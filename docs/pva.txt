@@ -1,0 +1,35 @@
+
+Aanpassingen Core SH9
+----------------------------
+
+1. Geen application.ini meer nodig voor core.
+	Onderdelen:
+		* Detecteer required modules (done)
+ 		* Detecteer environment (done)
+		* Instellen owner_email (done)
+
+Deprecated functies
+  SledgeHammer::get_application_ini() 
+  SledgeHammer::get_setting() en application/settings/sledgehammer.ini
+  	SledgeHammer heeft een goede tweedeling in "development" en "overig"
+		Eventuele aanpassingen aan  het profiel kan via application/init.php gedaan worden.
+
+$_SERVER['SERVER_ADMIN'] wordt gebruikt als ErrorHander email in not-development modus.
+
+Settings naar config
+
+Modules naar componenten?
+core => base
+webcore => mvc (web?)
+webforms => forms
+webcomponents => components
+
+Library naar AutoLoader??
+
+Cleanup functies en classes
+
+functions.php opsplitsen en deze bestanden vanuit functions.php includen.
+
+mirror_file() vanuit webcore wordt render_file();
+
+Serve static files via render_file() en render_content.php.

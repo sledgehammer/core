@@ -1,0 +1,20 @@
+
+Om van sledgehammer gebruik te maken kopier je de “S/sledgehammer/core” map naar  $project/development/sledgehammer/core/
+(SledgeHammer verwacht dat er een $project/development/tmp/ map bestaat.)
+
+Vanuit je bootstrap.php  voeg je de volgende code toe:
+
+$_SERVER[‘SERVER_ADMIN’] = ‘email@waar.de.error.vestuurd.worden.nl’;
+include("sledgehammer/core/init_framework.php");
+$Library->allow_unknown_classes = true; // Als je al gebruik maakt van een autoloader
+
+Een handige functie is: 
+dump($var);
+
+API Documentatie staat:
+http://linux.webcontent.nl/C/Catwhisperer/development/www/devutils/core/phpdocs/index.html
+
+Deze word gegenereerd met de sledgehammer introspectie tool “DevUtils”
+http://linux.webcontent.nl/C/Catwhisperer/development/www/devutils/
+
+

@@ -1,0 +1,64 @@
+/* Verborgen div voor de SQL queries */
+div.dbdebug {
+	position: fixed;
+	top: 10px;
+	left: 15px;
+	right: 15px;
+	bottom: 40px;
+	overflow: auto;
+	display: none;
+	padding: 7px;
+	border: 1px dashed #CFCFCF;
+	background-color: #FFFFE1;
+	color:#008000;
+	text-shadow: none;
+}
+
+div.dbdebug img {
+	position: fixed;
+	top: 15px;
+	right: 24px;
+}
+
+/* Debug blok in de voet */
+.statusbar, .statusbarcache {
+	color: #909090;
+	font: normal 8pt Verdana,sans-serif;
+	text-shadow: none;
+	padding: .2em 0 0 0;
+	margin: 5px 0 0 0;
+	border-top: 1px solid #CCCCCC;
+	background: #F5F5F5;
+	text-align: center;
+	clear: both;
+	min-height: 18px;
+	opacity: 0.95;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 5000;
+}
+.statusbar a {
+	color: #909090;
+	text-shadow: none;
+}
+.statusbarcache {
+	border-bottom: 0;
+	background: #f0f0f0;
+}
+.statusbar #statusbar_parsetimes {
+	position: absolute;
+	top: -18px;
+	bottom: 18px;
+	left: 0;
+	right: 0;
+	z-index: 10;
+	border-top: 1px solid #CCCCCC;
+	background: #F5F5F5;
+  display: none; 
+}
+
+#statusbar_parsetime:hover > span#statusbar_parsetimes {
+  display: block; 
+}

@@ -1,0 +1,40 @@
+
+ SledgeHammer Core
+-------------------
+
+Deze module (/ library / component ) verzocht de basis van het SledgeHammer Framework (/ Toolkit / Library).
+
+Scope
+------
+* Framework initialisation (+Module detection & initialisation)
+* Diverse globale functies die eigenlijk in php zelf zouden moeten zit.
+* Debug & error functions
+* Serve static files via render() en render_content.php.
+
+Buiten de scope
+----------------
+* MVC classes
+* Classes gefocust html generatie (tenzij debug)
+
+Onderdelen
+------------
+* Library (AutoLoader)
+* ErrorHandler
+* dump()
+* Database (+SQLComposer & SQLResultIterator)
+* CSVIterator
+
+Constantes
+----------
+START
+  De waarde van microtime(true) aan het begin van het script. 
+
+ENVIRONMENT
+	Bevat "development", "staging", of "production" waarop instellinge worden gebaseerd.
+
+PATH 
+  De server map waar het project/application in staat. (APP_ROOT?)
+
+E_MAX 
+  Maximaal niveau van error reporting. (E_ALL + E_STRICT)
+
