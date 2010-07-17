@@ -4,6 +4,8 @@
 
 Deze module (/ library / component ) verzocht de basis van het SledgeHammer Framework (/ Toolkit / Library).
 
+$_SERVER['SERVER_ADMIN'] wordt gebruikt als ErrorHander email in non-development modus.
+
 Scope
 ------
 * Framework initialisation (+Module detection & initialisation)
@@ -18,15 +20,15 @@ Buiten de scope
 
 Onderdelen
 ------------
-* Library (AutoLoader)
+* AutoLoader
 * ErrorHandler
 * dump()
-* Database (+SQLComposer & SQLResultIterator)
+* Database wrappers (Bied verbeterde error handeling en iterator interface)
 * CSVIterator
 
 Constantes
-----------
-START
+-----------
+MICROTIME_START
   De waarde van microtime(true) aan het begin van het script. 
 
 ENVIRONMENT

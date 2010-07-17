@@ -219,7 +219,7 @@ function extract_element($array, $identifier, &$value) {
  * Zodra er een unserialize() wordt aangeroepen op een string wat een object moet worden en de class in nog niet gedefineerd ( zoals bij eend session_start() ) wordt deze functie aanroepen.
  */
 function unserialize_callback($class) {
-	$GLOBALS['Library']->declare_class($class);
+	$GLOBALS['AutoLoader']->declare_class($class);
 }
 
 /**

@@ -7,7 +7,7 @@ Core verzorgt het inladen van andere sledgehammer modules.
 
 Overige functionaleit bestaat uit:
 
-* AutoLoader (Library)
+* AutoLoader
 * ErrorHandler 
 * MySQLi Database Wrapper
 * SQL statements op een OOP manier genereren.

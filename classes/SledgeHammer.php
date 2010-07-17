@@ -261,7 +261,7 @@ class SledgeHammer {
 			return true;
 		} 
 		// Een database connectie maken
-		$GLOBALS['Databases'][$database_link] = new Database;
+		$GLOBALS['Databases'][$database_link] = new MySQLiDatabase();
 		$config_options = array('report_warnings', 'throw_exception_on_error', 'remember_queries', 'remember_backtrace', 'symlink');
 		$connection_parameters = array('host', 'database', 'user', 'password');
 		foreach($settings as $name => $value) {

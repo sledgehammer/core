@@ -55,7 +55,7 @@ if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
 			$GLOBALS['ErrorHandler']->html = (bool) $showDebugInfo;
 		}
 	}
-	$GLOBALS['Library']->init(); // De library initialiseren
+	$GLOBALS['AutoLoader']->init(); // De AutoLoader initialiseren
 
 	// Database connecties maken
 	$GLOBALS['database_failure'] = false;
