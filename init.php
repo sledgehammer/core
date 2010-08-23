@@ -7,7 +7,7 @@
 if (!defined('MICROTIME_START')) {
 	define('MICROTIME_START', microtime(true));
 }
-define('PATH', dirname(dirname(dirname(__FILE__))).'/'); // Het pad instellen. Dit is de map waar de modules in staan.
+define('PATH', dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR); // Het pad instellen. Dit is de map waar de modules in staan.
 define('E_MAX', (E_ALL | E_STRICT)); /// Echt alle errors afvangen, inclusief de PHP5 STRICT hints
 error_reporting(E_MAX); // Foutniveau activeren
 if (ini_get('date.timezone') == '') { // Is er geen tijdzone ingesteld?

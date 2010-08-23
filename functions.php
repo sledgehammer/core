@@ -380,15 +380,18 @@ function rmdirs($path, $exclude = array()) {
  * @return void
  */
 function safe_unlink($filepath, $basepath) {
-	if (substr($basepath, -1) != DIRECTORY_SEPARATOR) {
-		throw new Exception('Invalid $basepath parameter, should end with in "'.DIRECTORY_SEPARATOR.'"');
+	if (in_array(substr($basepath, -1), array('/', '\\'))) { // Heeft de $basepath een trailing slash?
+		$basepath = substr($basepath, 0, -1);
+	}
+	if (strlen($basepath) < 4) { // Minimal "/tmp"
+		throw new Exception('$basepath "'.$basepath.'" is too short');
 	}
 	// 	Controleer of het path niet buiten de basepath ligt.
 	$realpath = realpath(dirname($filepath));		
 	if ($realpath == false) {
-		throw new Exception('Ongeldige bestandsnaam'); // Kon het path niet omvormen naar een bestaande map.
+		throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
 	}
-	$filepath = $realpath.DIRECTORY_SEPARATOR.basename($filepath);  // Nette $filepath	
+	$filepath = $realpath.'/'.basename($filepath);  // Nette $filepath
 	if (substr($filepath, 0, strlen($basepath)) != $basepath) { // Hack poging?
 		throw new Exception('Ongeldige bestandsnaam');
 	}

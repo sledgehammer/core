@@ -20,7 +20,7 @@ class SledgeHammer {
 		if ($modulesPath === NULL) {
 			$modulesPath = SledgeHammer::getPath();
 		}
-		$applicationPath = dirname($modulesPath).'/application/';
+		$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
 		if (empty(self::$cachedRequiredModules[$modulesPath])) {
 			$required_modules = array();
 			$module_info = array(
@@ -76,8 +76,8 @@ class SledgeHammer {
 	 * @param string $path Absolute path van een module
 	 */
 	static function initModule($path) {
-		if (substr($path, -1) != '/') { // Is er geen trailing "/" opgegeven in het path?
-			$path .= '/'; // De trailing slash toevoegen
+		if (in_array(substr($path, -1), array('\\', '/')) == false) { // Is er geen trailing "/" opgegeven in het path?
+			$path .= DIRECTORY_SEPARATOR; // De trailing slash toevoegen
 		}
 		if (!is_dir($path)) {
 			notice('Module path: "'.$path.'" not found');
@@ -108,7 +108,7 @@ class SledgeHammer {
 			if ($module === 'application') {
 				throw new Exception('Info for the application "module" must be configured');
 			} else {
-				$module_path = $modulesPath.$module.'/';
+				$module_path = $modulesPath.$module.DIRECTORY_SEPARATOR;
 				if (!($module_info[$module] = parse_ini_file($module_path.'module.ini'))) {
 					throw new Exception('Module: "'.$module.'" required by "'.$required_by.'" is missing or incomplete');
 				}
@@ -300,7 +300,7 @@ class SledgeHammer {
 	 * @return string
 	 */
 	private static function getPath() {
-		return dirname(dirname(dirname(__FILE__))).'/'; 
+		return dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR;
 	}
 }
 ?>
