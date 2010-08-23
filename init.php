@@ -27,5 +27,5 @@ $GLOBALS['ErrorHandler']->init();
 $GLOBALS['AutoLoader'] = new AutoLoader(PATH); // De AutoLoader aanmaken. (maar om te functioneren moet de $AutoLoader->init() nog aangeroepen worden)
 
 ini_set('unserialize_callback_func', 'unserialize_callback');
-spl_autoload_register(array($GLOBALS['AutoLoader'], 'declare_class'));
+spl_autoload_register(array($GLOBALS['AutoLoader'], 'declareClass'));
 ?>

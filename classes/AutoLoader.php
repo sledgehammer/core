@@ -8,32 +8,33 @@
 class AutoLoader extends Object {
 
 	public
-	$allow_unknown_classes = false, // Bij true zal class_info() geen fouten geven al de class niet gevonden wordt.
-	$enable_cache = true; // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
-	private
-	$path, // De basismap
-	$cachePath, // De map waar de cache bestanden worden opgeslagen.
-	$classes = array(), // Array met class-definities
-	$interfaces = array(), // Array met interface-definities
-	$extractErrors = false, // bool Die aangeeft of er fouten zijn opgetreden bij het inlezen van definities. (Bij fouten wordt de uitkomst niet gecached)
+		$standalone = true, // Bij true zal declareClass() geen fouten geven al de class niet gevonden wordt.
+		$enableCache = true; // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 
-	$defaultSettings = array(
-		'extract_definitions' => true, // Geef aan dat de bestanden en mappen doorzocht moeten worden om class of interface definities te achterhalen
-		'bof_check' => true, // Controleer op correct begin van de php bestanden
-		'mandatory_superclass' => true, // Controleer of "alle" objecten een superclass hebben
-		'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
-		'php_extension_check' => true, // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden
-		'php_extension_check_whitelist' => 'DS_Store,swp,bak,backup', // Geef foutmeldingen als er andere bestandtypes zijn dan "*.php" tenzij ze in dit veld vermeld staan
-		'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
-		'revalidate_cache_delay' => 15, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
-	);
+	private
+		$path, // De basismap
+		$cachePath, // De map waar de cache bestanden worden opgeslagen.
+		$classes = array(), // Array met class-definities
+		$interfaces = array(), // Array met interface-definities
+		$extractErrors = false, // bool Die aangeeft of er fouten zijn opgetreden bij het inlezen van definities. (Bij fouten wordt de uitkomst niet gecached)
+
+		$defaultSettings = array(
+			'extract_definitions' => true, // Geef aan dat de bestanden en mappen doorzocht moeten worden om class of interface definities te achterhalen
+			'bof_check' => true, // Controleer op correct begin van de php bestanden
+			'mandatory_superclass' => true, // Controleer of "alle" objecten een superclass hebben
+			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
+			'php_extension_check' => true, // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden
+			'php_extension_check_whitelist' => 'DS_Store,swp,bak,backup', // Geef foutmeldingen als er andere bestandtypes zijn dan "*.php" tenzij ze in dit veld vermeld staan
+			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
+			'revalidate_cache_delay' => 15, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
+		);
 
 	/**
 	 * @param string $path  De basis map, vaak gelijk aan de PATH constante
 	 */
 	function __construct($path) {
 		$this->path = $path;
-		$this->cachePath = $path . '/tmp/AutoLoader/';
+		$this->cachePath = $path.'/tmp/AutoLoader/';
 	}
 
 	/**
@@ -43,13 +44,13 @@ class AutoLoader extends Object {
 	 * @return void
 	 */
 	function init() {
-		if (!file_exists($this->path . 'autoloader.db.php')) {
+		if (!file_exists($this->path.'autoloader.db.php')) {
 			$modules = SledgeHammer::getModules();
-			$this->extract_definitions_from_modules($modules);
+			$this->inspectModules($modules);
 		} else {
-			include($this->path . 'autoloader.db.php');
+			include($this->path.'autoloader.db.php');
 			if (!isset($classes) || !isset($interfaces)) {
-				notice('$classes of $interfaces definitions not found in "' . $this->path . 'autoloader.db.php"');
+				notice('$classes of $interfaces definitions not found in "'.$this->path.'autoloader.db.php"');
 			}
 			$this->classes = $classes;
 			$this->interfaces = $interfaces;
@@ -62,31 +63,31 @@ class AutoLoader extends Object {
 	 *
 	 * @return bool
 	 */
-	function declare_class($class) {
+	function declareClass($class) {
 		if (class_exists($class, false)) { // is de class al gedeclareerd?
 			return true;
 		}
-		$class_info = $this->class_info($class, $this->allow_unknown_classes); // de gegevens van de class opzoeken
-		if (!$class_info) {
+		$info = $this->getInfo($class, !$this->standalone); // de gegevens van de class opzoeken
+		if (!$info) {
 			return false;
 		}
-		if (isset($class_info['extends'])) { // heeft dit object een parent?
-			if (!$this->declare_class($class_info['extends'])) { // de parent proberen te declareren
-				error('Failed to declare parent: "' . $class_info['extends'] . '" of class: "' . $class . '"');
+		if (isset($info['extends'])) { // heeft dit object een parent?
+			if (!$this->declareClass($info['extends'])) { // de parent proberen te declareren
+				throw new Exception('Failed to declare parent: "'.$info['extends'].'" of class: "'.$class.'"');
 			}
 		}
-		if (isset($class_info['implements'])) { // heeft dit object een interface?
-			foreach ($class_info['implements'] as $interface) {
-				if (!$this->declare_interface($interface)) { // de interface proberen te declareren
-					error('Failed to declare interface: "' . $interface . '" of class: "' . $class . '"');
+		if (isset($info['implements'])) { // heeft dit object een interface?
+			foreach ($info['implements'] as $interface) {
+				if (!$this->declareInterface($interface)) { // de interface proberen te declareren
+					throw new Exception('Failed to declare interface: "'.$interface.'" of class: "'.$class.'"');
 				}
 			}
 		}
-		if (!include($class_info['filename'])) { // Lukte het includen van het bestand?
-			error('Failed to include "' . $class_info['filename'] . '"');
+		if (!include($info['filename'])) { // Lukte het includen van het bestand?
+			throw new Exception('Failed to include "'.$info['filename'].'"');
 		}
 		if (!class_exists($class, false)) {
-			error('A autoloader file is corrupt, class "' . $class . '" not found in "' . $class_info['filename'] . '"');
+			throw new Exception('A autoloader file is corrupt, class "'.$class.'" not found in "'.$info['filename'].'"');
 		}
 		return true;
 	}
@@ -97,27 +98,27 @@ class AutoLoader extends Object {
 	 *
 	 * @return bool
 	 */
-	function declare_interface($interface) {
+	function declareInterface($interface) {
 		if (interface_exists($interface, false)) { // is de interface al gedeclareerd?
 			return true;
 		}
-		$interface_info = @$this->interfaces[$interface]; // Opzoeken of deze interface bekent in binnen de geopende libraries
+		$info = @$this->interfaces[$interface]; // Opzoeken of deze interface bekent in binnen de geopende libraries
 
-		if (!$interface_info) {
-			warning('Unknown interface: "' . $interface . '"', array('Available interfaces' => implode(array_keys($this->interfaces), ', ')));
+		if (!$info) {
+			warning('Unknown interface: "'.$interface.'"', array('Available interfaces' => implode(array_keys($this->interfaces), ', ')));
 			return false;
 		}
-		if (isset($interface_info['extends'])) {
-			foreach ($interface_info['extends'] as $extended_interface) {
-				$this->declare_interface($extended_interface);
+		if (isset($info['extends'])) {
+			foreach ($info['extends'] as $super) {
+				$this->declareInterface($super);
 			}
 		}
-		$filename = $this->fullpath($interface_info['filename']);
+		$filename = $this->fullpath($info['filename']);
 		if (!include($filename)) { // Lukte het includen van het bestand?
-			error('Failed to include "' . $filename . '"');
+			throw new Exception('Failed to include "'.$filename.'"');
 		}
 		if (!interface_exists($interface)) {
-			error('A autoloader file is corrupt, interface "' . $interface . '" not found in "' . $filename . '"');
+			throw new Exception('A autoloader file is corrupt, interface "'.$interface.'" not found in "'.$filename.'"');
 		}
 		return true;
 	}
@@ -127,7 +128,7 @@ class AutoLoader extends Object {
 	 *
 	 * @param array $modules Array containing modules, compatible with SledgeHammer::getModules()
 	 */
-	function extract_definitions_from_modules($modules) {
+	function inspectModules($modules) {
 		$memory_limit = NULL;
 		$time_limit = NULL;
 		$summary = array();
@@ -135,22 +136,22 @@ class AutoLoader extends Object {
 		$interfaces_total = 0;
 		foreach ($modules as $module_name => $module) {
 			$revalidate_cache_delay = false;
-			$class_folder = $module['path'] . 'classes'; // De map waar mogelijk classes en interfaces bestand in staan.
+			$class_folder = $module['path'].'classes'; // De map waar mogelijk classes en interfaces bestand in staan.
 			if (is_dir($class_folder)) {
-				if ($this->enable_cache) {
+				if ($this->enableCache) {
 					if (strpos($module['path'], $this->path) === 0) { // Staat de module bij deze app
-						$cache_file = $this->cachePath . $module_name . '.php';
+						$cache_file = $this->cachePath.$module_name.'.php';
 					} else { // De modules staan in een ander path (modules die via een devutils ingeladen worden)					
-						$cache_file = $this->cachePath . substr(md5(dirname($module['path'])), 8, 16) . '/' . $module_name . '.php'; // md5(module_path)/module_naam(bv core).php
+						$cache_file = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$module_name.'.php'; // md5(module_path)/module_naam(bv core).php
 					}
 					if (!mkdirs(dirname($cache_file))) {
-						$this->enable_cache = false;
+						$this->enableCache = false;
 					} else {
 						if (file_exists($cache_file)) {
 							$mtime_cache_file = filemtime($cache_file);
 							// revalidate_cache_delay setting bepalen
-							if (file_exists($class_folder . '/autoloader.ini')) {
-								$autoloader_ini = parse_ini_file($class_folder . '/autoloader.ini', true);
+							if (file_exists($class_folder.'/autoloader.ini')) {
+								$autoloader_ini = parse_ini_file($class_folder.'/autoloader.ini', true);
 								$revalidate_cache_delay = isset($autoloader_ini['revalidate_cache_delay']) ? $autoloader_ini['revalidate_cache_delay'] : $this->defaultSettings['revalidate_cache_delay'];
 							} else {
 								$revalidate_cache_delay = $this->defaultSettings['revalidate_cache_delay'];
@@ -186,7 +187,7 @@ class AutoLoader extends Object {
 						set_time_limit(120); // Tijdelijk de script timeout verhogen
 					}
 				}
-				$this->extract_definitions_from_folder($module['path'] . 'classes');
+				$this->inspectFolder($module['path'].'classes');
 				// Append summary
 				$class_subtotal = count($this->classes);
 				$interfaces_subtotal = count($this->interfaces);
@@ -196,7 +197,7 @@ class AutoLoader extends Object {
 				);
 				$class_total = $class_subtotal;
 				$interfaces_total = $interfaces_subtotal;
-				if ($this->enable_cache && $this->extractErrors == false) { // Zijn er geen fouten opgetreden
+				if ($this->enableCache && $this->extractErrors == false) { // Zijn er geen fouten opgetreden
 					// De zojuist toegevoegde classes opslaan in een cache bestand
 					$new_classes = array_diff_key($this->classes, $classes_before_extract); // nieuw ingelezen classes opvragen.
 					$new_interfaces = array_diff_key($this->interfaces, $interfaces_before_extract); // nieuw ingelezen interfaces opvragen.
@@ -219,21 +220,21 @@ class AutoLoader extends Object {
 	 *
 	 * @return void
 	 */
-	function extract_definitions_from_folder($folder, $settings = NULL) {
+	function inspectFolder($folder, $settings = NULL) {
 		if ($settings === NULL) {
 			$settings = $this->defaultSettings;
 		}
-		if (file_exists($folder . '/library.ini')) {
+		if (file_exists($folder.'/library.ini')) {
 			deprecated('Rename "library.ini" to "autoloader.ini"');
 		}
-		if (file_exists($folder . '/autoloader.ini')) {
-			$autoloader_ini = parse_ini_file($folder . '/autoloader.ini', true);
+		if (file_exists($folder.'/autoloader.ini')) {
+			$autoloader_ini = parse_ini_file($folder.'/autoloader.ini', true);
 			foreach ($autoloader_ini as $class => $info) {
 				if (is_array($info)) { // Is het geen autoloader instelling maar een class definitie?
-					$info['filename'] = $this->relativePath($folder . DIRECTORY_SEPARATOR . $info['filename']);
+					$info['filename'] = $this->relativePath($folder.DIRECTORY_SEPARATOR.$info['filename']);
 					$this->classes[$class] = $info;
 				} elseif (!in_array($class, array_keys($this->defaultSettings))) {
-					$this->extract_notice('Invalid setting: "' . $class . '" = ' . syntax_highlight($info) . ' in "' . $this->relativePath($folder) . '/autoloader.ini"', array('Available settings' => array_keys($this->defaultSettings)));
+					$this->parserNotice('Invalid setting: "'.$class.'" = '.syntax_highlight($info).' in "'.$this->relativePath($folder).'/autoloader.ini"', array('Available settings' => array_keys($this->defaultSettings)));
 				}
 			}
 			$settings = array_merge($settings, $autoloader_ini); // De settings aanpassen aan wat in de autoloader.ini staat
@@ -245,7 +246,7 @@ class AutoLoader extends Object {
 		foreach ($DirectoryIterator as $Entry) {
 			if ($Entry->isDir()) {
 				if (substr($Entry->getFilename(), 0, 1) != '.') { // Mappen die beginnen met een punt negeren. ("..", ".svn", enz)
-					$this->extract_definitions_from_folder($Entry->getPathname(), $settings);
+					$this->inspectFolder($Entry->getPathname(), $settings);
 				}
 				continue;
 			}
@@ -256,20 +257,20 @@ class AutoLoader extends Object {
 				$extension = preg_replace('/.*\./', '', $Entry->getFilename());
 				$extension_whilelist = explode(',', $settings['php_extension_check_whitelist']);
 				if (!in_array($extension, $extension_whilelist)) {
-					$this->extract_notice('Unexpected extension for "' . $Entry->getPathname() . '", expecting ".php"');
+					$this->parserNotice('Unexpected extension for "'.$Entry->getPathname().'", expecting ".php"');
 				}
 				continue;
 			}
-			$definitions = $this->extract_definitions_from_file($Entry->getPathname(), $settings);
+			$definitions = $this->inspectFile($Entry->getPathname(), $settings);
 			if ($definitions) {
 				foreach ($definitions['classes'] as $definition) {
 					$class = $definition['class'];
 					unset($definition['class']);
 					if (isset($this->classes[$class])) {
 						if ($this->classes[$class]['filename'] != $definition['filename']) {
-							$this->extract_notice('Class: "' . $class . '" is ambiguous, it\'s found in multiple files: "' . $this->classes[$class]['filename'] . '" and "' . $definition['filename'] . '"');
+							$this->parserNotice('Class: "'.$class.'" is ambiguous, it\'s found in multiple files: "'.$this->classes[$class]['filename'].'" and "'.$definition['filename'].'"');
 						} elseif ($settings['notify_on_multiple_definitions_per_file']) {
-							$this->extract_notice('Class: "' . $class . '" is declared multiple times in: "' . $definition['filename'] . '"');
+							$this->parserNotice('Class: "'.$class.'" is declared multiple times in: "'.$definition['filename'].'"');
 						}
 					}
 					$this->classes[$class] = $definition;
@@ -277,7 +278,7 @@ class AutoLoader extends Object {
 				foreach ($definitions['interfaces'] as $definition) {
 					$interface = $definition['interface'];
 					if (isset($this->interfaces[$interface])) {
-						$this->extract_notice('Interface: "' . $interface . '" is ambiguous, it\'s found in multiple files: "' . $this->interfaces[$interface] . '" and "' . $definition['filename'] . '"');
+						$this->parserNotice('Interface: "'.$interface.'" is ambiguous, it\'s found in multiple files: "'.$this->interfaces[$interface].'" and "'.$definition['filename'].'"');
 					}
 					$this->interfaces[$interface] = array('filename' => $definition['filename']);
 					if (isset($definition['extends'])) {
@@ -299,14 +300,14 @@ class AutoLoader extends Object {
 			// check parent class
 			if (isset($info['extends'])) {
 				if (!isset($this->classes[$info['extends']]) && !class_exists($info['extends'], false)) {
-					notice('Parent class "' . $info['extends'] . '" not found for class "' . $class . '" in ' . $info['filename']);
+					notice('Parent class "'.$info['extends'].'" not found for class "'.$class.'" in '.$info['filename']);
 					$no_errors_found = false;
 				}
 			}
 			if (isset($info['implements'])) {
 				foreach ($info['implements'] as $interface) {
 					if (!isset($this->interfaces[$interface]) && !interface_exists($interface, false)) {
-						notice('Interface "' . $interface . '" not found for class "' . $class . '" in ' . $info['filename']);
+						notice('Interface "'.$interface.'" not found for class "'.$class.'" in '.$info['filename']);
 						$no_errors_found = false;
 					}
 				}
@@ -320,7 +321,7 @@ class AutoLoader extends Object {
 	 * Deze zal bij de init() worden ingeladen, de extract_definitions_* functies worden dan niet meer gebruikt, waardoor de parsetijd korter is.
 	 */
 	function saveDatabase() {
-		return $this->writeCacheFile($this->path . 'autoloader.db.php', $this->classes, $this->interfaces);
+		return $this->writeCacheFile($this->path.'autoloader.db.php', $this->classes, $this->interfaces);
 	}
 
 	/**
@@ -335,12 +336,12 @@ class AutoLoader extends Object {
 		// classes
 		ksort($classes);
 		foreach ($classes as $class => $info) {
-			fputs($fp, "\t'" . $class . "'=> array('filename'=>'" . addslashes($info['filename']) . "'");
+			fputs($fp, "\t'".$class."'=> array('filename'=>'".addslashes($info['filename'])."'");
 			if (isset($info['extends'])) {
-				fputs($fp, ",'extends'=>'" . addslashes($info['extends']) . "'");
+				fputs($fp, ",'extends'=>'".addslashes($info['extends'])."'");
 			}
 			if (isset($info['implements'])) {
-				fputs($fp, ",'implements'=>array('" . implode("','", $info['implements']) . "')");
+				fputs($fp, ",'implements'=>array('".implode("','", $info['implements'])."')");
 			}
 			fputs($fp, "),\n");
 		}
@@ -348,9 +349,9 @@ class AutoLoader extends Object {
 		ksort($interfaces);
 		fputs($fp, ");\n\$interfaces = array(\n");
 		foreach ($interfaces as $interface => $info) {
-			fputs($fp, "\t'" . $interface . "'=>array('filename'=>'" . addslashes($info['filename']) . "'");
+			fputs($fp, "\t'".$interface."'=>array('filename'=>'".addslashes($info['filename'])."'");
 			if (isset($info['extends'])) {
-				fputs($fp, ",'extends'=>array('" . implode("','", $info['extends']) . "')");
+				fputs($fp, ",'extends'=>array('".implode("','", $info['extends'])."')");
 			}
 			fputs($fp, "),\n");
 		}
@@ -362,10 +363,10 @@ class AutoLoader extends Object {
 	/**
 	 * Broncode van een php bestand/class laten zien
 	 */
-	function highlight_class($class) {
-		$class_info = $this->class_info($class);
-		if ($class_info) {
-			highlight_file($this->path . $class_info['filename']);
+	function highlightClass($class) {
+		$info = $this->getInfo($class);
+		if ($info) {
+			highlight_file($this->path.$info['filename']);
 		}
 	}
 
@@ -374,20 +375,20 @@ class AutoLoader extends Object {
 	 *
 	 * @return array
 	 */
-	function class_info($class, $allow_unknown_class = false) {
-		$class_info = @$this->classes[$class];
-		if ($class_info !== NULL) {
-			if (is_string($class_info)) {
+	function getInfo($class, $allow_unknown_class = false) {
+		$info = @$this->classes[$class];
+		if ($info !== NULL) {
+			if (is_string($info)) {
 				return array(
-					'filename' => $this->fullpath($class_info)
+					'filename' => $this->fullpath($info)
 				);
 			} else {
-				$class_info['filename'] = $this->fullpath($class_info['filename']);
+				$info['filename'] = $this->fullpath($info['filename']);
 			}
-			return $class_info;
+			return $info;
 		}
 		if (!$allow_unknown_class) {
-			notice('Class: "' . $class . '" is unknown', array('Known classes' => implode(', ', array_keys($this->classes))));
+			notice('Class: "'.$class.'" is unknown', array('Known classes' => implode(', ', array_keys($this->classes))));
 		}
 		return false;
 	}
@@ -400,11 +401,11 @@ class AutoLoader extends Object {
 	 * @throws Exception Als de class al gedefineerd is. (De eval() zou anders fatale "Cannot redeclare class" veroorzaken).
 	 * @return void
 	 */
-	function expose_privates($class) {
+	function exposePrivates($class) {
 		if (class_exists($class, false)) {
-			throw new Exception('Class: "' . $class . '" is already defined');
+			throw new Exception('Class: "'.$class.'" is already defined');
 		}
-		$info = $this->class_info($class);
+		$info = $this->getInfo($class);
 		$tokens = token_get_all(file_get_contents($info['filename']));
 		$php_code = '';
 		if ($tokens[0][0] != T_OPEN_TAG) {
@@ -446,15 +447,15 @@ class AutoLoader extends Object {
 	 * @param string $filename Fullpath to the php-file.
 	 * @return array Array containing definitions
 	 */
-	private function extract_definitions_from_file($filename, $settings) {
+	private function inspectFile($filename, $settings) {
 		$source = file_get_contents($filename);
 		/*
 		 * @todo Instead of an eof check,  check if there is any output(non phpcode) in hthe script
 		  if ($settings['eof_check'] && substr($source, -3, -1) != '?>' && substr($source, -2) != '?>') {
-		  $this->extract_notice('Invalid end of file: "'.$this->relativePath($filename).'", expecting "?>"');
+		  $this->parserNotice('Invalid end of file: "'.$this->relativePath($filename).'", expecting "?>"');
 		  } */
 		if ($settings['bof_check'] && substr($source, 0, 12) != "<?php\n/**\n *" && substr($source, 0, 14) != "<?php\r\n/**\r\n *") {
-			$this->extract_notice('Invalid start of file:  "' . $this->relativePath($filename) . '"', array('Expecting' => "\"\n<?php\n/**\n *\""));
+			$this->parserNotice('Invalid start of file:  "'.$this->relativePath($filename).'"', array('Expecting' => "\"\n<?php\n/**\n *\""));
 		}
 		$tokens = token_get_all($source);
 		$statusses_definitions = array();
@@ -520,10 +521,10 @@ class AutoLoader extends Object {
 					} elseif ($definition_state['implements'] == 'NEXT_STRINGS') {
 						$definition_state['info']['implements'][] = $token[1];
 					} else {
-						$this->unexpected_token($token, $filename);
+						$this->unexpectedToken($token, $filename);
 					}
 				} else {
-					$this->unexpected_token($token, $filename);
+					$this->unexpectedToken($token, $filename);
 				}
 			}
 			if ($definition_state['interface'] == 'NEXT_STRING' || $definition_state['interface'] == 'FOUND') {
@@ -540,10 +541,10 @@ class AutoLoader extends Object {
 					} elseif ($definition_state['extends'] == 'NEXT_STRING') {
 
 					} else {
-						$this->unexpected_token($token, $filename);
+						$this->unexpectedToken($token, $filename);
 					}
 				} else {
-					$this->unexpected_token($token, $filename);
+					$this->unexpectedToken($token, $filename);
 				}
 			}
 		}
@@ -564,19 +565,19 @@ class AutoLoader extends Object {
 					if (count($definition_state['info']['extends']) == 1) {
 						$definition_state['info']['extends'] = $definition_state['info']['extends'][0];
 					} elseif (count($definition_state['info']['extends']) > 1) {
-						$this->extract_notice('Class: "' . $definition_state['info']['class'] . '" Multiple inheritance is not allowed for classes');
+						$this->parserNotice('Class: "'.$definition_state['info']['class'].'" Multiple inheritance is not allowed for classes');
 					} else {
-						$this->extract_notice('Huh??');
+						$this->parserNotice('Huh??');
 						$definition_state['info']['extends'] = false;
 					}
 					if (strtolower($definition_state['info']['extends']) == 'object') {
 						unset($definition_state['info']['extends']);
 					}
 				} elseif ($settings['mandatory_superclass'] && !in_array($definition_state['info']['class'], array('Object', 'SledgeHammer', 'ErrorHandler'))) {
-					$this->extract_notice('Class: "' . $definition_state['info']['class'] . '" has no superclass, "class X extends Y" expected');
+					$this->parserNotice('Class: "'.$definition_state['info']['class'].'" has no superclass, "class X extends Y" expected');
 				}
 				if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $definition_state['info']['class']) {
-					$this->extract_notice('Filename doesn\'t match classname "' . $definition_state['info']['class'] . '" in "' . $this->relativePath($filename) . '"');
+					$this->parserNotice('Filename doesn\'t match classname "'.$definition_state['info']['class'].'" in "'.$this->relativePath($filename).'"');
 				}
 				$definitions['classes'][] = $definition_state['info'];
 			} else {
@@ -586,21 +587,21 @@ class AutoLoader extends Object {
 		$definition_count = count($statusses_definitions);
 		if ($definition_count > 1) {
 			if ($settings['notify_on_multiple_definitions_per_file']) {
-				$this->extract_notice('Multiple definitions per file is not recommended', array_merge($definitions['classes'], $definitions['interfaces']));
+				$this->parserNotice('Multiple definitions per file is not recommended', array_merge($definitions['classes'], $definitions['interfaces']));
 			}
 		} elseif ($definition_count == 0) {
-			$this->extract_notice('No classes or interfaces found in ' . $filename);
+			$this->parserNotice('No classes or interfaces found in '.$filename);
 		}
 		return $definitions;
 	}
 
-	private function unexpected_token($token, $filename) {
+	private function unexpectedToken($token, $filename) {
 		if (is_string($token)) {
 			$error = syntax_highlight($token);
 		} else {
-			$error = token_name($token[0]) . ': ' . syntax_highlight($token[1]);
+			$error = token_name($token[0]).': '.syntax_highlight($token[1]);
 		}
-		$this->extract_notice('Unexpected token: ' . $error . ' in "' . $this->relativePath($filename) . '"');
+		$this->parserNotice('Unexpected token: '.$error.' in "'.$this->relativePath($filename).'"');
 	}
 
 	/**
@@ -609,7 +610,7 @@ class AutoLoader extends Object {
 	 * @see notice()
 	 * @return void
 	 */
-	private function extract_notice($message, $extra_information = NULL) {
+	private function parserNotice($message, $extra_information = NULL) {
 		notice($message, $extra_information);
 		$this->extractErrors = true;
 	}
@@ -641,7 +642,7 @@ class AutoLoader extends Object {
 			return $filename; // Absoluut path
 		}
 		// Anders was het een relatief path
-		return $this->path . $filename;
+		return $this->path.$filename;
 	}
 
 }
