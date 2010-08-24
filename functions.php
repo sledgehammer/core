@@ -354,7 +354,7 @@ function mkdirs($path) {
  * @throws Exception on failure
  * @return int Het aantal verwijderde bestanden
  */
-function rmdir_recursive($path) {
+function rmdir_recursive($path, $allowFailures = false) {
 	$counter = 0;
 	$dir = new DirectoryIterator($path);
 	foreach ($dir as $entry) {
@@ -362,16 +362,15 @@ function rmdir_recursive($path) {
 			continue;
 		}
 		if ($entry->isDir()) { // is het een map?
-			$counter += rmdir_recursive($entry->getPathname().'/');
-			
-		} else {
-			if (unlink($entry->getPathname()) == false) {
-				throw new Exception('Failed to delete "'.$entry->getPathname().'"');
-			}
-			$counter++;
+			$counter += rmdir_recursive($entry->getPathname().'/', $allowFailures);
+			continue;
 		}
+		if (unlink($entry->getPathname()) == false && $allowFailures == false) {
+			throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+		}
+		$counter++;
 	}
-	if (rmdir($path)) {
+	if (rmdir($path) == false && $allowFailures == false) {
 		throw new Exception('Failed to delete directory "'.$path.'"');
 	}
 	return $counter;
