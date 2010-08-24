@@ -377,10 +377,12 @@ function rmdir_recursive($path, $allowFailures = false) {
 }
 
 /**
+ * Delete the contents of the folder, but not the folder itself.
+ *
  * @throws Exception on failure
  * @return int Het aantal verwijderde bestanden
  */
-function rmdir_contents($path) {
+function rmdir_contents($path, $allowFailures = false) {
 	$counter = 0;
 	$dir = new DirectoryIterator($path);
 	foreach ($dir as $entry) {
@@ -388,9 +390,9 @@ function rmdir_contents($path) {
 			continue;
 		}
 		if ($entry->isDir()) { // is het een map?
-			$counter += rmdir_recursive($entry->getPathname());
+			$counter += rmdir_recursive($entry->getPathname(), $allowFailures);
 		} else {
-			if (unlink($entry->getPathname()) == false) {
+			if (unlink($entry->getPathname()) == false && $allowFailures == false) {
 				throw new Exception('Failed to delete "'.$entry->getPathname().'"');
 			}
 			$counter++;
