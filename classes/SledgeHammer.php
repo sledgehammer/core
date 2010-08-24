@@ -21,52 +21,53 @@ class SledgeHammer {
 			$modulesPath = SledgeHammer::getPath();
 		}
 		$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
-		if (empty(self::$cachedRequiredModules[$modulesPath])) {
-			$required_modules = array();
-			$module_info = array(
-				'application' => array(
-					'name' => 'Application',
-					'path' => $applicationPath,
-					'required_modules' => self::detectModules($modulesPath),
-					'optional_modules' => array(),
-					'application' => true
-				)
-			);
-			// Fetch all required_modules
-			SledgeHammer::appendModules($modulesPath, $required_modules, $module_info, 'application', 'detectModules()');
-			if (!file_exists($applicationPath)) {
-				unset($required_modules[array_search('application', $required_modules)]); // De application is zelf niet required
-			}
-			// Sort by dependancy
-			$sorted_modules = array();
-			$cyclic_dependency_check = count($required_modules) + 1; 	
-			while (count($required_modules) > 0) { // Loop until all required_modules are sorted
-				if ($cyclic_dependency_check == count($required_modules)) { // No modules are sorted in the previous while loop?
-					throw new Exception('Cyclic depedency detected for modules "'.implode('" and "', $required_modules).'"');
-				}
-				$cyclic_dependency_check = count($required_modules);
-				foreach ($required_modules as $index => $module) {
-					$all_dependancy_are_met = true;
-					foreach ($module_info[$module]['required_modules'] as $required_module) {
-						if (!in_array($required_module, $sorted_modules)) { // is the required depencancy not met
-							$all_dependancy_are_met = false;
-							break;
-						}
-					}
-					if ($all_dependancy_are_met) {
-						$sorted_modules[] = $module;
-						unset($required_modules[$index]);
-					}
-				}
-			}
-			// Merge the sorted modules with the module_info array
-			$modules = array();
-			foreach ($sorted_modules as $module) {
-				$modules[$module] = $module_info[$module];
-			}
-			self::$cachedRequiredModules[$modulesPath] = $modules;
+		if (isset(self::$cachedRequiredModules[$modulesPath])) {
+			return self::$cachedRequiredModules[$modulesPath];
 		}
-		return self::$cachedRequiredModules[$modulesPath];
+		$required_modules = array();
+		$module_info = array(
+			'application' => array(
+				'name' => 'Application',
+				'path' => $applicationPath,
+				'required_modules' => self::detectModules($modulesPath),
+				'optional_modules' => array(),
+				'application' => true
+			)
+		);
+		// Fetch all required_modules
+		SledgeHammer::appendModules($modulesPath, $required_modules, $module_info, 'application', 'detectModules()');
+		if (!file_exists($applicationPath)) {
+			unset($required_modules[array_search('application', $required_modules)]); // De application is zelf niet required
+		}
+		// Sort by dependancy
+		$sorted_modules = array();
+		$cyclic_dependency_check = count($required_modules) + 1;
+		while (count($required_modules) > 0) { // Loop until all required_modules are sorted
+			if ($cyclic_dependency_check == count($required_modules)) { // No modules are sorted in the previous while loop?
+				throw new Exception('Cyclic depedency detected for modules "'.implode('" and "', $required_modules).'"');
+			}
+			$cyclic_dependency_check = count($required_modules);
+			foreach ($required_modules as $index => $module) {
+				$all_dependancy_are_met = true;
+				foreach ($module_info[$module]['required_modules'] as $required_module) {
+					if (!in_array($required_module, $sorted_modules)) { // is the required depencancy not met
+						$all_dependancy_are_met = false;
+						break;
+					}
+				}
+				if ($all_dependancy_are_met) {
+					$sorted_modules[] = $module;
+					unset($required_modules[$index]);
+				}
+			}
+		}
+		// Merge the sorted modules with the module_info array
+		$modules = array();
+		foreach ($sorted_modules as $module) {
+			$modules[$module] = $module_info[$module];
+		}
+		self::$cachedRequiredModules[$modulesPath] = $modules;
+		return $modules;
 	}
 
 	/**

@@ -11,7 +11,7 @@ class FlushTemporaryFiles extends Util {
 
 	function execute() {
 		$tmpFolder = $this->paths['project'].'tmp/';
-		$count = rmdirs($tmpFolder, array('.svn'));
+		$count = rmdir_contents($tmpFolder, array('.svn'));
 		return new MessageBox('ok.gif', 'Flushing tmp/ complete', 'Deleting files in "'.$tmpFolder.'"<br /><br /><b>'.$count.' files removed</b>');
 
 	}

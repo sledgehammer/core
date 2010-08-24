@@ -349,27 +349,57 @@ function mkdirs($path) {
 }
 
 /**
- * Alle bestanden en mappen in het $path verwijderen.
- * 
+ * De map, inclusief alle bestanden en submappen in het $path verwijderen.
+ *
+ * @throws Exception on failure
  * @return int Het aantal verwijderde bestanden
  */
-function rmdirs($path, $exclude = array()) {
+function rmdir_recursive($path) {
 	$counter = 0;
 	$dir = new DirectoryIterator($path);
 	foreach ($dir as $entry) {
-		if ($entry->isDot() || in_array($entry->getFilename(), $exclude)) {
+		if ($entry->isDot()) {
 			continue;
 		}
 		if ($entry->isDir()) { // is het een map?
-			$counter += rmdirs($entry->getPathname().'/');
-			rmdir($entry->getPathname());
+			$counter += rmdir_recursive($entry->getPathname().'/');
+			
 		} else {
-			unlink($entry->getPathname());
+			if (unlink($entry->getPathname()) == false) {
+				throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+			}
+			$counter++;
+		}
+	}
+	if (rmdir($path)) {
+		throw new Exception('Failed to delete directory "'.$path.'"');
+	}
+	return $counter;
+}
+
+/**
+ * @throws Exception on failure
+ * @return int Het aantal verwijderde bestanden
+ */
+function rmdir_contents($path) {
+	$counter = 0;
+	$dir = new DirectoryIterator($path);
+	foreach ($dir as $entry) {
+		if ($entry->isDot()) {
+			continue;
+		}
+		if ($entry->isDir()) { // is het een map?
+			$counter += rmdir_recursive($entry->getPathname());
+		} else {
+			if (unlink($entry->getPathname()) == false) {
+				throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+			}
 			$counter++;
 		}
 	}
 	return $counter;
 }
+
 
 /**
  * Een bestand verwijderen, met extra controle dat het bestand zich in de $basepath map bevind. 
@@ -379,7 +409,7 @@ function rmdirs($path, $exclude = array()) {
  * @param $basepath
  * @return void
  */
-function safe_unlink($filepath, $basepath) {
+function safe_unlink($filepath, $basepath, $recursive = false) {
 	if (in_array(substr($basepath, -1), array('/', '\\'))) { // Heeft de $basepath een trailing slash?
 		$basepath = substr($basepath, 0, -1);
 	}
@@ -393,13 +423,17 @@ function safe_unlink($filepath, $basepath) {
 	}
 	$filepath = $realpath.'/'.basename($filepath);  // Nette $filepath
 	if (substr($filepath, 0, strlen($basepath)) != $basepath) { // Hack poging?
-		throw new Exception('Ongeldige bestandsnaam');
+		throw new Exception('Ongeldige bestandsnaam "'.$filepath.'"');
 	}
 	if (!file_exists($filepath)) {
-		throw new Exception('Bestand niet gevonden');		
+		throw new Exception('File "'.$filepath.'" not found');
+	}
+	if ($recursive ) {
+		rmdir_recursive($filepath);
+		return;
 	}
 	if (unlink($filepath) == false) {
-		throw new Exception('Kon het bestand niet verwijderen. Controleer schrijfrechten');
+		throw new Exception('Failed to delete "'.$filepath.'"');
 	}
 }
 

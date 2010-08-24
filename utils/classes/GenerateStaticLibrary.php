@@ -13,7 +13,7 @@ class GenerateStaticLibrary extends Util {
 	}
 
 	function execute() {
-		$warningMessage = 'This will generate a <b>library.db.php</b> file which contains the file-location for al detected classes and interfaces.<br />';
+		$warningMessage = 'This will generate a <b>autoloader.db.php</b> file which contains the file-location for al detected classes and interfaces.<br />';
 		$warningMessage .= 'Changes in the classes folders will no longer be detected by the AutoLoader!<br />';
 		$warningMessage .= 'You\'ll need to rerun this script after those changes.';
 		$dialog = new DialogBox('warning.png', 'Optimize AutoLoader', $warningMessage, array('continue' => array('icon' => 'accept.png', 'label' => 'Continue')));

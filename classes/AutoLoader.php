@@ -20,10 +20,10 @@ class AutoLoader extends Object {
 
 		$defaultSettings = array(
 			'extract_definitions' => true, // Geef aan dat de bestanden en mappen doorzocht moeten worden om class of interface definities te achterhalen
-			'bof_check' => true, // Controleer op correct begin van de php bestanden
+			'bof_check' => false, // Controleer op correct begin van de php bestanden
 			'mandatory_superclass' => true, // Controleer of "alle" objecten een superclass hebben
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
-			'php_extension_check' => true, // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden
+			'php_extension_check' => 'auto', // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden. (Bij "auto" word er gekeken of het bestand in de "classes" map staat)
 			'php_extension_check_whitelist' => 'DS_Store,swp,bak,backup', // Geef foutmeldingen als er andere bestandtypes zijn dan "*.php" tenzij ze in dit veld vermeld staan
 			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
 			'revalidate_cache_delay' => 15, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
@@ -136,8 +136,11 @@ class AutoLoader extends Object {
 		$interfaces_total = 0;
 		foreach ($modules as $module_name => $module) {
 			$revalidate_cache_delay = false;
-			$class_folder = $module['path'].'classes'; // De map waar mogelijk classes en interfaces bestand in staan.
-			if (is_dir($class_folder)) {
+			$folder = $module['path']; // De map waar mogelijk classes en interfaces bestand in staan.
+			if (is_dir($folder.'classes')) {
+				$folder .= 'classes'; // De module heeft een aparte map voor classes, negeer de andere mappen
+			}
+			if (is_dir($folder)) {
 				if ($this->enableCache) {
 					if (strpos($module['path'], $this->path) === 0) { // Staat de module bij deze app
 						$cache_file = $this->cachePath.$module_name.'.php';
@@ -150,8 +153,8 @@ class AutoLoader extends Object {
 						if (file_exists($cache_file)) {
 							$mtime_cache_file = filemtime($cache_file);
 							// revalidate_cache_delay setting bepalen
-							if (file_exists($class_folder.'/autoloader.ini')) {
-								$autoloader_ini = parse_ini_file($class_folder.'/autoloader.ini', true);
+							if (file_exists($folder.'/autoloader.ini')) {
+								$autoloader_ini = parse_ini_file($folder.'/autoloader.ini', true);
 								$revalidate_cache_delay = isset($autoloader_ini['revalidate_cache_delay']) ? $autoloader_ini['revalidate_cache_delay'] : $this->defaultSettings['revalidate_cache_delay'];
 							} else {
 								$revalidate_cache_delay = $this->defaultSettings['revalidate_cache_delay'];
@@ -161,7 +164,7 @@ class AutoLoader extends Object {
 							if ($revalidate_cache_delay && $mtime_cache_file > ($now - $revalidate_cache_delay)) { // Is er een delay ingesteld en is deze nog niet verstreken?
 								$revalidate_cache = false; // De mappen nog niet controleren op wijzigingen
 							}
-							if ($revalidate_cache == false || $mtime_cache_file > mtime_folders($class_folder)) { // Is het cache bestand niet verouderd?
+							if ($revalidate_cache == false || $mtime_cache_file > mtime_folders($folder)) { // Is het cache bestand niet verouderd?
 								// Gebruik dan de cache
 								include($cache_file);
 								$this->classes = array_merge($this->classes, $classes);
@@ -187,7 +190,7 @@ class AutoLoader extends Object {
 						set_time_limit(120); // Tijdelijk de script timeout verhogen
 					}
 				}
-				$this->inspectFolder($module['path'].'classes');
+				$this->inspectFolder($folder);
 				// Append summary
 				$class_subtotal = count($this->classes);
 				$interfaces_subtotal = count($this->interfaces);
@@ -252,6 +255,9 @@ class AutoLoader extends Object {
 			}
 			if (substr($Entry->getFilename(), -4) != '.php') {
 				if ($Entry->getFilename() == 'autoloader.ini' || $settings['php_extension_check'] == false) {
+					continue;
+				}
+				if ($settings['php_extension_check'] == 'auto' && in_array('classes', explode(DIRECTORY_SEPARATOR, $Entry->getPathname())) == false) {
 					continue;
 				}
 				$extension = preg_replace('/.*\./', '', $Entry->getFilename());
