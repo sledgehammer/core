@@ -50,7 +50,7 @@ unset($argv[1]);
 require (dirname(__FILE__).'/generate_static_library.php');
 
 // Bestanden & mappen verwijderen die niet in productie nodig zijn.
-require (dirname(__FILE__).'/cleanup_svn_export.php');
+//require (dirname(__FILE__).'/cleanup_svn_export.php');
 
 // Populate de public map
 $populateSuccess = require (dirname(__FILE__).'/populate_DocumentRoot.php');
