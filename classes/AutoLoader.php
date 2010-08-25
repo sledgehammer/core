@@ -19,18 +19,29 @@ class AutoLoader extends Object {
 		$extractErrors = false, // bool Die aangeeft of er fouten zijn opgetreden bij het inlezen van definities. (Bij fouten wordt de uitkomst niet gecached)
 
 		$defaultSettings = array(
-			'extract_definitions' => true, // Geef aan dat de bestanden en mappen doorzocht moeten worden om class of interface definities te achterhalen
-			'bof_check' => false, // Controleer op correct begin van de php bestanden
-			'mandatory_superclass' => true, // Controleer of "alle" objecten een superclass hebben
+			'mandatory_superclass' => false, // Controleer of "alle" objecten een superclass hebben
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
-			'php_extension_check' => 'auto', // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden. (Bij "auto" word er gekeken of het bestand in de "classes" map staat)
+			'mandatory_comment_block' => false, // Controleer op correct begin van de php bestanden
 			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
-			'revalidate_cache_delay' => 15, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
+			'revalidate_cache_delay' => 20, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
+			'ignore_all' => false, // Bij false worden de bestanden en submappen doorzocht op class en interface definities
 			'ignore_folders' => '.git,.svn',
 			'ignore_files' => '.DS_Store,.gitignore',
-			'ignore_extentions' => 'swp,bak,backup', // Negeer bestanden met deze extensies
-		);
+			'ignore_extensions' => true, // Negeer extensies anders dan *.php. Gebruik csv voor specifieke extensies
+		),
 
+		// Als de module een "classes" map heeft, dan worden de strict settings gebruikt
+		$strictSettings = array(
+			'mandatory_superclass' => true,
+			'matching_filename' => true,
+			'mandatory_comment_block' => true,
+			'notify_on_multiple_definitions_per_file' => true,
+			'revalidate_cache_delay' => 10,
+			'ignore_all' => false,
+			'ignore_folders' => '',
+			'ignore_files' => '',
+			'ignore_extensions' => 'swp,bak,backup', // Negeer bestanden met deze extensies
+		);
 	/**
 	 * @param string $path  De basis map, vaak gelijk aan de PATH constante
 	 */
@@ -141,6 +152,9 @@ class AutoLoader extends Object {
 			$folder = $module['path']; // De map waar mogelijk classes en interfaces bestand in staan.
 			if (is_dir($folder.'classes')) {
 				$folder .= 'classes'; // De module heeft een aparte map voor classes, negeer de andere mappen
+				$settings = $this->strictSettings;
+			} else {
+				$settings = $this->defaultSettings;
 			}
 			if (is_dir($folder)) {
 				if ($this->enableCache) {
@@ -192,7 +206,7 @@ class AutoLoader extends Object {
 						set_time_limit(120); // Tijdelijk de script timeout verhogen
 					}
 				}
-				$this->inspectFolder($folder);
+				$this->inspectFolder($folder, $settings);
 				// Append summary
 				$class_subtotal = count($this->classes);
 				$interfaces_subtotal = count($this->interfaces);
@@ -246,7 +260,7 @@ class AutoLoader extends Object {
 				}
 			}
 			$settings = array_merge($settings, $autoloader_ini); // De settings aanpassen aan wat in de autoloader.ini staat
-			if (!$settings['extract_definitions']) {
+			if ($settings['ignore_all']) {
 				return;
 			}
 		}
@@ -259,14 +273,11 @@ class AutoLoader extends Object {
 				continue;
 			}
 			if (substr($Entry->getFilename(), -4) != '.php') {
-				if ($Entry->getFilename() == 'autoloader.ini' || $settings['php_extension_check'] == false) {
-					continue;
-				}
-				if ($settings['php_extension_check'] == 'auto' && in_array('classes', explode(DIRECTORY_SEPARATOR, $Entry->getPathname())) == false) {
+				if ($Entry->getFilename() == 'autoloader.ini' || $settings['ignore_extensions'] === true) {
 					continue;
 				}
 				$extension = preg_replace('/.*\./', '', $Entry->getFilename());
-				$extension_whilelist = explode(',', $settings['php_extension_check_whitelist']);
+				$extension_whilelist = explode(',', $settings['ignore_extensions']);
 				if (!in_array($extension, $extension_whilelist)) {
 					$this->parserNotice('Unexpected extension for "'.$Entry->getPathname().'", expecting ".php"');
 				}
@@ -468,7 +479,7 @@ class AutoLoader extends Object {
 		  if ($settings['eof_check'] && substr($source, -3, -1) != '?>' && substr($source, -2) != '?>') {
 		  $this->parserNotice('Invalid end of file: "'.$this->relativePath($filename).'", expecting "?>"');
 		  } */
-		if ($settings['bof_check'] && substr($source, 0, 12) != "<?php\n/**\n *" && substr($source, 0, 14) != "<?php\r\n/**\r\n *") {
+		if ($settings['mandatory_comment_block'] && substr($source, 0, 12) != "<?php\n/**\n *" && substr($source, 0, 14) != "<?php\r\n/**\r\n *") {
 			$this->parserNotice('Invalid start of file:  "'.$this->relativePath($filename).'"', array('Expecting' => "\"\n<?php\n/**\n *\""));
 		}
 		$tokens = token_get_all($source);

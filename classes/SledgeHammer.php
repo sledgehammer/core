@@ -115,13 +115,13 @@ class SledgeHammer {
 				}
 				$module_info[$module]['path'] = $module_path;
 			}
-			if (isset($module_info[$module]['required_modules']) == false) {
-				$module_info[$module]['required_modules'] = $module == 'core' ? array() : array('core');
-			} else {
+			if (isset($module_info[$module]['required_modules'])) {
 				$module_info[$module]['required_modules'] = explode(',', $module_info[$module]['required_modules']);
 				foreach ($module_info[$module]['required_modules'] as $index => $required_module) {
 					$module_info[$module]['required_modules'][$index] = trim($required_module);
 				}
+			} else {
+				$module_info[$module]['required_modules'] = ($module == 'core') ? array() : array('core');
 			}
 			if (isset($module_info[$module]['optional_modules'])) {
 				$module_info[$module]['optional_modules'] = explode(',', $module_info[$module]['optional_modules']);
