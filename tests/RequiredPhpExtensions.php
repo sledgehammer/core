@@ -3,7 +3,7 @@
  * Controleer of alle benodige php extenties geinstalleerd zijn
  */
 
-class RequiredPhpExtentions extends UnitTestCase {
+class RequiredPhpExtensions extends UnitTestCase {
 
 	private 
 		$classes_folders_only = true, // 

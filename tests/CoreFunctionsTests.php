@@ -3,7 +3,7 @@
  * Controleer diverse globale SledgeHammer functies
  */
 
-class FunctionsUnitTest extends UnitTestCase {
+class CoreFunctionsTests extends UnitTestCase {
 
 	function test_value_function() {
 		$bestaat = 'Wel';

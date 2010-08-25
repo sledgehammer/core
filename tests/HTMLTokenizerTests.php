@@ -3,7 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 
-class HTMLTokenizerUnit extends UnitTestCase {
+class HTMLTokenizerTests extends UnitTestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);

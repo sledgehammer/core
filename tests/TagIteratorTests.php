@@ -3,7 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 
-class TagIteratorUnit extends UnitTestCase {
+class TagIteratorTests extends UnitTestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);
