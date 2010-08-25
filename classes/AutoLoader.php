@@ -24,9 +24,11 @@ class AutoLoader extends Object {
 			'mandatory_superclass' => true, // Controleer of "alle" objecten een superclass hebben
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
 			'php_extension_check' => 'auto', // Bij true worden er foutmeldingen gegeven als er bestanden met andere extenties worden gevonden. (Bij "auto" word er gekeken of het bestand in de "classes" map staat)
-			'php_extension_check_whitelist' => 'DS_Store,swp,bak,backup', // Geef foutmeldingen als er andere bestandtypes zijn dan "*.php" tenzij ze in dit veld vermeld staan
 			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
 			'revalidate_cache_delay' => 15, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
+			'ignore_folders' => '.git,.svn',
+			'ignore_files' => '.DS_Store,.gitignore',
+			'ignore_extentions' => 'swp,bak,backup', // Negeer bestanden met deze extensies
 		);
 
 	/**
@@ -58,7 +60,7 @@ class AutoLoader extends Object {
 	}
 
 	/**
-	 * Een class declareren. 
+	 * Een class declareren.
 	 * Zal het bijbehorende bestand includen.
 	 *
 	 * @return bool
@@ -83,7 +85,7 @@ class AutoLoader extends Object {
 				}
 			}
 		}
-		if (!include($info['filename'])) { // Lukte het includen van het bestand?
+		if (!include_once($info['filename'])) { // Lukte het includen van het bestand?
 			throw new Exception('Failed to include "'.$info['filename'].'"');
 		}
 		if (!class_exists($class, false)) {
@@ -144,7 +146,7 @@ class AutoLoader extends Object {
 				if ($this->enableCache) {
 					if (strpos($module['path'], $this->path) === 0) { // Staat de module bij deze app
 						$cache_file = $this->cachePath.$module_name.'.php';
-					} else { // De modules staan in een ander path (modules die via een devutils ingeladen worden)					
+					} else { // De modules staan in een ander path (modules die via een devutils ingeladen worden)
 						$cache_file = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$module_name.'.php'; // md5(module_path)/module_naam(bv core).php
 					}
 					if (!mkdirs(dirname($cache_file))) {
@@ -226,6 +228,9 @@ class AutoLoader extends Object {
 	function inspectFolder($folder, $settings = NULL) {
 		if ($settings === NULL) {
 			$settings = $this->defaultSettings;
+		}
+		if (in_array(basename($folder), explode(',', $settings['ignore_folders']))) {
+			return;
 		}
 		if (file_exists($folder.'/library.ini')) {
 			deprecated('Rename "library.ini" to "autoloader.ini"');
@@ -454,6 +459,9 @@ class AutoLoader extends Object {
 	 * @return array Array containing definitions
 	 */
 	private function inspectFile($filename, $settings) {
+		if (in_array(basename($filename), explode(',', $settings['ignore_files']))) {
+			return array();
+		}
 		$source = file_get_contents($filename);
 		/*
 		 * @todo Instead of an eof check,  check if there is any output(non phpcode) in hthe script
