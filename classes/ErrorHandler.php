@@ -137,7 +137,7 @@ class ErrorHandler {
 		} else {
 			$message_color  = '#cc0000';
 		}
-		echo '<div style="'.implode(';', $style).'"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/images/ErrorHandler/'.strtolower($this->error_types[$type]).'.gif" alt="" align="left" /><span style="color:'.$message_color.'">'."\n";
+		echo '<div style="'.implode(';', $style).'"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/'.strtolower($this->error_types[$type]).'.gif" alt="" align="left" /><span style="color:'.$message_color.'">'."\n";
 		if ($information === NULL && strpos($message, 'Missing argument ') === 0) {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
 		}
