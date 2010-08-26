@@ -1,14 +1,14 @@
 <?php
 /**
- * Omschrijving : Verantwoordelijk voor het on-the-fly inladen en declareren van classes en interfaces.
- * Opmerkingen  : Verbeterd parsetijd/geheugenverbruik aanzienlijk, je include alleen de bestanden die je nodig hebt
+ * Verantwoordelijk voor het on-the-fly inladen en declareren van classes en interfaces.
+ * Dit verbeterd parsetijd/geheugenverbruik aanzienlijk, alleen de bestanden die je nodig hebt worden ge-include.
  *
  * @package Core
  */
 class AutoLoader extends Object {
 
 	public
-		$standalone = true, // Bij true zal declareClass() geen fouten geven al de class niet gevonden wordt.
+		$standalone = true, // Bij true zal declareClass() een fout genereren als de class niet bekend is.
 		$enableCache = true; // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 
 	private

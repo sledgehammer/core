@@ -165,8 +165,10 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
 	if ($extension === null) {
 		$mimetype = null;
 	} else {
-		$mimetypes = parse_ini_file(dirname(__FILE__).'/settings/mimetypes.ini');
-		$mimetype = value($mimetypes[strtolower($extension)]);
+		if (empty($GLOBALS['mimetypes.ini'])) {
+			$GLOBALS['mimetypes.ini'] = parse_ini_file(dirname(__FILE__).'/settings/mimetypes.ini');
+		}
+		$mimetype = value($GLOBALS['mimetypes.ini'][strtolower($extension)]);
 	}
 	if ($mimetype === NULL) {
 		if (!$allow_unknown_types) {
