@@ -869,8 +869,13 @@ function send_headers($headers) {
 			trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers,'", "').'"'.$location,  E_USER_NOTICE);
 		}
 	} else {
-		foreach($headers AS $header) {
-			header($header);
+		foreach($headers as $header => $value) {
+			if ($header == 'Status') { // and != fastcgi?
+				header($_SERVER['SERVER_PROTOCOL'].' '.$value);
+			} else {
+				header($header.': '.$value);
+			}
+
 		}
 	}
 }
@@ -904,14 +909,14 @@ function render_file($filename) {
 	if (is_dir($filename)) {
 		throw new Exception('Unable to render_file(). "'.$filename.'" is a folder');
 	}
-	$headers[] = 'Content-Type: '.mimetype($filename);
-	$headers[] = 'Last-Modified: '.gmdate('r', $last_modified);
+	$headers['Content-Type'] = mimetype($filename);
+	$headers['Last-Modified'] = gmdate('r', $last_modified);
 	$filesize = filesize($filename);
 	if ($filesize === false) {
 		throw new Exception('Filesize unknown');
 	}
 	if (empty($_SERVER['HTTP_RANGE'])) {
-		$headers[] = 'Content-Length: '.$filesize; // @todo Detecteer bestanden groter dan 2GiB, deze geven fouten.
+		$headers['Content-Length'] = $filesize; // @todo Detecteer bestanden groter dan 2GiB, deze geven fouten.
 		send_headers($headers);
 		// Output buffers uitschakelen, anders zal readfile heb bestand in het geheugen inladen. (en mogelijk de memory_limit overschrijden) 
 		while (ob_get_level() > 0) {

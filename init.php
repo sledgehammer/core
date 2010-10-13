@@ -20,6 +20,7 @@ require_once($corePath.'classes/SledgeHammer.php'); // Helper class voor modules
 require($corePath.'classes/ErrorHandler.php');
 require($corePath.'classes/AutoLoader.php');
 
+$GLOBALS['charset'] = 'UTF-8';
 // ErrorHandeler instellen (standaard configuratie is geen output, maar alleen error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
