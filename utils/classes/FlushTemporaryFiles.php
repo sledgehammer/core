@@ -9,7 +9,7 @@ class FlushTemporaryFiles extends Util {
 		parent::__construct('Flush temporary files');
 	}
 
-	function execute() {
+	function generateContent() {
 		$tmpFolder = $this->paths['project'].'tmp/';
 		$count = rmdir_contents($tmpFolder, true);
 		return new MessageBox('ok.gif', 'Flushing tmp/ complete', 'Deleting files in "'.$tmpFolder.'"<br /><br /><b>'.$count.' files removed</b>');
