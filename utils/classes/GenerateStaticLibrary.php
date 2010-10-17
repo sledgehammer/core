@@ -20,7 +20,7 @@ class GenerateStaticLibrary extends Util {
 		$answer = $dialog->import($error);
 		if ($answer == 'continue') {
 			if (!$this->isWritable()) {
-				return new MessageBox('error.png', 'Generating failed', 'Make sure the webuser is allowed to write "'.$this->paths['project'].'library.db.php"');
+				return new MessageBox('error', 'Generating failed', 'Make sure the webuser is allowed to write "'.$this->paths['project'].'library.db.php"');
 			}
 			$util = new UtilScript('generate_static_library.php', 'Generate Library db');
 			return $util->execute();
