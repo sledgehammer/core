@@ -28,7 +28,7 @@ abstract class DatabaseTestCase extends UnitTestCase {
 			return;
 		}
 		if ($this->dbLink == '__NOT_CONNECTED__') {
-			$db = new Database();
+			$db = new MySQLiDatabase();
 			$host = php_uname('n');
 			if ($host == 'linux.webcontent.nl') {
 				$connected = $db->connect('localhost', 'dev', 'dev');
