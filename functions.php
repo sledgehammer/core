@@ -977,4 +977,27 @@ function render_file($filename) {
 	return fclose($fp);
 }
 
+/**
+ * Mappen en bestandsnaam in de url corrigeren
+ * Geen " " maar "%20" enz
+ */
+function urlencode_path($path) {
+	$escaped_path = rawurlencode($path);
+	return str_replace('%2F', '/', $escaped_path); // De "/" weer terugzetten
+}
+
+/**
+ * Genereer aan de hand van de $identifier een (meestal) uniek id
+ *
+ * @param string $identifier
+ * @return int
+ */
+function sem_key($identifier) {
+	$md5 = md5($identifier);
+	$key = 0;
+	for ($i = 0; $i < 32; $i++) {
+		$key += ord($md5{$i}) * $i;
+	}
+	return $key;
+}
 ?>
