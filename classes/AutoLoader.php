@@ -39,7 +39,7 @@ class AutoLoader extends Object {
 			'revalidate_cache_delay' => 10,
 			'ignore_all' => false,
 			'ignore_folders' => '',
-			'ignore_files' => '',
+			'ignore_files' => '.DS_Store',
 			'ignore_extensions' => 'swp,bak,backup', // Negeer bestanden met deze extensies
 		);
 	/**
@@ -265,18 +265,25 @@ class AutoLoader extends Object {
 			}
 		}
 		$DirectoryIterator = new DirectoryIterator($folder);
+		$ignoreFiles = explode(',', $settings['ignore_files']);
+		$ignoreFiles[] =  'autoloader.ini';
 		foreach ($DirectoryIterator as $Entry) {
+			$filename = $Entry->getFilename();
 			if ($Entry->isDir()) {
-				if (substr($Entry->getFilename(), 0, 1) != '.') { // Mappen die beginnen met een punt negeren. ("..", ".svn", enz)
+				if (substr($filename, 0, 1) != '.') { // Mappen die beginnen met een punt negeren. ("..", ".svn", enz)
 					$this->inspectFolder($Entry->getPathname(), $settings);
 				}
 				continue;
 			}
-			if (substr($Entry->getFilename(), -4) != '.php') {
-				if ($Entry->getFilename() == 'autoloader.ini' || $settings['ignore_extensions'] === true) {
+
+			if (in_array($filename, $ignoreFiles)) {
+				continue;
+			}
+			if (substr($filename, -4) != '.php') {
+				if ($settings['ignore_extensions'] === true) {
 					continue;
 				}
-				$extension = preg_replace('/.*\./', '', $Entry->getFilename());
+				$extension = file_extension($filename);
 				$extension_whilelist = explode(',', $settings['ignore_extensions']);
 				if (!in_array($extension, $extension_whilelist)) {
 					$this->parserNotice('Unexpected extension for "'.$Entry->getPathname().'", expecting ".php"');
@@ -470,9 +477,6 @@ class AutoLoader extends Object {
 	 * @return array Array containing definitions
 	 */
 	private function inspectFile($filename, $settings) {
-		if (in_array(basename($filename), explode(',', $settings['ignore_files']))) {
-			return array();
-		}
 		$source = file_get_contents($filename);
 		/*
 		 * @todo Instead of an eof check,  check if there is any output(non phpcode) in hthe script
