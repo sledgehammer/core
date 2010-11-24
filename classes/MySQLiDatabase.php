@@ -84,7 +84,7 @@ class MySQLiDatabase extends MySQLi {
 			$this->report_warnings();
 		}
 		if (is_object($Result)) { // Gaat het om een mysqli_result object
-			return new SQLResultIterator($Result, $key, $value);
+			return new MySQLiResultIterator($Result, $key, $value);
 		} elseif ($Result) { // Is de Result true (INSERT, UPDATE of SET statements)
 			return $Result;
 		} else { // Fout in de query
