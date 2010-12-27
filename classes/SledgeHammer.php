@@ -275,6 +275,9 @@ class SledgeHammer {
 		if (!isset($settings['database'])) {
 			$settings['database'] = NULL;
 		}
+                if (!isset($settings['password'])) {
+			$settings['password'] = NULL;
+		}
 		return $GLOBALS['Databases'][$database_link]->connect($settings['host'], $settings['user'], $settings['password'], $settings['database']);
 	}
 

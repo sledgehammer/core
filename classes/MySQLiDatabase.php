@@ -26,7 +26,7 @@ class MySQLiDatabase extends MySQLi {
 	 *
 	 * @return bool
 	 */
-	function connect($host, $user, $password = NULL, $database = NULL, $port = NULL, $socket = NULL) {
+	function connect($host = null, $user = null, $password = NULL, $database = NULL, $port = NULL, $socket = NULL) {
 		$this->tableInfoCache = array();
 		$start_time = microtime(true);
 		$this->connected = false;
