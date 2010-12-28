@@ -572,7 +572,7 @@ function syntax_highlight($variabele, $datatype = NULL) {
  * Het database object van een link opvragen.
  * @param string $link De naam van de link die opgevraagd moet worden
  * @todo betere locatie vinden dan de functions.php
- * @return Database
+ * @return MySQLiDatabase
  */
 function getDatabase($link = 'default') {
 	if (isset($GLOBALS['Databases'][$link])) {

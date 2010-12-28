@@ -164,8 +164,25 @@ class SQL extends Object {
 
 	function orderBy($column, $direction = 'ASC') {
 		$this->order_by = array(
-				$column => $direction
-				);
+			$column => $direction
+		);
+		return $this;
+	}
+
+	/**
+	 * limit(20) => LIMIT 20
+	 * limit(20, 10) => LIMIT 20, 10
+	 *
+	 * @param int $offset De offet of limit
+	 * @param int $limit De limit of leeg
+	 */
+	function limit($offset, $limit = null) {
+		if ($limit === null) {
+			$this->limit = $offset;
+			return $this;
+		}
+		$this->offset = $offset;
+		$this->limit = $limit;
 		return $this;
 	}
 
