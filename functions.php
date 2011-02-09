@@ -869,13 +869,18 @@ function send_headers($headers) {
 			trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers,'", "').'"'.$location,  E_USER_NOTICE);
 		}
 	} else {
+		$notices = array();
 		foreach($headers as $header => $value) {
 			if ($header == 'Status') { // and != fastcgi?
 				header($_SERVER['SERVER_PROTOCOL'].' '.$value);
+			} elseif (is_numeric($header)) {
+				$notices[] = 'Invalid HTTP header: "'.$header.': '.$value.'"';
 			} else {
 				header($header.': '.$value);
 			}
-
+		}
+		foreach ($notices as $notice) {
+			notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
 		}
 	}
 }
