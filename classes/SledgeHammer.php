@@ -223,7 +223,7 @@ class SledgeHammer {
 		}
 		$settings = parse_ini_file($filename, true);
 		if (!$settings) { // Staat er een fout in het ini bestand, of is deze leeg?
-			notice('File: "'.$ini_file.'" is invalid');
+			notice('File: "'.$filename.'" is invalid');
 			return false;
 		}
 		$database_links = array();
@@ -238,7 +238,7 @@ class SledgeHammer {
 
 			$allowedEnvironments = array('development', 'staging', 'production');
 			if (!in_array($database_environment, $allowedEnvironments)) {
-				notice('Invalid environment: "'.$database_environment.'" for ['.$environment_and_link.'] in '.$ini_file, array('Allowed environments' => $allowedEnvironments));
+				notice('Invalid environment: "'.$database_environment.'" for ['.$environment_and_link.'] in '.$filename, array('Allowed environments' => $allowedEnvironments));
 				continue;
 			}
 			if ($database_environment == $environment) {
@@ -272,10 +272,13 @@ class SledgeHammer {
 				notice($ini_file.' ['.$database_link.'] '.$name.'="'.$value.'" is not supported', array('connection_parameters' => $connection_parameters, 'config_options' => $config_options));
 			}
 		}
+		if (!isset($settings['host'])) {
+			$settings['host'] = NULL;
+		}
 		if (!isset($settings['database'])) {
 			$settings['database'] = NULL;
 		}
-                if (!isset($settings['password'])) {
+		if (!isset($settings['password'])) {
 			$settings['password'] = NULL;
 		}
 		return $GLOBALS['Databases'][$database_link]->connect($settings['host'], $settings['user'], $settings['password'], $settings['database']);
