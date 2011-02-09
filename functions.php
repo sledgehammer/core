@@ -916,7 +916,7 @@ function render_file($filename) {
 		throw new Exception('Filesize unknown');
 	}
 	if (empty($_SERVER['HTTP_RANGE'])) {
-		$headers['Content-Length'] = $filesize; // @todo Detecteer bestanden groter dan 2GiB, deze geven fouten.
+		$headers['Content-Length'] = $filesize; // @todo Detectie inbouwen voor bestanden groter dan 2GiB, deze geven fouten.
 		send_headers($headers);
 		// Output buffers uitschakelen, anders zal readfile heb bestand in het geheugen inladen. (en mogelijk de memory_limit overschrijden) 
 		while (ob_get_level() > 0) {
