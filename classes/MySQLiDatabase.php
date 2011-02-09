@@ -415,7 +415,6 @@ class MySQLiDatabase extends MySQLi {
 	 * De keywords van een sql query dik(<b>) maken en de querytijd een kleur geven (rood voor trage queries, orange voor middelmatige en grijs voor snelle queries)
 	 */
 	private function highlight($sql, $truncated, $time, $backtrace) {
-		// TODO: this needs a little bit of fine-tuning
 		$sql = htmlspecialchars($sql);
 		$startKeywords = array('SELECT', 'UPDATE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW TABLES', 'START TRANSACTION', 'ROLLBACK');
 		$inlineKeywords = array('SELECT', 'VALUES', 'SET', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'ASC', 'DESC', 'LIMIT', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'AS', 'ON');

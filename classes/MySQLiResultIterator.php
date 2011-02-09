@@ -9,7 +9,7 @@
  *  }
  *  foreach($Iterator as $key => $value) {
  *  }
- * TODO: Ook de interfaces Seekable en mischien zelfs ArrayAcces implementeren.
+ * @todo: Ook de interfaces Seekable en mischien zelfs ArrayAcces implementeren.
  *
  * @package Core
  */
