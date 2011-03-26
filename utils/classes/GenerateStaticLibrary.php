@@ -1,7 +1,8 @@
 <?php
 /**
- * 
- * 
+ * Run the generate_static_library.php script from DevUtils.
+ *
+ * @package Core
  */
 class GenerateStaticLibrary extends Util {
 
@@ -23,7 +24,7 @@ class GenerateStaticLibrary extends Util {
 				return new MessageBox('error', 'Generating failed', 'Make sure the webuser is allowed to write "'.$this->paths['project'].'library.db.php"');
 			}
 			$util = new UtilScript('generate_static_library.php', 'Generate Library db');
-			return $util->execute();
+			return $util->generateContent();
 		}
 		return $dialog;
 	}
