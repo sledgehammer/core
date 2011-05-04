@@ -6,7 +6,7 @@
 class RequiredPhpExtensions extends UnitTestCase {
 
 	private 
-		$classes_folders_only = true, // 
+		$classes_folders_only = true, // switch off to scan all files in the PATH
 		$functions_per_extention,
 		$function_to_extention_map = array(), // assoc array waarvan de key de functie/class is en de value de extentie. 
 		$extention_to_files_map = array(); // assoc array met als key de extentie gevult met alle bestanden die deze extentie gebruiken.
@@ -41,7 +41,7 @@ class RequiredPhpExtensions extends UnitTestCase {
 				$this->append_required_extentions($module['path'].'classes/');
 			}
 		} else { // check all php files within $path
-			$this->append_required_extentions($path);
+			$this->append_required_extentions(PATH);
 		}
 
 		$extention_whitelist = include(dirname(__FILE__).'/data/required_php_extentions_whitelist.db.php');
