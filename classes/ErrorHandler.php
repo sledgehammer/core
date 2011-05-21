@@ -342,7 +342,7 @@ class ErrorHandler {
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
-				if (in_array($call['function'], array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated')) || ($call['function'] == 'connect' && in_array(@$call['class'], array('mysqli', 'Database')))) {
+				if (in_array($call['function'], array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated')) || ($call['function'] == 'connect' && in_array(@$call['class'], array('mysqli', 'MySQLiDatabase')))) {
 					echo '(...)';
 				} else {
 					echo '(';
