@@ -1,36 +1,85 @@
 <?php
 /**
- * Diverse statische functies die met een URL te maken hebben
+ * Description of URL
  *
- * @package Core
+ * @author bob
  */
-
-class URL extends Object{
+class URL extends Object {
 	
-	static $cached_extract_path; // De cache voor de extract_path() functie, Is in principe private, maar kan in unittests overschreven worden om een URL te testen
+	public
+		$scheme,
+		$host,
+		$port,
+		$path,
+		$query;
+	
+	public
+		$user,
+		$password,
+		$fragment;
+	
+	public
+		$folders,
+		$filename;
 
 	/**
-	 * Vraag de huidige URI op
-	 *
-	 * @return string
+	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
-	static function uri() {
-		if (!isset($_SERVER['REQUEST_URI'])) {
-			if (self::$cached_extract_path !== NULL) { // Wordt er een bestand gemocked (via een unittest)
-				$url = '/';
-				foreach($cached_extract_path['folders'] as $folder) {
-					$url .= $folder.'/';
-				}
-				$url .= self::$cached_extract_path['filename'];
-				return $url;
+	function __construct($url = null) {
+		unset($this->folders, $this->filename);
+		if ($url === null) {
+			$url = 'http';
+			if (array_value($_SERVER, 'HTTPS') == 'on') {
+				$url .= 's';
 			}
-			return '';
+			$url .= '://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
 		}
-		$scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
-		$server = $_SERVER['SERVER_NAME'];
-		$file   = $_SERVER['REQUEST_URI'];
+		$info = parse_url($url);
+		if ($info === false) {
+			throw new Exception('Invalid url parameter: "'.$url.'"');
+		}
+		set_object_vars($this, $info);
+	}
+	
+	function __toString() {
+		$url = '';
+		if ($this->scheme !== null && $this->host !== null) {
+			$url .= $this->scheme.'://'.$this->host;
+			if ($this->port) {
+				$url .= ':'.$this->port;
+			}
+		}
+		$url .= $this->path;
+		if ($this->query !== null) {
+			$url .= '?'.$this->query;
 
-		return $scheme.$server.$file;
+		}
+		return $url;
+	}
+	function __get($property) {
+		$path = rawurldecode($this->path); // "%20" omzetten naar " " e.d.
+				
+		switch ($property) {
+			
+			case 'filename':
+				if (substr($path, -1) == '/') { // Gaat het om een map?
+					return 'index.html';
+				}
+				return basename($path);
+
+			case 'folders':
+				if($path == '/') {
+					return array();
+				}
+				if (substr($path, -1) == '/') { // Gaat het om een map?
+					return explode('/', substr($path, 1, -1));
+				}
+				// Het gaat om een bestand (in een map)
+				return explode('/', substr(dirname($path), 1)); 
+				
+			default:
+				return parent::__get($property);
+		}
 	}
 
 	/**
@@ -40,35 +89,73 @@ class URL extends Object{
 	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 * @return mixed
 	 */
-	static function info($part = NULL, $url = NULL) {
-		$partsTable = array(
-			'scheme' => PHP_URL_SCHEME,
-			'host' => PHP_URL_HOST,
-			'port' => PHP_URL_PORT,
-			'user' => PHP_URL_USER,
-			'pass' => PHP_URL_PASS,
-			'path' => PHP_URL_PATH,
-			'query' => PHP_URL_QUERY,
-			'fragment' => PHP_URL_FRAGMENT
-		);
-
-		if ($url === NULL) {
-			$url = URL::uri();
+	static function info($part, $url = null) {
+		deprecated('Use the OOP "new URL()" syntax');
+		if ($part === null) {
+			error('No longer supported');
 		}
-		if ($part === NULL) {
-			return parse_url($url);
-		}
-		if ($part == 'file') {
-			return basename($url);
-		}
-		if (!array_key_exists($part, $partsTable)) {
-			notice('Unexpected part: "'.$part.'", expecting: "'.implode('", "', array_keys($partsTable)).'"');
+		$url = new URL($url);
+		return $url->$part;
+	}
+	
+	static function uri() {
+		deprecated('Use the OOP "new URL()" syntax');
+		$url = new URL();
+		return $url->__toString();
+	}
+	
+	static function extract_path() {
+		deprecated('Use the OOP "new URL()" syntax');
+		$url = new URL();
+		$folders = explode('/', $url->path);
+		
+		// Default waarden instellen.
+		$filename = 'index.html';
+		$folders = array();
+		$path = URL::info('path', $_SERVER['REQUEST_URI']);
+		if ($path === false) { // Kon de url niet geparsed worden? 
 			return false;
 		}
-		return parse_url($url, $partsTable[$part]);
+		$path = rawurldecode($path); // "%20" omzetten naar " " e.d.
+		if($path != '/') {
+			if (substr($path, -1) == '/') { // Gaat het om een map?
+				$folders = explode('/', substr($path, 1, -1)); 
+			} else { // Het gaat om een bestand (in een map)
+				$folders = explode('/', substr($path, 1)); 
+				$filename =  array_pop($folders);
+			}
+		}
+		return array(
+			'filename' => $filename,
+			'folders' => $folders
+		);
 	}
-
-	/**
+	
+		/**
+	 * Multi-functionele functie om parameters op te vragen en toe te voegen
+	 *
+	 * URL:parameters(); vraagt de huidige parameters op. ($_GET)
+	 * URL:parameters("naam['test']=1234"); of URL::parameters(array('naam'=>array('test'=>1234))); voegt deze parameter toe aan de huidige parameter array.
+	 * URL:parameter("bla=true", 'x=y'); voegt 2 parameter 'arrays' samen
+	 *
+	 * @param array $append De parameter die toegevoegd moet worden
+	 * @param mixed $stack: De url of array waarde parameters waaraan toegevoegd moet worden, bij NULL worden de huidige $_GET parameters gebruikt
+	 * @return array
+	 */
+	static function parameters($append = array(), $stack = NULL) {
+		deprecated('Maar nog geen alternatief beschikbaar');
+		if ($stack === NULL) { // Huidige parameters opvragen
+			$stack = $_GET;
+		} elseif (is_string($stack)) { // Is er geen array, maar een query string meegegeven?
+			parse_str($stack, $stack);
+		}
+		if (is_string($append)) {
+			parse_str($append, $append);
+		}
+		return array_merge(array_diff_key($stack, $append), $append); // De array kan gebruikt worden in een http_build_query()
+	}
+	
+		/**
 	 * Een sub-domein opvragen van een domein
 	 * 
 	 * @param int $index Bepaald welke subdomein van de subdomeinen er wordt opgevraagd. 0 = eerste subdomein van links, -1 =  eerste subdomein van rechts
@@ -76,6 +163,8 @@ class URL extends Object{
 	 * @return string
 	 */
 	static function subdomain($index = -1, $uri = NULL) {
+		deprecated('Maar nog geen alternatief beschikbaar');
+
 		if ($uri === NULL) {
 			$uri = URL::info('host');
 		}
@@ -94,6 +183,8 @@ class URL extends Object{
 	 * 
 	 */
 	static function domain() {
+		deprecated('Maar nog geen alternatief beschikbaar');
+
 		$hostname = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : php_uname('n');
 		$regexDomain = '/[a-z0-9]+([a-z]{2}){0,1}.[a-z]{2,4}$/i';
 		if (preg_match($regexDomain, $hostname, $match)) { // Zit er een domeinnaam in de hostname? 
@@ -102,67 +193,6 @@ class URL extends Object{
 		return 'example.com'; 	
 	}
 
-	/**
-	 * Multi-functionele functie om parameters op te vragen en toe te voegen
-	 *
-	 * URL:parameters(); vraagt de huidige parameters op. ($_GET)
-	 * URL:parameters("naam['test']=1234"); of URL::parameters(array('naam'=>array('test'=>1234))); voegt deze parameter toe aan de huidige parameter array.
-	 * URL:parameter("bla=true", 'x=y'); voegt 2 parameter 'arrays' samen
-	 *
-	 * @param array $append De parameter die toegevoegd moet worden
-	 * @param mixed $stack: De url of array waarde parameters waaraan toegevoegd moet worden, bij NULL worden de huidige $_GET parameters gebruikt
-	 * @return array
-	 */
-	static function parameters($append = array(), $stack = NULL) {
-		if ($stack === NULL) { // Huidige parameters opvragen
-			$stack = $_GET;
-		} elseif (is_string($stack)) { // Is er geen array, maar een query string meegegeven?
-			parse_str($stack, $stack);
-		}
-		if (is_string($append)) {
-			parse_str($append, $append);
-		}
-		return array_merge(array_diff_key($stack, $append), $append); // De array kan gebruikt worden in een http_build_query()
-	}
-	
-	/**
-	 * Bestandnaam en mappen (in array vorm) opvragen uit de url
-	 *
-	 * @return array
-	 */
-	static function extract_path() {
-		if (self::$cached_extract_path !== NULL) { // Zijn de variabelen al eerder opgevraagd?
-			if (!is_array(self::$cached_extract_path['folders']) || !is_string(self::$cached_extract_path['filename'])) {
-				throw new Exception('Invalid format for URL::$cached_extract_path; format: array(\'folders\' => (array) $folders, \'filename\' => (string) $filename)');
-			}
-			return self::$cached_extract_path;
-		}
-		if (isset($_SERVER['REQUEST_URI']) == false) { // Is geen REQUEST_URI? 
-			warning('$_SERVER[REQUEST_URI] not set');
-			return false;
-		}
-		// Default waarden instellen.
-		$filename = 'index.html';
-		$folders = array();
-		$path = URL::info('path', $_SERVER['REQUEST_URI']);
-		if ($path === false) { // Kon de url niet geparsed worden? 
-			return false;
-		}
-		$path = rawurldecode($path); // "%20" omzetten naar " " e.d.
-		if($path != '/') {
-			if (substr($path, -1) == '/') { // Gaat het om een map?
-				$folders = explode('/', substr($path, 1, -1)); 
-			} else { // Het gaat om een bestand (in een map)
-				$folders = explode('/', substr($path, 1)); 
-				$filename =  array_pop($folders);
-			}
-		}
-		// De zojuist opgevraagde waarden cachen. Zodat de voldende aanroepen VirtualFolder->extract_path() versnelt worden.
-		self::$cached_extract_path = array(
-			'filename' => $filename,
-			'folders' => $folders
-		);
-		return self::$cached_extract_path;
-	}
 }
+
 ?>
