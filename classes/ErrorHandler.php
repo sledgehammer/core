@@ -138,6 +138,9 @@ class ErrorHandler {
 			$message_color  = '#cc0000';
 		}
 		echo '<div style="'.implode(';', $style).'"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/'.strtolower($this->error_types[$type]).'.gif" alt="" align="left" /><span style="color:'.$message_color.'">'."\n";
+		if (is_array($message)) {
+			$message = 'Array';
+		}
 		if ($information === NULL && strpos($message, 'Missing argument ') === 0) {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
 		}
@@ -193,7 +196,11 @@ class ErrorHandler {
 	 */
 	private function process($type, $message, $information = NULL) {
 		if ($this->isProcessing) {
-			echo '<font color="red">ErrorHandler failure</font>';
+			echo '<span style="color:red">ErrorHandler failure';
+			if ($this->html && is_string($message)) { // show error?
+				echo ' ', htmlentities($message);
+			}
+			echo ' </span>';
 			error_log('ErrorHandler failure: '.$message);
 			return;
 		}
@@ -254,10 +261,9 @@ class ErrorHandler {
 		for($i = 0; $i < count($location); $i++) {
 			if (isset($location[$i]['file']) && $location[$i]['file'] !== __FILE__) {
 				if ($location[$i]['function'] == 'handle') {
-					$filename = $location[$i + 1]['file'];
-				} else {
-					$filename = $location[$i]['file'];
+					continue;
 				}
+				$filename = $location[$i]['file'];
 				break;
 			}
 		}
@@ -273,7 +279,7 @@ class ErrorHandler {
 		for ($i = 0; $i < count($location); $i++) {
 			if (isset($location[$i]['file']) && $location[$i]['file'] !== __FILE__) {
 				if ($location[$i]['function'] == 'handle') {
-					return $location[$i + 1]['line'];
+					continue;
 				}
 				return $location[$i]['line'];
 			}
@@ -342,7 +348,8 @@ class ErrorHandler {
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
-				if (in_array($call['function'], array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated')) || ($call['function'] == 'connect' && in_array(@$call['class'], array('mysqli', 'MySQLiDatabase')))) {
+				$errorHandlerInvocations = array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
+				if (in_array($call['function'], $errorHandlerInvocations) || ($call['function'] == 'connect' && in_array(@$call['class'], array('mysqli', 'MySQLiDatabase'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations)))  {
 					echo '(...)';
 				} else {
 					echo '(';
