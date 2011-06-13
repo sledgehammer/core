@@ -1,82 +1,118 @@
 <?php
 /**
- * Description of URL
+ * URL class for generating and manipulating urls.
  *
- * @author bob
+ * @package Core
  */
 class URL extends Object {
 	
-	public
-		$scheme,
-		$host,
-		$port,
-		$path,
-		$query;
+	/**
+	 * @var string The protocol schema
+	 */
+	public $scheme;
+	/**
+	 * @var string The hostname/ip
+	 */
+	public $host;
+	/**
+	 * @var int Portnumber
+	 */
+	public $port;
+	/**
+	 * @var string The (unescaped) path
+	 */
+	public $path;
+	/**
+	 * @var array The parameters in the querystring
+	 */
+	public $query = array();
 	
 	public
 		$user,
-		$password,
+		$pass,
 		$fragment;
 	
-	public
-		$folders,
-		$filename;
-
 	/**
 	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
 	function __construct($url) {
-		unset($this->folders, $this->filename);
 		$info = parse_url($url);
 		if ($info === false) {
-			throw new Exception('Invalid url parameter: "'.$url.'"');
+			throw new Exception('Invalid url: "'.$url.'"');
+		}
+		if (isset($info['query'])) {
+			 parse_str($info['query'], $info['query']); // Zet de query om naar een array
+		}
+		if (isset($info['path'])) {
+			$info['path'] = rawurldecode($info['path']); // "%20" omzetten naar " " e.d.
 		}
 		set_object_vars($this, $info);
 	}
 	
+	/**
+	 * Generate the url as a string.
+	 * 
+	 * @return string 
+	 */
 	function __toString() {
 		$url = '';
 		if ($this->scheme !== null && $this->host !== null) {
-			$url .= $this->scheme.'://'.$this->host;
+			$url .= $this->scheme.'://';
+			if (empty($this->user) == false) {
+				$url .= $this->user;
+				if (empty($this->pass) == false) {
+					$url .= ':'.$this->pass;
+				}
+				$url .= '@';
+			}			
+			$url .= $this->host;
 			if ($this->port) {
 				$url .= ':'.$this->port;
 			}
 		}
-		$url .= $this->path;
-		if ($this->query !== null) {
+		if ($this->path !== null) {
+			$url .= str_replace('%2F', '/', rawurlencode($this->path));
+		}
+		if (is_string($this->query)) {
 			$url .= '?'.$this->query;
-
+		} elseif (count($this->query) != 0) {
+			$url .= '?'.http_build_query($this->query);
+		}
+		if ($this->fragment !== null) {
+			$url .= '#'.$this->fragment;
 		}
 		return $url;
 	}
-	function __get($property) {
-		$path = rawurldecode($this->path); // "%20" omzetten naar " " e.d.
-				
-		switch ($property) {
-			
-			case 'filename':
-				if (substr($path, -1) == '/') { // Gaat het om een map?
-					return 'index.html';
-				}
-				return basename($path);
-
-			case 'folders':
-				if($path == '/') {
-					return array();
-				}
-				if (substr($path, -1) == '/') { // Gaat het om een map?
-					return explode('/', substr($path, 1, -1));
-				}
-				// Het gaat om een bestand (in een map)
-				return explode('/', substr(dirname($path), 1)); 
-				
-			default:
-				return parent::__get($property);
+	
+	/**
+	 * Get foldes in a array (based on the path)
+	 * @return array
+	 */
+	function getFolders() {
+		$parts = explode('/', $this->path);
+		array_pop($parts); // remove filename part
+		$folders = array();
+		foreach ($parts as $folder) {
+			if ($folder !== '') { // dont add the root and skip "//" 
+				$folders[] = $folder;
+			}
 		}
+		return $folders;
 	}
 	
 	/**
-	 * Gets the current url
+	 * Get de filename (or "index.html" if no filename is given.)
+	 * @return string
+	 */
+	function getFilename() {
+		if ($this->path === null || substr($this->path, -1) == '/') { // Gaat het om een map?
+			return 'index.html';
+		}
+		return basename($this->path);
+	}
+	
+	/**
+	 * Gets the current url based on the information in $_SERVER
 	 * @return URL
 	 */
 	static function getCurrentURL() {
@@ -84,7 +120,8 @@ class URL extends Object {
 		if (array_value($_SERVER, 'HTTPS') == 'on') {
 			$url .= 's';
 		}
-		$url .= '://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+		$url .= '://';
+		$url .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
 		return new URL($url);
 	}
 
@@ -122,7 +159,7 @@ class URL extends Object {
 		if ($path === false) { // Kon de url niet geparsed worden? 
 			return false;
 		}
-		$path = rawurldecode($path); // "%20" omzetten naar " " e.d.
+		$path = rawurldecode($path); 
 		if($path != '/') {
 			if (substr($path, -1) == '/') { // Gaat het om een map?
 				$folders = explode('/', substr($path, 1, -1)); 
