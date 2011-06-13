@@ -8,6 +8,7 @@
  * @package Core
  */
 
+require_once(dirname(__FILE__).'/init_framework.php'); // voor render_file() en redirect()
 if (!defined('MICROTIME_START')) {
 	define('MICROTIME_START', microtime(true));
 }
@@ -18,7 +19,6 @@ if ($webpath != '/') {
 }
 $uriPath = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)); // Het path gedeelte van de uri
 $relativeWebpath = substr($uriPath, strlen($webpath)); // Bestandsnaam is het gedeelte van de uriPath zonder de WEBPATH
-
 $modulePath = dirname(dirname(__FILE__));
 $files = array(
 	dirname($modulePath).'/application/public/'.$relativeWebpath,
@@ -43,7 +43,7 @@ if ($relativeWebpath == '' || substr($relativeWebpath, -1) == '/') { // Gaat de 
 	$files = $indexFiles;
 }
 foreach($files as $filename) {
-	if (file_exists($filename)) {
+	if (is_readable($filename)) {
 		if (substr($filename, -4) == '.php') { // Is het een php bestand?
 			if ($_SERVER['SCRIPT_FILENAME'] == $filename) { // Is het het php-bestand waar de mod_rewrite heen gaat?
 					break; // Deze niet includen, dit php-bestand is al actief en include juist dit bestand. (infinite loop)

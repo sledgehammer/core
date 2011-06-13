@@ -25,15 +25,8 @@ class URL extends Object {
 	/**
 	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
-	function __construct($url = null) {
+	function __construct($url) {
 		unset($this->folders, $this->filename);
-		if ($url === null) {
-			$url = 'http';
-			if (array_value($_SERVER, 'HTTPS') == 'on') {
-				$url .= 's';
-			}
-			$url .= '://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-		}
 		$info = parse_url($url);
 		if ($info === false) {
 			throw new Exception('Invalid url parameter: "'.$url.'"');
@@ -80,6 +73,19 @@ class URL extends Object {
 			default:
 				return parent::__get($property);
 		}
+	}
+	
+	/**
+	 * Gets the current url
+	 * @return URL
+	 */
+	static function getCurrentURL() {
+		$url = 'http';
+		if (array_value($_SERVER, 'HTTPS') == 'on') {
+			$url .= 's';
+		}
+		$url .= '://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+		return new URL($url);
 	}
 
 	/**
