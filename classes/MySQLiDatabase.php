@@ -237,7 +237,7 @@ class MySQLiDatabase extends MySQLi {
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
 				echo '<div id="'.$id.'" class="dbdebug" style="display:none;text-align:left;">';
-				echo '<img src="http://nebygemini.nl/core/images/debug_close.gif" alt="<close>" onclick="document.getElementById(\''.$id.'\').style.display=\'none\';" />';
+				echo '<img src="http://bfanger.nl/core/images/debug_close.gif" alt="<close>" onclick="document.getElementById(\''.$id.'\').style.display=\'none\';" />';
 			}
 			for($i = 0; $i < $query_log_count; $i++) {
 				$log = $this->query_log[$i];
