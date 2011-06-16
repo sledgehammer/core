@@ -149,32 +149,14 @@ class URL extends Object {
 	
 	static function extract_path() {
 		deprecated('Use the OOP "new URL()" syntax');
-		$url = new URL();
-		$folders = explode('/', $url->path);
-		
-		// Default waarden instellen.
-		$filename = 'index.html';
-		$folders = array();
-		$path = URL::info('path', $_SERVER['REQUEST_URI']);
-		if ($path === false) { // Kon de url niet geparsed worden? 
-			return false;
-		}
-		$path = rawurldecode($path); 
-		if($path != '/') {
-			if (substr($path, -1) == '/') { // Gaat het om een map?
-				$folders = explode('/', substr($path, 1, -1)); 
-			} else { // Het gaat om een bestand (in een map)
-				$folders = explode('/', substr($path, 1)); 
-				$filename =  array_pop($folders);
-			}
-		}
+		$url = URL::getCurrentURL();
 		return array(
-			'filename' => $filename,
-			'folders' => $folders
+			'filename' => $url->getFilename(),
+			'folders'  => $url->getFolders(),
 		);
 	}
 	
-		/**
+	/**
 	 * Multi-functionele functie om parameters op te vragen en toe te voegen
 	 *
 	 * URL:parameters(); vraagt de huidige parameters op. ($_GET)
@@ -222,9 +204,6 @@ class URL extends Object {
 		return ($subdomain === NULL) ? '' : $subdomain;
 	}
 	
-	/**
-	 * 
-	 */
 	static function domain() {
 		deprecated('Maar nog geen alternatief beschikbaar');
 
@@ -235,7 +214,5 @@ class URL extends Object {
 		}
 		return 'example.com'; 	
 	}
-
 }
-
 ?>
