@@ -18,7 +18,7 @@ abstract class Object {
 	 * @return void
 	 */
 	function __get($property) {		
-		$rObject = new ReflectionObject($this);
+		$rObject = new \ReflectionObject($this);
 		$properties = array();
 		foreach ($rObject->getProperties() as $rProperty) {
 			if ($rProperty->isPublic()) {
@@ -59,7 +59,7 @@ abstract class Object {
 	 * @return void
 	 */
 	function __call($method, $arguments) {
-		$rObject = new ReflectionObject($this);
+		$rObject = new \ReflectionObject($this);
 		$methods = array();
 		foreach ($rObject->getMethods() as $rMethod) {
 			if (in_array($rMethod->name, array('__get', '__set', '__call', '__toString'))) {
