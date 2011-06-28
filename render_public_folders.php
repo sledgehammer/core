@@ -7,7 +7,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 require_once(dirname(__FILE__).'/init_framework.php'); // voor render_file() en redirect()
 if (!defined('MICROTIME_START')) {
 	define('MICROTIME_START', microtime(true));

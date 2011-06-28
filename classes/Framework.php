@@ -7,8 +7,8 @@
  * @todo Beter locatie vinden voor de database functies
  * @package Core
  */
-
-class SledgeHammer {
+namespace SledgeHammer;
+class Framework {
 
 	private static $cachedRequiredModules = array();
 
@@ -18,7 +18,7 @@ class SledgeHammer {
 	 */
 	static function getModules($modulesPath = NULL) {
 		if ($modulesPath === NULL) {
-			$modulesPath = SledgeHammer::getPath();
+			$modulesPath = self::getPath();
 		}
 		$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
 		if (isset(self::$cachedRequiredModules[$modulesPath])) {
@@ -35,7 +35,7 @@ class SledgeHammer {
 			)
 		);
 		// Fetch all required_modules
-		SledgeHammer::appendModules($modulesPath, $required_modules, $module_info, 'application', 'detectModules()');
+		self::appendModules($modulesPath, $required_modules, $module_info, 'application', 'detectModules()');
 		if (!file_exists($applicationPath)) {
 			unset($required_modules[array_search('application', $required_modules)]); // De application is zelf niet required
 		}
@@ -133,11 +133,11 @@ class SledgeHammer {
 			}
 		}
 		foreach ($module_info[$module]['required_modules'] as $required_dependancy) {
-			SledgeHammer::appendModules($modulesPath, $required_modules, $module_info, $required_dependancy, $module);
+			self::appendModules($modulesPath, $required_modules, $module_info, $required_dependancy, $module);
 		}
 		foreach ($module_info[$module]['optional_modules'] as $recommended_dependancy) {
 			if (file_exists($modulesPath.$recommended_dependancy.'/module.ini')) {
-				SledgeHammer::appendModules($modulesPath, $required_modules, $module_info, $recommended_dependancy, $module);
+				self::appendModules($modulesPath, $required_modules, $module_info, $recommended_dependancy, $module);
 			}
 		}
 	}
@@ -292,7 +292,7 @@ class SledgeHammer {
 	 */	
 	private static function detectModules($modulesPath) {
 		$modules = array();
-		$Directory = new DirectoryIterator($modulesPath);
+		$Directory = new \DirectoryIterator($modulesPath);
 		foreach ($Directory as $entry) {
 			if ($entry->isDir() && substr($entry->getFilename(), 0, 1) != '.') { // Is het een niet verborgen map
 					$modules[] = $entry->getFilename();

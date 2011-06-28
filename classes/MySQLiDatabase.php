@@ -4,7 +4,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 class MySQLiDatabase extends MySQLi {
 
 	public

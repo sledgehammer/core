@@ -7,7 +7,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 class CSVIterator extends Object implements Iterator {
 
 	private

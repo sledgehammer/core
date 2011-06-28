@@ -2,7 +2,7 @@
 /**
  * Script om het deployen naar een acceptation/production omgeving te vereenvoudingen
  */
-
+namespace SledgeHammer;
 if ($argc < 2) {
 	echo "Usage: php core/utils/".basename(__FILE__)." [environment]\n\n  environment: \"development\", \"production\", etc\n";
 	exit(1);

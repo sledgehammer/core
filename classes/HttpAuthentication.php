@@ -17,7 +17,7 @@
  * 
  * @package Core
  */
-
+namespace SledgeHammer;
 class HttpAuthentication extends Object {
 
 	private

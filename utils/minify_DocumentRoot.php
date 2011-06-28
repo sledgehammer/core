@@ -2,6 +2,7 @@
 /**
  * De *.css en *.js in de echte public/ map (apache's documentroot) vullen met de bestanden uit de diverse public/ mappen
  */
+namespace SledgeHammer;
 
 echo "\nMinify DocumentRoot\n";
 ini_set('memory_limit', '256M');

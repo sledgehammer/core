@@ -4,6 +4,8 @@
  *
  * @package Core
  */
+namespace SledgeHammer;
+
 class GenerateStaticLibrary extends Util {
 
 	function __construct() {

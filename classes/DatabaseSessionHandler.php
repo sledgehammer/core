@@ -5,7 +5,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 class DatabaseSessionHandler extends Object{
 
 	/**

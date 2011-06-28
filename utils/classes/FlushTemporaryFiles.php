@@ -3,6 +3,8 @@
  * 
  * 
  */
+namespace SledgeHammer;
+
 class FlushTemporaryFiles extends Util {
 
 	function __construct() {

@@ -6,7 +6,7 @@
  * (Is compatible met Component interface uit Webcore)
  * @package Core
  */
-
+namespace SledgeHammer;
 class Dump extends Object {
 
 	private
@@ -19,7 +19,7 @@ class Dump extends Object {
 		$file = $trace[0]['file'];
 		$line = $trace[0]['line'];
 		$file_short = str_replace(PATH, '', $file);
-		$this->trace = 'new Dump(<strong>'.Dump::get_variable_name($file, $line).'</strong>) in <strong>'.$file_short.'</strong> on line <strong>'.$line.'</strong>';
+		$this->trace = 'new '.__CLASS__.'(<strong>'.self::get_variable_name($file, $line).'</strong>) in <strong>'.$file_short.'</strong> on line <strong>'.$line.'</strong>';
 	}
 
 	function render() {
@@ -58,7 +58,7 @@ class Dump extends Object {
 		if ($trace) {
 			echo $trace;
 		} else {
-			Dump::trace();
+			self::trace();
 		}
 		echo "</div>\n";
 		echo "\n<pre style=\"".implode(';', $dump_style) ."\">\n";
@@ -67,7 +67,7 @@ class Dump extends Object {
 		ob_start();
 		var_dump($variable);
 		$data = rtrim(ob_get_clean());
-		Dump::render_vardump($data);
+		self::render_vardump($data);
 		echo "\n</pre>\n";
 		ini_set('html_errors', $old_value);
 	}
@@ -167,7 +167,7 @@ class Dump extends Object {
 					echo ' => ';
 
 					$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
-					$lengte_elemement = Dump::render_vardump($gegevens, $spaties);
+					$lengte_elemement = self::render_vardump($gegevens, $spaties);
 					$gegevens = substr($gegevens, $lengte_elemement + 1);
 					$positie += $lengte_elemement + strlen($index) + ($spaties * 2) + 6;
 
@@ -211,7 +211,7 @@ class Dump extends Object {
 					self::render_attribute($attribuut);
 					echo ' -> ';
 					$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
-					$lengte_elemement = Dump::render_vardump($gegevens, $spaties);
+					$lengte_elemement = self::render_vardump($gegevens, $spaties);
 					$gegevens = substr($gegevens, $lengte_elemement + 1);
 					echo ",\n";
 					$positie += $lengte_elemement + strlen($attribuut) + ($spaties * 2) + 6;
@@ -242,7 +242,7 @@ class Dump extends Object {
 					$file = $trace[$i]['file'];
 					$line = $trace[$i]['line'];
 					$file_short = str_replace(PATH, '', $file);
-					echo 'dump(<strong>'.Dump::get_variable_name($file, $line).'</strong>) in <strong>/'.str_replace('\\','/',$file_short).'</strong> on line <strong>'.$trace[$i]['line'].'</strong>.';
+					echo 'dump(<strong>', htmlentities(self::get_variable_name($file, $line)), '</strong>) in <strong>/', str_replace('\\', '/', $file_short), '</strong> on line <strong>', $trace[$i]['line'], '</strong>.';
 					return;
 				}
 			}

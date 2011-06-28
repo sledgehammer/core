@@ -3,6 +3,8 @@
  * Vergelijkt 2 environments, en geeft aan constantes/database settings verschillen/ontbreken.
  * 
  */
+namespace SledgeHammer;
+
 class CompareEnvironments extends Util {
 
 	function __construct() {

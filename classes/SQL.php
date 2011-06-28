@@ -5,6 +5,7 @@
  *
  * @package Core
  */
+namespace SledgeHammer;
 class SQL extends Object {
 
 	private

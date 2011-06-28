@@ -4,6 +4,7 @@
  *
  * @package Core
  */
+namespace SledgeHammer;
 if (!defined('MICROTIME_START')) {
 	define('MICROTIME_START', microtime(true));
 }
@@ -14,9 +15,10 @@ if (ini_get('date.timezone') == '') { // Is er geen tijdzone ingesteld?
 	date_default_timezone_set('Europe/Amsterdam'); // Voorkom foutmeldingen door de tijdzone in te stellen
 }
 $corePath = dirname(__FILE__).'/';
-require_once($corePath.'functions.php'); // De globale functies
+require_once($corePath.'functions.php'); // De functies voor in de SledgeHammer namespace
+require_once($corePath.'global_functions.php'); // De functies voor in de global namespace
 require_once($corePath.'classes/Object.php'); // De generieke superclass
-require_once($corePath.'classes/SledgeHammer.php'); // Helper class voor modules e.d. 
+require_once($corePath.'classes/Framework.php'); // Helper class voor modules e.d. 
 require($corePath.'classes/ErrorHandler.php');
 require($corePath.'classes/AutoLoader.php');
 

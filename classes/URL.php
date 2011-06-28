@@ -4,6 +4,7 @@
  *
  * @package Core
  */
+namespace SledgeHammer;
 class URL extends Object {
 	
 	/**

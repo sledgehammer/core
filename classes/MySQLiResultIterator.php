@@ -13,7 +13,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 class MySQLiResultIterator extends Object implements Iterator, Countable{
 
 	public

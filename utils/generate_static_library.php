@@ -2,6 +2,7 @@
 /**
  * Rebuild the Library database-file based on the installed modules
  */
+namespace SledgeHammer;
 $library_db_folder = realpath(dirname(__FILE__).'/../../../');
 if ($library_db_folder == '') {
 	trigger_error('Invalid directory structure, expection "$folder/modules/core/"', E_USER_ERROR);

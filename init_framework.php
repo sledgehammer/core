@@ -2,7 +2,7 @@
 /**
  * Initialiseer de database(s) en alle sledgehammer-modules (constants, functions en init)
  */
-
+namespace SledgeHammer;
 if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
 	define('SLEDGEHAMMER_FRAMEWORK', true);
 
@@ -64,10 +64,10 @@ if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
 		$GLOBALS['database_failure'] = !$success;
 	}
 	// Per module de constants.ini, functions.php en init.php inladen en defineren
-	$modules = SledgeHammer::getModules();
+	$modules = Framework::getModules();
 	unset($modules['core']);
 	foreach($modules as $module) {
-		SledgeHammer::initModule($module['path']);
+		Framework::initModule($module['path']);
 	}
 	unset($configFile, $config, $email, $success, $modules, $module, $showDebugInfo); 
 

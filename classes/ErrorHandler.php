@@ -5,7 +5,7 @@
  *
  * @package Core
  */
-
+namespace SledgeHammer;
 class ErrorHandler {
 
 	public 
@@ -63,8 +63,8 @@ class ErrorHandler {
         }
 			}
 		}
-		register_shutdown_function('ErrorHandler_shutdown_callback');
-		set_error_handler('ErrorHandler_trigger_error_callback');
+		register_shutdown_function('SledgeHammer\ErrorHandler_shutdown_callback');
+		set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
 	}
 
 	/**
@@ -77,8 +77,8 @@ class ErrorHandler {
 			return;
 		}
 		if ($check_for_alternate_error_handler) {
-			$callback = set_error_handler('ErrorHandler_trigger_error_callback');
-			if ($callback !== 'ErrorHandler_trigger_error_callback') {
+			$callback = set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
+			if ($callback !== 'SledgeHammer\ErrorHandler_trigger_error_callback') {
 				if ($callback === NULL) {
 					restore_error_handler();
 				} else {
@@ -92,7 +92,7 @@ class ErrorHandler {
 				return;
 			}
 		}
-		if (get_class(@ $GLOBALS['ErrorHandler']) == 'ErrorHandler') {
+		if (get_class(@ $GLOBALS['ErrorHandler']) == 'SledgeHammer\ErrorHandler') {
 			$GLOBALS['ErrorHandler']->process($type, $message, $information);
 			return;
 		} else { 
@@ -298,8 +298,8 @@ class ErrorHandler {
 		//   Bij een Exception de $Exception->getTrace() tonen.
 		//   De plaats van de errror extra benadrukken (door een extra witregel)
 		while ($call = next($backtrace)) {
-			if (@$call['class'] != 'ErrorHandler') {
-				if ($call['function'] == 'ErrorHandler_trigger_error_callback') { // Is de fout getriggerd door php
+			if (@$call['class'] != __CLASS__) {
+				if ($call['function'] == 'SledgeHammer\ErrorHandler_trigger_error_callback') { // Is de fout getriggerd door php
 					if (isset($call['file'])) { // Zit de fout niet in een functie? 
 						$this->backtrace_highlight($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler_trigger_error_callback parameters
 						next($backtrace);

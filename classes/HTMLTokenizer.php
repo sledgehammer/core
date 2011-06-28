@@ -41,6 +41,7 @@
  * 
  * @package Core 
  */
+namespace SledgeHammer;
 class HTMLTokenizer extends Object implements Iterator{
 
 

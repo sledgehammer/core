@@ -9,7 +9,7 @@
 
  * @package Core
  */
-
+namespace SledgeHammer;
 class TagIterator extends Object implements Iterator {
 	
 	public

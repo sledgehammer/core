@@ -8,6 +8,7 @@
  *   
  * @package Core
  */
+namespace SledgeHammer;
 abstract class Object {
 
 	/**

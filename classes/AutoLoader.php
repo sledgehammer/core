@@ -5,6 +5,7 @@
  *
  * @package Core
  */
+namespace SledgeHammer;
 class AutoLoader extends Object {
 
 	public
@@ -58,7 +59,7 @@ class AutoLoader extends Object {
 	 */
 	function init() {
 		if (!file_exists($this->path.'autoloader.db.php')) {
-			$modules = SledgeHammer::getModules();
+			$modules = Framework::getModules();
 			$this->inspectModules($modules);
 		} else {
 			include($this->path.'autoloader.db.php');
@@ -264,7 +265,7 @@ class AutoLoader extends Object {
 				return;
 			}
 		}
-		$DirectoryIterator = new DirectoryIterator($folder);
+		$DirectoryIterator = new \DirectoryIterator($folder);
 		$ignoreFiles = explode(',', $settings['ignore_files']);
 		$ignoreFiles[] =  'autoloader.ini';
 		foreach ($DirectoryIterator as $Entry) {
@@ -489,9 +490,12 @@ class AutoLoader extends Object {
 		$tokens = token_get_all($source);
 		$statusses_definitions = array();
 		$index = 0;
+		$namespace_state = 'GLOBAL';
+		$namespace = '';
 		foreach ($tokens as $token) {
 			if (empty($statusses_definitions[$index])) {
 				$statusses_definitions[$index] = array(
+					'namespace' => $namespace,
 					'class' => false,
 					'extends' => array(),
 					'implements' => false,
@@ -504,6 +508,11 @@ class AutoLoader extends Object {
 			}
 			if ($token[0] == T_COMMENT) { // Is het commentaar
 				continue; // negeer deze token
+			}
+			if ($token[0] == T_NAMESPACE) {
+				$namespace_state = 'NEXT_STRING';
+				$namespace = ''; //reset namespace
+				continue;
 			}
 			// Gaat het om een class of een interface?
 			if ($token[0] == T_CLASS) { // Is er een "class" van de class definitie gevonden?
@@ -518,8 +527,24 @@ class AutoLoader extends Object {
 				$definition_state['extends'] = 'NEXT_STRING';
 				continue;
 			}
+			if ($namespace_state == 'NEXT_STRING') {
+				if ($token == ';') {
+					$namespace_state = 'SET';
+					continue;
+				}
+				if ($token[0] == T_WHITESPACE || $token[0] == T_NS_SEPARATOR) {
+					continue;
+				}
+				if ($token[0] == T_STRING) {
+					$namespace .= $token[1].'\\';
+					continue;
+				} else {
+					$this->unexpectedToken($token, $filename);
+				}
+			}
+
 			if ($definition_state['extends'] == 'NEXT_STRING' && $token[0] == T_STRING) {
-				$definition_state['info']['extends'][] = $token[1];
+				$definition_state['info']['extends'][] = $namespace.$token[1];
 				$definition_state['extends'] = 'FOUND';
 				continue;
 			}
@@ -599,10 +624,10 @@ class AutoLoader extends Object {
 						$this->parserNotice('Huh??');
 						$definition_state['info']['extends'] = false;
 					}
-					if (strtolower($definition_state['info']['extends']) == 'object') {
+					if ($definition_state['info']['extends'] == 'SledgeHammer\Object') {
 						unset($definition_state['info']['extends']);
 					}
-				} elseif ($settings['mandatory_superclass'] && !in_array($definition_state['info']['class'], array('Object', 'SledgeHammer', 'ErrorHandler'))) {
+				} elseif ($settings['mandatory_superclass'] && !in_array($definition_state['info']['class'], array('Object', 'Framework', 'ErrorHandler'))) {
 					$this->parserNotice('Class: "'.$definition_state['info']['class'].'" has no superclass, "class X extends Y" expected');
 				}
 				if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $definition_state['info']['class']) {
