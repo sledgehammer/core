@@ -1,20 +1,27 @@
 
-Om van sledgehammer gebruik te maken kopier je de “S/sledgehammer/core” map naar  $project/development/sledgehammer/core/
-(SledgeHammer verwacht dat er een $project/development/tmp/ map bestaat.)
+Installatie handleiding
+------------------------
 
-Vanuit je bootstrap.php  voeg je de volgende code toe:
 
-$_SERVER[‘SERVER_ADMIN’] = ‘email@waar.de.error.vestuurd.worden.nl’;
+Om van sledgehammer gebruik te maken importeer je sledgehammer_core naar de “$project/sledgehammer/core” map.
+`git clone git://github.com/bfanger/sledgehammer_core.git sledgehammer/core`
+Of voeg deze toe als gitmodule:
+`git submodule add git://github.com/bfanger/sledgehammer_core.git sledgehammer/core`
+
+SledgeHammer verwacht dat er een $project/tmp/ map bestaat.
+
+
+Vanuit je bootstrap.php voeg je de volgende code toe:
+
+define('ENVIRONMENT', 'development'); // andere optie is 'production'
+$_SERVER['SERVER_ADMIN'] = 'email@waar.de.error.vestuurd.worden.nl'; // Deze wordt alleen in production modus gebruikt
 include("sledgehammer/core/init_framework.php");
-$Library->allow_unknown_classes = true; // Als je al gebruik maakt van een autoloader
+$AutoLoader->standalone = false; // Deze regel alleen toevoegen als je al gebruik maakt van een andere autoloader
 
-Een handige functie is: 
+
+Om te testen of alles werkt kun je de handige dump functie uitproberen: 
 dump($var);
 
-API Documentatie staat:
-http://linux.webcontent.nl/C/Catwhisperer/development/www/devutils/core/phpdocs/index.html
+Daarnaast worden errors, warnings en notices nu door de SledgeHammer ErrorHandler afgehandeld. 
 
-Deze word gegenereerd met de sledgehammer introspectie tool “DevUtils”
-http://linux.webcontent.nl/C/Catwhisperer/development/www/devutils/
-
-
+API Documentatie kan worden gegenereerd met de introspectie tool "DevUtils" zie: https://github.com/bfanger/devutils

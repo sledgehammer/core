@@ -32,6 +32,7 @@ function shell_execute($command, $hideOutput = false) {
 
 // Rechten instellen van de tmp map
 echo "Writeable tmp/ folder...\n";
+mkdirs(PATH.'tmp/');
 shell_execute('chmod a+wrX '.escapeshellarg(PATH.'tmp/'));
 passthru('chmod -R a+wrX '.escapeshellarg(PATH.'tmp/')); // bestanden binnen de tmp kunnen al van de webuser zijn. Ookal gaat dit fout, moet dit script verdergaan.
 echo "  done.\n\n";
