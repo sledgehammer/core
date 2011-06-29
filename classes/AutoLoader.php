@@ -83,6 +83,27 @@ class AutoLoader extends Object {
 		}
 		$info = $this->getInfo($class, !$this->standalone); // de gegevens van de class opzoeken
 		if (!$info) {
+			$namespaces = explode('\\', $class);
+			$classWithoutNamespace = array_pop($namespaces);
+			$originalNamespace = implode('\\', $namespaces);
+			while (count($namespaces) > 0) {
+				// Kijk een namespage hoger
+				array_pop($namespaces);
+				$classLevelUp = implode('\\', $namespaces). $classWithoutNamespace;
+				if (!class_exists($classLevelUp)) {
+					$infoLevelUp = $this->getInfo($classLevelUp, false);
+					if ($infoLevelUp) {
+						$this->declareClass($classLevelUp);
+					}
+				}
+				$extends =  (count($namespaces) == 0) ? '\\' : implode('\\',$namespaces);
+				$extends .= $classWithoutNamespace;
+				$php = 'namespace '.$originalNamespace.";\n";
+				$php .= 'class '.$classWithoutNamespace.' extends '.$extends." {\n}";
+				notice('Generating class "'.$class.'" based on "'.$extends.'"');
+				eval ($php); // try to duplicate the (global) class into the namespace
+
+			}
 			return false;
 		}
 		if (isset($info['extends'])) { // heeft dit object een parent?
@@ -294,8 +315,14 @@ class AutoLoader extends Object {
 			$definitions = $this->inspectFile($Entry->getPathname(), $settings);
 			if ($definitions) {
 				foreach ($definitions['classes'] as $definition) {
-					$class = $definition['class'];
+					$classPrefix = '';
+					if ($definition['namespace'] != '') {
+						$classPrefix = $definition['namespace'].'\\';
+						// @todo extends ook de prefix geven
+					}
+					$class = $classPrefix.$definition['class'];
 					unset($definition['class']);
+					unset($definition['namespace']);
 					if (isset($this->classes[$class])) {
 						if ($this->classes[$class]['filename'] != $definition['filename']) {
 							$this->parserNotice('Class: "'.$class.'" is ambiguous, it\'s found in multiple files: "'.$this->classes[$class]['filename'].'" and "'.$definition['filename'].'"');
@@ -495,13 +522,13 @@ class AutoLoader extends Object {
 		foreach ($tokens as $token) {
 			if (empty($statusses_definitions[$index])) {
 				$statusses_definitions[$index] = array(
-					'namespace' => $namespace,
 					'class' => false,
 					'extends' => array(),
 					'implements' => false,
 					'interface' => false,
 					'info' => array(
 						'filename' => $this->relativePath($filename),
+						'namespace' => $namespace,
 					),
 				);
 				$definition_state = &$statusses_definitions[$index];
@@ -529,14 +556,19 @@ class AutoLoader extends Object {
 			}
 			if ($namespace_state == 'NEXT_STRING') {
 				if ($token == ';') {
+					$definition_state['info']['namespace'] = $namespace;
 					$namespace_state = 'SET';
 					continue;
 				}
-				if ($token[0] == T_WHITESPACE || $token[0] == T_NS_SEPARATOR) {
+				if ($token[0] == T_WHITESPACE) {
+					continue;
+				}
+				if ($token[0] == T_NS_SEPARATOR) {
+					$namespace .= $token[1];
 					continue;
 				}
 				if ($token[0] == T_STRING) {
-					$namespace .= $token[1].'\\';
+					$namespace .= $token[1];
 					continue;
 				} else {
 					$this->unexpectedToken($token, $filename);
@@ -544,7 +576,7 @@ class AutoLoader extends Object {
 			}
 
 			if ($definition_state['extends'] == 'NEXT_STRING' && $token[0] == T_STRING) {
-				$definition_state['info']['extends'][] = $namespace.$token[1];
+				$definition_state['info']['extends'][] = $token[1];
 				$definition_state['extends'] = 'FOUND';
 				continue;
 			}
@@ -588,9 +620,12 @@ class AutoLoader extends Object {
 				}
 				if ($token[0] == T_WHITESPACE) {
 					continue;
+				} elseif ($token[0] == T_NS_SEPARATOR) {
+					$definition_state['info']['interface'] .= $token[1];
+					continue;
 				} elseif ($token[0] == T_STRING) {
 					if ($definition_state['interface'] == 'NEXT_STRING') {
-						$definition_state['info']['interface'] = $token[1];
+						$definition_state['info']['interface'] .= $token[1];
 						$definition_state['interface'] = 'FOUND';
 					} elseif ($definition_state['extends'] == 'NEXT_STRING') {
 
