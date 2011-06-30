@@ -454,7 +454,10 @@ function syntax_highlight($variabele, $datatype = NULL) {
 		case 'string':
 			$variabele = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variabele))).'&#39;';
 			break;
-
+		case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
+			$datatype = 'string';
+			$variabele = '&#39;'.htmlspecialchars($variabele).'&#39;';
+			break;
 		case 'integer':
 		case 'double':
 			$datatype = 'number';

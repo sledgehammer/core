@@ -120,7 +120,7 @@ class Dump extends Object {
 			// tekst (string)
 			case 'string':
 				$tekst = substr($gegevens, $positie_haak_eind + 3, $lengte);
-				echo syntax_highlight($tekst, 'string');
+				echo syntax_highlight($tekst, 'string_pre');
 				return $positie + $lengte + 3;
 
 			// Resource (bestand, database)
