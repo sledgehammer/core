@@ -128,7 +128,7 @@ class ErrorHandler {
 		if (!$this->email) {
 			$style[] = 'border: 1px dashed #cfcfcf';
 		}
-		if ($type instanceof Exception) {
+		if ($type instanceof \Exception) {
 			$message = $type->getMessage();
 			$type = 'EXCEPTION';
 		}
@@ -319,7 +319,7 @@ class ErrorHandler {
 				$this->backtrace_highlight($call);
 				next($backtrace);
 				break;
-			} elseif ($call['function'] == 'handle_exception' || ($call['function'] == 'render' && $call['args'][0] instanceof Exception)) { // Gaat het om een Exception
+			} elseif ($call['function'] == 'handle_exception' || ($call['function'] == 'render' && $call['args'][0] instanceof \Exception)) { // Gaat het om een Exception
 				$Exception =  $call['args'][0];
 				$call['file'] = $Exception->getFile();
 				$call['line'] = $Exception->getLine();
@@ -578,7 +578,7 @@ class ErrorHandler {
 	 * @param Exception $exception
 	 */
 	static function handle_exception($exception) {
-		if ($exception instanceof Exception) {
+		if ($exception instanceof \Exception) {
 			self::handle(E_USER_ERROR, 'Uncaught exception: '.$exception->getMessage());
 		} else {
 			self::handle(E_USER_ERROR, 'Parameter $exception must be an Exception, instead of a '.gettype($exception));

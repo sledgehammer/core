@@ -1,6 +1,7 @@
 <?php
 /**
- * Initialiseer de database(s) en alle sledgehammer-modules (constants, functions en init)
+ * Het Framework initialiseren.
+ * Initialiseerd de database(s) en alle sledgehammer-modules (constants, functions en init)
  */
 namespace SledgeHammer;
 if (!defined('SLEDGEHAMMER_FRAMEWORK')) {

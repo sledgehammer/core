@@ -1,6 +1,6 @@
 <?php
 /**
- * Het SledgeHammer Core initialiseren
+ * SledgeHammer Core initialiseren
  *
  * @package Core
  */
@@ -23,7 +23,7 @@ require($corePath.'classes/ErrorHandler.php');
 require($corePath.'classes/AutoLoader.php');
 
 $GLOBALS['charset'] = 'UTF-8';
-// ErrorHandeler instellen (standaard configuratie is geen output, maar alleen error_log())
+// ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
 
