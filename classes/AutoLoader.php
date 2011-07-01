@@ -11,7 +11,6 @@ class AutoLoader extends Object {
 	public
 		$standalone = true; // Bij true zal declareClass() een fout genereren als de class niet bekend is.
 			
-
 	private
 		$path, // De basismap
 		$enableCache = false, // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
@@ -525,8 +524,10 @@ class AutoLoader extends Object {
 	 * @param string $filename Fullpath to the php-file.
 	 * @return array Array containing definitions
 	 */
-	private function inspectFile($filename, $settings) {
-		
+	function inspectFile($filename, $settings = null) {
+		if ($settings === null) {
+			$settings = $this->strictSettings;
+		}
 		$source = file_get_contents($filename);
 		if ($settings['mandatory_comment_block'] && substr($source, 0, 12) != "<?php\n/**\n *" && substr($source, 0, 14) != "<?php\r\n/**\r\n *") {
 			$this->parserNotice('Invalid start of file:  "'.$this->relativePath($filename).'"', array('Expecting' => "\"\n<?php\n/**\n *\""));
@@ -535,6 +536,7 @@ class AutoLoader extends Object {
 		unset($source);
 		
 		$namespace = '';
+		$uses = array();
 		$definitions = array();
 		foreach ($tokens as $token) {
 			$type = $token[0];
@@ -548,11 +550,24 @@ class AutoLoader extends Object {
 					$namespace = $value;
 					break;
 				
+				case 'T_USE':
+					$pos = strrpos($value, '\\');
+					$namespaceAlias = substr($value, $pos + 1);
+					$uses[$namespaceAlias] = $value;
+					break;
+					
+				case 'T_USE_AS':
+					$uses[$value] = $uses[$namespaceAlias];
+					unset($uses[$namespaceAlias]);
+					break;
+					
+				
 				case 'T_INTERFACE':
 					$definitions[] = array(
 						'type' => 'INTERFACE',
 						'namespace' => $namespace,
 						'interface' => $value,
+						'identifier' => $this->prefixNamespace($namespace, $value, $uses),
 						'extends' => array()
 					);
 					$definition = &$definitions[count($definitions) - 1];
@@ -563,6 +578,7 @@ class AutoLoader extends Object {
 						'type' => 'CLASS',
 						'namespace' => $namespace, 
 						'class' => $value,
+						'identifier' => $this->prefixNamespace($namespace, $value, $uses),
 						'extends' => array(),
 						'implements' => array()
 						
@@ -571,11 +587,11 @@ class AutoLoader extends Object {
 					break;
 				
 				case 'T_EXTENDS':
-					$definition['extends'][] = $this->prefixNamespace($namespace, $value);
+					$definition['extends'][] = $this->prefixNamespace($namespace, $value, $uses);
 					break;
 				
 				case 'T_IMPLEMENTS':
-					$definition['implements'][] = $this->prefixNamespace($namespace, $value);
+					$definition['implements'][] = $this->prefixNamespace($namespace, $value, $uses);
 					break;
 				
 				default:
@@ -597,7 +613,7 @@ class AutoLoader extends Object {
 		}
 		// Add definitions to de loader
 		foreach ($definitions as $index => $definition) {
-			$identifier = $this->prefixNamespace($definition['namespace'], $definition[strtolower($definition['type'])]); // de class/interface naam incl. namespace
+			$identifier = $definition['identifier'];
 			$loaderDefinition = array(
 				'filename' => $this->relativePath($filename),
 			);
@@ -662,10 +678,22 @@ class AutoLoader extends Object {
 		if ($namespace == '') {
 			return $identifier;
 		}
-		if (strpos($identifier, '\\') !== false) {
+		$pos = strpos($identifier, '\\');
+		if ($pos !== false) {
+			if ($pos == 0 || count($uses) == 0) {
+				return $identifier;
+			}
+			foreach ($uses as $alias => $namespace) {
+				$alias .= '\\'; 
+				if (substr($identifier, 0, strlen($alias)) === $alias) {
+					return $namespace.substr($identifier, strlen($alias) - 1);
+				}
+			}
 			return $identifier;
 		}
-		// @todo $uses
+		if (isset($uses[$identifier])) {
+			return $uses[$identifier];
+		}
 		return $namespace.'\\'.$identifier;
 	}
 

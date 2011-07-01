@@ -163,13 +163,13 @@ class PHPTokenizer extends Object implements \Iterator {
 						$this->current = array('T_NAMESPACE', ''); // empty NAMESPACE token, om aan te geven dat de global namespace geactiveerd wordt.
 						return;
 					}
-					if ($nextToken == '{' || $nextToken == ';') {
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
 						$this->state = 'PHP';
 						$this->current = array('T_NAMESPACE', $value);
 						$this->tokenIndex++;
 						return;
 					}
-					$this->expectToken($token, T_STRING);
+					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 					break;
 					
 				case 'USE_START':
