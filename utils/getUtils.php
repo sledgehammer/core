@@ -2,7 +2,7 @@
 /**
  *
  */
-
+namespace SledgeHammer;
 return  array(
 	'flush_tmp.html' => new FlushTemporaryFiles(),
 	'generate_library.db.php' => new GenerateStaticLibrary(),

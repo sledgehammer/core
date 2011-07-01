@@ -4,7 +4,6 @@
  * 
  */
 namespace SledgeHammer;
-
 class CompareEnvironments extends Util {
 
 	function __construct() {

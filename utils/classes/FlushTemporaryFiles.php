@@ -1,10 +1,10 @@
 <?php
 /**
+ * Delete the contents of the $project/tmp/ folder.
  * 
- * 
+ * @package Core
  */
 namespace SledgeHammer;
-
 class FlushTemporaryFiles extends Util {
 
 	function __construct() {
