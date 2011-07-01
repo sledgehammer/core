@@ -195,13 +195,11 @@ class PHPTokenizer extends Object implements Iterator {
 				
 				case 'EXTENDS':
 					if ($nextToken[0] == T_STRING) {
-						// Alles voor de classname 
 						$this->current = array('T_OTHER', $value);
 						$this->tokenIndex++;
 						return;
 					}
 					if ($token[0] == T_STRING) {
-						// De classname 
 						$this->state = 'PHP';
 						$this->current = array('T_EXTENDS', $value);
 						$this->tokenIndex++;

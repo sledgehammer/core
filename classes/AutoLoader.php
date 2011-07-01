@@ -9,11 +9,12 @@ namespace SledgeHammer;
 class AutoLoader extends Object {
 
 	public
-		$standalone = true, // Bij true zal declareClass() een fout genereren als de class niet bekend is.
-		$enableCache = true; // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
+		$standalone = true; // Bij true zal declareClass() een fout genereren als de class niet bekend is.
+			
 
 	private
 		$path, // De basismap
+		$enableCache = false, // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 		$cachePath, // De map waar de cache bestanden worden opgeslagen.
 		$classes = array(), // Array met class-definities
 		$interfaces = array(), // Array met interface-definities
@@ -24,6 +25,7 @@ class AutoLoader extends Object {
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
 			'mandatory_comment_block' => false, // Controleer op correct begin van de php bestanden
 			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
+			'detect_accidental_output' => true,
 			'revalidate_cache_delay' => 20, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
 			'ignore_all' => false, // Bij false worden de bestanden en submappen doorzocht op class en interface definities
 			'ignore_folders' => '.git,.svn',
@@ -37,6 +39,7 @@ class AutoLoader extends Object {
 			'matching_filename' => true,
 			'mandatory_comment_block' => true,
 			'notify_on_multiple_definitions_per_file' => true,
+			'detect_accidental_output' => true,
 			'revalidate_cache_delay' => 10,
 			'ignore_all' => false,
 			'ignore_folders' => '',
@@ -99,8 +102,14 @@ class AutoLoader extends Object {
 				$extends =  (count($namespaces) == 0) ? '\\' : implode('\\',$namespaces);
 				$extends .= $classWithoutNamespace;
 				$php = 'namespace '.$originalNamespace.";\n";
-				$php .= 'class '.$classWithoutNamespace.' extends '.$extends." {\n}";
-				notice('Generating class "'.$class.'" based on "'.$extends.'"');
+				$reflection = new \ReflectionClass($extends);
+				if ($reflection->isInterface()) {
+					notice('Generating interface "'.$class.'" based on "'.$extends.'"');
+					$php .= 'interface '.$classWithoutNamespace.' extends '.$extends." {\n}";
+				} else {
+					notice('Generating class "'.$class.'" based on "'.$extends.'"');
+					$php .= 'class '.$classWithoutNamespace.' extends '.$extends." {\n}";
+				}
 				eval ($php); // try to duplicate the (global) class into the namespace
 
 			}
@@ -286,6 +295,9 @@ class AutoLoader extends Object {
 				return;
 			}
 		}
+		if (class_exists('SledgeHammer\PHPTokenizer', false) == false) {
+			require(dirname(__FILE__).'/PHPTokenizer.php'); // Helper class voor de AutoLoader
+		}
 		$DirectoryIterator = new \DirectoryIterator($folder);
 		$ignoreFiles = explode(',', $settings['ignore_files']);
 		$ignoreFiles[] =  'autoloader.ini';
@@ -312,10 +324,10 @@ class AutoLoader extends Object {
 				}
 				continue;
 			}
-			$definitions = $this->inspectFile($Entry->getPathname(), $settings);
-			if ($definitions) {
-				foreach ($definitions['classes'] as $definition) {
-					$classPrefix = '';
+			$this->inspectFile($Entry->getPathname(), $settings);
+			
+				/*
+				$classPrefix = '';
 					if ($definition['namespace'] != '') {
 						$classPrefix = $definition['namespace'].'\\';
 						// @todo extends ook de prefix geven
@@ -323,6 +335,7 @@ class AutoLoader extends Object {
 					$class = $classPrefix.$definition['class'];
 					unset($definition['class']);
 					unset($definition['namespace']);
+					$definition['filename'] = $filename;
 					if (isset($this->classes[$class])) {
 						if ($this->classes[$class]['filename'] != $definition['filename']) {
 							$this->parserNotice('Class: "'.$class.'" is ambiguous, it\'s found in multiple files: "'.$this->classes[$class]['filename'].'" and "'.$definition['filename'].'"');
@@ -333,7 +346,15 @@ class AutoLoader extends Object {
 					$this->classes[$class] = $definition;
 				}
 				foreach ($definitions['interfaces'] as $definition) {
-					$interface = $definition['interface'];
+					$interfacePrefix = '';
+					if ($definition['namespace'] != '') {
+						$interfacePrefix = $definition['namespace'].'\\';
+						// @todo extends ook de prefix geven
+					}
+					$interface = $interfacePrefix.$definition['interface'];
+					unset($definition['interface']);
+					unset($definition['namespace']);
+					$definition['filename'] = $filename;
 					if (isset($this->interfaces[$interface])) {
 						$this->parserNotice('Interface: "'.$interface.'" is ambiguous, it\'s found in multiple files: "'.$this->interfaces[$interface].'" and "'.$definition['filename'].'"');
 					}
@@ -342,7 +363,7 @@ class AutoLoader extends Object {
 						$this->interfaces[$interface]['extends'] = $definition['extends'];
 					}
 				}
-			}
+			}*/
 		}
 	}
 
@@ -505,183 +526,147 @@ class AutoLoader extends Object {
 	 * @return array Array containing definitions
 	 */
 	private function inspectFile($filename, $settings) {
+		
 		$source = file_get_contents($filename);
-		/*
-		 * @todo Instead of an eof check,  check if there is any output(non phpcode) in hthe script
-		  if ($settings['eof_check'] && substr($source, -3, -1) != '?>' && substr($source, -2) != '?>') {
-		  $this->parserNotice('Invalid end of file: "'.$this->relativePath($filename).'", expecting "?>"');
-		  } */
 		if ($settings['mandatory_comment_block'] && substr($source, 0, 12) != "<?php\n/**\n *" && substr($source, 0, 14) != "<?php\r\n/**\r\n *") {
 			$this->parserNotice('Invalid start of file:  "'.$this->relativePath($filename).'"', array('Expecting' => "\"\n<?php\n/**\n *\""));
 		}
-		$tokens = token_get_all($source);
-		$statusses_definitions = array();
-		$index = 0;
-		$namespace_state = 'GLOBAL';
+		$tokens = new PHPTokenizer($source);
+		unset($source);
+		
 		$namespace = '';
+		$definitions = array();
 		foreach ($tokens as $token) {
-			if (empty($statusses_definitions[$index])) {
-				$statusses_definitions[$index] = array(
-					'class' => false,
-					'extends' => array(),
-					'implements' => false,
-					'interface' => false,
-					'info' => array(
-						'filename' => $this->relativePath($filename),
+			$type = $token[0];
+			if ($type == 'T_OTHER') {
+				continue;
+			}
+			$value = $token[1];
+			switch ($type) {
+				
+				case 'T_NAMESPACE':
+					$namespace = $value;
+					break;
+				
+				case 'T_INTERFACE':
+					$definitions[] = array(
+						'type' => 'INTERFACE',
 						'namespace' => $namespace,
-					),
-				);
-				$definition_state = &$statusses_definitions[$index];
-			}
-			if ($token[0] == T_COMMENT) { // Is het commentaar
-				continue; // negeer deze token
-			}
-			if ($token[0] == T_NAMESPACE) {
-				$namespace_state = 'NEXT_STRING';
-				$namespace = ''; //reset namespace
-				continue;
-			}
-			// Gaat het om een class of een interface?
-			if ($token[0] == T_CLASS) { // Is er een "class" van de class definitie gevonden?
-				$definition_state['class'] = 'NEXT_STRING'; // aangeven zodat de naam van de class achterhaald kan worden.
-				continue;
-			}
-			if ($token[0] == T_INTERFACE) { // Is er een "interface" van een interface definitie gevonden?
-				$definition_state['interface'] = 'NEXT_STRING';
-				continue;
-			}
-			if ($token[0] == T_EXTENDS) {
-				$definition_state['extends'] = 'NEXT_STRING';
-				continue;
-			}
-			if ($namespace_state == 'NEXT_STRING') {
-				if ($token == ';') {
-					$definition_state['info']['namespace'] = $namespace;
-					$namespace_state = 'SET';
-					continue;
-				}
-				if ($token[0] == T_WHITESPACE) {
-					continue;
-				}
-				if ($token[0] == T_NS_SEPARATOR) {
-					$namespace .= $token[1];
-					continue;
-				}
-				if ($token[0] == T_STRING) {
-					$namespace .= $token[1];
-					continue;
-				} else {
-					$this->unexpectedToken($token, $filename);
-				}
-			}
-
-			if ($definition_state['extends'] == 'NEXT_STRING' && $token[0] == T_STRING) {
-				$definition_state['info']['extends'][] = $token[1];
-				$definition_state['extends'] = 'FOUND';
-				continue;
-			}
-			if ($definition_state['interface'] == 'FOUND' && $definition_state['extends'] == 'FOUND' && $token == ',') { // Heeft deze interface van meer dan 1 extends ?
-				$definition_state['extends'] = 'NEXT_STRING';
-				continue;
-			}
-			if ($definition_state['class'] == 'NEXT_STRING' || $definition_state['class'] == 'FOUND') {
-				if ($token == '{') { // Is de '{' gevonden?
-					$definition_state['class'] = 'DEFINED';
-					$index++;
-					continue;
-				}
-				if ($definition_state['implements'] == 'NEXT_STRINGS' && $token == ',') {
-					continue;
-				}
-				if ($token[0] == T_WHITESPACE) {
-					continue;
-				}
-				if ($token[0] == T_IMPLEMENTS) {
-					$definition_state['implements'] = 'NEXT_STRINGS';
-					continue;
-				}
-				if ($token[0] == T_STRING) {
-					if ($definition_state['class'] == 'NEXT_STRING') {
-						$definition_state['info']['class'] = $token[1];
-						$definition_state['class'] = 'FOUND';
-					} elseif ($definition_state['implements'] == 'NEXT_STRINGS') {
-						$definition_state['info']['implements'][] = $token[1];
-					} else {
-						$this->unexpectedToken($token, $filename);
-					}
-				} else {
-					$this->unexpectedToken($token, $filename);
-				}
-			}
-			if ($definition_state['interface'] == 'NEXT_STRING' || $definition_state['interface'] == 'FOUND') {
-				if ($token == '{') { // Is de '{' gevonden?
-					$definition_state['interface'] = 'DEFINED';
-					continue;
-				}
-				if ($token[0] == T_WHITESPACE) {
-					continue;
-				} elseif ($token[0] == T_NS_SEPARATOR) {
-					$definition_state['info']['interface'] .= $token[1];
-					continue;
-				} elseif ($token[0] == T_STRING) {
-					if ($definition_state['interface'] == 'NEXT_STRING') {
-						$definition_state['info']['interface'] .= $token[1];
-						$definition_state['interface'] = 'FOUND';
-					} elseif ($definition_state['extends'] == 'NEXT_STRING') {
-
-					} else {
-						$this->unexpectedToken($token, $filename);
-					}
-				} else {
-					$this->unexpectedToken($token, $filename);
-				}
+						'interface' => $value,
+						'extends' => array()
+					);
+					$definition = &$definitions[count($definitions) - 1];
+					break;
+				
+				case 'T_CLASS':
+					$definitions[] = array(
+						'type' => 'CLASS',
+						'namespace' => $namespace, 
+						'class' => $value,
+						'extends' => array(),
+						'implements' => array()
+						
+					);
+					$definition = &$definitions[count($definitions) - 1];
+					break;
+				
+				case 'T_EXTENDS':
+					$definition['extends'][] = $this->prefixNamespace($namespace, $value);
+					break;
+				
+				case 'T_IMPLEMENTS':
+					$definition['implements'][] = $this->prefixNamespace($namespace, $value);
+					break;
+				
+				default:
+					$this->parserNotice('Unexpected tokenType: "'.$type.'"');
+					break;
 			}
 		}
-
-		// De file is geparsed, en de definities zijn bekend
-		if (count($statusses_definitions) > 1 && $statusses_definitions[$index]['class'] == false && $statusses_definitions[$index]['interface'] == false) {
-			unset($statusses_definitions[$index]);
-		}
-		$definitions = array(
-			'classes' => array(),
-			'interfaces' => array(),
-		);
-		foreach ($statusses_definitions as $definition_state) {
-			if ($definition_state['interface'] == 'DEFINED') {
-				$definitions['interfaces'][] = $definition_state['info'];
-			} elseif ($definition_state['class'] == 'DEFINED') {
-				if ($definition_state['extends'] == 'FOUND') { // Heeft de class een superclass?
-					if (count($definition_state['info']['extends']) == 1) {
-						$definition_state['info']['extends'] = $definition_state['info']['extends'][0];
-					} elseif (count($definition_state['info']['extends']) > 1) {
-						$this->parserNotice('Class: "'.$definition_state['info']['class'].'" Multiple inheritance is not allowed for classes');
-					} else {
-						$this->parserNotice('Huh??');
-						$definition_state['info']['extends'] = false;
-					}
-					if ($definition_state['info']['extends'] == 'SledgeHammer\Object') {
-						unset($definition_state['info']['extends']);
-					}
-				} elseif ($settings['mandatory_superclass'] && !in_array($definition_state['info']['class'], array('Object', 'Framework', 'ErrorHandler'))) {
-					$this->parserNotice('Class: "'.$definition_state['info']['class'].'" has no superclass, "class X extends Y" expected');
-				}
-				if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $definition_state['info']['class']) {
-					$this->parserNotice('Filename doesn\'t match classname "'.$definition_state['info']['class'].'" in "'.$this->relativePath($filename).'"');
-				}
-				$definitions['classes'][] = $definition_state['info'];
-			} else {
-
-			}
-		}
-		$definition_count = count($statusses_definitions);
-		if ($definition_count > 1) {
+		if ($settings['detect_accidental_output'] && $token[0] == 'T_HTML') {
+			$this->parserNotice('Invalid end of file. (html)output detected');
+		} 
+		unset($definition);
+		$definitionCount = count($definitions);
+		if ($definitionCount > 1) {
 			if ($settings['notify_on_multiple_definitions_per_file']) {
-				$this->parserNotice('Multiple definitions per file is not recommended', array_merge($definitions['classes'], $definitions['interfaces']));
+				$this->parserNotice('Multiple definitions per file is not recommended', array_merge($definitions));
 			}
-		} elseif ($definition_count == 0) {
+		} elseif ($definitionCount == 0) {
 			$this->parserNotice('No classes or interfaces found in '.$filename);
 		}
+		// Add definitions to de loader
+		foreach ($definitions as $index => $definition) {
+			$identifier = $this->prefixNamespace($definition['namespace'], $definition[strtolower($definition['type'])]); // de class/interface naam incl. namespace
+			$loaderDefinition = array(
+				'filename' => $this->relativePath($filename),
+			);
+			if (isset($definition['extends']) && count($definition['extends']) > 0) {
+				$loaderDefinition['extends'] = $definition['extends'];
+			} 
+			if (isset($definition['implements']) && count($definition['implements']) > 0) {
+				$loaderDefinition['implements'] = $definition['implements'];
+			}
+			$duplicate = false;
+			if (isset($this->classes[$identifier])) {
+				$duplicate = $this->classes[$identifier];
+			} elseif (isset($this->interfaces[$identifier])) {
+				$duplicate = $this->interfaces[$identifier];
+			}
+			if ($duplicate) {
+				if ($duplicate['filename'] != $loaderDefinition['filename']) {
+					$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$loaderDefinition['filename'].'"');
+				} elseif ($settings['notify_on_multiple_definitions_per_file']) {
+					$this->parserNotice('"'.$identifier.'" is declared multiple times in: "'.$loaderDefinition['filename'].'"');
+				}
+			}
+			switch ($definition['type']) {
+					
+				case 'CLASS':
+					if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $definition['class']) {
+						$this->parserNotice('Filename doesn\'t match classname "'.$identifier.'" in "'.$loaderDefinition['filename'].'"');
+					}
+					if (count($definition['extends']) == 0) {
+						if ($settings['mandatory_superclass'] && !in_array($identifier, array('SledgeHammer\Object', 'SledgeHammer\Framework', 'SledgeHammer\ErrorHandler'))) {
+							$this->parserNotice('Class: "'.$definition['class'].'" has no superclass, expection "class X extends Y"');
+						}
+					} else {
+						if (count($definition['extends']) > 1) {
+							$this->parserNotice('Class: "'.$definition['class'].'" Multiple inheritance is not allowed for classes');
+						}
+						$loaderDefinition['extends'] = $definition['extends'][0];
+					}
+					
+					$this->classes[$identifier] = $loaderDefinition;
+					break;
+
+				case 'INTERFACE':
+					$this->interfaces[$identifier] = $loaderDefinition;
+					break;
+
+				default:
+					throw new \Exception('Unsupported type: "'.$definition['type'].'"');
+			}	
+		}
 		return $definitions;
+	}
+	
+	/**
+	 * Resolve the full classname.
+	 * 
+	 * @param string $namespace
+	 * @param string $identifier  The class or interface name 
+	 * @return string 
+	 */
+	private function prefixNamespace($namespace, $identifier, $uses = array()) {
+		if ($namespace == '') {
+			return $identifier;
+		}
+		if (strpos($identifier, '\\') !== false) {
+			return $identifier;
+		}
+		// @todo $uses
+		return $namespace.'\\'.$identifier;
 	}
 
 	private function unexpectedToken($token, $filename) {
