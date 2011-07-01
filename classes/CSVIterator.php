@@ -8,7 +8,7 @@
  * @package Core
  */
 namespace SledgeHammer;
-class CSVIterator extends Object implements Iterator {
+class CSVIterator extends Object implements \Iterator {
 
 	private
 		$filename, // path van het csv bestand
@@ -51,11 +51,11 @@ class CSVIterator extends Object implements Iterator {
 	 */
 	function write($iterator) {
 		if ($this->fp) {
-			throw new Exception('CSVIterator is in read-mode');
+			throw new \Exception('CSVIterator is in read-mode');
 		}
 		$this->fp =	fopen($this->filename, 'w');
 		if (!$this->fp) {
-			throw new Exception('Failed to open "'.$this->filename.'" for writing');
+			throw new \Exception('Failed to open "'.$this->filename.'" for writing');
 		} 
 		// De kolomnamen op de eerste csv regel zetten
 		if ($this->columns !== null) {
@@ -94,7 +94,7 @@ class CSVIterator extends Object implements Iterator {
 		}
 		$this->fp = fopen($this->filename, 'r');
 		if (!$this->fp) {
-			throw new Exception('Couldn\'t open file "'.$this->filename.'"');
+			throw new \Exception('Couldn\'t open file "'.$this->filename.'"');
 		}
 		// Kolommen controleren
 		$keys = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
@@ -102,7 +102,7 @@ class CSVIterator extends Object implements Iterator {
 		foreach ($keys as $column) {
 			if (isset($column_isset[$column])) {
 				if ($this->columns === null || array_search($column, $this->columns) !== false) {
-					throw new Exception('Column "'.$column.'" is ambiguous');
+					throw new \Exception('Column "'.$column.'" is ambiguous');
 				}
 			} else {
 				$column_isset[$column] = true;
@@ -116,7 +116,7 @@ class CSVIterator extends Object implements Iterator {
 				if ($index !== false) {
 					$this->keys[$index] = $key;
 				} else {
-					throw new Exception('Column: "'.$column.'" not found. Available columns: "'.implode('", "',$keys).'"');
+					throw new \Exception('Column: "'.$column.'" not found. Available columns: "'.implode('", "',$keys).'"');
 					return false;
 				}
 			}
@@ -199,7 +199,5 @@ class CSVIterator extends Object implements Iterator {
 		$stuffedValue = str_replace($this->enclosure, $this->enclosure.$this->enclosure, $value); // Een '"' vervangen door '""'
 		return $this->enclosure.$stuffedValue.$this->enclosure;
 	}
-
-
 }
 ?>

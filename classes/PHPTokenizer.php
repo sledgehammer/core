@@ -15,8 +15,7 @@
  * @package core
  */
 namespace SledgeHammer;
-use \Iterator;
-class PHPTokenizer extends Object implements Iterator {
+class PHPTokenizer extends Object implements \Iterator {
 	
 	/**
 	 * @var array 
@@ -61,7 +60,7 @@ class PHPTokenizer extends Object implements Iterator {
 	}
 
 	function key() {
-		return key($this->tokens);
+		return $this->tokenIndex;
 	}
 	
 	function current() {
@@ -124,7 +123,7 @@ class PHPTokenizer extends Object implements Iterator {
 						$this->state = 'CLASS';
 					}
 					if ($token[0] == T_EXTENDS) {
-						$this->state = 'EXTENDS';
+						$this->state = 'EXTENDS_START';
 					}
 					if ($token[0] == T_IMPLEMENTS) {
 						$this->state = 'IMPLEMENTS_START';
@@ -193,23 +192,46 @@ class PHPTokenizer extends Object implements Iterator {
 					$this->expectToken($token, T_STRING);
 					break;
 				
-				case 'EXTENDS':
-					if ($nextToken[0] == T_STRING) {
+				case 'EXTENDS_START':
+					//$this->dump($token);
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
+						$this->state = 'EXTENDS';
 						$this->current = array('T_OTHER', $value);
 						$this->tokenIndex++;
 						return;
 					}
-					if ($token[0] == T_STRING) {
-						$this->state = 'PHP';
+					$this->expectToken($token, T_WHITESPACE);
+					break;
+					
+				case 'EXTENDS':
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+						$this->state = 'EXTENDS_SEPARATOR';
 						$this->current = array('T_EXTENDS', $value);
 						$this->tokenIndex++;
 						return;
 					}
-					$this->expectToken($token, T_STRING);
 					break;
 					
-				case 'IMPLEMENTS_START':
-					if ($nextToken[0] == T_STRING) {
+				case 'EXTENDS_SEPARATOR':
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
+						$this->state = 'EXTENDS';
+						$this->current = array('T_OTHER', $value);
+						$this->tokenIndex++;
+						return;
+					}
+					if ($token == '{') {
+						$this->state = 'PHP';
+						break;
+					}
+					if ($token[0] == T_IMPLEMENTS) {
+						$this->state = "IMPLEMENTS_START";
+						continue;
+					}
+					$this->expectTokens($token, array(T_WHITESPACE, ','));
+					break;
+					
+				case 'IMPLEMENTS_START':				
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
 						$this->state = 'IMPLEMENTS';
 						$this->current = array('T_OTHER', $value);
 						$this->tokenIndex++;
@@ -228,7 +250,7 @@ class PHPTokenizer extends Object implements Iterator {
 					break;
 				
 				case 'IMPLEMENTS_SEPARATOR':
-					if ($nextToken[0] == T_STRING) {
+					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
 						$this->state = 'IMPLEMENTS';
 						$this->current = array('T_OTHER', $value);
 						$this->tokenIndex++;
@@ -240,7 +262,6 @@ class PHPTokenizer extends Object implements Iterator {
 					}
 					$this->expectTokens($token, array(T_WHITESPACE, ','));
 					break;
-
 					
 				default:
 					$this->failure('Invalid state');

@@ -14,7 +14,7 @@
  * @package Core
  */
 namespace SledgeHammer;
-class MySQLiResultIterator extends Object implements Iterator, Countable{
+class MySQLiResultIterator extends Object implements \Iterator, \Countable{
 
 	public
 		$key, // [string|NULL] De kolomnaam die moet doorgaan als key in een foreach.

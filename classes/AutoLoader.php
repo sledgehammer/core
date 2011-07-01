@@ -117,21 +117,21 @@ class AutoLoader extends Object {
 		}
 		if (isset($info['extends'])) { // heeft dit object een parent?
 			if (!$this->declareClass($info['extends'])) { // de parent proberen te declareren
-				throw new Exception('Failed to declare parent: "'.$info['extends'].'" of class: "'.$class.'"');
+				throw new \Exception('Failed to declare parent: "'.$info['extends'].'" of class: "'.$class.'"');
 			}
 		}
 		if (isset($info['implements'])) { // heeft dit object een interface?
 			foreach ($info['implements'] as $interface) {
 				if (!$this->declareInterface($interface)) { // de interface proberen te declareren
-					throw new Exception('Failed to declare interface: "'.$interface.'" of class: "'.$class.'"');
+					notice('Failed to declare interface: "'.$interface.'" for class: "'.$class.'"');
 				}
 			}
 		}
 		if (!include_once($info['filename'])) { // Lukte het includen van het bestand?
-			throw new Exception('Failed to include "'.$info['filename'].'"');
+			throw new \Exception('Failed to include "'.$info['filename'].'"');
 		}
 		if (!class_exists($class, false)) {
-			throw new Exception('A autoloader file is corrupt, class "'.$class.'" not found in "'.$info['filename'].'"');
+			throw new \Exception('A autoloader file is corrupt, class "'.$class.'" not found in "'.$info['filename'].'"');
 		}
 		return true;
 	}

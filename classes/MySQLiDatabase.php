@@ -5,7 +5,7 @@
  * @package Core
  */
 namespace SledgeHammer;
-class MySQLiDatabase extends MySQLi {
+class MySQLiDatabase extends \MySQLi {
 
 	public
 		$connected = false,

@@ -10,7 +10,7 @@
  * @package Core
  */
 namespace SledgeHammer;
-class TagIterator extends Object implements Iterator {
+class TagIterator extends Object implements \Iterator {
 	
 	public
 		$warnings;
@@ -81,7 +81,7 @@ class TagIterator extends Object implements Iterator {
 		);
 		$token = $this->tokenizer->current();
 		if ($token[0] !== 'T_OPEN') { // Sanity check
-			throw new Exception('Sanity check failed. Expected a "T_OPEN" token');
+			throw new \Exception('Sanity check failed. Expected a "T_OPEN" token');
 		}
 		$state = 'NAME';
 		$attribute = null;
@@ -130,8 +130,6 @@ class TagIterator extends Object implements Iterator {
 	}
 
 	/**
-	 * 
-	 *
 	 * @return bool
 	 */
 	function valid() {
@@ -139,8 +137,6 @@ class TagIterator extends Object implements Iterator {
 	}
 
 	/**
-	 * 
-	 *
 	 * @return array
 	 */
 	function current() {
@@ -148,8 +144,6 @@ class TagIterator extends Object implements Iterator {
 	}
 
 	/**
-	 * 
-	 *
 	 * @return int
 	 */
 	function key() {
