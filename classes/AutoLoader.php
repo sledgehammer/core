@@ -13,7 +13,7 @@ class AutoLoader extends Object {
 			
 	private
 		$path, // De basismap
-		$enableCache = false, // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
+		$enableCache = true, // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 		$cachePath, // De map waar de cache bestanden worden opgeslagen.
 		$classes = array(), // Array met class-definities
 		$interfaces = array(), // Array met interface-definities
@@ -23,8 +23,9 @@ class AutoLoader extends Object {
 			'mandatory_superclass' => false, // Controleer of "alle" objecten een superclass hebben
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name
 			'mandatory_comment_block' => false, // Controleer op correct begin van de php bestanden
+			'mandatory_definition' => true, // Het bestand moet minimaal 1 class of interface definitie bevatten.
 			'notify_on_multiple_definitions_per_file' => true, // Geen een notice als er meer dan 1 class gedefineerd wordt in een bestand.
-			'detect_accidental_output' => true,
+			'detect_accidental_output' => true, // Controleer of het bestand correct gesloten wordt.
 			'revalidate_cache_delay' => 20, // Bij false wordt er elke run gecontrontroleerd of er bestanden gewijzigd zijn. Anders wordt er elke x seconden gecontroleerd.
 			'ignore_all' => false, // Bij false worden de bestanden en submappen doorzocht op class en interface definities
 			'ignore_folders' => '.git,.svn',
@@ -37,6 +38,7 @@ class AutoLoader extends Object {
 			'mandatory_superclass' => true,
 			'matching_filename' => true,
 			'mandatory_comment_block' => true,
+			'mandatory_definition' => false,
 			'notify_on_multiple_definitions_per_file' => true,
 			'detect_accidental_output' => true,
 			'revalidate_cache_delay' => 10,
@@ -540,7 +542,7 @@ class AutoLoader extends Object {
 		$definitions = array();
 		foreach ($tokens as $token) {
 			$type = $token[0];
-			if ($type == 'T_PHP') {
+			if ($type == 'T_PHP' || $type == 'T_HTML') {
 				continue;
 			}
 			$value = $token[1];
@@ -608,7 +610,7 @@ class AutoLoader extends Object {
 			if ($settings['notify_on_multiple_definitions_per_file']) {
 				$this->parserNotice('Multiple definitions per file is not recommended', array_merge($definitions));
 			}
-		} elseif ($definitionCount == 0) {
+		} elseif ($settings['mandatory_definition'] && $definitionCount == 0) {
 			$this->parserNotice('No classes or interfaces found in '.$filename);
 		}
 		// Add definitions to de loader
@@ -675,9 +677,6 @@ class AutoLoader extends Object {
 	 * @return string 
 	 */
 	private function prefixNamespace($namespace, $identifier, $uses = array()) {
-		if ($namespace == '') {
-			return $identifier;
-		}
 		$pos = strpos($identifier, '\\');
 		if ($pos !== false) {
 			if ($pos == 0 || count($uses) == 0) {
@@ -693,6 +692,9 @@ class AutoLoader extends Object {
 		}
 		if (isset($uses[$identifier])) {
 			return $uses[$identifier];
+		}
+		if ($namespace == '') {
+			return $identifier;
 		}
 		return $namespace.'\\'.$identifier;
 	}
