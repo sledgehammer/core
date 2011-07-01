@@ -538,7 +538,7 @@ class AutoLoader extends Object {
 		$definitions = array();
 		foreach ($tokens as $token) {
 			$type = $token[0];
-			if ($type == 'T_OTHER') {
+			if ($type == 'T_PHP') {
 				continue;
 			}
 			$value = $token[1];

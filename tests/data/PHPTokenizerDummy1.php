@@ -14,7 +14,7 @@ namespace {
 	
 	}
 }
-namespace SledgeHammer {
+namespace _TEST {
 	interface _MyInterface {
 		
 	}
@@ -30,7 +30,7 @@ function _yourFunc() {
 }
 
 ?>
-LOL
+	LOL <?=	_yourFunc() ?>
 <?
 date('Y-m-d');
 // hiji
