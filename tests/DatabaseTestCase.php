@@ -2,8 +2,8 @@
 /**
  * Breidt de UnitTestCase class uit met assert functies voor het controleren van queries en tabellen.
  */
-
-abstract class DatabaseTestCase extends UnitTestCase {
+namespace SledgeHammer;
+abstract class DatabaseTestCase extends \UnitTestCase {
 
 	protected
 		$skipRebuildDatabase = false,

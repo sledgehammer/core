@@ -1,9 +1,11 @@
 <?php
 /**
  * Controleer de werking van het URL object
+ * 
+ * @package Core
  */
-
-class URLTests extends UnitTestCase {
+namespace SledgeHammer;
+class URLTests extends \UnitTestCase {
 
 	function test_url_parts() {
 		$urlString = 'http://me:mypass@example.com:8080/path/file?name=value#top';

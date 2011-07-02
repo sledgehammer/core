@@ -2,8 +2,8 @@
 /**
  * Controleer diverse globale SledgeHammer functies
  */
-
-class CoreFunctionsTests extends UnitTestCase {
+namespace SledgeHammer;
+class CoreFunctionsTests extends \UnitTestCase {
 
 	function test_value_function() {
 		$bestaat = 'Wel';

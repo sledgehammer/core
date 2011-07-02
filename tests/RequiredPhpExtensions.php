@@ -2,8 +2,8 @@
 /**
  * Controleer of alle benodige php extenties geinstalleerd zijn
  */
-
-class RequiredPhpExtensions extends UnitTestCase {
+namespace SledgeHammer;
+class RequiredPhpExtensions extends \UnitTestCase {
 
 	private 
 		$classes_folders_only = true, // switch off to scan all files in the PATH
@@ -36,7 +36,7 @@ class RequiredPhpExtensions extends UnitTestCase {
 		}
 		if ($this->classes_folders_only) {
 			// Alleen de classes mappen van de modules inlezen
-			$modules = SledgeHammer::getModules();
+			$modules = Framework::getModules();
 			foreach ($modules as $module) {
 				$this->append_required_extentions($module['path'].'classes/');
 			}
@@ -72,7 +72,7 @@ class RequiredPhpExtensions extends UnitTestCase {
 		if (!file_exists($folder)) {
 			return;
 		}
-		$DirectoryIterator = new DirectoryIterator($folder);
+		$DirectoryIterator = new \DirectoryIterator($folder);
 		foreach ($DirectoryIterator as $Entry) {
 			if ($Entry->isDot() || $Entry->getFilename() == '.svn') {
 				continue;

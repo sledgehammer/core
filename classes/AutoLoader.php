@@ -9,16 +9,15 @@ namespace SledgeHammer;
 class AutoLoader extends Object {
 
 	public
-		$standalone = true; // Bij true zal declareClass() een fout genereren als de class niet bekend is.
-			
+		$standalone = true, // Bij true zal declareClass() een fout genereren als de class niet bekend is.
+		$enableCache = true; // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
+
 	private
 		$path, // De basismap
-		$enableCache = true, // Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 		$cachePath, // De map waar de cache bestanden worden opgeslagen.
 		$classes = array(), // Array met class-definities
 		$interfaces = array(), // Array met interface-definities
 		$extractErrors = false, // bool Die aangeeft of er fouten zijn opgetreden bij het inlezen van definities. (Bij fouten wordt de uitkomst niet gecached)
-
 		$defaultSettings = array(
 			'mandatory_superclass' => false, // Controleer of "alle" objecten een superclass hebben
 			'matching_filename' => true, // Controleer of de bestandnaam overeenkomst met de class name

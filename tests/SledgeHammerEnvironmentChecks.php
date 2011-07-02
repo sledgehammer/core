@@ -2,8 +2,8 @@
 /**
  * Controleer diverse SledgeHammer vereisten
  */
-
-class SledgeHammerEnvironmentChecks extends UnitTestCase {
+namespace SledgeHammer;
+class SledgeHammerEnvironmentChecks extends \UnitTestCase {
 
 	/**
 	 * Controleer of de php.ini instellingen goed staan
@@ -34,7 +34,7 @@ class SledgeHammerEnvironmentChecks extends UnitTestCase {
 	}
 
 	function test_module_ini() {
-		$modules = SledgeHammer::getModules();
+		$modules = Framework::getModules();
 		foreach ($modules as $index => $module) {
 			if ($index == 'application') {
 				continue;
@@ -50,7 +50,7 @@ class SledgeHammerEnvironmentChecks extends UnitTestCase {
 	}
 
 	function test_deprecated_constants_ini() {
-		$modules = SledgeHammer::getModules();
+		$modules = Framework::getModules();
 		foreach ($modules as $name => $module) {
 			if (file_exists($module['path'].'constants.ini') || file_exists($module['path'].'settings/constants.ini')) {
 				$this->fail('constants.ini gevonden in "'.$name.'". Deze worden niet meer ondersteund');

@@ -2,8 +2,8 @@
 /**
  * Controleer diverse SledgeHammer vereisten
  */
-
-class HTMLTokenizerTests extends UnitTestCase {
+namespace SledgeHammer;
+class HTMLTokenizerTests extends \UnitTestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);

@@ -2,8 +2,8 @@
 /**
  * Controleer diverse SledgeHammer vereisten
  */
-
-class TagIteratorTests extends UnitTestCase {
+namespace SledgeHammer;
+class TagIteratorTests extends \UnitTestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);

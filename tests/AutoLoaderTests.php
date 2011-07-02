@@ -2,13 +2,13 @@
 /**
  * Controleer diverse SledgeHammer vereisten
  */
-
-class AutoLoaderTests extends UnitTestCase {
+namespace SledgeHammer;
+class AutoLoaderTests extends \UnitTestCase {
 
 	function test_definitions() {
 		$loader = new AutoLoader(PATH);
 		$loader->enableCache = false;
-		$modules = SledgeHammer::getModules();
+		$modules = Framework::getModules();
 		$loader->inspectModules($modules);
 		$this->assertTrue($loader->validate(), 'AutoLoader->validate() should return true');
 	}
