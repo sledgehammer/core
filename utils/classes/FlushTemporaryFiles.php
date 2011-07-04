@@ -18,7 +18,7 @@ class FlushTemporaryFiles extends Util {
 		}
 		$tmpFolder = $this->paths['project'].'tmp/';
 		$count = rmdir_contents($tmpFolder, true);
-		if (isset($gitignore)) {
+		if (isset($gitignoreContents)) {
 			file_put_contents($gitignoreFile, $gitignoreContents);
 		}
 		return new MessageBox('done', 'Flushing tmp/ complete', 'Deleting files in "'.$tmpFolder.'"<br /><br /><b>'.$count.' files removed</b>');
