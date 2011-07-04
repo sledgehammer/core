@@ -20,8 +20,10 @@ class AutoLoader extends Object {
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
 	public $enableCache = true; 
+	public $cachePath = true; 
 
 	private $path;
+
 	private $settings = array(
 		'matching_filename' => true,
 		'mandatory_definition' => true,
@@ -29,20 +31,28 @@ class AutoLoader extends Object {
 		'one_definition_per_file' => true,
 		'ignore_folders' => array(),
 		'ignore_files' => array(),
+		'revalidate_cache_delay' => 10,
 	);
 	/**
 	 * @var array  Array containing the filename per class or interface.
 	 */
 	private $definitions = array();
 
-
-	function __construct($path) {
+	/**
+	 *
+	 * @param string $path
+	 * @param string $cachePath  Basepath of the cacheFiles
+	 */
+	function __construct($path, $cachePath = 'tmp/AutoLoader/') {
 		$this->path = $path;
+		$this->cachePath = $this->fullPath($cachePath);
 	}
 	
 	function init() {
+		
+		// @todo 
 		$modules = Framework::getModules();
-		foreach ($modules as $module) {
+		foreach ($modules as $folder => $module) {
 			$this->importModule($module);
 		}
 	}
@@ -128,44 +138,57 @@ class AutoLoader extends Object {
 
 	function importModule($module) {
 		$path = $module['path'];
-		$settings = $this->settings;
 		if (file_exists($path.'classes')) {
 			$path = $path.'classes';
+			$defaultSettings = $this->settings;
 		} else {
-			$settings = $this->mergeSettings($settings, array(
+			$defaultSettings = $this->mergeSettings($this->settings, array(
 				'matching_filename' => false,
 				'mandatory_definition' => false,
 				'mandatory_superclass' => false,
-				'one_definition_per_file' => false
-
+				'one_definition_per_file' => false,
+				'revalidate_cache_delay' => 20,
 			));
 		}
+		$settings = $this->loadSettings($path, $defaultSettings);
+		if ($this->enableCache) {
+			$folder = basename($module['path']);
+			if (strpos($module['path'], $this->path) === 0) { // Staat de module bij deze app
+				$cacheFile = $this->cachePath.$folder.'.php';
+			} else { // De modules staan in een ander path (modules die via een devutils ingeladen worden)
+				$cacheFile = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
+			}
+			if (!mkdirs(dirname($cacheFile))) {
+				$this->enableCache = false;
+			} else {
+				if (file_exists($cacheFile)) {
+					$mtimeCache = filemtime($cacheFile);		
+					$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
+					if ($revalidateCache == false || $mtimeCache > mtime_folders($module['path'])) { // Is het cache bestand niet verouderd?
+						// Gebruik dan de cache
+						include($cacheFile);
+						if (isset($definitions)) {
+							$this->definitions += $definitions;
+							if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
+								touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
+								dump($cacheFile.' retouched');
+							}
+							return;
+						}
+					}
+				}
+				dump($cacheFile.' outdated');
+				//	error('LOAD CACCE');
+			}
+		}
 		$this->importFolder($path, $settings);
+		if ($this->enableCache) {
+			$this->writeCache($cacheFile, $this->relativePath($module['path']));
+		}
 	}
 	
 	function importFolder($path, $settings = null) {
-		$overrides = array();
-		if (file_exists($path.'/autoloader.ini')) {
-			$overrides = parse_ini_file($path.'/autoloader.ini', true);
-			if (isset($overrides['ignore_folders'])) {
-				$folders = array();
-				foreach(explode(',', $overrides['ignore_folders']) as $folder) {
-					if (substr($folder, -1) == '/') {
-						$folder = substr($folder, 0, -1);
-					}
-					$folders[] = $path.$folder;
-				}
-				$overrides['ignore_folders'] = $folders;
-			}
-			if (isset($overrides['ignore_files'])) {
-				$files = array();
-				foreach(explode(',', $overrides['ignore_files']) as $filename) {
-					$files[] = $path.$filename;
-				}
-				$overrides['ignore_files'] = $files;
-			}
-		}
-		$settings = $this->mergeSettings($settings, $overrides);
+		$settings = $this->loadSettings($path, $settings);
 		$dir = new \DirectoryIterator($path);
 		foreach ($dir as $entry) {
 			if ($entry->isDot()) {
@@ -173,7 +196,7 @@ class AutoLoader extends Object {
 			}
 			if ($entry->isDir()) {
 				if (in_array($entry->getPathname(), $settings['ignore_folders']) == false) {
-					$this->importFolder($entry->getPathname(), $settings);
+					$this->importFolder($entry->getPathname(), $this->loadSettings($entry->getPathname(), $settings));
 				}
 				continue;
 			}
@@ -303,6 +326,55 @@ class AutoLoader extends Object {
 		return $definitions;
 	}
 	
+	function writeCache($cacheFile, $definitionPath = null) {
+		$definitions = array();
+		if ($definitionPath === null) {
+			$definitions = $this->definitions;
+		} else {
+			$length = strlen($definitionPath);
+			foreach ($this->definitions as $definition => $filename) {
+				if (substr($filename, 0, $length) == $definitionPath) {
+					$definitions[$definition] = $filename; 
+				}
+			}
+		}
+		$php = "<?php\n/**\n * Generated AutoLoader Cache\n */\n\$definitions = array(\n";
+		foreach ($definitions as $definition => $filename) {
+			$php .= "\t'".  addslashes($definition)."' => '".  addslashes($filename)."',\n";
+		}
+		$php .= ");\n?>";
+		file_put_contents($cacheFile, $php);
+		
+		/* classes
+		ksort($classes);
+		foreach ($classes as $class => $info) {
+			fputs($fp, "\t'".$class."'=> array('filename'=>'".addslashes($info['filename'])."'");
+			if (isset($info['extends'])) {
+				fputs($fp, ",'extends'=>'".addslashes($info['extends'])."'");
+			}
+			if (isset($info['implements'])) {
+				fputs($fp, ",'implements'=>array('".implode("','", $info['implements'])."')");
+			}
+			fputs($fp, "),\n");
+		}
+		// interfaces
+		ksort($interfaces);
+		fputs($fp, ");\n\$interfaces = array(\n");
+		foreach ($interfaces as $interface => $info) {
+			fputs($fp, "\t'".$interface."'=>array('filename'=>'".addslashes($info['filename'])."'");
+			if (isset($info['extends'])) {
+				fputs($fp, ",'extends'=>array('".implode("','", $info['extends'])."')");
+			}
+			fputs($fp, "),\n");
+		}
+		fputs($fp, ");\n?>");
+		fclose($fp);
+		return true;
+		for
+		 * *
+		 */
+	}
+	
 	private function mergeSettings($settings, $overrides = array()) {
 		if ($settings === null) {
 			$settings = $this->settings;
@@ -315,6 +387,31 @@ class AutoLoader extends Object {
 			$settings[$key] = $value;
 		}
 		return $settings;
+	}
+	
+	private function loadSettings($path, $settings = null) {
+		$overrides = array();
+		if (file_exists($path.'/autoloader.ini')) {
+			$overrides = parse_ini_file($path.'/autoloader.ini', true);
+			if (isset($overrides['ignore_folders'])) {
+				$folders = array();
+				foreach(explode(',', $overrides['ignore_folders']) as $folder) {
+					if (substr($folder, -1) == '/') {
+						$folder = substr($folder, 0, -1);
+					}
+					$folders[] = $path.$folder;
+				}
+				$overrides['ignore_folders'] = $folders;
+			}
+			if (isset($overrides['ignore_files'])) {
+				$files = array();
+				foreach(explode(',', $overrides['ignore_files']) as $filename) {
+					$files[] = $path.$filename;
+				}
+				$overrides['ignore_files'] = $files;
+			}
+		}
+		return $this->mergeSettings($settings, $overrides);
 	}
 	
 	private function unexpectedToken($token) {
