@@ -71,7 +71,8 @@ class AutoLoader extends Object {
 				return true; // The class/interface is defined by resolving a namespace
 			}
 			if ($this->standalone) {
-				warning('Failed to define: "'.$definition.'"');
+				warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+
 			}
 			return false;
 		}
@@ -320,7 +321,7 @@ class AutoLoader extends Object {
 		} else {
 			$length = strlen($definitionPath);
 			foreach ($this->definitions as $definition => $filename) {
-				if (substr($filename, 0, $length) == $definition) {
+				if (substr($filename, 0, $length) == $definitionPath) {
 					$definitions[$definition] = $filename; 
 				}
 			}
