@@ -14,7 +14,7 @@ require_once(dirname(__FILE__).'/../init.php');
 //$ErrorHandler->cli = true; // Forceer foutmeldingen
 
 echo "Resolving required modules...\n";
-$modules = SledgeHammer::getModules();
+$modules = Framework::getModules();
 $max_length_module = 0;
 foreach ($modules as $module) {
 	if (strlen($module['name']) > $max_length_module) {	
@@ -23,21 +23,15 @@ foreach ($modules as $module) {
 }
 
 echo "Scanning classes and interfaces...\n";
-ini_set('memory_limit', '32M'); // Bij grote hoeveelheden classes (1000+) gebruikt php token_get_all() onnodig veel geheugen
+ini_set('memory_limit', '128M'); // Bij grote hoeveelheden classes (1000+) gebruikt php token_get_all() onnodig veel geheugen
 $Loader = new AutoLoader(PATH);
 $Loader->enableCache = false;
-$summary = $Loader->inspectModules($modules);
-foreach ($summary as $module => $summary) {
-	echo '  '.str_pad($module, $max_length_module). ' : '.$summary['classes'] .' classes';
-	if ($summary['interfaces']) {
-		echo ' and '.$summary['interfaces'].' interfaces';
-	}
-	echo "\n";
+foreach ($modules as $module) {
+	$Loader->importModule($module);
 }
-echo "Validating library...\n";
-$Loader->validate();
 echo "Writing library...\n";
-if ($Loader->saveDatabase()) {
+$Loader->writeCache(PATH.'AutoLoader.db.php');
+if (file_exists(PATH.'AutoLoader.db.php')) {
 	echo "  done.\n";
 } else {
 	echo "  failed.\n";

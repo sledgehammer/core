@@ -32,6 +32,7 @@ class AutoLoader extends Object {
 		'ignore_folders' => array(),
 		'ignore_files' => array(),
 		'revalidate_cache_delay' => 10,
+		'detect_accidental_output' => true,
 	);
 	/**
 	 * @var array  Array containing the filename per class or interface.
@@ -49,7 +50,11 @@ class AutoLoader extends Object {
 	}
 	
 	function init() {
-		// @todo MasterCache file
+		if (file_exists($this->path.'AutoLoader.db.php')) {
+			include($this->path.'AutoLoader.db.php');
+			$this->definitions = $definitions;
+			return;
+		}
 		$modules = Framework::getModules();
 		foreach ($modules as $folder => $module) {
 			$this->importModule($module);
@@ -105,6 +110,11 @@ class AutoLoader extends Object {
 		return $filename;
 	}
 	
+	function getDefinitions() {
+		return array_keys($this->definitions);
+	}
+
+
 	/**
 	 *
 	 * @param string $definition Fully qualified class/interface name
@@ -146,10 +156,10 @@ class AutoLoader extends Object {
 				'mandatory_superclass' => false,
 				'one_definition_per_file' => false,
 				'revalidate_cache_delay' => 20,
+				'detect_accidental_output' => false,
 			), $settings);
 		}
 		$settings = $this->loadSettings($path, $settings);
-		
 		if ($this->enableCache) {
 			$folder = basename($module['path']);
 			$cacheFile = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
@@ -292,6 +302,9 @@ class AutoLoader extends Object {
 					throw new \Exception('Unexpected state: "'.$state.'"');
 			}
 		}
+		if ($settings['detect_accidental_output'] && $token[0] == T_INLINE_HTML) {
+			notice('Invalid end of file. (html)output detected');
+		}
 		if (count($definitions) > 1) {
 			if ($settings['one_definition_per_file']) {
 				notice('Multiple definitions found in '.$filename, $definitions);
@@ -314,6 +327,59 @@ class AutoLoader extends Object {
 		}
 	}
 	
+	/**
+	 * Veranderdt de scope van alle functies en eigenschappen van de $class van private of protected naar public.
+	 * Hierdoor kun je in UnitTests controleren of de inhoud van het objecten correct is.
+	 * Deze functie NIET gebruiken in productie-code
+	 *
+	 * @throws Exception Als de class al gedefineerd is. (De eval() zou anders fatale "Cannot redeclare class" veroorzaken).
+	 * @return void
+	 */
+	function exposePrivates($class) {
+		if (class_exists($class, false)) {
+			throw new \Exception('Class: "'.$class.'" is already defined');
+		}
+		$filename = $this->getFilename($class);
+		$tokens = token_get_all(file_get_contents($filename));
+		$php_code = '';
+		if ($tokens[0][0] != T_OPEN_TAG) {
+			notice('Unexpected beginning of the file, expecting "<?php"');
+			return;
+		} else {
+			unset($tokens[0]); // Haal de "<?php" er vanaf
+		}
+		foreach ($tokens as $token) {
+			if (is_string($token)) {
+				$php_code .= $token;
+				continue;
+			}
+			switch ($token[0]) {
+
+				// Geen commentaar
+				case T_DOC_COMMENT:
+				case T_COMMENT:
+					break;
+				// Geen private en protected
+				case T_PRIVATE:
+				case T_PROTECTED:
+					$php_code .= 'public';
+					break;
+
+				// Alle andere php_code toevoegen aan de $php_code string
+				default:
+					$php_code .= $token[1];
+					break;
+			}
+		}
+		// De php code uitvoeren en de class (zonder protected en private) declareren
+		eval($php_code);
+	}
+	
+	/**
+	 * 
+	 * @param string $cacheFile
+	 * @param null|string $definitionPath 
+	 */
 	function writeCache($cacheFile, $definitionPath = null) {
 		$definitions = array();
 		if ($definitionPath === null) {
@@ -326,41 +392,13 @@ class AutoLoader extends Object {
 				}
 			}
 		}
+		ksort($definitions);
 		$php = "<?php\n/**\n * Generated AutoLoader Cache\n */\n\$definitions = array(\n";
 		foreach ($definitions as $definition => $filename) {
 			$php .= "\t'".  addslashes($definition)."' => '".  addslashes($filename)."',\n";
 		}
 		$php .= ");\n?>";
 		file_put_contents($cacheFile, $php);
-		
-		/* classes
-		ksort($classes);
-		foreach ($classes as $class => $info) {
-			fputs($fp, "\t'".$class."'=> array('filename'=>'".addslashes($info['filename'])."'");
-			if (isset($info['extends'])) {
-				fputs($fp, ",'extends'=>'".addslashes($info['extends'])."'");
-			}
-			if (isset($info['implements'])) {
-				fputs($fp, ",'implements'=>array('".implode("','", $info['implements'])."')");
-			}
-			fputs($fp, "),\n");
-		}
-		// interfaces
-		ksort($interfaces);
-		fputs($fp, ");\n\$interfaces = array(\n");
-		foreach ($interfaces as $interface => $info) {
-			fputs($fp, "\t'".$interface."'=>array('filename'=>'".addslashes($info['filename'])."'");
-			if (isset($info['extends'])) {
-				fputs($fp, ",'extends'=>array('".implode("','", $info['extends'])."')");
-			}
-			fputs($fp, "),\n");
-		}
-		fputs($fp, ");\n?>");
-		fclose($fp);
-		return true;
-		for
-		 * *
-		 */
 	}
 	
 	private function mergeSettings($settings, $overrides = array()) {
@@ -382,6 +420,9 @@ class AutoLoader extends Object {
 	}
 	
 	private function loadSettings($path, $settings = array()) {
+		if (substr($path, -1) == '/') {
+			$path = substr($path, 0, -1);
+		}
 		$overrides = array();
 		if (file_exists($path.'/autoloader.ini')) {
 			$overrides = parse_ini_file($path.'/autoloader.ini', true);
@@ -391,14 +432,15 @@ class AutoLoader extends Object {
 					if (substr($folder, -1) == '/') {
 						$folder = substr($folder, 0, -1);
 					}
-					$folders[] = $path.$folder;
+					$folders[] = $path.'/'.$folder;
 				}
 				$overrides['ignore_folders'] = $folders;
 			}
 			if (isset($overrides['ignore_files'])) {
+				
 				$files = array();
 				foreach(explode(',', $overrides['ignore_files']) as $filename) {
-					$files[] = $path.$filename;
+					$files[] = $path.'/'.$filename;
 				}
 				$overrides['ignore_files'] = $files;
 			}
@@ -413,6 +455,7 @@ class AutoLoader extends Object {
 			notice('Unexpected token: '.token_name($token[0]).': '.syntax_highlight($token[1]).' on line '.$token[2]);
 		}
 	}
+	
 	/**
 	 * Maakt van een absoluut path een relatief path (waar mogelijk)
 	 *
