@@ -49,8 +49,7 @@ class AutoLoader extends Object {
 	}
 	
 	function init() {
-		
-		// @todo 
+		// @todo MasterCache file
 		$modules = Framework::getModules();
 		foreach ($modules as $folder => $module) {
 			$this->importModule($module);
@@ -128,7 +127,6 @@ class AutoLoader extends Object {
 			return false;
 		}
 		notice('Importing "'.$class.'" into namespace "'.$targetNamespace.'"', 'Use "\\'.$extends.'"');
-
 		$php .= ' extends \\'.$extends." {}\n}";
 		eval($php);
 
@@ -136,49 +134,38 @@ class AutoLoader extends Object {
 	}
 
 
-	function importModule($module) {
+	function importModule($module, $settings = array()) {
 		$path = $module['path'];
-		if (file_exists($path.'classes')) {
+		if (file_exists($module['path'].'classes')) {
 			$path = $path.'classes';
-			$defaultSettings = $this->settings;
 		} else {
-			$defaultSettings = $this->mergeSettings($this->settings, array(
+			$settings = $this->mergeSettings(array(
 				'matching_filename' => false,
 				'mandatory_definition' => false,
 				'mandatory_superclass' => false,
 				'one_definition_per_file' => false,
 				'revalidate_cache_delay' => 20,
-			));
+			), $settings);
 		}
-		$settings = $this->loadSettings($path, $defaultSettings);
+		$settings = $this->loadSettings($path, $settings);
+		
 		if ($this->enableCache) {
 			$folder = basename($module['path']);
-			if (strpos($module['path'], $this->path) === 0) { // Staat de module bij deze app
-				$cacheFile = $this->cachePath.$folder.'.php';
-			} else { // De modules staan in een ander path (modules die via een devutils ingeladen worden)
-				$cacheFile = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
-			}
+			$cacheFile = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
 			if (!mkdirs(dirname($cacheFile))) {
 				$this->enableCache = false;
-			} else {
-				if (file_exists($cacheFile)) {
-					$mtimeCache = filemtime($cacheFile);		
-					$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-					if ($revalidateCache == false || $mtimeCache > mtime_folders($module['path'])) { // Is het cache bestand niet verouderd?
-						// Gebruik dan de cache
-						include($cacheFile);
-						if (isset($definitions)) {
-							$this->definitions += $definitions;
-							if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
-								touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
-								dump($cacheFile.' retouched');
-							}
-							return;
-						}
+			} elseif (file_exists($cacheFile)) {
+				$mtimeCache = filemtime($cacheFile);		
+				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
+				if ($revalidateCache == false || $mtimeCache > mtime_folders($module['path'])) { // Is het cache bestand niet verouderd?
+					// Use the cacheFile
+					include($cacheFile);
+					$this->definitions += $definitions;
+					if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
+						touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
 					}
+					return;
 				}
-				dump($cacheFile.' outdated');
-				//	error('LOAD CACCE');
 			}
 		}
 		$this->importFolder($path, $settings);
@@ -187,7 +174,7 @@ class AutoLoader extends Object {
 		}
 	}
 	
-	function importFolder($path, $settings = null) {
+	function importFolder($path, $settings = array()) {
 		$settings = $this->loadSettings($path, $settings);
 		$dir = new \DirectoryIterator($path);
 		foreach ($dir as $entry) {
@@ -195,10 +182,10 @@ class AutoLoader extends Object {
 				continue;
 			}
 			if ($entry->isDir()) {
-				if (in_array($entry->getPathname(), $settings['ignore_folders']) == false) {
-					$this->importFolder($entry->getPathname(), $this->loadSettings($entry->getPathname(), $settings));
+				if (in_array($entry->getPathname(), $settings['ignore_folders'])) {
+					continue;
 				}
-				continue;
+				$this->importFolder($entry->getPathname(), $settings);
 			}
 			if (file_extension($entry->getFilename()) == 'php') {
 				if (in_array($entry->getPathname(), $settings['ignore_files']) == false) {
@@ -211,9 +198,10 @@ class AutoLoader extends Object {
 	/**
 	 *
 	 * @param string $filename
-	 * @param array $settings 
+	 * @param array $settings
+	 * @return array definitions 
 	 */
-	function importFile($filename, $settings = null) {
+	function importFile($filename, $settings = array()) {
 		$setttings = $this->mergeSettings($settings);
 		$tokens = token_get_all(file_get_contents($filename));
 		$definitions = array();
@@ -323,7 +311,6 @@ class AutoLoader extends Object {
 			}
 			$this->definitions[$definition] = $filename;
 		}
-		return $definitions;
 	}
 	
 	function writeCache($cacheFile, $definitionPath = null) {
@@ -333,7 +320,7 @@ class AutoLoader extends Object {
 		} else {
 			$length = strlen($definitionPath);
 			foreach ($this->definitions as $definition => $filename) {
-				if (substr($filename, 0, $length) == $definitionPath) {
+				if (substr($filename, 0, $length) == $definition) {
 					$definitions[$definition] = $filename; 
 				}
 			}
@@ -376,20 +363,24 @@ class AutoLoader extends Object {
 	}
 	
 	private function mergeSettings($settings, $overrides = array()) {
-		if ($settings === null) {
-			$settings = $this->settings;
-		}
 		foreach ($overrides as $key => $value) {
 			if (array_key_exists($key, $this->settings) == false) {
 				notice('Invalid setting: "'.$key.'" = '.syntax_highlight($value), array('Available settings' => array_keys($this->settings)));
-
 			}
 			$settings[$key] = $value;
+		}
+		if (count($settings) !== count($this->settings)) {
+			// Use global settings values 
+			foreach ($this->settings as $key => $value) {
+				if (array_key_exists($key, $settings) == false) {
+					$settings[$key] = $value;
+				}
+			}
 		}
 		return $settings;
 	}
 	
-	private function loadSettings($path, $settings = null) {
+	private function loadSettings($path, $settings = array()) {
 		$overrides = array();
 		if (file_exists($path.'/autoloader.ini')) {
 			$overrides = parse_ini_file($path.'/autoloader.ini', true);

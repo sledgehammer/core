@@ -44,7 +44,7 @@ class Framework {
 		$cyclic_dependency_check = count($required_modules) + 1;
 		while (count($required_modules) > 0) { // Loop until all required_modules are sorted
 			if ($cyclic_dependency_check == count($required_modules)) { // No modules are sorted in the previous while loop?
-				throw new Exception('Cyclic depedency detected for modules "'.implode('" and "', $required_modules).'"');
+				throw new \Exception('Cyclic depedency detected for modules "'.implode('" and "', $required_modules).'"');
 			}
 			$cyclic_dependency_check = count($required_modules);
 			foreach ($required_modules as $index => $module) {
@@ -107,11 +107,16 @@ class Framework {
 		$required_modules[] = $module;
 		if (!isset($module_info[$module])) {
 			if ($module === 'application') {
-				throw new Exception('Info for the application "module" must be configured');
+				throw new \Exception('Info for the application "module" must be configured');
 			} else {
 				$module_path = $modulesPath.$module.DIRECTORY_SEPARATOR;
-				if (!($module_info[$module] = parse_ini_file($module_path.'module.ini'))) {
-					throw new Exception('Module: "'.$module.'" required by "'.$required_by.'" is missing or incomplete');
+				if (file_exists($module_path) == false) {
+					warning('Module: "'.$module.'" is missing, but is required by "'.$required_by.'"');
+				} elseif (file_exists($module_path.'module.ini') == false) {
+					notice('Missing module.ini for module: "'.$module.'" required by "'.$required_by.'"');
+					$module_info[$module] = array('name' => $module);
+				} elseif (!($module_info[$module] = parse_ini_file($module_path.'module.ini'))) {
+					throw new \Exception('module.ini from mModule: "'.$module.'" is corrupt');
 				}
 				$module_info[$module]['path'] = $module_path;
 			}
@@ -175,7 +180,7 @@ class Framework {
 	function mysqlArgs($link, $environment = null, $filename = null) {
 		$databases = self::extractDatabaseSettings($environment, $filename);
 		if (empty($databases[$link])) {
-			throw new Exception('Database "'.$link.'" not defined');
+			throw new \Exception('Database "'.$link.'" not defined');
 		}
 		$settings = $databases[$link];
 		$params = array(
