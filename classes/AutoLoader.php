@@ -9,9 +9,10 @@ namespace SledgeHammer;
 class AutoLoader extends Object {
 
 	/**
-	 * @var bool  Bij true zal declareClass() een fout genereren als de class niet bekend is.
+	 * @var bool  Bij true zal define() een fout genereren als de class niet bekend is.
 	 */
 	public $standalone = true;
+
 	/**
 	 * @var bool  If a class or interface doesn't exist in a namespace use the class from a higher namespace
 	 */
@@ -19,11 +20,16 @@ class AutoLoader extends Object {
 	/** 
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
-	public $enableCache = true; 
-	public $cachePath = true; 
+	public $enableCache = false; 
 
 	private $path;
+	private $cachePath = true; 
 
+	/**
+	 * Checks that are enabled when the module contains a classes folder.
+	 * The settings can be overridden with by placing an  autoloader.ini in the offending folder.
+	 * @var array
+	 */
 	private $settings = array(
 		'matching_filename' => true,
 		'mandatory_definition' => true,
@@ -102,7 +108,9 @@ class AutoLoader extends Object {
 		if ($filename === null) {
 			foreach ($this->definitions as $name => $value) {
 				if (strcasecmp($name, $definition) == 0) {
-					notice('Definition "'.$definition.'" not found, using "'.$name.'" fallback');
+					if (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode?
+						notice('Definition "'.$definition.'" not found, using "'.$name.'" fallback');
+					}
 					return $value;
 				}
 			}
@@ -137,7 +145,9 @@ class AutoLoader extends Object {
 		} else {
 			return false;
 		}
-		notice('Importing "'.$class.'" into namespace "'.$targetNamespace.'"', 'Use "\\'.$extends.'"');
+		if (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode
+			notice('Importing "'.$class.'" into namespace "'.$targetNamespace.'"', 'Use "\\'.$extends.'"');
+		}
 		$php .= ' extends \\'.$extends." {}\n}";
 		eval($php);
 
@@ -259,7 +269,7 @@ class AutoLoader extends Object {
 				case 'CLASS':
 					if ($token[0] == T_STRING) {
 						if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $token[1]) {
-							notice('Filename doesn\'t match classname "'.$token[1].'" in "'.$filename.'"');
+							notice('Filename doesn\'t match classname "'.$token[1].'" in "'.$filename.'"', array('settings' => $settings));
 					}
 						if ($namespace == '') {
 							$definition = $token[1];
@@ -316,7 +326,7 @@ class AutoLoader extends Object {
 		foreach ($definitions as $definition) {
 			if (isset($this->definitions[$definition])) {
 				if ($this->definitions[$definition] != $filename) {
-					notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: "'.$this->definitions[$definition].'" and "'.$filename.'"');
+					notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: "'.$this->definitions[$definition].'" and "'.$filename.'"', array('settings' => $settings));
 				} else {
 					//if ($settings['one_definition_per_file']) {
 					//$this->parserNotice('"'.$identifier.'" is declared multiple times in: "'.$loaderDefinition['filename'].'"');
