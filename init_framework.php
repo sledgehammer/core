@@ -4,11 +4,11 @@
  * Initialiseerd de database(s) en alle sledgehammer-modules (constants, functions en init)
  */
 namespace SledgeHammer;
-if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
-	define('SLEDGEHAMMER_FRAMEWORK', true);
+if (!defined(__NAMESPACE__.'\SLEDGEHAMMER_FRAMEWORK')) {
+	define(__NAMESPACE__.'\SLEDGEHAMMER_FRAMEWORK', true);
 
-	if (!defined('ENVIRONMENT')) {
-		define('ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+	if (!defined('ENVIRONMENT') && !defined(__NAMESPACE__.'\ENVIRONMENT')) {
+		define(__NAMESPACE__.'\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
 	}
 	$configFile = (ENVIRONMENT == 'development') ? 'development' : 'defaults'; 
 	$config = parse_ini_file(dirname(__FILE__).'/settings/sledgehammer_'.$configFile.'.ini'); 
@@ -28,7 +28,6 @@ if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
 	$GLOBALS['ErrorHandler']->emails_per_request = $config['error_handler_emails_per_request'];
 	$GLOBALS['ErrorHandler']->emails_per_minute = $config['error_handler_emails_per_minute'];
 	$GLOBALS['ErrorHandler']->emails_per_day = $config['error_handler_emails_per_day'];
-
 
 	if (!isset($debug_override_variable)) {
 		$debug_override_variable = 'debug'; // Gebruik de debug variabele
@@ -75,6 +74,6 @@ if (!defined('SLEDGEHAMMER_FRAMEWORK')) {
 	if ($debug_override_variable == 'debug') {
 		unset($debug_override_variable);
 	}
-	define('MICROTIME_INIT', microtime(true));
+	define(__NAMESPACE__.'\MICROTIME_INIT', microtime(true));
 }
 ?>

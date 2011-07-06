@@ -25,15 +25,13 @@ class AutoLoaderTests extends \UnitTestCase {
 	}
 	
 	function test_availability() {
-		$loader = new AutoLoader(PATH);
-		$loader->init();
-		$definitions = $loader->getDefinitions();
+		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
 		$analyzer = new PHPAnalyzer();
 		//set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
 
 		foreach ($definitions as $definition) {
 			$filename = $loader->getFilename($definition);
-			$analyzer->open(PATH.$filename);
+			$analyzer->open($filename);
 		}
 		
 		foreach ($analyzer->classes as $class => $info) {

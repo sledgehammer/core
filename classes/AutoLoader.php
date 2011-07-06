@@ -20,7 +20,7 @@ class AutoLoader extends Object {
 	/** 
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
-	public $enableCache = false; 
+	public $enableCache = true; 
 
 	private $path;
 	private $cachePath = true; 
@@ -87,7 +87,7 @@ class AutoLoader extends Object {
 			}
 			return false;
 		}
-		$success = include_once($this->fullpath($filename));
+		$success = include_once($filename);
 		if ($success !== 1) { // Lukte het includen van het bestand?
 			throw new \Exception('Failed to include "'.$filename.'"');
 		}
@@ -105,17 +105,17 @@ class AutoLoader extends Object {
 	 */
 	function getFilename($definition) {
 		$filename = @$this->definitions[$definition];
-		if ($filename === null) {
-			foreach ($this->definitions as $name => $value) {
-				if (strcasecmp($name, $definition) == 0) {
-					if (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode?
-						notice('Definition "'.$definition.'" not found, using "'.$name.'" fallback');
-					}
-					return $value;
+		if ($filename !== null) {
+			return $this->fullPath($filename);
+		}
+		foreach ($this->definitions as $name => $value) {
+			if (strcasecmp($name, $definition) == 0) {
+				if (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode?
+					notice('Definition "'.$definition.'" not found, using "'.$name.'" fallback');
 				}
+				return $this->fullPath($value);
 			}
 		}
-		return $filename;
 	}
 	
 	function getDefinitions() {

@@ -124,6 +124,7 @@ class ErrorHandler {
 			'line-height: 14px',
 			'text-align: left',
 			'text-shadow: none',
+			'overflow-x: auto',
 		);
 		if (!$this->email) {
 			$style[] = 'border: 1px dashed #cfcfcf';
