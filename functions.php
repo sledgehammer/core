@@ -1,11 +1,13 @@
 <?php
 /**
- * De globale functies van SledgeHammer
+ * SledgeHammer functions
+ * 
+ * Also adds global functions that are missing in php.
  *
  * @package Core
  */
 
-// Functies die ook buiten de SledgeHammer namespace direct benaderd kunnen worden.
+// Functions that are available outside everywhere (global namespace)
 namespace {
 
 	/**
@@ -49,11 +51,7 @@ namespace {
 	 * Een verouderde functionaleit.
 	 */
 	function deprecated($message = 'Deze functionaliteit zal in de toekomst niet meer ondersteund worden.', $information = NULL) {
-		if (defined('E_USER_DEPRECATED')) {
-			SledgeHammer\ErrorHandler::handle(E_USER_DEPRECATED, $message, $information, true); // Kan pas sinds php 5.3.0
-		} else {
-			notice('Deprecated: '.$message, $information);
-		}
+		SledgeHammer\ErrorHandler::handle(E_USER_DEPRECATED, $message, $information, true); // Kan pas sinds php 5.3.0
 	}
 
 	/**
@@ -141,7 +139,7 @@ namespace {
 	}
 }
 
-// Functies die binnen de SledgeHammer namespace
+// Global functions inside the SledgeHammer namespace
 namespace SledgeHammer {
 
 	/**
@@ -319,10 +317,10 @@ namespace SledgeHammer {
 	 * @return int|false
 	 */
 	function wget($url, $filename) {
-		$file_contents = file_get_contents($url);
-		if ($file_contents) {
-			if (file_put_contents($filename, $file_contents)) {
-				return strlen($file_contents);
+		$contents = file_get_contents($url);
+		if ($contents) {
+			if (file_put_contents($filename, $contents)) {
+				return strlen($contents);
 			}
 		}
 		return false;
@@ -681,7 +679,7 @@ namespace SledgeHammer {
 			return array_keys($iterator);
 		}
 		if (func_num_args() > 1) {
-			error('$search_value not yet implemented');
+			throw new \Exception('$search_value not implemented');
 		}
 		if (!is_object($iterator) || !($iterator instanceof Iterator)) {
 			warning('The first argument should be an Iterator object');
@@ -739,7 +737,7 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * Retreive browser and OS info
+	 * Retrieve browser and OS info
 	 *
 	 * @param NULL|string $part Het deel van de info welke gevraagd wordt("name", "version" of "os"), bij NULL krijg je een array met alle gegevens
 	 * @return string|array array (
@@ -849,7 +847,7 @@ namespace SledgeHammer {
 	/**
 	 * De HTTP headers versturen.
 	 *
-	 * @param array $headers
+	 * @param array $headers  Example: array('Location' => 'http://example.com')
 	 * @return void
 	 */
 	function send_headers($headers) {
@@ -862,8 +860,8 @@ namespace SledgeHammer {
 			} else {
 				$location = ', output started in '.$file.' on line '.$line;
 			}
-			if (class_exists('ErrorHandler', false)) {
-					notice('Couldn\'t sent header(s)'.$location,  array('headers' => $headers));
+			if (class_exists('SledgeHammer\ErrorHandler', false)) {
+				notice('Couldn\'t sent header(s)'.$location,  array('headers' => $headers));
 			} else {
 				trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers,'", "').'"'.$location,  E_USER_NOTICE);
 			}
