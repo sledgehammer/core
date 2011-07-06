@@ -9,8 +9,8 @@
  */
 namespace SledgeHammer;
 require_once(dirname(__FILE__).'/init_framework.php'); // voor render_file() en redirect()
-if (!defined('MICROTIME_START')) {
-	define('MICROTIME_START', microtime(true));
+if (!defined(__NAMESPACE__.'\MICROTIME_START')) {
+	define(__NAMESPACE__.'\MICROTIME_START', microtime(true));
 }
 
 $webpath = dirname((isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME']));
@@ -61,9 +61,9 @@ foreach($files as $filename) {
 	}
 }
 
-define('WEBPATH', $webpath);
+define(__NAMESPACE__.'\WEBPATH', $webpath);
 $folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(WEBPATH)), $match);
-define('WEBROOT', str_repeat('../', $folderCount));
+define(__NAMESPACE__.'\WEBROOT', str_repeat('../', $folderCount));
 //unset($urlPath, $publicFile, $fullpath, $folderCount, $math, $folders, $folder, $files, $filename);
 return true;
 ?>
