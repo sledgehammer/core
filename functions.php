@@ -1,7 +1,7 @@
 <?php
 /**
  * SledgeHammer functions
- * 
+ *
  * Also adds global functions that are missing in php.
  *
  * @package Core
@@ -56,13 +56,13 @@ namespace {
 
 	/**
 	 * Als de variable bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
-	 * Let op! Heeft als side-effect dat de variable wordt ingesteld op null. array_value() heeft hier geen last van, maar is alleen geschikt voor arrays. 
+	 * Let op! Heeft als side-effect dat de variable wordt ingesteld op null. array_value() heeft hier geen last van, maar is alleen geschikt voor arrays.
 	 *
 	 * i.p.v.
 	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
 	 * Schrijf je:
 	 *   if (value($_GET['foo']) == 'bar') {
-	 * 
+	 *
 	 * @return mixed
 	 */
 	function value(&$variable) {
@@ -70,7 +70,7 @@ namespace {
 			return $variable;
 		}
 	}
-	
+
 	/**
 	 * Als het element bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
 	 *
@@ -95,31 +95,31 @@ namespace {
 			return $array[$key];
 		}
 	}
-	
+
 	/**
-	 * implode, maar dan zodat deze leesbaar is voor mensen. 
-	 * Bv: echo human_implode(' of ', array('appel', 'peer', 'banaan')); wordt 'appel, peer of banaan' 
-	 * 
-	 * @param string $glueLast deze wordt gebruikt tussen de laaste en het eennalaatste element. bv: ' en ' of ' of ' 
-	 * @param array $array 
-	 * @param string $glue 
+	 * implode, maar dan zodat deze leesbaar is voor mensen.
+	 * Bv: echo human_implode(' of ', array('appel', 'peer', 'banaan')); wordt 'appel, peer of banaan'
+	 *
+	 * @param string $glueLast deze wordt gebruikt tussen de laaste en het eennalaatste element. bv: ' en ' of ' of '
+	 * @param array $array
+	 * @param string $glue
 	 * @return string
 	 */
 	function human_implode($glueLast, $array, $glue = ', ') {
 		if (!$array || !count ($array)) { // sanity check
 			return '';
 		}
-		$last = array_pop ($array); // get last element   
+		$last = array_pop ($array); // get last element
 		if (!count ($array)) { // if it was the only element - return it
 			return $last;
 		}
 		return implode ($glue, $array).$glueLast.$last;
 	}
-	
+
 		/**
 	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
 	 *
-	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast 
+	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast
 	 * @param array $values Een assoc array met als key de eigenschap. bv: array('id' => 1)
 	 * @param bool $check_for_propery Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
 	 * @return void
@@ -262,7 +262,7 @@ namespace SledgeHammer {
 
 	/**
 	 * Vergelijk de eigenschappen van 2 objecten met de equals functie.
-	 * 
+	 *
 	 * @param Object $object1
 	 * @param Object $object2
 	 * @param array $properties De eigenschappen die vergeleken moeten worden
@@ -272,7 +272,7 @@ namespace SledgeHammer {
 		foreach ($properties as $property) {
 			if (equals($object1->$property, $object2->$property) == false) { // Zijn de eigenschappen verschillend?
 				return false;
-			}		
+			}
 		}
 		return true; // Er zijn geen verschillen gevonden
 	}
@@ -290,7 +290,7 @@ namespace SledgeHammer {
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
 	 *
-	 * @param string $url  De URL van de 
+	 * @param string $url  De URL van de
 	 * @param bool $permanent  Bij true wordt ook de "301 Moved Permanently" header verstuurd
 	 * @return exit()
 	 */
@@ -330,15 +330,15 @@ namespace SledgeHammer {
 	 * Het path creeren
 	 * Zal alle map-namen die in het path genoemd worden proberen te maken.
 	 * Zal geen foutmelding geven als het path al bestaat.
-	 * 
+	 *
 	 * @param string $path De map die gemaakt moet worden
 	 * @return bool
 	 */
 	function mkdirs($path) {
 		if (is_dir($path)) {
 			return true;
-		} 
-		$parent = dirname($path); 
+		}
+		$parent = dirname($path);
 		if ($parent == $path) { // Is er geen niveau hoger?
 			warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv NULL of ""
 		} elseif (mkdirs($parent)) { // Maak (waneer nodig) de boverliggende deze map aan.
@@ -402,9 +402,9 @@ namespace SledgeHammer {
 
 
 	/**
-	 * Een bestand verwijderen, met extra controle dat het bestand zich in de $basepath map bevind. 
-	 * 
-	 * @throws Exception  
+	 * Een bestand verwijderen, met extra controle dat het bestand zich in de $basepath map bevind.
+	 *
+	 * @throws Exception
 	 * @param $filepath
 	 * @param $basepath
 	 * @return void
@@ -417,7 +417,7 @@ namespace SledgeHammer {
 			throw new Exception('$basepath "'.$basepath.'" is too short');
 		}
 		// 	Controleer of het path niet buiten de basepath ligt.
-		$realpath = realpath(dirname($filepath));		
+		$realpath = realpath(dirname($filepath));
 		if ($realpath == false) {
 			throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
 		}
@@ -439,9 +439,9 @@ namespace SledgeHammer {
 
 	/**
 	 * De nieuwste/hoogste mtime opvragen dat zich in het $path bevind.
-	 * Controleert de timestamps van alle 
-	 * 
-	 * @param string $path 
+	 * Controleert de timestamps van alle
+	 *
+	 * @param string $path
 	 * @return int
 	 */
 	function mtime_folders($path, $exclude = array()) {
@@ -501,7 +501,7 @@ namespace SledgeHammer {
 
 	/**
 	 * Een variabele aan de hand van zijn datatype een kleur geven en omzetten naar html-formaat.
-	 * Wordt o.a. gebruikt door Dump & ErrorHandler 
+	 * Wordt o.a. gebruikt door Dump & ErrorHandler
 	 * De een kleuren worden bepaald in /css/datatypes.css uit webcore
 	 *
 	 * @return string
@@ -564,7 +564,7 @@ namespace SledgeHammer {
 		}
 		if (!isset($GLOBALS['highlight_colors'])) {
 			include(dirname(__FILE__).'/settings/highlight_colors.php');
-		}	
+		}
 		return '<span style="color:'.$GLOBALS['highlight_colors'][$datatype].'">'.$variabele.'</span>';
 	}
 
@@ -603,12 +603,12 @@ namespace SledgeHammer {
 	 * Toont een reeks debug en profiling gegevens zoals parsetijd en geheugenverbruik.
 	 */
 	function statusbar() {
-		if (defined(__NAMESPACE__.'\MICROTIME_START')) {
+		if (defined('SledgeHammer\MICROTIME_START')) {
 			$now = microtime(true);
 			echo '<span id="statusbar_parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START) .'</b>sec. ';
-			if (defined(__NAMESPACE__.'\MICROTIME_INIT')) {
+			if (defined('SledgeHammer\MICROTIME_INIT')) {
 				echo '<span id="statusbar_parsetimes">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START) .'</b>sec.';
-				if (defined(__NAMESPACE__.'\MICROTIME_EXECUTE')) {
+				if (defined('SledgeHammer\MICROTIME_EXECUTE')) {
 					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT) .'</b>sec. ';
 					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE) .'</b>sec.';
 				}
@@ -639,18 +639,18 @@ namespace SledgeHammer {
 	 * Zet alle iterators binnen $data om naar arrays.
 	 * Doet zijn best om $source niet te veranderen, maar is afhankelijk van __clone
 	 * (private en protected eigenschappen worden niet omgezet)
-	 * 
+	 *
 	 * @param mixed $data
 	 * @return mixed
 	 */
 	function iterators_to_arrays($data) {
-		if (!is_object($data) && !is_array($data)) { // Is het een primitief type?  
+		if (!is_object($data) && !is_array($data)) { // Is het een primitief type?
 			return $data; // niks om om te zetten.
 		}
 		if (is_object($data)) {
 			if ($data instanceof Iterator) { // Is dit een iterator?
 				$array = iterator_to_array($data); // Iterator omzetten naar een array.
-				return iterators_to_arrays($array); /// Alle elementen (mogelijk) omzetten 
+				return iterators_to_arrays($array); /// Alle elementen (mogelijk) omzetten
 			} else {
 				$object = clone $data;
 				foreach ($data as $property => $value) {
@@ -662,17 +662,17 @@ namespace SledgeHammer {
 		// dan is het een array.
 		$array = array();
 		foreach ($data as $key => $value) {
-			$array[$key] = iterators_to_arrays($value); // Alle elementen (mogelijk) omzetten 		
+			$array[$key] = iterators_to_arrays($value); // Alle elementen (mogelijk) omzetten
 		}
 		return $array;
-	} 
+	}
 
 	/**
 	 * Geeft de keys van een iterator in een array. Net als array_key(), maar dan voor iterators.
 	 *
 	 * @see array_keys()
 	 * @param Iterator $iterator
-	 * @return array * 
+	 * @return array *
 	 */
 	function iterator_keys($iterator, $search_value = null, $strict = false) {
 		if (is_array($iterator)) {
@@ -696,7 +696,7 @@ namespace SledgeHammer {
 	 * (De reeds ingestelde timeout zal nooit ingekort worden)
 	 * Bij $relative op false (absolute) zullen de $seconden bij de huidige timeout worden opgeteld.
 	 *
-	 * @param $fromNow 
+	 * @param $fromNow
 	 * @return void
 	 */
 	function extend_time_limit($seconds, $relative = false) {
@@ -724,7 +724,7 @@ namespace SledgeHammer {
 	 *   "game.PART001.rar" "rar"       "game.PART001"
 	 *
 	 * @param $filename De bestandsaam
-	 * @param $filename_without_extention  Deze reference word ingesteld met de bestandsnaam, maar dan zonder extensie 
+	 * @param $filename_without_extention  Deze reference word ingesteld met de bestandsnaam, maar dan zonder extensie
 	 * @return string De extensie
 	 */
 	function file_extension($filename, &$filename_without_extention = null) {
@@ -884,8 +884,8 @@ namespace SledgeHammer {
 
 	/**
 	 * Sends the contents of the file including appropriate headers.
-	 * Zal na het succesvol versturen van het bestand het script stoppen "exit()" 
-	 * 
+	 * Zal na het succesvol versturen van het bestand het script stoppen "exit()"
+	 *
 	 * @param string $filename Filename including path.
 	 * @throws Exception on Failure
 	 * @return void
@@ -904,7 +904,7 @@ namespace SledgeHammer {
 		}
 		$headers = array();
 		/*
-		$resume_support = false; // @todo Bestanden in tmp/ geen resume_support geven.  
+		$resume_support = false; // @todo Bestanden in tmp/ geen resume_support geven.
 		if ($resume_support) {
 			$headers[] = 'Accept-Ranges: bytes';
 		}*/
@@ -920,7 +920,7 @@ namespace SledgeHammer {
 		if (empty($_SERVER['HTTP_RANGE'])) {
 			$headers['Content-Length'] = $filesize; // @todo Detectie inbouwen voor bestanden groter dan 2GiB, deze geven fouten.
 			send_headers($headers);
-			// Output buffers uitschakelen, anders zal readfile heb bestand in het geheugen inladen. (en mogelijk de memory_limit overschrijden) 
+			// Output buffers uitschakelen, anders zal readfile heb bestand in het geheugen inladen. (en mogelijk de memory_limit overschrijden)
 			while (ob_get_level() > 0) {
 				ob_end_flush();
 			}
@@ -937,7 +937,7 @@ namespace SledgeHammer {
 			}
 			throw new Exception('readfile() failed');
 			// #########################################
-			// Onderstaande CODE wordt nooit uitgevoerd. 
+			// Onderstaande CODE wordt nooit uitgevoerd.
 
 			// Een gedeelte van het bestand sturen
 

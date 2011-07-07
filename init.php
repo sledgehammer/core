@@ -5,11 +5,11 @@
  * @package Core
  */
 namespace SledgeHammer;
-if (!defined(__NAMESPACE__.'\MICROTIME_START')) {
-	define(__NAMESPACE__.'\MICROTIME_START', microtime(true));
+if (!defined('SledgeHammer\MICROTIME_START')) {
+	define('SledgeHammer\MICROTIME_START', microtime(true));
 }
-define(__NAMESPACE__.'\PATH', dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR); // Het pad instellen. Dit is de map waar de sledgehammer map in staat.
-define(__NAMESPACE__.'\E_MAX', (E_ALL | E_STRICT)); /// Echt alle errors afvangen, inclusief de PHP5 STRICT hints
+define('SledgeHammer\PATH', dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR); // Het pad instellen. Dit is de map waar de sledgehammer map in staat.
+define('SledgeHammer\E_MAX', (E_ALL | E_STRICT)); /// Echt alle errors afvangen, inclusief de PHP5 STRICT hints
 error_reporting(E_MAX); // Foutniveau activeren
 if (ini_get('date.timezone') == '') { // Is er geen tijdzone ingesteld?
 	date_default_timezone_set('Europe/Amsterdam'); // Voorkom foutmeldingen door de tijdzone in te stellen

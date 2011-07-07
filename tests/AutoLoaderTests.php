@@ -24,13 +24,35 @@ class AutoLoaderTests extends \UnitTestCase {
 		}
 	}
 	
-	function test_availability() {
-		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
-		$analyzer = new PHPAnalyzer();
-		//set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
+	function donttest_tokenizer_merged_output() {
+		$files = $this->getDefinitionFiles();
+		foreach ($files as $filename) {
+			$this->assertEqualTokenizer($filename); 
+		}
+	}	
+	
 
-		foreach ($definitions as $definition) {
-			$filename = $loader->getFilename($definition);
+
+	
+	function test_compilation_errors() {
+		restore_error_handler();
+		
+		$tokens = iterator_to_array(new PHPTokenizer('/Users/bob/Sites/bfanger.nl/sledgehammer/phMagick/phMagick.php')); 
+		dump($tokens);
+		
+		$analyzer = new PHPAnalyzer();
+		dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
+
+		
+
+//		dump($analyzer->getInfo('SledgeHammer\Component'));
+//		dump($analyzer->getInfo('ArrayAccess'));
+//		dump($analyzer->getInfo('stdClass'));
+		dump($analyzer->getInfo('ArrayIterator'));
+
+	//	die('OK?');
+		$files = $this->getDefinitionFiles();
+		foreach ($files as $filename) {
 			$analyzer->open($filename);
 		}
 		
@@ -60,6 +82,32 @@ class AutoLoaderTests extends \UnitTestCase {
 				}
 			}
 		}
+	}
+	
+	private function assertEqualTokenizer($filename) {
+		$content = file_get_contents($filename); //$GLOBALS['AutoLoader']->getFilename('SledgeHammer\GoogleAnalytics');
+		try {
+			$tokenIterator = new PHPTokenizer($content);
+			$mergedTokens = '';
+			$tokens = array();
+			foreach ($tokenIterator as $token) {
+				$mergedTokens .= $token[1];
+				$tokens[] = $token;
+			}
+			$this->assertEqual($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
+		} catch (\Exception $e) {
+			ErrorHandler::handle_exception($e);
+			$this->fail($e->getMessage());
+		}
+	}
+	
+	private function getDefinitionFiles() {
+		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
+		$files = array();
+		foreach ($definitions as $definition) {
+			$files[] = $GLOBALS['AutoLoader']->getFilename($definition);
+		}
+		return array_unique($files);
 	}
 }
 ?>

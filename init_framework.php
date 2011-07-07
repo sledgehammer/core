@@ -4,11 +4,11 @@
  * Initialiseerd de database(s) en alle sledgehammer-modules (constants, functions en init)
  */
 namespace SledgeHammer;
-if (!defined(__NAMESPACE__.'\SLEDGEHAMMER_FRAMEWORK')) {
-	define(__NAMESPACE__.'\SLEDGEHAMMER_FRAMEWORK', true);
+if (!defined('SledgeHammer\INITIALIZED')) {
+	define('SledgeHammer\INITIALIZED', true);
 
-	if (!defined('ENVIRONMENT') && !defined(__NAMESPACE__.'\ENVIRONMENT')) {
-		define(__NAMESPACE__.'\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+	if (!defined('ENVIRONMENT') && !defined('SledgeHammer\ENVIRONMENT')) {
+		define('SledgeHammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
 	}
 	$configFile = (ENVIRONMENT == 'development') ? 'development' : 'defaults'; 
 	$config = parse_ini_file(dirname(__FILE__).'/settings/sledgehammer_'.$configFile.'.ini'); 
@@ -74,6 +74,6 @@ if (!defined(__NAMESPACE__.'\SLEDGEHAMMER_FRAMEWORK')) {
 	if ($debug_override_variable == 'debug') {
 		unset($debug_override_variable);
 	}
-	define(__NAMESPACE__.'\MICROTIME_INIT', microtime(true));
+	define('SledgeHammer\MICROTIME_INIT', microtime(true));
 }
 ?>

@@ -24,6 +24,10 @@ class PHPAnalyzer extends Object {
 		$namespace = '';
 		$uses = array();
 		$definitions = array();
+		$definition = array('level' => -1);
+		$globalFunctions =array();
+		$functions = &$globalFunctions;
+		$level = 0;
 		foreach ($tokens as $token) {
 			$type = $token[0];
 			if ($type == 'T_PHP' || $type == 'T_HTML') {
@@ -54,7 +58,9 @@ class PHPAnalyzer extends Object {
 						'namespace' => $namespace,
 						'interface' => $value,
 						'identifier' => $this->prefixNamespace($namespace, $value, $uses),
-						'extends' => array()
+						'extends' => array(),
+						'methods' => array(),
+						'level' => $level
 					);
 					$definition = &$definitions[count($definitions) - 1];
 					break;
@@ -66,7 +72,9 @@ class PHPAnalyzer extends Object {
 						'class' => $value,
 						'identifier' => $this->prefixNamespace($namespace, $value, $uses),
 						'extends' => array(),
-						'implements' => array()
+						'implements' => array(),
+						'methods' => array(),
+						'level' => $level
 						
 					);
 					$definition = &$definitions[count($definitions) - 1];
@@ -80,16 +88,47 @@ class PHPAnalyzer extends Object {
 					$definition['implements'][] = $this->prefixNamespace($namespace, $value, $uses);
 					break;
 				
+				case 'T_FUNCTION':
+					$function = $value;
+					if ($level == ($definition['level'] + 1)) {
+						$definition['methods'][$function] = array();
+						$functions = &$definition['methods'];
+					} else {
+						$functions = &$globalFunctions;
+					}
+					break;
+				
+				case 'T_PARAMETER':
+					$parameter = $value;
+					$functions[$function][$parameter] = null;
+					break;
+				
+				case 'T_PARAMETER_VALUE':
+					$functions[$function][$parameter] = $value;
+					break;
+				
+				case 'T_OPEN_BRACKET':
+					$level++;
+					break;
+				
+				case 'T_CLOSE_BRACKET':
+					
+					$level--;
+					break;
+
 				default:
 					notice('Unexpected tokenType: "'.$type.'"');
 					break;
 			}
 		}
+		if ($level != 0) {
+			notice('Level: '.$level.' Number of "{" doesn\'t match the number of "}"');
+		}
 		unset($definition);
 		// Add definitions to de loader
 		foreach ($definitions as $index => $definition) {
 			$identifier = $definition['identifier'];
-			unset($definition['identifier']);
+			unset($definition['identifier'], $definition['level']);
 			$definition['filename'] = $filename;
 			/*
 			$duplicate = false;
@@ -130,6 +169,58 @@ class PHPAnalyzer extends Object {
 		}
 	}
 	
+	function getInfo($definition) {
+		// Check
+		if (isset($this->classes[$definition])) {
+			return $this->classes[$definition];
+		}
+		if (isset($this->interfaces[$definition])) {
+			return $this->interfaces[$definition];
+		}
+		$filename = $GLOBALS['AutoLoader']->getFilename($definition);
+		if ($filename !== null) {
+			$this->open($filename);
+			if (isset($this->classes[$definition])) {
+				return $this->classes[$definition];
+			}
+			if (isset($this->interfaces[$definition])) {
+				return $this->interfaces[$definition];
+			}
+		}
+		/*	return $this->getInfo($definition, 'DATABASE');
+		} elseif (class_exists($definition, false) == false && interface_exists($definition, false) == false) {
+			throw new \Exception('Definition "'.$definition.'" is unknown');
+		} else {
+			
+		}*/
+		if (class_exists($definition, false) || interface_exists($definition, false)) {
+			$reflection = new \ReflectionClass($definition);
+			$info = array(
+				'namespace' => $reflection->getNamespaceName()
+			);
+			if ($reflection->isInterface()) {
+				$info['interface'] = $reflection->name;
+				$info['extends'] = $reflection->getInterfaceNames();
+			} else {
+				$info['class'] = $reflection->name;
+				$info['implements'] = $reflection->getInterfaceNames();
+				$info['extends'] = $reflection->getParentClass();
+				if ($info['extends'] == false) {
+					unset($info['extends']);
+				}
+			}
+			if ($reflection->isInterface()) {
+				$this->interfaces[$definition] = $info;
+			} else {
+				$this->classes[$definition] = $info;
+			}
+			$info['uses'] = array();
+			return $info;
+		}
+		throw new \Exception('Definition "'.$definition.'" is not found in the analyzed files');
+	}
+
+
 	/**
 	 * Resolve the full classname.
 	 * 
