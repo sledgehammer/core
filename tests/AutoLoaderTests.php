@@ -36,13 +36,26 @@ class AutoLoaderTests extends \UnitTestCase {
 	
 	function test_compilation_errors() {
 		restore_error_handler();
-		
-		$tokens = iterator_to_array(new PHPTokenizer('/Users/bob/Sites/bfanger.nl/sledgehammer/phMagick/phMagick.php')); 
-		dump($tokens);
-		
 		$analyzer = new PHPAnalyzer();
-		dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
-		dump($analyzer->getInfoWithReflection('SledgeHammer\CSVIterator'));
+
+		$filename = $GLOBALS['AutoLoader']->getFilename('phMagick');
+		
+		try {
+			$tokens = iterator_to_array(new PHPTokenizer(file_get_contents($filename)));
+		//	dump($tokens);
+		
+			dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
+			
+			$files = $this->getDefinitionFiles();
+			foreach ($files as $filename) {
+				$analyzer->open($filename);
+			}
+		
+		} catch (\Exception $e) {
+			ErrorHandler::handle_exception($e);
+			$this->fail($e->getMessage());
+		}
+//		dump($analyzer->getInfoWithReflection('SledgeHammer\CSVIterator'));
 
 
 		
@@ -53,10 +66,7 @@ class AutoLoaderTests extends \UnitTestCase {
 //		dump($analyzer->getInfo('ArrayIterator'));
 
 	//	die('OK?');
-		$files = $this->getDefinitionFiles();
-		foreach ($files as $filename) {
-			$analyzer->open($filename);
-		}
+		
 		
 		foreach ($analyzer->classes as $class => $info) {
 			// check parent class

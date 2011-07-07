@@ -30,10 +30,15 @@ class PHPAnalyzer extends Object {
 		$level = 0;
 		foreach ($tokens as $token) {
 			$type = $token[0];
+			$value = $token[1];
+			if ($value == '') {
+				notice('Empty token', $token);
+//				dump(iterator_to_array($tokens));
+//				die;
+			}
 			if ($type == 'T_PHP' || $type == 'T_HTML') {
 				continue;
 			}
-			$value = $token[1];
 			switch ($type) {
 				
 				case 'T_NAMESPACE':
@@ -90,6 +95,7 @@ class PHPAnalyzer extends Object {
 				
 				case 'T_FUNCTION':
 					$function = $value;
+					$parameter = null;
 					if ($level == ($definition['level'] + 1)) {
 						$definition['methods'][$function] = array();
 						$functions = &$definition['methods'];
@@ -99,12 +105,13 @@ class PHPAnalyzer extends Object {
 					break;
 				
 				case 'T_PARAMETER':
-					$parameter = substr($value, 1);
+					$parameter = substr($value, strpos($value, '$') + 1);
 					$functions[$function][$parameter] = null;
 					break;
 				
 				case 'T_PARAMETER_VALUE':
 					$functions[$function][$parameter] = $value;
+					$parameter = null;
 					break;
 				
 				case 'T_OPEN_BRACKET':
