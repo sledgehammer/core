@@ -38,12 +38,22 @@ class AutoLoaderTests extends \UnitTestCase {
 		restore_error_handler();
 		$analyzer = new PHPAnalyzer();
 
-		$filename = $GLOBALS['AutoLoader']->getFilename('phMagick');
+		$filename = $GLOBALS['AutoLoader']->getFilename('TestOfSimpleSeleniumRemoteControl');
+		$this->assertEqualTokenizer($filename);
 		
 		try {
-			$tokens = iterator_to_array(new PHPTokenizer(file_get_contents($filename)));
-		//	dump($tokens);
-		
+			$tokenizer = new PHPTokenizer(file_get_contents($filename));
+			$tokens = iterator_to_array($tokenizer);
+			foreach ($tokens as $token) {
+				if (strpos($token[1], '{') !== false) {
+					if ($token[0] != 'T_OPEN_BRACKET' || $token[1] != '{') {
+					//	dump($token);
+					}
+				}
+			}
+			dump($tokens);
+//			dump($tokenizer);
+
 			dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
 			
 			$files = $this->getDefinitionFiles();
