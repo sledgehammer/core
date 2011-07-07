@@ -99,7 +99,7 @@ class PHPAnalyzer extends Object {
 					break;
 				
 				case 'T_PARAMETER':
-					$parameter = $value;
+					$parameter = substr($value, 1);
 					$functions[$function][$parameter] = null;
 					break;
 				
@@ -170,7 +170,7 @@ class PHPAnalyzer extends Object {
 	}
 	
 	function getInfo($definition) {
-		// Check
+		// Check analyzed definitions
 		if (isset($this->classes[$definition])) {
 			return $this->classes[$definition];
 		}
@@ -180,44 +180,62 @@ class PHPAnalyzer extends Object {
 		$filename = $GLOBALS['AutoLoader']->getFilename($definition);
 		if ($filename !== null) {
 			$this->open($filename);
-			if (isset($this->classes[$definition])) {
-				return $this->classes[$definition];
-			}
-			if (isset($this->interfaces[$definition])) {
-				return $this->interfaces[$definition];
+		} elseif (class_exists($definition, false) || interface_exists($definition, false)) {
+			$this->getInfoWithReflection($definition);
+		}
+		if (isset($this->classes[$definition])) {
+			return $this->classes[$definition];
+		}
+		if (isset($this->interfaces[$definition])) {
+			return $this->interfaces[$definition];
+		}
+		throw new \Exception('Definition "'.$definition.'" is not found');
+
+	}
+	function getInfoWithReflection($definition) {
+		if (class_exists($definition) == false && interface_exists($definition) == false) {
+			//throw new \Exception('Definition "'.$definition.'" is unknown');
+		}
+		$reflectionClass = new \ReflectionClass($definition);
+		$info = array(
+			'namespace' => $reflectionClass->getNamespaceName()
+		);
+		$class = $reflectionClass->name;
+		if ($reflectionClass->isInterface()) {
+			$info['interface'] = $class;
+			$info['extends'] = $reflectionClass->getInterfaceNames();
+		} else {
+			$info['class'] = $class;
+			$info['implements'] = $reflectionClass->getInterfaceNames();
+			$info['extends'] = $reflectionClass->getParentClass();
+			if ($info['extends'] == false || $info['extends']->name == 'SledgeHammer\Object' || $info['extends']->name == 'stdClass') {
+				unset($info['extends']);
+			} else {
+				$info['extends'] = $info['extends']->name;
 			}
 		}
-		/*	return $this->getInfo($definition, 'DATABASE');
-		} elseif (class_exists($definition, false) == false && interface_exists($definition, false) == false) {
-			throw new \Exception('Definition "'.$definition.'" is unknown');
-		} else {
-			
-		}*/
-		if (class_exists($definition, false) || interface_exists($definition, false)) {
-			$reflection = new \ReflectionClass($definition);
-			$info = array(
-				'namespace' => $reflection->getNamespaceName()
-			);
-			if ($reflection->isInterface()) {
-				$info['interface'] = $reflection->name;
-				$info['extends'] = $reflection->getInterfaceNames();
-			} else {
-				$info['class'] = $reflection->name;
-				$info['implements'] = $reflection->getInterfaceNames();
-				$info['extends'] = $reflection->getParentClass();
-				if ($info['extends'] == false) {
-					unset($info['extends']);
+		$info['methods'] = array();
+		foreach ($reflectionClass->getMethods() as $reflectionMethod) {
+			if ($reflectionMethod->class != $class) {
+				continue; // De methoden uit de parentclass negeren
+			}
+			$method = $reflectionMethod->name;
+			$info['methods'][$method] = array();
+			foreach ($reflectionMethod->getParameters() as $reflectionParameter) {
+				$parameter = $reflectionParameter->name;
+				$info['methods'][$method][$parameter] = null;
+				if ($reflectionParameter->isDefaultValueAvailable()) {
+					$value =  $reflectionParameter->getDefaultValue();
+					$info['methods'][$method][$parameter] = $value;
 				}
 			}
-			if ($reflection->isInterface()) {
-				$this->interfaces[$definition] = $info;
-			} else {
-				$this->classes[$definition] = $info;
-			}
-			$info['uses'] = array();
-			return $info;
 		}
-		throw new \Exception('Definition "'.$definition.'" is not found in the analyzed files');
+		if ($reflectionClass->isInterface()) {
+			$this->interfaces[$definition] = $info;
+		} else {
+			$this->classes[$definition] = $info;
+		}
+		return $info;
 	}
 
 

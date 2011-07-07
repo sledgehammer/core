@@ -42,13 +42,15 @@ class AutoLoaderTests extends \UnitTestCase {
 		
 		$analyzer = new PHPAnalyzer();
 		dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
+		dump($analyzer->getInfoWithReflection('SledgeHammer\CSVIterator'));
+
 
 		
 
 //		dump($analyzer->getInfo('SledgeHammer\Component'));
 //		dump($analyzer->getInfo('ArrayAccess'));
 //		dump($analyzer->getInfo('stdClass'));
-		dump($analyzer->getInfo('ArrayIterator'));
+//		dump($analyzer->getInfo('ArrayIterator'));
 
 	//	die('OK?');
 		$files = $this->getDefinitionFiles();
