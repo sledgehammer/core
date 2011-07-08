@@ -55,8 +55,8 @@ class CompareEnvironments extends Util {
 		$Form = new Form(array('method' => 'get'), array(
 			new Fieldset('Compare environments', array(
 				'environments' => new FieldLabel('Environments', new Fields(array(
-					'source' => new SelectBox('source', $environments, array(), new NotEmptyValidator),
-					'target' => new SelectBox('target', $environments, array(), new NotEmptyValidator),
+					'source' => new SelectBox('source', $environments, array(), new NotEmptyValidator()),
+					'target' => new SelectBox('target', $environments, array(), new NotEmptyValidator()),
 					new Input('submit', NULL, array('value' => 'Compare')),
 				))),
 			)),

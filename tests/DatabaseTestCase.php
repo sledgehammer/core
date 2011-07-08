@@ -24,7 +24,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		//set_error_handler('ErrorHandler_trigger_error_callback');
 		if(ENVIRONMENT != 'development') {
 				$this->skip(); 
-				throw new Exception('Database connection FAILED');
+				throw new \Exception('Database connection FAILED');
 			return;
 		}
 		if ($this->dbLink == '__NOT_CONNECTED__') {
@@ -36,7 +36,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 				$connected = $db->connect('localhost', 'root');
 			}
 			if (!$connected) {
-				throw new Exception('Database connection FAILED');
+				throw new \Exception('Database connection FAILED');
 			}
 			$suffix = preg_replace('/[^0-9a-z]*/i', '', '_'.$_SERVER['HTTP_HOST']);
 			$this->dbName = 'UnitTestDB_'.$suffix; // Genereer databasenaam

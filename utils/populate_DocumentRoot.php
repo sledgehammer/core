@@ -23,7 +23,7 @@ if (count($targetFolders) == 0) {
 	echo "  \n";
 	return false;
 }
-$modules = SledgeHammer::getModules();
+$modules = Framework::getModules();
 $folders = array();
 foreach ($modules as $folder => $info) {
 	$modulePath = $info['path'];

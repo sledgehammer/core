@@ -13,6 +13,12 @@ class PHPAnalyzer extends Object {
 	public $interfaces = array();
 
 	public $usedDefinitions = array();
+	
+	/**
+	 *
+	 * @var AutoLoader
+	 */
+	private $autoLoader;
 
 	/**
 	 * Extract class and interface definitions from a file.
@@ -94,7 +100,9 @@ class PHPAnalyzer extends Object {
 					break;
 				
 				case 'T_IMPLEMENTS':
-					$definition['implements'][] = $this->prefixNamespace($namespace, $value, $uses);
+					$interface = $this->prefixNamespace($namespace, $value, $uses);
+					$definition['implements'][] = $interface;
+					$this->addUsedIn($interface, $filename, $token[2]);
 					break;
 				
 				case 'T_FUNCTION':
@@ -191,7 +199,7 @@ class PHPAnalyzer extends Object {
 		if (isset($this->interfaces[$definition])) {
 			return $this->interfaces[$definition];
 		}
-		$filename = $GLOBALS['AutoLoader']->getFilename($definition);
+		$filename = $this->getAutoLoader()->getFilename($definition);
 		if ($filename !== null) {
 			$this->open($filename);
 		} elseif (class_exists($definition, false) || interface_exists($definition, false)) {
@@ -251,7 +259,25 @@ class PHPAnalyzer extends Object {
 		}
 		return $info;
 	}
+	
+	/**
+	 *
+	 * @param AutoLoader $autoLoader 
+	 */
+	function setAutoLoader(AutoLoader $autoLoader) {
+		$this->autoLoader = $autoLoader;
+	}
+	
+	/**
+	 *
+	 * @return AutoLoader
+	 */
+	private function getAutoLoader() {
+		if ($this->autoLoader === null) {
+			return 	$GLOBALS['AutoLoader'];
 
+		}
+	}
 
 	/**
 	 * Resolve the full classname.

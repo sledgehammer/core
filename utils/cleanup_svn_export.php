@@ -3,10 +3,10 @@
  * De mappen die niet nodig zijn in productie omgeving verwijderen.
  * Denk aan de "docs" & "tests" mappen van de modules.
  */
-
+namespace SledgeHammer;
 echo "Cleaning modules...\n";
 require_once(dirname(__FILE__).'/../../core/init.php');
-$modules = SledgeHammer::getModules();
+$modules = Framework::getModules();
 foreach ($modules as $module) {
 	if (file_exists($module['path'].'.svn')) {
 		echo "  FAILED: working copy detected.\nRun: svn export ".escapeshellarg(PATH)." ".escapeshellarg(dirname(PATH).'/release/'),"\n\n";

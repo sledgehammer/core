@@ -37,7 +37,7 @@ if (function_exists('minifyAppendFiles') == false) { // Wordt dit bestand opnieu
 	 * @return array
 	 */
 	function minifyAppendFiles( &$files, $path, $targetPrefix, $pathSuffix = '') {
-		$dir = new DirectoryIterator($path.$pathSuffix);
+		$dir = new \DirectoryIterator($path.$pathSuffix);
 		foreach ($dir as $entry) {
 			if (substr($entry->getFilename(), 0, 1) == '.') {
 				continue;
@@ -57,7 +57,7 @@ if (function_exists('minifyAppendFiles') == false) { // Wordt dit bestand opnieu
 	}
 }
 
-$modules = SledgeHammer::getModules();
+$modules = Framework::getModules();
 
 $files = array();
 // Scanning $module/public/ folders
@@ -90,9 +90,9 @@ foreach($files as $filename => $pathname) {
 		$script = file_get_contents($pathname);
 		$fullSize = strlen($script);
 		if (mimetype($filename) == 'text/css') {
-			$minifiedScript = CSSMin::minify($script);
+			$minifiedScript = \CSSMin::minify($script);
 		} else {
-			$minifiedScript = JSMinPlus::minify($script);
+			$minifiedScript = \JSMinPlus::minify($script);
 		}
 		if ($minifiedScript === false) { // Is het minify proces mislukt?
 			$minifiedScript = $script; // Gebruik dan het orginele bestand.

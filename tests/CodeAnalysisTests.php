@@ -62,10 +62,15 @@ class CodeAnalysisTests extends \UnitTestCase {
 	/**
 	 * Analize all known classes and validate if all classes are available
 	 */
-	function test_entire_codebase() {
-//		restore_error_handler();
+	function test_known_classes() {
+		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
+		$files = array();
+		foreach ($definitions as $definition) {
+			$files[] = $GLOBALS['AutoLoader']->getFilename($definition);
+		}
+		$files = array_unique($files);
+		
 		$analyzer = new PHPAnalyzer();
-		$files = $this->getDefinitionFiles();
 		foreach ($files as $filename) {
 			try {
 				$analyzer->open($filename);
@@ -74,7 +79,7 @@ class CodeAnalysisTests extends \UnitTestCase {
 				$this->fail($e->getMessage());
 			}
 		}
-		
+		/* checking parents wordt ook gedaan door de used check
 		foreach ($analyzer->classes as $class => $info) {
 			// check parent class
 			if (isset($info['extends'])) {
@@ -100,7 +105,7 @@ class CodeAnalysisTests extends \UnitTestCase {
 					}
 				}
 			}
-		}
+		}*/
 		// Check all used definitions
 		$failed = false;
 		foreach (array_keys($analyzer->usedDefinitions) as $definition) {
@@ -110,6 +115,53 @@ class CodeAnalysisTests extends \UnitTestCase {
 		}
 		if ($failed == false) {
 			$this->pass('All '.count($analyzer->usedDefinitions).' definitions are found');
+		}
+	}
+	
+	function donttest_entire_codebase() {
+//		restore_error_handler();
+		$loader = new AutoLoader(PATH);
+		$loader->importFolder(PATH, array(
+			'matching_filename' => false,
+			'mandatory_definition' => false,
+			'mandatory_superclass' => false,
+			'one_definition_per_file' => false,
+			'detect_accidental_output' => false,
+		)); // Import all
+		//
+		$analyzer = new PHPAnalyzer();
+		$this->analyzeDirectory($analyzer, PATH);
+		// Check all used definitions
+		$failed = false;
+		foreach (array_keys($analyzer->usedDefinitions) as $definition) {
+			if ($this->tryGetInfo($analyzer, $definition) == false) {
+				$failed = true;
+			}
+		}
+		if ($failed == false) {
+			$this->pass('All '.count($analyzer->usedDefinitions).' definitions are found');
+		}
+	}
+	
+	private function analyzeDirectory($analyzer, $path) {
+		$dir = new \DirectoryIterator($path);
+		foreach ($dir as $entry) {
+			if ($entry->isDot()) {
+				continue;
+			}
+			if ($entry->isDir()) {
+				$this->analyzeDirectory($analyzer, $entry->getPathname());
+				continue;
+			} 
+			$ext = file_extension($entry->getFilename());
+			if (in_array($ext, array('php'))) {
+				try {
+					$analyzer->open($entry->getPathname());
+				}  catch (\Exception $e) {
+//					ErrorHandler::handle_exception($e);
+					$this->fail($e->getMessage());
+				}
+			}
 		}
 	}
 	
@@ -140,12 +192,7 @@ class CodeAnalysisTests extends \UnitTestCase {
 	}
 	
 	private function getDefinitionFiles() {
-		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
-		$files = array();
-		foreach ($definitions as $definition) {
-			$files[] = $GLOBALS['AutoLoader']->getFilename($definition);
-		}
-		return array_unique($files);
+		
 	}
 }
 ?>
