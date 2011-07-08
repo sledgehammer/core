@@ -95,7 +95,7 @@ class MySQLiDatabase extends \MySQLi {
 				$error_message = 'Not connected';
 			}
 			if ($this->throw_exception_on_error) {
-				throw new Exception($error_message);
+				throw new \Exception($error_message);
 			}
 			return false;
 		}
@@ -125,7 +125,7 @@ class MySQLiDatabase extends \MySQLi {
 			$error_message = 'MySQL error['.$this->errno.'] '.$this->error;
 			$this->notice($error_message);
 			if ($this->throw_exception_on_error) {
-				throw new Exception($error_message);
+				throw new \Exception($error_message);
 			}
 			return false;
 		}
@@ -146,7 +146,7 @@ class MySQLiDatabase extends \MySQLi {
 			$error_message = 'MySQL error['.$this->errno.'] '.$this->error;
 			notice($error_message);
 			if ($this->throw_exception_on_error) {
-				throw new Exception($error_message);
+				throw new \Exception($error_message);
 			}
 		}
 		return $success;

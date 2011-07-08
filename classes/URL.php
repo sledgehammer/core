@@ -39,7 +39,7 @@ class URL extends Object {
 	function __construct($url) {
 		$info = parse_url($url);
 		if ($info === false) {
-			throw new Exception('Invalid url: "'.$url.'"');
+			throw new \Exception('Invalid url: "'.$url.'"');
 		}
 		if (isset($info['query'])) {
 			 parse_str($info['query'], $info['query']); // Zet de query om naar een array

@@ -134,9 +134,9 @@ class HTMLTokenizer extends Object implements \Iterator{
 					break;
 					
 				default: 
-					throw new Exception('Unknown state: "'.$this->state.'"');
+					throw new \Exception('Unknown state: "'.$this->state.'"');
 			}
-		} catch (Exception $exception) {
+		} catch (\Exception $exception) {
 			if ($exception->getMessage() == 'HTML_TOKENIZER_EOF') {
 				$this->warning('Unexpected end of stream, state: '.$this->state);
 			} else {
@@ -144,7 +144,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 			}
 		}
 		if ($startPos === $this->position) {
-			throw new Exception('No new tokens. State: '.$this->state.', position: '.$startPos);
+			throw new \Exception('No new tokens. State: '.$this->state.', position: '.$startPos);
 		}
 		return array_shift($this->tokenQueue);
 	}
@@ -170,7 +170,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 
 	function parseTag() {
 		if ($this->getChar() !== '<') {
-			throw new Exception('parseTag() saninty check failed');
+			throw new \Exception('parseTag() saninty check failed');
 		}
 		$nextChar = $this->substr(1, 1);
 		if (preg_match('/[>1-9'.$this->wsPattern.']/', $nextChar)) { // Is het geen begin van een tag?
@@ -322,7 +322,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 	 */
 	function parseDTDTag() {
 		if ($this->substr(0, 2) !== '<!') { 
-			throw new Exception('parseDTDTag() saninty check failed');
+			throw new \Exception('parseDTDTag() saninty check failed');
 		}
 		// @link http://en.wikipedia.org/wiki/CDATA#CDATA_sections_in_XML
 		if($this->substr(0, 9) == '<![CDATA[') {
@@ -437,9 +437,9 @@ class HTMLTokenizer extends Object implements \Iterator{
 		$length = $endPosition + 1 - $this->position;
 		if ($length <= 0) {
 			if ($this->position >= $this->htmlLength) {
-				throw new Exception('EOF reached, parsing '.$tokenType.' token failed');
+				throw new \Exception('EOF reached, parsing '.$tokenType.' token failed');
 			}
-			throw new Exception('Invalid lenght for token: '.$tokenType.', start: '.$this->position.' state: '.$this->state);
+			throw new \Exception('Invalid lenght for token: '.$tokenType.', start: '.$this->position.' state: '.$this->state);
 		}
 		$value = substr($this->html, $this->position, $length);
 		$this->position = $endPosition + 1;
@@ -462,7 +462,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 	 */
 	function getChar() {
 		if ($this->position == $this->htmlLength) {
-			throw new Exception('HTML_TOKENIZER_EOF');
+			throw new \Exception('HTML_TOKENIZER_EOF');
 		}
 		return $this->html{$this->position};
 	}
@@ -472,7 +472,7 @@ class HTMLTokenizer extends Object implements \Iterator{
  	 */
 	function substr($start, $length = null) {
 		if ($start < 0) {
-			throw new Exception('substr() doesnt accept a negative $start');
+			throw new \Exception('substr() doesnt accept a negative $start');
 		}
 		if ($length === null) {
 			return substr($this->html, $this->position + $start);

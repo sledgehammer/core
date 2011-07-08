@@ -28,7 +28,7 @@ class HttpAuthentication extends Object {
 	}
 
 	function initial($value) {
-		throw new Exception('Can\'t set initial values');
+		throw new \Exception('Can\'t set initial values');
 	}
 
 	/**

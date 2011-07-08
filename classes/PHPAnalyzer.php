@@ -12,6 +12,8 @@ class PHPAnalyzer extends Object {
 	
 	public $interfaces = array();
 
+	public $usedDefinitions = array();
+
 	/**
 	 * Extract class and interface definitions from a file.
 	 *
@@ -24,17 +26,17 @@ class PHPAnalyzer extends Object {
 		$namespace = '';
 		$uses = array();
 		$definitions = array();
-		$definition = array('level' => -1);
+		$definition = array(
+			'level' => -1
+		);
 		$globalFunctions =array();
 		$functions = &$globalFunctions;
 		$level = 0;
 		foreach ($tokens as $token) {
 			$type = $token[0];
 			$value = $token[1];
-			if ($value == '') {
+			if ($value == '' && $type != 'T_NAMESPACE') {
 				notice('Empty token', $token);
-//				dump(iterator_to_array($tokens));
-//				die;
 			}
 			if ($type == 'T_PHP' || $type == 'T_HTML') {
 				continue;
@@ -86,7 +88,9 @@ class PHPAnalyzer extends Object {
 					break;
 				
 				case 'T_EXTENDS':
-					$definition['extends'][] = $this->prefixNamespace($namespace, $value, $uses);
+					$extends = $this->prefixNamespace($namespace, $value, $uses);
+					$definition['extends'][] = $extends;
+					$this->addUsedIn($extends, $filename, $token[2]);
 					break;
 				
 				case 'T_IMPLEMENTS':
@@ -119,8 +123,11 @@ class PHPAnalyzer extends Object {
 					break;
 				
 				case 'T_CLOSE_BRACKET':
-					
 					$level--;
+					break;
+				
+				case 'T_OBJECT':
+					$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
 					break;
 
 				default:
@@ -275,15 +282,15 @@ class PHPAnalyzer extends Object {
 		}
 		return $namespace.'\\'.$identifier;
 	}
-/*
-	private function unexpectedToken($token, $filename) {
-		if (is_string($token)) {
-			$error = syntax_highlight($token);
-		} else {
-			$error = token_name($token[0]).': '.syntax_highlight($token[1]);
-		}
-		notice('Unexpected token: '.$error.' in "'.$this->relativePath($filename).'"');
+	
+	/**
+	 *
+	 * @param string $class  The class that used
+	 * @param string $filename  The filename it is use in
+	 * @param int $line  The line number it is used on
+	 */
+	private function addUsedIn($class, $filename, $line) {
+		@$this->usedDefinitions[$class][$filename][] = $line;
 	}
- */
 }
 ?>

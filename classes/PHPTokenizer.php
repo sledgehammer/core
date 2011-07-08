@@ -12,8 +12,13 @@
  *   T_CLASS        The name of the class
  *   T_EXTENDS      The name of the parent class/interface
  *   T_IMPLEMENTS   The name of the interface
+ *   T_FUNCTION     The name of a function/method
+ *   T_PARAMETER    The (typehint and) variable name of the function parameter
+ *   T_PARAMETER_VALUE  The default value of the function parameter
  *
- * @package core
+ * @todo Extract type hints from catch() blocks 
+ * @todo Extract function calls 
+ * @package Core
  */
 namespace SledgeHammer;
 class PHPTokenizer extends Object implements \Iterator {
@@ -158,6 +163,7 @@ class PHPTokenizer extends Object implements \Iterator {
 						case T_EXTENDS:    $this->state = 'EXTENDS_START'; break;
 						case T_IMPLEMENTS: $this->state = 'IMPLEMENTS_START'; break;
 						case T_FUNCTION:   $this->state = 'FUNCTION'; break;
+						case T_NEW:        $this->state = 'NEW'; break;
 						case T_CURLY_OPEN: $this->state = 'COMPLEX_VARIABLE'; break;
 						case T_DOLLAR_OPEN_CURLY_BRACES: $this->state = 'COMPLEX_VARIABLE'; break;
 					}
@@ -446,7 +452,38 @@ class PHPTokenizer extends Object implements \Iterator {
 					}
 					$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING));
 					break;
-
+					
+				case 'NEW':
+					if (in_array($nextToken, array('(', ';'))) {
+						$this->state = 'PHP';
+						break;
+					}
+					if  (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING))) {
+						$this->state = 'NEW_OBJECT';
+						$this->current = array('T_PHP', $value, $line);
+						$this->tokenIndex++;
+						return;
+					}
+					$this->expectToken($token, T_WHITESPACE);
+					break;
+					
+				case 'NEW_OBJECT':
+					if (in_array($nextToken, array('(', ';'))) {
+						$this->state = 'PHP';
+						$this->current = array('T_OBJECT', $value, $line);
+						$this->tokenIndex++;
+						return;
+					}
+					
+					if ($nextToken == ',' || $nextToken[0] == T_WHITESPACE) {
+						notice('Non-strict new declaration, Expecting "new '.$value.'(" on line '.$this->lineNumber);
+						$this->state = 'PHP';
+						$this->current = array('T_OBJECT', $value, $line);
+						$this->tokenIndex++;
+						return;
+					}
+					$this->expectTokens($nextToken, array(T_NS_SEPARATOR, T_STRING));
+					break;
 				
 				default:
 					$this->failure('Invalid state');

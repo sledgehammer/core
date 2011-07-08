@@ -101,7 +101,7 @@ class SQL extends Object {
 		foreach ($tables as $alias => $table) {
 			$alias = $this->extractAlias($table);
 			if (isset($this->tables[$alias])) {
-				throw new Exception('Table (or alias) "'.$alias.'" is not unique');
+				throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
 			}
 			$this->tables[$alias] = $table;
 		}
@@ -194,10 +194,10 @@ class SQL extends Object {
 	 */
 	private function compose() {
 		if (count($this->columns) == 0) {
-			throw new Exception('1 or more columns are required, Call '.get_class($this).'->select($columns)');
+			throw new \Exception('1 or more columns are required, Call '.get_class($this).'->select($columns)');
 		}
 		if (count($this->tables) == 0) {
-			throw new Exception('1 or tables are required, Call '.get_class($this).'->from($table)');
+			throw new \Exception('1 or tables are required, Call '.get_class($this).'->from($table)');
 		}
 		$sql = $this->select." ";
 		$columns = array();
@@ -258,7 +258,7 @@ class SQL extends Object {
 						break;
 
 					default:
-						throw new Exception('Unknown order-type: "'.$order.'"');
+						throw new \Exception('Unknown order-type: "'.$order.'"');
 				}
 			}
 			$sql .= ' ORDER BY '.implode(', ', $order_by);
@@ -288,7 +288,7 @@ class SQL extends Object {
 		}
 		$prefix = '';
 		if (empty($restrictions['operator'])) {
-			throw new Exception('where[] statements require an operator, Exaple: array("operator" => "AND", "x = 1", "y = 2")');
+			throw new \Exception('where[] statements require an operator, Exaple: array("operator" => "AND", "x = 1", "y = 2")');
 		}
 		$operator = strtoupper($restrictions['operator']);
 		switch($operator) {
@@ -312,7 +312,7 @@ class SQL extends Object {
 				break;
 
 			default:
-				throw new Exception('Onbekende operator: "'.$operator.'"');
+				throw new \Exception('Onbekende operator: "'.$operator.'"');
 		}
 		unset($restrictions['operator']); // De operator uit de array halen
 		$sql_statements = array();
@@ -342,7 +342,7 @@ class SQL extends Object {
 	private function join($type, $table, $on) {
 		$alias = $this->extractAlias($table);
 		if (isset($this->tables[$alias])) {
-			throw new Exception('Table (or alias) "'.$alias.'" is not unique');
+			throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
 		}
 		$this->tables[$alias] = array(
 			'type' => $type,

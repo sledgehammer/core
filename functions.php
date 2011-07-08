@@ -365,12 +365,12 @@ namespace SledgeHammer {
 				continue;
 			}
 			if (unlink($entry->getPathname()) == false && $allowFailures == false) {
-				throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+				throw new \Exception('Failed to delete "'.$entry->getPathname().'"');
 			}
 			$counter++;
 		}
 		if (rmdir($path) == false && $allowFailures == false) {
-			throw new Exception('Failed to delete directory "'.$path.'"');
+			throw new \Exception('Failed to delete directory "'.$path.'"');
 		}
 		return $counter;
 	}
@@ -392,7 +392,7 @@ namespace SledgeHammer {
 				$counter += rmdir_recursive($entry->getPathname(), $allowFailures);
 			} else {
 				if (unlink($entry->getPathname()) == false && $allowFailures == false) {
-					throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+					throw new \Exception('Failed to delete "'.$entry->getPathname().'"');
 				}
 				$counter++;
 			}
@@ -414,26 +414,26 @@ namespace SledgeHammer {
 			$basepath = substr($basepath, 0, -1);
 		}
 		if (strlen($basepath) < 4) { // Minimal "/tmp"
-			throw new Exception('$basepath "'.$basepath.'" is too short');
+			throw new \Exception('$basepath "'.$basepath.'" is too short');
 		}
 		// 	Controleer of het path niet buiten de basepath ligt.
 		$realpath = realpath(dirname($filepath));
 		if ($realpath == false) {
-			throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
+			throw new \Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
 		}
 		$filepath = $realpath.'/'.basename($filepath);  // Nette $filepath
 		if (substr($filepath, 0, strlen($basepath)) != $basepath) { // Hack poging?
-			throw new Exception('Ongeldige bestandsnaam "'.$filepath.'"');
+			throw new \Exception('Ongeldige bestandsnaam "'.$filepath.'"');
 		}
 		if (!file_exists($filepath)) {
-			throw new Exception('File "'.$filepath.'" not found');
+			throw new \Exception('File "'.$filepath.'" not found');
 		}
 		if ($recursive ) {
 			rmdir_recursive($filepath);
 			return;
 		}
 		if (unlink($filepath) == false) {
-			throw new Exception('Failed to delete "'.$filepath.'"');
+			throw new \Exception('Failed to delete "'.$filepath.'"');
 		}
 	}
 
@@ -480,7 +480,7 @@ namespace SledgeHammer {
 			return false;
 		}
 		$file_count = 0;
-		$DirectoryIterator = new DirectoryIterator($source);
+		$DirectoryIterator = new \DirectoryIterator($source);
 		foreach ($DirectoryIterator as $Entry) {
 			if ($Entry->isDot() || in_array($Entry->getFilename(), $exclude)) {
 				continue;
@@ -581,7 +581,7 @@ namespace SledgeHammer {
 			}
 			return $GLOBALS['Databases'][$link];
 		}
-		throw new Exception('Database connection: $GLOBALS[\'Databases\'][\''.$link.'\'] is not configured');
+		throw new \Exception('Database connection: $GLOBALS[\'Databases\'][\''.$link.'\'] is not configured');
 		return false;
 	}
 
@@ -893,7 +893,7 @@ namespace SledgeHammer {
 	function render_file($filename) {
 		$last_modified = filemtime($filename);
 		if ($last_modified === false) {
-			throw new Exception('Modify date unknown');
+			throw new \Exception('Modify date unknown');
 		}
 		if (array_key_exists('HTTP_IF_MODIFIED_SINCE', $_SERVER)) {
 			$if_modified_since = strtotime(preg_replace('/;.*$/', '', $_SERVER['HTTP_IF_MODIFIED_SINCE']));
@@ -909,13 +909,13 @@ namespace SledgeHammer {
 			$headers[] = 'Accept-Ranges: bytes';
 		}*/
 		if (is_dir($filename)) {
-			throw new Exception('Unable to render_file(). "'.$filename.'" is a folder');
+			throw new \Exception('Unable to render_file(). "'.$filename.'" is a folder');
 		}
 		$headers['Content-Type'] = mimetype($filename);
 		$headers['Last-Modified'] = gmdate('r', $last_modified);
 		$filesize = filesize($filename);
 		if ($filesize === false) {
-			throw new Exception('Filesize unknown');
+			throw new \Exception('Filesize unknown');
 		}
 		if (empty($_SERVER['HTTP_RANGE'])) {
 			$headers['Content-Length'] = $filesize; // @todo Detectie inbouwen voor bestanden groter dan 2GiB, deze geven fouten.
@@ -928,14 +928,14 @@ namespace SledgeHammer {
 			if ($success) {
 				exit();
 			}
-			throw new Exception('readfile() failed');
+			throw new \Exception('readfile() failed');
 		} else {
 			 // Het gehele bestand sturen (resume support is untested)
 			$success = readfile($filename);
 			if ($success) {
 				exit();
 			}
-			throw new Exception('readfile() failed');
+			throw new \Exception('readfile() failed');
 			// #########################################
 			// Onderstaande CODE wordt nooit uitgevoerd.
 
