@@ -3,21 +3,26 @@
  * a PHPTokenizer that helps to identify the class and interface names.
  *
  * Tokens:
- *   T_HTML
- *   T_PHP          PHP-code that issn't a type or namespace definition.
- *   T_NAMESPACE    The name of a namespace, A empty string '' indicates a global scope.
- *   T_USE          The name of a namespace or a classname including a namespace
- *   T_USE_ALIAS    The alias of for the T_USE namespace
- *   T_INTERFACE    The name of the interface
- *   T_CLASS        The name of the class
- *   T_EXTENDS      The name of the parent class/interface
- *   T_IMPLEMENTS   The name of the interface
- *   T_FUNCTION     The name of a function/method
- *   T_PARAMETER    The (typehint and) variable name of the function parameter
- *   T_PARAMETER_VALUE  The default value of the function parameter
+ *   T_HTML        Inline html output
+ *   T_PHP         PHP-code that issn't a type or namespace definition
+ *   T_NAMESPACE   The name of a namespace, A empty string '' indicates a global scope
+ *   T_USE         A namespace or a classname including a namespace
+ *   T_USE_ALIAS   The alias of for the T_USE namespace
+ *   T_INTERFACE   An interface that is defined
+ *   T_CLASS       A class that is defined
+ *   T_EXTENDS     The parent class/interface
+ *   T_IMPLEMENTS  The interface(s) that are implemented
+ *   T_FUNCTION    A function/method that is defined
+ *   T_PARAMETER   A parameter/variable (and typehint) of the defined function
+ *   T_PARAMETER_VALUE  The default value of the parameter
+ * 
+ *   T_OBJECT       The class that is used in the code
  *
- * @todo Extract type hints from catch() blocks 
- * @todo Extract function calls 
+ * @todo 
+ *   Extract type hints from catch() blocks 
+ *   Extract class/interface from intanceof operator
+ *   T_CALL: Extract function calls
+ * 
  * @package Core
  */
 namespace SledgeHammer;
@@ -63,8 +68,12 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->key = -1;
 		$this->current = null;
 		$this->lineNumber = 1;
-		$this->validState = 'VALID';
-		$this->next();
+		if (count($this->tokens) == 0) {
+			$this->validState = 'INVALID';
+		} else {
+			$this->validState = 'VALID';
+			$this->next();
+		}
 	}
 
 	function valid() {
@@ -454,7 +463,7 @@ class PHPTokenizer extends Object implements \Iterator {
 					break;
 					
 				case 'NEW':
-					if (in_array($nextToken, array('(', ';'))) {
+					if (in_array($nextToken, array('(', ';')) || $nextToken[0] == T_VARIABLE) {
 						$this->state = 'PHP';
 						break;
 					}
@@ -474,8 +483,7 @@ class PHPTokenizer extends Object implements \Iterator {
 						$this->tokenIndex++;
 						return;
 					}
-					
-					if ($nextToken == ',' || $nextToken[0] == T_WHITESPACE) {
+					if (in_array($nextToken, array(',', ')')) || $nextToken[0] == T_WHITESPACE) {
 						notice('Non-strict new declaration, Expecting "new '.$value.'(" on line '.$this->lineNumber);
 						$this->state = 'PHP';
 						$this->current = array('T_OBJECT', $value, $line);

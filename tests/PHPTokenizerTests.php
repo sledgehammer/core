@@ -7,7 +7,7 @@ namespace SledgeHammer;
 class PHPTokenizerTests extends \UnitTestCase {
 	
 	function donttest_tokenizer() {
-		$filename = $GLOBALS['AutoLoader']->getFilename('SledgeHammer\Website');
+		$filename = $GLOBALS['AutoLoader']->getFilename('Input');
 		$this->assertEqualTokenizer($filename);
 		
 		try {

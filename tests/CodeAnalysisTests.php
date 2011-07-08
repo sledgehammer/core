@@ -37,7 +37,9 @@ class CodeAnalysisTests extends \UnitTestCase {
 				$analyzer->open($module['path'].'functions.php');
 			}
 		}
-		$analyzer->open(PATH.'public/rewrite.php');
+		if (file_exists(PATH.'public/rewrite.php')) {
+			$analyzer->open(PATH.'public/rewrite.php');
+		}
 		$definitionCount = 0;
 		$passes = array();
 		$failed = false;
@@ -61,10 +63,16 @@ class CodeAnalysisTests extends \UnitTestCase {
 	 * Analize all known classes and validate if all classes are available
 	 */
 	function test_entire_codebase() {
+//		restore_error_handler();
 		$analyzer = new PHPAnalyzer();
 		$files = $this->getDefinitionFiles();
 		foreach ($files as $filename) {
-			$analyzer->open($filename);
+			try {
+				$analyzer->open($filename);
+			}  catch (\Exception $e) {
+//				ErrorHandler::handle_exception($e);
+				$this->fail($e->getMessage());
+			}
 		}
 		
 		foreach ($analyzer->classes as $class => $info) {
