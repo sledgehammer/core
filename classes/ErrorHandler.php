@@ -33,7 +33,14 @@ class ErrorHandler {
 			4096 => 'RecoverableError', // E_RECOVERABLE_ERROR constante is pas bekend sinds php 5.2.0
 			8192 => 'Deprecated', //  E_DEPRECATED constante is pas bekend sinds php 5.3.0
 			16384 => 'Deprecated', // E_USER_DEPRECATED constante is pas bekend sinds php 5.3.0
-			'EXCEPTION' => 'Exception'
+			'EXCEPTION' => 'Exception',
+			// Error levels that can't be caught or triggered directly, but could be retrieved with error_get_last()
+			E_COMPILE_WARNING => 'Warning',
+			E_COMPILE_ERROR => 'Error',
+			E_CORE_WARNING => 'Warning',
+			E_CORE_ERROR => 'Error',
+			E_PARSE => 'Error',
+			
 		),
 		$max_string_length_backtrace = 51200, // Maximaal 50 KiB per argument in de backtrace weergeven
 		$isProcessing = false; // Wordt gebruikt voor het bepalen van fouten tijdens de error reporting

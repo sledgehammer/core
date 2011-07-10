@@ -224,7 +224,12 @@ class AutoLoader extends Object {
 	 */
 	function importFile($filename, $settings = array()) {
 		$setttings = $this->mergeSettings($settings);
+		$previousError = error_get_last();
 		$tokens = token_get_all(file_get_contents($filename));
+		$error = error_get_last();
+		if ($error !== $previousError) {
+			notice($error['message'].' in "'.$filename.'"');
+		}
 		$definitions = array();
 		$namespace = '';
 		$state = 'DETECT';

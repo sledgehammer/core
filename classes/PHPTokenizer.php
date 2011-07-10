@@ -59,9 +59,14 @@ class PHPTokenizer extends Object implements \Iterator {
 	 * @param string $contents The contents of a php script/file
 	 */
 	function __construct($contents) {
+		$previousError = error_get_last();
 		$this->tokens = token_get_all($contents);
+		$error = error_get_last();
+		if ($error !== $previousError) {
+			notice($error['type'], $error['message']);
+		}
 	}
-
+	
 	function rewind() {
 		$this->tokenIndex = 0;
 		$this->state = 'HTML';
@@ -459,7 +464,7 @@ class PHPTokenizer extends Object implements \Iterator {
 						$this->state = 'PHP';
 						break;
 					}
-					$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING));
+					$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, '[', T_CONSTANT_ENCAPSED_STRING, ']'));
 					break;
 					
 				case 'NEW':
