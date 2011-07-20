@@ -230,7 +230,7 @@ class PHPAnalyzer extends Object {
 			$info['class'] = $class;
 			$info['implements'] = $reflectionClass->getInterfaceNames();
 			$info['extends'] = $reflectionClass->getParentClass();
-			if ($info['extends'] == false || $info['extends']->name == 'SledgeHammer\Object' || $info['extends']->name == 'stdClass') {
+			if ($info['extends'] == false || $info['extends']->name == 'stdClass') {
 				unset($info['extends']);
 			} else {
 				$info['extends'] = $info['extends']->name;
