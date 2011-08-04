@@ -357,7 +357,8 @@ class ErrorHandler {
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
 				$errorHandlerInvocations = array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
-				if (in_array($call['function'], $errorHandlerInvocations) || ($call['function'] == 'connect' && in_array(@$call['class'], array('mysqli', 'MySQLiDatabase'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations)))  {
+				$databaseClasses = array('Database', 'mysqli', 'MySQLiDatabase', 'SledgeHammer\MySQLiDatabase'); // prevent showing passwords in the backtrace.
+				if (in_array($call['function'], $errorHandlerInvocations) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations)))  {
 					echo '(...)';
 				} else {
 					echo '(';
