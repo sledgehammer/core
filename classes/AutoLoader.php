@@ -20,10 +20,11 @@ class AutoLoader extends Object {
 	/** 
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
-	public $enableCache = true; 
-
+	public $enableCache; 
+	/**
+	 * @var string
+	 */
 	private $path;
-	private $cachePath = true; 
 
 	/**
 	 * Checks that are enabled when the module contains a classes folder.
@@ -48,11 +49,9 @@ class AutoLoader extends Object {
 	/**
 	 *
 	 * @param string $path
-	 * @param string $cachePath  Basepath of the cacheFiles
 	 */
-	function __construct($path, $cachePath = 'tmp/AutoLoader/') {
+	function __construct($path) {
 		$this->path = $path;
-		$this->cachePath = $this->fullPath($cachePath);
 	}
 	
 	function init() {
@@ -172,7 +171,7 @@ class AutoLoader extends Object {
 		$settings = $this->loadSettings($path, $settings);
 		if ($this->enableCache) {
 			$folder = basename($module['path']);
-			$cacheFile = $this->cachePath.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
+			$cacheFile = TMP_DIR.'AutoLoader/'.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
 			if (!mkdirs(dirname($cacheFile))) {
 				$this->enableCache = false;
 			} elseif (file_exists($cacheFile)) {
@@ -197,7 +196,12 @@ class AutoLoader extends Object {
 	
 	function importFolder($path, $settings = array()) {
 		$settings = $this->loadSettings($path, $settings);
-		$dir = new \DirectoryIterator($path);
+		try {
+			$dir = new \DirectoryIterator($path);
+		} catch (\Exception $e) {
+			notice($e->getMessage());
+			return;
+		}
 		foreach ($dir as $entry) {
 			if ($entry->isDot()) {
 				continue;

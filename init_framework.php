@@ -59,7 +59,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 
 	// Database connecties maken
 	$GLOBALS['database_failure'] = false;
-	if (file_exists(PATH.'application/settings/database.ini')) {
+	if (file_exists(APPLICATION_DIR.'settings/database.ini')) {
 		$success = SledgeHammer::initDatabases();
 		$GLOBALS['database_failure'] = !$success;
 	}

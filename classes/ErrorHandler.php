@@ -382,9 +382,10 @@ class ErrorHandler {
 		}
 		if (!empty($call['file'])) {
 			if (strpos($call['file'], PATH) === 0) {
-				$call['file'] = substr($call['file'], strlen(PATH));
+				echo ' in&nbsp;<b title="'.htmlentities($call['file']).'">'.substr($call['file'], strlen(PATH)).'</b>'; // De bestandnaam opvragen en filteren.
+			} else {
+				echo ' in&nbsp;<b>'.$call['file'].'</b>'; // De bestandnaam opvragen en filteren.
 			}
-			echo ' in&nbsp;<b>'.str_replace('\\', '/', $call['file']).'</b>'; // De bestandnaam opvragen en filteren.
 		}
 		if (isset($call['line'])) {
 			echo ' on&nbsp;line&nbsp;<b>'.$call['line'].'</b>';
@@ -493,7 +494,7 @@ class ErrorHandler {
 				return 0;
 			}
 		}
-		$filename = PATH.'tmp/error_handler_email_limit.txt';
+		$filename = TMP_DIR.'error_handler_email_limit.txt';
 		if (!@file_exists($filename)) {
 			error_log('File "'.$filename.'" doesn\'t exist (yet)');
 			// nieuwe voorraad.
