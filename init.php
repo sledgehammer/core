@@ -27,11 +27,13 @@ $GLOBALS['charset'] = 'UTF-8';
 // ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
+
+$user = posix_getpwuid(posix_geteuid());
 $tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
 if (is_dir($tmpDir)) {
-	define('SledgeHammer\TMP_DIR', $tmpDir); // Use local tmp folder.
+	define('SledgeHammer\TMP_DIR', $tmpDir.$user['name'].DIRECTORY_SEPARATOR); // Use local tmp folder.
 } else {
-	define('SledgeHammer\TMP_DIR', '/tmp/sledgehammer/'.posix_getlogin().'/'.md5(__FILE__).'/'); // Use global tmp folder
+	define('SledgeHammer\TMP_DIR', '/tmp/sledgehammerTmp/'.md5(__FILE__).'-'.$user['name'].'/'); // Use global tmp folder
 }
 $GLOBALS['AutoLoader'] = new AutoLoader(PATH); // De AutoLoader aanmaken. (maar om te functioneren moet de $AutoLoader->init() nog aangeroepen worden)
 
