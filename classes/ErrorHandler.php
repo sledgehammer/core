@@ -318,7 +318,7 @@ class ErrorHandler {
 						next($backtrace);
 						break;
 					}
-				} elseif ($call['function'] == 'ErrorHandler_shutdown_callback') {
+				} elseif ($call['function'] == 'SledgeHammer\ErrorHandler_shutdown_callback') {
 					$error = error_get_last();
 					$this->backtrace_highlight($error);
 					next($backtrace);
