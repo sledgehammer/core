@@ -1002,5 +1002,17 @@ namespace SledgeHammer {
 		}
 		return $key;
 	}
+	
+	/**
+	 * Shorthand for creating an SQL object and selecting columns.
+	 * Allows direct method-chaining:
+	 *   select('*')->from('table')->where('column = "value"');
+	 * 
+	 * @return SQL
+	 */
+	function select($columns) {
+		$sql = new SQL();
+		return $sql->select($columns);
+	}
 }
 ?>

@@ -1,8 +1,15 @@
 <?php
 /**
  * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
- * @see http://dev.mysql.com/doc/refman/5.1/en/select.html
+ * Has a fluent interface where the methods won't modify the object but will return a new object.
+ * 
+ *   $sql = select('*')->from('customers'); // uses the select shorthand
+ * 
+ *   $sql2 = $sql->where('id = 1');
+ *   echo $sql; // "SELECT * FROM customers"
+ *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
  *
+ * @see http://dev.mysql.com/doc/refman/5.1/en/select.html
  * @package Core
  */
 namespace SledgeHammer;
@@ -25,13 +32,12 @@ class SQL extends Object {
 	function __toString() {
 		try {
 			return $this->compose(); 
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			// __toString must not throw an exception
 			ErrorHandler::handle_exception($e);
 			return '';
 		}
 	}
-
 	
 	/**
 	 * Een array met kolommen toevoegen
@@ -42,14 +48,12 @@ class SQL extends Object {
 	function select($columns) {
 		if (count($this->columns) != 0) {
 			notice('Overruling columns');
-			$this->columns = array();
 		}
 		if (is_array($columns)) {
-			$this->addColumns($columns);
+			return $this->addColumns($columns);
 		} else {
-			$this->addColumn($columns);
+			return $this->addColumn($columns);
 		}
-		return $this;
 	}
 
 	function addColumn($column, $alias = null) {
@@ -62,23 +66,25 @@ class SQL extends Object {
 	}
 
 	function addColumns($columns) {
+		$sql = clone $this;
 		foreach ($columns as $alias => $column) {
 			$alias = $this->extractAlias($column, $alias, true); // Zit er een alias in de $column string?
 			if ($alias === null) {
-				$this->columns[] = $column;
+				$sql->columns[] = $column;
 			} else {
-				if (isset($this->columns[$alias])) {
+				if (isset($sql->columns[$alias])) {
 					notice('Overruling column(alias) "'.$alias.'"');
 				}
-				$this->columns[$alias] = $column;
+				$sql->columns[$alias] = $column;
 			}
 		}
-		return $this;
+		return $sql;
 	}
 
 	function removeColumn($alias) {
-		unset($this->columns[$alias]);
-		return $this;
+		$sql = clone $this;
+		unset($sql->columns[$alias]);
+		return $sql;
 	}
 
 	/**
@@ -89,9 +95,10 @@ class SQL extends Object {
 	 * @return SQL  for fluent interface 
 	 */
 	function from($table) {
-		if (count($this->tables) != 0) {
+		$sql = clone $this;
+		if (count($sql->tables) != 0) {
 			notice('Overruling from');
-			$this->tables = array();
+			$sql->tables = array();
 		}
 		if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
 			$tables = $table; 
@@ -99,13 +106,13 @@ class SQL extends Object {
 			$tables = func_get_args();
 		}
 		foreach ($tables as $alias => $table) {
-			$alias = $this->extractAlias($table);
-			if (isset($this->tables[$alias])) {
+			$alias = $sql->extractAlias($table);
+			if (isset($sql->tables[$alias])) {
 				throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
 			}
-			$this->tables[$alias] = $table;
+			$sql->tables[$alias] = $table;
 		}
-		return $this;
+		return $sql;
 	}
 
 	function innerJoin($table, $on) {
@@ -125,49 +132,54 @@ class SQL extends Object {
 	}
 
 	function where($where) {
-		if ($this->where !== '') {
+		$sql = clone $this;
+		if ($sql->where !== '') {
 			notice('Overruling where');
 		}
-		$this->where = $where;
-		return $this;
+		$sql->where = $where;
+		return $sql;
 	}
 
 	function andWhere($restriction) {
-		if (is_array($this->where) && $this->where['operator'] == 'AND') {
-			$this->where[] = $restriction;
+		$sql = clone $this;
+		if (is_array($sql->where) && $sql->where['operator'] == 'AND') {
+			$sql->where[] = $restriction;
 		} else {
-			$this->where = array(
-				$this->where,
+			$sql->where = array(
+				$sql->where,
 				'operator' => 'AND',
 				$restriction
 			);
 		}
-		return $this;
+		return $sql;
 	}
 
 	function orWhere($restriction) {
-		if (is_array($this->where) && $this->where['operator'] == 'OR') {
-			$this->where[] = $restriction;
+		$sql = clone $this;
+		if (is_array($sql->where) && $sql->where['operator'] == 'OR') {
+			$sql->where[] = $restriction;
 		} else {
-			$this->where = array(
-				$this->where,
+			$sql->where = array(
+				$sql->where,
 				'operator' => 'OR',
 				$restriction
 			);
 		}
-		return $this;
+		return $sql;
 	}
 
 	function groupBy($column) {
-		$this->group_by[] = $column;
-		return $this;
+		$sql = clone $this;
+		$sql->group_by[] = $column;
+		return $sql;
 	}
 
 	function orderBy($column, $direction = 'ASC') {
-		$this->order_by = array(
+		$sql = clone $this;
+		$sql->order_by = array(
 			$column => $direction
 		);
-		return $this;
+		return $sql;
 	}
 
 	/**
@@ -178,13 +190,14 @@ class SQL extends Object {
 	 * @param int $limit De limit of leeg
 	 */
 	function limit($offset, $limit = null) {
+		$sql = clone $this;
 		if ($limit === null) {
-			$this->limit = $offset;
-			return $this;
+			$sql->limit = $offset;
+			return $sql;
 		}
-		$this->offset = $offset;
-		$this->limit = $limit;
-		return $this;
+		$sql->offset = $offset;
+		$sql->limit = $limit;
+		return $sql;
 	}
 
 	/**
@@ -201,7 +214,7 @@ class SQL extends Object {
 		}
 		$sql = $this->select." ";
 		$columns = array();
-		foreach($this->columns as $alias => $column) { // kolommen opbouwen
+		foreach ($this->columns as $alias => $column) { // kolommen opbouwen
 			if ($alias != $column) {
 				$column .= ' AS '.$alias;
 			}
@@ -211,7 +224,7 @@ class SQL extends Object {
 
 		$sql .= ' FROM ';
 		$first = true;
-		foreach($this->tables as $table) {
+		foreach ($this->tables as $table) {
 			if (is_string($table)) { // Is er een table (geen join)
 				$join = array('table' => $table);
 			} else {
@@ -242,11 +255,10 @@ class SQL extends Object {
 		if ($having != '') {
 			$sql .= ' HAVING '.$having;
 		}
-
 		if (count($this->order_by) > 0) {
 			$order_by = array();
-			foreach($this->order_by as $column => $order) {
-				switch($order) {
+			foreach ($this->order_by as $column => $order) {
+				switch ($order) {
 
 					case 'NULL':
 						$order_by[] = 'NULL';
@@ -319,7 +331,7 @@ class SQL extends Object {
 		foreach($restrictions as $sql) {
 			if (is_array($sql)) { // Is het geen sql maar nog een 'restriction'?
 				$haakjes_voor_node = ($sql['operator'] !== $operator); // Als de subnode dezelde verbinding heeft, dan geen haakjes. "x = 1 AND (y = 5 AND z = 8)" == "x = 1 AND y = 5 AND z = 8"
-				$sql = $this->composeRestrictions($sql, $haakjes_voor_node); // recursief
+				$sql = $sql->composeRestrictions($sql, $haakjes_voor_node); // recursief
 			}
 			if ($sql != '') { // lege sql statements negeren.
 				$sql_statements[] = $sql; // stukje sql aan de statement toevoegen
@@ -337,19 +349,20 @@ class SQL extends Object {
 
 	/**
 	 * Helper voor de diverse *Join functies
-	 * @return $this  For fluent interface
+	 * @return $sql  For fluent interface
 	 */
 	private function join($type, $table, $on) {
 		$alias = $this->extractAlias($table);
-		if (isset($this->tables[$alias])) {
+		if (isset($sql->tables[$alias])) {
 			throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
 		}
-		$this->tables[$alias] = array(
+		$sql = clone $this;
+		$sql->tables[$alias] = array(
 			'type' => $type,
 			'table' => $table,
 			'on' => $on
 		);
-		return $this;
+		return $sql;
 	}
 
 	/**
