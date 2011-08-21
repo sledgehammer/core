@@ -300,7 +300,7 @@ class SQL extends Object {
 		}
 		$prefix = '';
 		if (empty($restrictions['operator'])) {
-			throw new \Exception('where[] statements require an operator, Exaple: array("operator" => "AND", "x = 1", "y = 2")');
+			throw new \Exception('where[] statements require an operator, Example: array("operator" => "AND", "x = 1", "y = 2")');
 		}
 		$operator = strtoupper($restrictions['operator']);
 		switch($operator) {
