@@ -27,8 +27,9 @@ $GLOBALS['charset'] = 'UTF-8';
 // ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
+// Detect a writable tmp folder
 $tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
-if (is_dir($tmpDir)) {
+if (is_dir($tmpDir) && is_writable($tmpDir)) {
 	define('SledgeHammer\TMP_DIR', $tmpDir); // Use local tmp folder.
 } else {
 	define('SledgeHammer\TMP_DIR', '/tmp/sledgehammer/'.posix_getlogin().'/'.md5(__FILE__).'/'); // Use global tmp folder
