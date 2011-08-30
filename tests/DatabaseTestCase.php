@@ -99,7 +99,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$query_log = array_slice($db->query_log, $this->query_nr); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
 		$queries = array();
 		foreach ($query_log as $row) {
-			$queries[] = $row['sql'];
+			$queries[] = (string) $row['sql'];
 		}
 		foreach ($queries as $query) {
 			if ($sql == $query) {
