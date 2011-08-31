@@ -1014,5 +1014,16 @@ namespace SledgeHammer {
 		$sql = new SQL();
 		return $sql->select($columns);
 	}
+
+	/**
+	 * Shorthand for creating an Text object
+	 * Allows direct method-chaining:
+	 *   text('my text')->toUpper()->trim();
+	 *
+	 * @return Text
+	 */
+	function text($text, $charset = null) {
+		return new Text($text, $charset);
+	}
 }
 ?>
