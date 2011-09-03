@@ -101,6 +101,13 @@ class Text extends Object implements \ArrayAccess {
 		return $texts;	
 	}
 	
+	function ucfirst() {
+		return new Text($this[0]->toUpper().$this->substring(1), 'UTF-8');
+	}
+	function capitalize() {
+		return new Text($this[0]->toUpper().$this->substring(1)->toLower(), 'UTF-8');
+	}
+
 	// Info 
 	
 	/**
@@ -108,8 +115,12 @@ class Text extends Object implements \ArrayAccess {
 	 * @param type $search
 	 * @param type $offset 
 	 */
-	function indexOf($text, $offset = null) {
-		return mb_strpos($this->text, $text, $offset, 'UTF-8');
+	function indexOf($text, $offset = 0, $ignoreCase = false) {
+		if ($ignoreCase) {
+			return mb_stripos($this->text, $text, $offset, 'UTF-8');
+		} else {
+			return mb_strpos($this->text, $text, $offset, 'UTF-8');
+		}
 	}
 
 	function startsWith($text) {
@@ -128,7 +139,16 @@ class Text extends Object implements \ArrayAccess {
 		return false;
 	}
 	
-	//
+	function equals($text, $ignoreCase = false) {
+		$text = new Text($text);
+		if ($ignoreCase) {
+			return ($text->toLower()->text === $text->toLower()->text);
+		} else {
+			return ($text->text === $text->text);
+		}
+	}
+
+		//
 	
 	// ArrayAccess
 	public function offsetExists($offset) {

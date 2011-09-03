@@ -7,14 +7,14 @@
 namespace SledgeHammer;
 class TextTests extends \UnitTestCase {
 
-	function test_length() {
+	function test_length_and_encoding_detection() {
 		$utf8 = $this->getString('UTF-8');
 		$latin1 = $this->getString('ISO-8859-15');
 		$ascii = 'abc';
 		$expectedLength = 13;
 		$numberOfBytesInUtf8 = 17;
-		$this->assertEqual(strlen($latin1), $expectedLength, 'strlen() returns the number of characters on ISO-8859-15 and other single-byte encodings');
-		$this->assertEqual(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of characters on UTF-8 and other multi-byte encodings');
+		$this->assertEqual(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
+		$this->assertEqual(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
 		
 		$this->assertEqual(text($latin1)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
 		$this->assertEqual(text($utf8)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
@@ -47,7 +47,18 @@ class TextTests extends \UnitTestCase {
 	function test_endsWith() {
 		$this->assertTrue(text('1234')->endsWith('34'));
 		$this->assertFalse(text('1234')->endsWith('12'));
+	
+	}	
+	function test_startsWith() {
+		$this->assertTrue(text('1234')->startsWith('12'));
+		$this->assertFalse(text('1234')->startsWith('34'));
 	}
+	function test_ucfirst_and_capitalize() {
+		$this->assertEqual(text('bob')->ucfirst(), 'Bob');
+		$this->assertEqual(text('STOP')->ucfirst(), 'STOP', 'ucfirst() should do nothing when the first chararakter already is uppercase');
+		$this->assertEqual(text('STOP')->capitalize(), 'Stop', 'capitalize() should convert the first charakter to uppercase and the rest to lowercase');
+	}
+	
 	private function getString($charset) {
 		$html = '&copy; Itali&euml; &euro; 10';
 		return html_entity_decode($html, ENT_COMPAT, $charset);
