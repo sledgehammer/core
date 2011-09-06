@@ -42,6 +42,7 @@ class Dump extends Object {
 			'background-color: #FBFBFB',
 			'text-align: left',
 			'text-shadow: none',
+			'overflow-x: auto',
 			);
 		$dumptrace_style = array(
 			'font: 12px Tahoma, sans-serif',
