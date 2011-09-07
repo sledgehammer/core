@@ -23,6 +23,11 @@ class CodeAnalysisTests extends \UnitTestCase {
 		}
 	}
 	
+	function donttest_single_file() {
+		$phpAnalyzer = new PHPAnalyzer();
+		$info = $phpAnalyzer->getInfo('SledgeHammer\FFVideo');
+		dump($info);
+	}
 	/**
 	 * Crawl the codebase and validate if all used classes are available
 	 */
@@ -188,10 +193,6 @@ class CodeAnalysisTests extends \UnitTestCase {
 			return false;
 		}
 		return true;
-	}
-	
-	private function getDefinitionFiles() {
-		
 	}
 }
 ?>
