@@ -119,7 +119,6 @@ class CodeAnalysisTests extends \UnitTestCase {
 	}
 	
 	function donttest_entire_codebase() {
-//		restore_error_handler();
 		$loader = new AutoLoader(PATH);
 		$loader->importFolder(PATH, array(
 			'matching_filename' => false,
