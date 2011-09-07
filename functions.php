@@ -648,7 +648,7 @@ namespace SledgeHammer {
 			return $data; // niks om om te zetten.
 		}
 		if (is_object($data)) {
-			if ($data instanceof Iterator) { // Is dit een iterator?
+			if ($data instanceof \Iterator) { // Is dit een iterator?
 				$array = iterator_to_array($data); // Iterator omzetten naar een array.
 				return iterators_to_arrays($array); /// Alle elementen (mogelijk) omzetten
 			} else {
@@ -681,7 +681,7 @@ namespace SledgeHammer {
 		if (func_num_args() > 1) {
 			throw new \Exception('$search_value not implemented');
 		}
-		if (!is_object($iterator) || !($iterator instanceof Iterator)) {
+		if (!is_object($iterator) || !($iterator instanceof \Iterator)) {
 			warning('The first argument should be an Iterator object');
 		}
 		$keys = array();

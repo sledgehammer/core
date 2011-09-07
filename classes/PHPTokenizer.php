@@ -20,8 +20,7 @@
  *   T_OBJECT       The class that is used in the code
  *
  * @todo
- *   Extract class/interface from intanceof operator
- *   T_CALL: Extract function calls
+ *   T_CALL: Extract functions & methods tha are called from within the code like: "$object->method();"
  *
  * @package Core
  */
@@ -180,7 +179,9 @@ class PHPTokenizer extends Object implements \Iterator {
 						case T_NEW:        $this->state = 'NEW'; break;
 						case T_CURLY_OPEN: $this->state = 'COMPLEX_VARIABLE'; break;
 						case T_DOLLAR_OPEN_CURLY_BRACES: $this->state = 'COMPLEX_VARIABLE'; break;
-						case T_CATCH:      $this->state = 'PARAMETERS';
+						case T_CATCH:      $this->state = 'PARAMETERS'; break;
+						case T_INSTANCEOF: $this->state = 'INSTANCEOF'; break;
+
 					}
 					break;
 
@@ -503,6 +504,26 @@ class PHPTokenizer extends Object implements \Iterator {
 						return;
 					}
 					$this->expectTokens($nextToken, array(T_NS_SEPARATOR, T_STRING));
+					break;
+
+				case 'INSTANCEOF':
+					if (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING))) {
+						$this->state = 'INSTANCEOF_TYPE';
+						$this->current = array('T_PHP', $value, $line);
+						$this->tokenIndex++;
+						return;
+
+					}
+					$this->state = 'PHP'; // Unable to detect type
+					break;
+
+				case 'INSTANCEOF_TYPE':
+					if (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING)) == false) {
+						$this->state = 'PHP';
+						$this->current = array('T_TYPE_HINT', $value, $line);
+						$this->tokenIndex++;
+						return;
+					}
 					break;
 
 				default:
