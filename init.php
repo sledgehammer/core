@@ -24,7 +24,9 @@ require($coreDir.'classes/ErrorHandler.php');
 require($coreDir.'classes/AutoLoader.php');
 
 $GLOBALS['charset'] = 'UTF-8';
-mb_internal_encoding($GLOBALS['charset']);
+if (function_exists('mb_internal_encoding')) {
+	mb_internal_encoding($GLOBALS['charset']);
+}
 
 // ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
