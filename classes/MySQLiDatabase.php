@@ -89,13 +89,14 @@ class MySQLiDatabase extends \MySQLi {
 			return $Result;
 		} else { // Fout in de query
 			if ($this->connected) {
-				$error_message = 'MySQL error['.$this->errno.'] '.$this->error;
-				$this->notice($error_message, $sql);
-			} else {
-				$error_message = 'Not connected';
-			}
-			if ($this->throw_exception_on_error) {
-				throw new \Exception($error_message);
+				$error = 'MySQL error['.$this->errno.'] '.$this->error;
+				if ($this->throw_exception_on_error) {
+					throw new \Exception($error);
+				} else {
+					$this->notice($error, $sql);
+				}
+			} elseif ($this->throw_exception_on_error) {
+				throw new \Exception('Not connected');
 			}
 			return false;
 		}

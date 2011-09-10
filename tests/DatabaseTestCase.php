@@ -21,20 +21,14 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			$GLOBALS['Databases']['default_backup'] = $GLOBALS['Databases']['default'];
 			unset($GLOBALS['Databases']['default']);
 		}
-		//set_error_handler('ErrorHandler_trigger_error_callback');
 		if(ENVIRONMENT != 'development') {
-				$this->skip(); 
-				throw new \Exception('Database connection FAILED');
 			return;
 		}
+			
 		if ($this->dbLink == '__NOT_CONNECTED__') {
 			$db = new MySQLiDatabase();
 			$host = php_uname('n');
-			if ($host == 'linux.webcontent.nl') {
-				$connected = $db->connect('localhost', 'dev', 'dev');
-			} else {
-				$connected = $db->connect('localhost', 'root');
-			}
+			$connected = $db->connect('localhost', 'root');
 			if (!$connected) {
 				throw new \Exception('Database connection FAILED');
 			}
@@ -51,6 +45,14 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			}
 			$GLOBALS['Databases'][$this->dbName] = $db;
 		}
+	}
+	
+	function getTests() {
+		if(ENVIRONMENT != 'development') {
+			$this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
+			return array();
+		}
+		return parent::getTests();
 	}
 
 	/**
@@ -97,7 +99,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$query_log = array_slice($db->query_log, $this->query_nr); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
 		$queries = array();
 		foreach ($query_log as $row) {
-			$queries[] = $row['sql'];
+			$queries[] = (string) $row['sql'];
 		}
 		foreach ($queries as $query) {
 			if ($sql == $query) {

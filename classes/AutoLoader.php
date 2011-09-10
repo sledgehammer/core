@@ -322,8 +322,11 @@ class AutoLoader extends Object {
 			}
 		}
 		if ($settings['detect_accidental_output'] && $token[0] == T_INLINE_HTML) {
-			notice('Invalid end of file. (html)output detected');
+			notice('Invalid end of file. (html)output detected in "'.basename($filename).'"');
 		}
+		/* elseif ($token[0] == T_CLOSE_TAG && $token[1] != '?>') {
+			notice('Invalid end of file, accidental newline detected in "'.basename($filename).'"'); // newline directly after the close tag doesn't cause problems
+		} */
 		if (count($definitions) > 1) {
 			if ($settings['one_definition_per_file']) {
 				notice('Multiple definitions found in '.$filename, $definitions);

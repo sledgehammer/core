@@ -49,7 +49,7 @@ class DatabaseSessionHandler extends Object{
 		$db = getDatabase($this->dbLink);
 		try {
 			$gegevens = $db->fetch_value('SELECT session_data FROM '.$this->table.' WHERE id = '.$db->quote($id), true);
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			ErrorHandler::handle_exception($e);
 			$gegevens = false;
 		}
@@ -69,7 +69,7 @@ class DatabaseSessionHandler extends Object{
 			if ($result) {
 				return true;
 			}
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			ErrorHandler::handle_exception($e);
 		}
 		return false;

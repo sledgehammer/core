@@ -25,7 +25,7 @@ class SledgeHammerEnvironmentChecks extends \UnitTestCase {
 	 * Controleer de tmp map
 	 */
 	function test_tmp_folder() {
-		$this->assertTrue(is_writable(PATH.'tmp/'), 'De tmp map zou beschrijfbaar moeten zijn');
+		$this->assertTrue(is_writable(TMP_DIR), 'De tmp map zou beschrijfbaar moeten zijn');
 	}
 
 	function test_environment() {

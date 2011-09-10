@@ -7,13 +7,13 @@
  */
 namespace SledgeHammer;
 class PHPAnalyzer extends Object {
-	
+
 	public $classes = array();
-	
+
 	public $interfaces = array();
 
 	public $usedDefinitions = array();
-	
+
 	/**
 	 *
 	 * @var AutoLoader
@@ -27,8 +27,7 @@ class PHPAnalyzer extends Object {
 	 */
 	function open($filename) {
 		$tokens = new PHPTokenizer(file_get_contents($filename));
-		unset($source);
-		
+
 		$namespace = '';
 		$uses = array();
 		$definitions = array();
@@ -48,23 +47,23 @@ class PHPAnalyzer extends Object {
 				continue;
 			}
 			switch ($type) {
-				
+
 				case 'T_NAMESPACE':
 					$namespace = $value;
 					break;
-				
+
 				case 'T_USE':
 					$pos = strrpos($value, '\\');
 					$namespaceAlias = substr($value, $pos + 1);
 					$uses[$namespaceAlias] = $value;
 					break;
-					
+
 				case 'T_USE_AS':
 					$uses[$value] = $uses[$namespaceAlias];
 					unset($uses[$namespaceAlias]);
 					break;
-					
-				
+
+
 				case 'T_INTERFACE':
 					$definitions[] = array(
 						'type' => 'INTERFACE',
@@ -77,34 +76,34 @@ class PHPAnalyzer extends Object {
 					);
 					$definition = &$definitions[count($definitions) - 1];
 					break;
-				
+
 				case 'T_CLASS':
 					$definitions[] = array(
 						'type' => 'CLASS',
-						'namespace' => $namespace, 
+						'namespace' => $namespace,
 						'class' => $value,
 						'identifier' => $this->prefixNamespace($namespace, $value, $uses),
 						'extends' => array(),
 						'implements' => array(),
 						'methods' => array(),
 						'level' => $level
-						
+
 					);
 					$definition = &$definitions[count($definitions) - 1];
 					break;
-				
+
 				case 'T_EXTENDS':
 					$extends = $this->prefixNamespace($namespace, $value, $uses);
 					$definition['extends'][] = $extends;
 					$this->addUsedIn($extends, $filename, $token[2]);
 					break;
-				
+
 				case 'T_IMPLEMENTS':
 					$interface = $this->prefixNamespace($namespace, $value, $uses);
 					$definition['implements'][] = $interface;
 					$this->addUsedIn($interface, $filename, $token[2]);
 					break;
-				
+
 				case 'T_FUNCTION':
 					$function = $value;
 					$parameter = null;
@@ -114,26 +113,34 @@ class PHPAnalyzer extends Object {
 					} else {
 						$functions = &$globalFunctions;
 					}
+					$parameterLevel = $level;
 					break;
-				
+
+				case 'T_TYPE_HINT':
+					$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
+					break;
+
 				case 'T_PARAMETER':
-					$parameter = substr($value, strpos($value, '$') + 1);
+					if ($parameterLevel != $level) { // Doesn't this parameter belong to the function?
+						break; // Propably a catch () parameter
+					}
+					$parameter = substr($value, 1); // strip '$'
 					$functions[$function][$parameter] = null;
 					break;
-				
+
 				case 'T_PARAMETER_VALUE':
 					$functions[$function][$parameter] = $value;
 					$parameter = null;
 					break;
-				
+
 				case 'T_OPEN_BRACKET':
 					$level++;
 					break;
-				
+
 				case 'T_CLOSE_BRACKET':
 					$level--;
 					break;
-				
+
 				case 'T_OBJECT':
 					$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
 					break;
@@ -163,7 +170,7 @@ class PHPAnalyzer extends Object {
 				$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
 			}*/
 			switch ($definition['type']) {
-					
+
 				case 'CLASS':
 					unset($definition['type']);
 					if (count($definition['extends']) > 1) {
@@ -190,7 +197,7 @@ class PHPAnalyzer extends Object {
 			}
 		}
 	}
-	
+
 	function getInfo($definition) {
 		// Check analyzed definitions
 		if (isset($this->classes[$definition])) {
@@ -259,15 +266,15 @@ class PHPAnalyzer extends Object {
 		}
 		return $info;
 	}
-	
+
 	/**
 	 *
-	 * @param AutoLoader $autoLoader 
+	 * @param AutoLoader $autoLoader
 	 */
 	function setAutoLoader(AutoLoader $autoLoader) {
 		$this->autoLoader = $autoLoader;
 	}
-	
+
 	/**
 	 *
 	 * @return AutoLoader
@@ -281,10 +288,10 @@ class PHPAnalyzer extends Object {
 
 	/**
 	 * Resolve the full classname.
-	 * 
+	 *
 	 * @param string $namespace
-	 * @param string $identifier  The class or interface name 
-	 * @return string 
+	 * @param string $identifier  The class or interface name
+	 * @return string
 	 */
 	private function prefixNamespace($namespace, $identifier, $uses = array()) {
 		$pos = strpos($identifier, '\\');
@@ -293,7 +300,7 @@ class PHPAnalyzer extends Object {
 				return substr($identifier, 1);
 			}
 			foreach ($uses as $alias => $namespace) {
-				$alias .= '\\'; 
+				$alias .= '\\';
 				if (substr($identifier, 0, strlen($alias)) === $alias) {
 					return $namespace.substr($identifier, strlen($alias) - 1);
 				}
@@ -308,10 +315,10 @@ class PHPAnalyzer extends Object {
 		}
 		return $namespace.'\\'.$identifier;
 	}
-	
+
 	/**
 	 *
-	 * @param string $class  The class that used
+	 * @param string $class  The class that is used
 	 * @param string $filename  The filename it is use in
 	 * @param int $line  The line number it is used on
 	 */

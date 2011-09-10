@@ -42,6 +42,7 @@ class Dump extends Object {
 			'background-color: #FBFBFB',
 			'text-align: left',
 			'text-shadow: none',
+			'overflow-x: auto',
 			);
 		$dumptrace_style = array(
 			'font: 12px Tahoma, sans-serif',
@@ -91,7 +92,7 @@ class Dump extends Object {
 			return $positie + 4;
 		}
 		if (substr($gegevens, 0, 11) == '*RECURSION*') {
-			echo syntax_highlight('// Deze variabele wordt al weergeven in de dump (Recursief genest)', 'comment');
+			echo '*RECURSION* ', syntax_highlight('// This variable is already shown', 'comment');
 			return $positie + 11;
 		}
 		$positie_haak_begin = strpos($gegevens, '(');

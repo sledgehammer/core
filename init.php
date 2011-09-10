@@ -24,19 +24,29 @@ require($coreDir.'classes/ErrorHandler.php');
 require($coreDir.'classes/AutoLoader.php');
 
 $GLOBALS['charset'] = 'UTF-8';
+if (function_exists('mb_internal_encoding')) {
+	mb_internal_encoding($GLOBALS['charset']);
+}
+
+// Detect a writable tmp folder
+$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
+if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
+	define('SledgeHammer\TMP_DIR', $tmpDir);
+} else {
+	$tmpDir = '/tmp/sledgehammer-'.md5(PATH).'/';
+	if (function_exists('posix_getpwuid')) {
+		$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+	}
+	define('SledgeHammer\TMP_DIR', $tmpDir);
+	mkdirs(TMP_DIR);
+}
+
 // ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
 
-$user = posix_getpwuid(posix_geteuid());
-$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
-if (is_dir($tmpDir)) {
-	define('SledgeHammer\TMP_DIR', $tmpDir.$user['name'].DIRECTORY_SEPARATOR); // Use local tmp folder.
-} else {
-	define('SledgeHammer\TMP_DIR', '/tmp/sledgehammerTmp/'.md5(__FILE__).'-'.$user['name'].'/'); // Use global tmp folder
-}
 $GLOBALS['AutoLoader'] = new AutoLoader(PATH); // De AutoLoader aanmaken. (maar om te functioneren moet de $AutoLoader->init() nog aangeroepen worden)
-
 spl_autoload_register(array($GLOBALS['AutoLoader'], 'define'));
+
 unset($coreDir, $tmpDir);
 ?>
