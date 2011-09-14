@@ -338,11 +338,19 @@ class ErrorHandler {
 				next($backtrace);
 				break;
 			} elseif ($call['function'] == 'handle_exception' || ($call['function'] == 'render' && $call['args'][0] instanceof \Exception)) { // Gaat het om een Exception
-				$Exception =  $call['args'][0];
-				$call['file'] = $Exception->getFile();
-				$call['line'] = $Exception->getLine();
+				$Exception = $call['args'][0];
+				$thrown = array(
+					'file' => $Exception->getFile(),
+					'line' => $Exception->getLine()
+				);
 				echo 'Exception thrown ';
-				$this->backtrace_highlight($call, true);
+				$this->backtrace_highlight($thrown, true);
+				$uncaught = next($backtrace);
+				if ($uncaught !== false) { // Not an uncaught exception?
+					echo '<span style="color:gray">&nbsp;&nbsp;Caught ';
+					$this->backtrace_highlight($call, true);
+					echo '</span>';
+				}
 				$backtrace = $Exception->getTrace();
 				break;
 			}
