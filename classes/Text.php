@@ -87,7 +87,15 @@ class Text extends Object implements \ArrayAccess {
 		}
 		return new Text(mb_substr($this->text, $offset, $length, 'UTF-8'), 'UTF-8');
 	}
-	
+
+	function reverse() {
+		$result = '';
+		for($i = $this->length - 1; $i >= 0; $i--) {
+			$result .= mb_substr($this->text, $i, 1, 'UTF-8');
+		}
+		return new Text($result, 'UTF-8'); 
+	}
+
 	function replace($search, $replace) {
 		return new Text(str_replace($search, $replace, $this->text), 'UTF-8');
 	}

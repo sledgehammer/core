@@ -611,7 +611,7 @@ class ErrorHandler {
 		if ($exception instanceof \Exception) {
 			if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
 				self::handle(E_USER_ERROR, 'Uncaught '.get_class($exception).': '.$exception->getMessage());
-			}else {
+			} else {
 				self::handle(E_USER_WARNING, get_class($exception).': '.$exception->getMessage());
 			}
 		} else {
