@@ -1002,12 +1002,43 @@ namespace SledgeHammer {
 		}
 		return $key;
 	}
-	
+
+	/**
+	 * Write an ini file, compatible with parse_ini_file()
+	 * @param string $filename
+	 * @param array $array
+	 * @param string $comment (optional)
+	 */
+	function write_ini_file($filename, $array, $comment = null) {
+		$ini = ($comment !== null) ? "; ".$comment."\n\n" : '';
+		$usingSections = false;
+		foreach ($array as $name => $value) {
+			if (is_array($value)) {
+				$usingSections = true;
+			} else {
+				$ini .= $name.' = '.$value."\n"; // @todo Escape
+			}
+		}
+		// Write [section] values
+		if ($usingSections) {
+			foreach ($array as $section => $values) {
+				if (is_array($values)) {
+					$ini .= "\n[".$section."]\n";
+					foreach ($values as $name => $value) {
+						$ini .= $name.' = '.$value."\n"; // @todo Escape
+					}
+				}
+			}
+		}
+		return file_put_contents($filename, $ini);
+	}
+
+
 	/**
 	 * Shorthand for creating an SQL object and selecting columns.
 	 * Allows direct method-chaining:
 	 *   select('*')->from('table')->where('column = "value"');
-	 * 
+	 *
 	 * @return SQL
 	 */
 	function select($columns) {

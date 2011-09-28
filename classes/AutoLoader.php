@@ -17,10 +17,10 @@ class AutoLoader extends Object {
 	 * @var bool  If a class or interface doesn't exist in a namespace use the class from a higher namespace
 	 */
 	public $resolveNamespaces = true;
-	/** 
+	/**
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
-	public $enableCache; 
+	public $enableCache;
 	/**
 	 * @var string
 	 */
@@ -53,7 +53,7 @@ class AutoLoader extends Object {
 	function __construct($path) {
 		$this->path = $path;
 	}
-	
+
 	function init() {
 		if (file_exists($this->path.'AutoLoader.db.php')) {
 			include($this->path.'AutoLoader.db.php');
@@ -65,10 +65,10 @@ class AutoLoader extends Object {
 			$this->importModule($module);
 		}
 	}
-	
+
 	/**
 	 * include() the file containing the class of interface
-	 * 
+	 *
 	 * @param string $definition Fully qualified class or interface name
 	 */
 	function define($definition) {
@@ -95,10 +95,10 @@ class AutoLoader extends Object {
 		}
 		throw new \Exception('AutoLoader is corrupt, class "'.$definition.'" not found in "'.$filename.'"');
 	}
-	
+
 	/**
-	 * Get the filename 
-	 * 
+	 * Get the filename
+	 *
 	 * @param string $definition Fully qualified class/interface name
 	 * @return string|null  Return null if the definion can't be found
 	 */
@@ -116,7 +116,7 @@ class AutoLoader extends Object {
 			}
 		}
 	}
-	
+
 	function getDefinitions() {
 		return array_keys($this->definitions);
 	}
@@ -135,11 +135,16 @@ class AutoLoader extends Object {
 		$class = array_pop($namespaces);
 		$targetNamespace =  implode('\\', $namespaces);
 		array_pop($namespaces); // een namespace laag hoger
-		$extends = implode('\\', $namespaces).$class;
+		$extends = implode('\\', $namespaces);
+		if ($extends == '') {
+			$extends  = $class;
+		} else {
+			$extends .= '\\'.$class;
+		}
 		$php = 'namespace '.$targetNamespace." {\n\t";
-		if (class_exists($extends)) {
+		if (class_exists($extends, false)) {
 			$php .= 'class '.$class;
-		} elseif (interface_exists($class)) {			
+		} elseif (interface_exists($class, false)) {
 			$php .= 'interface '.$class;
 		} else {
 			return false;
@@ -175,7 +180,7 @@ class AutoLoader extends Object {
 			if (!mkdirs(dirname($cacheFile))) {
 				$this->enableCache = false;
 			} elseif (file_exists($cacheFile)) {
-				$mtimeCache = filemtime($cacheFile);		
+				$mtimeCache = filemtime($cacheFile);
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
 				if ($revalidateCache == false || $mtimeCache > mtime_folders($module['path'])) { // Is het cache bestand niet verouderd?
 					// Use the cacheFile
@@ -193,7 +198,7 @@ class AutoLoader extends Object {
 			$this->writeCache($cacheFile, $this->relativePath($module['path']));
 		}
 	}
-	
+
 	function importFolder($path, $settings = array()) {
 		$settings = $this->loadSettings($path, $settings);
 		try {
@@ -219,12 +224,12 @@ class AutoLoader extends Object {
 			}
 		}
 	}
-	
+
 	/**
 	 *
 	 * @param string $filename
 	 * @param array $settings
-	 * @return array definitions 
+	 * @return array definitions
 	 */
 	function importFile($filename, $settings = array()) {
 		$setttings = $this->mergeSettings($settings);
@@ -242,26 +247,26 @@ class AutoLoader extends Object {
 				continue;
 			}
 			switch ($state) {
-				
+
 				case 'DETECT':
 					switch ($token[0]) {
-					
+
 						case T_NAMESPACE:
 							$state = 'NAMESPACE';
 							$namespace = '';
 							break;
-						
+
 						case T_CLASS:
 							$state = 'CLASS';
 							break;
-						
+
 						case T_INTERFACE:
 							$state = 'INTERFACE';
 							break;
-							
+
 					}
 					break;
-					
+
 				case 'NAMESPACE':
 					if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
 						$namespace .= $token[1];
@@ -301,7 +306,7 @@ class AutoLoader extends Object {
 					$this->unexpectedToken($token);
 					$state ='DETECT';
 					break;
-					
+
 				case 'INTERFACE':
 					if ($token[0] == T_STRING) {
 						if ($namespace == '') {
@@ -316,7 +321,7 @@ class AutoLoader extends Object {
 					$this->unexpectedToken($token);
 					$state ='DETECT';
 					break;
-					
+
 				default:
 					throw new \Exception('Unexpected state: "'.$state.'"');
 			}
@@ -348,7 +353,7 @@ class AutoLoader extends Object {
 			$this->definitions[$definition] = $filename;
 		}
 	}
-	
+
 	/**
 	 * Veranderdt de scope van alle functies en eigenschappen van de $class van private of protected naar public.
 	 * Hierdoor kun je in UnitTests controleren of de inhoud van het objecten correct is.
@@ -396,11 +401,11 @@ class AutoLoader extends Object {
 		// De php code uitvoeren en de class (zonder protected en private) declareren
 		eval($php_code);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param string $cacheFile
-	 * @param null|string $definitionPath 
+	 * @param null|string $definitionPath
 	 */
 	function writeCache($cacheFile, $definitionPath = null) {
 		$definitions = array();
@@ -410,7 +415,7 @@ class AutoLoader extends Object {
 			$length = strlen($definitionPath);
 			foreach ($this->definitions as $definition => $filename) {
 				if (substr($filename, 0, $length) == $definitionPath) {
-					$definitions[$definition] = $filename; 
+					$definitions[$definition] = $filename;
 				}
 			}
 		}
@@ -422,7 +427,7 @@ class AutoLoader extends Object {
 		$php .= ");\n?>";
 		file_put_contents($cacheFile, $php);
 	}
-	
+
 	private function mergeSettings($settings, $overrides = array()) {
 		foreach ($overrides as $key => $value) {
 			if (array_key_exists($key, $this->settings) == false) {
@@ -431,7 +436,7 @@ class AutoLoader extends Object {
 			$settings[$key] = $value;
 		}
 		if (count($settings) !== count($this->settings)) {
-			// Use global settings values 
+			// Use global settings values
 			foreach ($this->settings as $key => $value) {
 				if (array_key_exists($key, $settings) == false) {
 					$settings[$key] = $value;
@@ -440,7 +445,7 @@ class AutoLoader extends Object {
 		}
 		return $settings;
 	}
-	
+
 	private function loadSettings($path, $settings = array()) {
 		if (substr($path, -1) == '/') {
 			$path = substr($path, 0, -1);
@@ -459,7 +464,7 @@ class AutoLoader extends Object {
 				$overrides['ignore_folders'] = $folders;
 			}
 			if (isset($overrides['ignore_files'])) {
-				
+
 				$files = array();
 				foreach(explode(',', $overrides['ignore_files']) as $filename) {
 					$files[] = $path.'/'.$filename;
@@ -469,7 +474,7 @@ class AutoLoader extends Object {
 		}
 		return $this->mergeSettings($settings, $overrides);
 	}
-	
+
 	private function unexpectedToken($token) {
 		if (is_string($token)) {
 			notice('Unexpected token: '.syntax_highlight($token));
@@ -477,7 +482,7 @@ class AutoLoader extends Object {
 			notice('Unexpected token: '.token_name($token[0]).': '.syntax_highlight($token[1]).' on line '.$token[2]);
 		}
 	}
-	
+
 	/**
 	 * Maakt van een absoluut path een relatief path (waar mogelijk)
 	 *
