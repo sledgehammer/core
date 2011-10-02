@@ -116,6 +116,22 @@ namespace {
 		return implode ($glue, $array).$glueLast.$last;
 	}
 
+	/**
+	 * Humam implode, but qith quotes (") around the values.
+	 *
+	 * @param string $glueLast
+	 * @param string $array
+	 * @param string $glue
+	 * @param string $quote
+	 * @return string
+	 */
+	function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"') {
+		if (count($array) == 0) {
+			return '';
+		}
+		return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
+	}
+
 		/**
 	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
 	 *
@@ -581,7 +597,10 @@ namespace SledgeHammer {
 			}
 			return $GLOBALS['Databases'][$link];
 		}
-		throw new \Exception('Database connection: $GLOBALS[\'Databases\'][\''.$link.'\'] is not configured');
+		if (empty($GLOBALS['Databases'])) {
+			throw new \Exception('No databases are configured in $GLOBALS[\'Databases\']');
+		}
+		throw new InfoException('Database connection: $GLOBALS[\'Databases\'][\''.$link.'\'] is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($GLOBALS['Databases'])));
 		return false;
 	}
 

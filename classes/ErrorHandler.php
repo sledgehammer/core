@@ -150,6 +150,9 @@ class ErrorHandler {
 		if (isset($backtrace[3]['function']) && $backtrace[3]['function'] == 'handle_exception' && $backtrace[3]['args'][0] instanceof \Exception) {
 			$exception = $backtrace[3]['args'][0];
 			$message = $exception->getMessage();
+			if ($exception instanceof InfoException) {
+				$information = $exception->getInformation();
+			}
 		}
 		if ($information === NULL && strpos($message, 'Missing argument ') === 0) {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.

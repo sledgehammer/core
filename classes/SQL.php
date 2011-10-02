@@ -2,21 +2,21 @@
 /**
  * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
  * Has a fluent interface where the methods won't modify the object but will return a new object.
- * 
+ *
  *   $sql = select('*')->from('customers'); // uses the select shorthand
- * 
+ *
  *   $sql2 = $sql->where('id = 1');
  *   echo $sql; // "SELECT * FROM customers"
  *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
  *
- * @see http://dev.mysql.com/doc/refman/5.1/en/select.html
+ * For SELECT options @see http://dev.mysql.com/doc/refman/5.1/en/select.html
  * @package Core
  */
 namespace SledgeHammer;
 class SQL extends Object {
 
 	private
-		$select = 'SELECT', // Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d. 
+		$select = 'SELECT', // Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
 		$columns = array(), // array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
 		$tables = array(); // array(array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
 	public
@@ -31,19 +31,19 @@ class SQL extends Object {
 
 	function __toString() {
 		try {
-			return $this->compose(); 
+			return $this->compose();
 		} catch (\Exception $e) {
 			// __toString must not throw an exception
 			ErrorHandler::handle_exception($e);
 			return '';
 		}
 	}
-	
+
 	/**
 	 * Een array met kolommen toevoegen
 	 *
 	 * @param array|string $columns ('AS value' => 'column name')
-	 * @return SQL  for fluent interface 
+	 * @return SQL
 	 */
 	function select($columns) {
 		if (count($this->columns) != 0) {
@@ -92,7 +92,7 @@ class SQL extends Object {
 	 * Multiple tables: from('table1', 'table2') of from(array('table1', 'table2'))
 	 *   from('table1 AS t1', 'table2 t2') of from(array('t1' => 'table1', 'table2 AS t2'))
 	 *
-	 * @return SQL  for fluent interface 
+	 * @return SQL
 	 */
 	function from($table) {
 		$sql = clone $this;
@@ -101,7 +101,7 @@ class SQL extends Object {
 			$sql->tables = array();
 		}
 		if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
-			$tables = $table; 
+			$tables = $table;
 		} else {
 			$tables = func_get_args();
 		}
@@ -115,22 +115,38 @@ class SQL extends Object {
 		return $sql;
 	}
 
+	/**
+	 * @param string $table
+	 * @param string $on
+	 * @return SQL
+	 */
 	function innerJoin($table, $on) {
 		return $this->join('INNER JOIN', $table, $on);
 	}
 
+	/**
+	 * @param string $table
+	 * @param string $on
+	 * @return SQL
+	 */
 	function leftJoin($table, $on) {
 		return $this->join('LEFT JOIN', $table, $on);
 	}
 
+	/**
+	 * @param string $table
+	 * @param string $on
+	 * @return SQL
+	 */
 	function rightJoin($table, $on) {
 		return $this->join('RIGHT JOIN', $table, $on);
 	}
 
-	function outerJoin($table, $on) {
-		return $this->join('OUTER JOIN', $table, $on);
-	}
 
+	/**
+	 * @param string|array $where
+	 * @return SQL
+	 */
 	function where($where) {
 		$sql = clone $this;
 		if ($sql->where !== '') {
@@ -140,6 +156,10 @@ class SQL extends Object {
 		return $sql;
 	}
 
+	/**
+	 * @param mixed $restriction
+	 * @return SQL
+	 */
 	function andWhere($restriction) {
 		$sql = clone $this;
 		if (is_array($sql->where) && $sql->where['operator'] == 'AND') {
@@ -154,6 +174,10 @@ class SQL extends Object {
 		return $sql;
 	}
 
+	/**
+	 * @param mixed $restriction
+	 * @return SQL
+	 */
 	function orWhere($restriction) {
 		$sql = clone $this;
 		if (is_array($sql->where) && $sql->where['operator'] == 'OR') {
@@ -168,12 +192,21 @@ class SQL extends Object {
 		return $sql;
 	}
 
+	/**
+	 * @param string $column
+	 * @return SQL
+	 */
 	function groupBy($column) {
 		$sql = clone $this;
 		$sql->group_by[] = $column;
 		return $sql;
 	}
 
+	/**
+	 * @param string $column
+	 * @param string $direction "ASC" or "DESC"
+	 * @return SQL
+	 */
 	function orderBy($column, $direction = 'ASC') {
 		$sql = clone $this;
 		$sql->order_by = array(
@@ -188,6 +221,7 @@ class SQL extends Object {
 	 *
 	 * @param int $offset De offet of limit
 	 * @param int $limit De limit of leeg
+	 * @return SQL
 	 */
 	function limit($offset, $limit = null) {
 		$sql = clone $this;
@@ -349,7 +383,7 @@ class SQL extends Object {
 
 	/**
 	 * Helper voor de diverse *Join functies
-	 * @return $sql  For fluent interface
+	 * @return SQL
 	 */
 	private function join($type, $table, $on) {
 		$alias = $this->extractAlias($table);
@@ -366,7 +400,7 @@ class SQL extends Object {
 	}
 
 	/**
-	 * De alias van een kolom of tabel uitzoeken. 
+	 * De alias van een kolom of tabel uitzoeken.
 	 * Geeft anders de gehele string terug.
 	 *
 	 * @return string
@@ -382,7 +416,7 @@ class SQL extends Object {
 			}
 			return $match[2];
 		}
-		if (preg_match('/(.*)\s([\S]+)$/i', $string, $match)) { // column alias 
+		if (preg_match('/(.*)\s([\S]+)$/i', $string, $match)) { // column alias
 			if ($stripAlias) {
 				$string = $match[1];
 			}

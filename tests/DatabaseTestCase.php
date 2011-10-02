@@ -40,10 +40,10 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			$db->report_warnings = $dbWarnings;
 			$db->query('CREATE DATABASE '.$this->dbName);
 			$db->select_db($this->dbName);
+			$GLOBALS['Databases'][$this->dbName] = $db;
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
 			}
-			$GLOBALS['Databases'][$this->dbName] = $db;
 		}
 	}
 	
@@ -66,6 +66,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$db = $this->getDatabase();
 		if ($this->debug) {
 			$db->debug();
+			echo '<br />';
 		}
 		if ($this->dbName) {
 			$db->query('DROP DATABASE '.$this->dbName);
