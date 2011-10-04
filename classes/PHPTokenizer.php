@@ -18,9 +18,8 @@
  *   T_PARAMETER_VALUE  The default value of the parameter
  *
  *   T_OBJECT       The class that is used in the code
- *
- * @todo
- *   T_CALL: Extract functions & methods tha are called from within the code like: "$object->method();"
+ *   T_CALL         An global function that is called in the code
+ *   T_METHOD_CALL  An method that is called in the code
  *
  * @package Core
  */
@@ -181,7 +180,14 @@ class PHPTokenizer extends Object implements \Iterator {
 						case T_DOLLAR_OPEN_CURLY_BRACES: $this->state = 'COMPLEX_VARIABLE'; break;
 						case T_CATCH:      $this->state = 'PARAMETERS'; break;
 						case T_INSTANCEOF: $this->state = 'INSTANCEOF'; break;
+					}
 
+					if ($nextToken[0] == T_STRING && $this->tokens[$this->tokenIndex + 2] == '('&& $nextToken[1] != 'array') {
+						// @todo Detect methods and functions with T_WHITESPACE a.k.a "$this->method (param)"
+						$this->current = array('T_PHP', $value, $line);
+						$this->state = 'CALL';
+						$this->tokenIndex++;
+						return;
 					}
 					break;
 
@@ -472,7 +478,20 @@ class PHPTokenizer extends Object implements \Iterator {
 						$this->state = 'PHP';
 						break;
 					}
+					if ($token == '$') {
+						// echo "123 {${$varname}[$index]} 456";
+						$this->state = 'INNER_COMPLEX_VARIABLE';
+						break;
+					}
 					$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, '[', T_CONSTANT_ENCAPSED_STRING, ']'));
+					break;
+
+				case 'INNER_COMPLEX_VARIABLE':
+					if ($token == '}') { // end of the inner complex var
+						$this->state = 'COMPLEX_VARIABLE';
+						break;
+					}
+					$this->expectTokens($token, array('{', T_VARIABLE));
 					break;
 
 				case 'NEW':
@@ -525,6 +544,14 @@ class PHPTokenizer extends Object implements \Iterator {
 						return;
 					}
 					break;
+
+				case 'CALL':
+					$previousToken = $this->tokens[$this->tokenIndex - 1];
+					$type = ($previousToken[0] == T_OBJECT_OPERATOR) ? 'T_METHOD_CALL' : 'T_CALL';
+					$this->state = 'PHP';
+					$this->current = array($type, $value, $line);
+					$this->tokenIndex++;
+					return;
 
 				default:
 					$this->failure('Invalid state');

@@ -141,6 +141,10 @@ class PHPAnalyzer extends Object {
 					$level--;
 					break;
 
+				case 'T_METHOD_CALL':
+				case 'T_CALL':
+					break;
+
 				case 'T_OBJECT':
 					$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
 					break;
