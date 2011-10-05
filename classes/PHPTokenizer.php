@@ -17,7 +17,7 @@
  *   T_PARAMETER   A parameter/variable of the defined function
  *   T_PARAMETER_VALUE  The default value of the parameter
  *
- *   T_OBJECT       The class that is used in the code
+ *   T_OBJECT       An class that is used in the code
  *   T_CALL         An global function that is called in the code
  *   T_METHOD_CALL  An method that is called in the code
  *
@@ -51,6 +51,8 @@ class PHPTokenizer extends Object implements \Iterator {
 	 */
 	private $tokens;
 	private $lineNumber;
+	private $arrayDepth;
+
 
 	/**
 	 *
@@ -101,460 +103,120 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->key++;
 		$count = count($this->tokens);
 		$value = '';
-		$arrayDepth = 0;
 		$line =  $this->lineNumber;
 
 		for (; $this->tokenIndex < $count; $this->tokenIndex++) {
-			$i = $this->tokenIndex;
-			$token = $this->tokens[$i];
-			if ($i === ($count - 1)) { // laatste token?
+			$token = $this->tokens[$this->tokenIndex];
+			if ($this->tokenIndex === ($count - 1)) { // laatste token?
 				$nextToken = false;
 				$this->validState = 'LAST';
 			} else {
-				$nextToken = $this->tokens[$i + 1];
+				$nextToken = $this->tokens[$this->tokenIndex + 1];
 			}
 			if (is_array($token)) {
-				$value .= $token[1];
+				$tokenContents = $token[1];
 				$this->lineNumber = $token[2];
 			} else {
-				$value .= $token;
+				$tokenContents = $token;
 			}
-			switch ($this->state) {
+			$value .= $tokenContents;
+			$method = 'parse_'.$this->state;
+			if (method_exists($this, $method) == false) {
+				$this->failure('Invalid state');
+				break;
+			}
+			$result = $this->$method($token, $nextToken);
+			switch ($result['action']) {
 
-				case 'HTML':
-					if (in_array($token[0], array(T_OPEN_TAG, T_OPEN_TAG_WITH_ECHO)) && $value === $token[1]) { // Dit is geen HTML token
-						$this->state = 'PHP';
-						continue;
-					}
-					if ($nextToken === false) {
-						$this->current = array('T_HTML', $value, $line);
-						return;
-					}
-					if ($nextToken[0] === T_OPEN_TAG) {
-						$this->current = array('T_HTML', $value, $line);
-						$this->tokenIndex++;
-						return; // token complete
-					}
+				case 'CONTINUE': // $token belongs to the current state
 					break;
 
-				case 'PHP':
-					if ($token[0] == T_CLOSE_TAG) { // end of php section?
-						$this->state = 'HTML';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token == '{') {
-						if ($value != '{') {
-							$this->current = array('T_PHP', substr($value, 0, -1), $line);
-							return;
-						}
-						$this->current = array('T_OPEN_BRACKET', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token == '}') {
-						$this->current = array('T_CLOSE_BRACKET', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken === false) { // end of file?
-						break;
-					}
-					if (in_array($nextToken, array('{', '}'))) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-
-					switch ($token[0]) {
-						case T_NAMESPACE:  $this->state = 'NAMESPACE_START'; break;
-						case T_USE:        $this->state = 'USE_START'; break;
-						case T_INTERFACE:  $this->state = 'INTERFACE'; break;
-						case T_CLASS:      $this->state = 'CLASS'; break;
-						case T_EXTENDS:    $this->state = 'EXTENDS_START'; break;
-						case T_IMPLEMENTS: $this->state = 'IMPLEMENTS_START'; break;
-						case T_FUNCTION:   $this->state = 'FUNCTION'; break;
-						case T_NEW:        $this->state = 'NEW'; break;
-						case T_CURLY_OPEN: $this->state = 'COMPLEX_VARIABLE'; break;
-						case T_DOLLAR_OPEN_CURLY_BRACES: $this->state = 'COMPLEX_VARIABLE'; break;
-						case T_CATCH:      $this->state = 'PARAMETERS'; break;
-						case T_INSTANCEOF: $this->state = 'INSTANCEOF'; break;
-					}
-
-					if ($nextToken[0] == T_STRING && $this->tokens[$this->tokenIndex + 2] == '('&& $nextToken[1] != 'array') {
-						// @todo Detect methods and functions with T_WHITESPACE a.k.a "$this->method (param)"
-						$this->current = array('T_PHP', $value, $line);
-						$this->state = 'CALL';
-						$this->tokenIndex++;
-						return;
-					}
+				case 'CONTINUE_AS':
+					$this->state = $result['state'];
 					break;
 
-				case 'NAMESPACE_START':
-					if ($nextToken[0] == '{') { // Global namespace?
-						$this->state = 'NAMESPACE';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken[0] == T_STRING) {
-						$this->state = 'NAMESPACE';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'NAMESPACE':
-					if ($value === '{') {  // Global namespace
-						$this->state = 'PHP';
-						$this->current = array('T_NAMESPACE', '', $line); // empty NAMESPACE token, om aan te geven dat de global namespace geactiveerd wordt.
-						return;
-					}
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
-						$this->state = 'PHP';
-						$this->current = array('T_NAMESPACE', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
-					break;
-
-				case 'USE_START':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'USE';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
-					break;
-
-				case 'USE':
-					if ($nextToken == ';' || $nextToken[0] == T_WHITESPACE) {
-						if ($nextToken != ';') {
-							$this->state = 'USE_AS';
-						} else {
-							$this->state = 'PHP';
-						}
-						$this->current = array('T_USE', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
-					break;
-
-				case 'USE_AS':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'USE_ALIAS';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_WHITESPACE, T_AS));
-					break;
-
-				case 'USE_ALIAS':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
-						$this->state = 'PHP';
-						$this->current = array('T_USE_AS', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
-					break;
-
-				case 'INTERFACE':
-					if ($nextToken[0] == T_STRING) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token[0] == T_STRING) {
-						$this->state = 'PHP';
-						$this->current = array('T_INTERFACE', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_STRING);
-					break;
-
-				case 'CLASS':
-					if ($nextToken[0] == T_STRING) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token[0] == T_STRING) {
-						$this->state = 'PHP';
-						$this->current = array('T_CLASS', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_STRING);
-					break;
-
-				case 'EXTENDS_START':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'EXTENDS';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'EXTENDS':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) { // End of Classname?
-						$this->state = ($nextToken == '{') ? 'PHP' : 'EXTENDS_SEPARATOR';
-						$this->current = array('T_EXTENDS', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					break;
-
-				case 'EXTENDS_SEPARATOR':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'EXTENDS';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken == '{') {
-						$this->state = 'PHP';
-						continue;
-					}
-					if ($token[0] == T_IMPLEMENTS) {
-						$this->state = "IMPLEMENTS_START";
-						continue;
-					}
-					$this->expectTokens($token, array(T_WHITESPACE, ','));
-					break;
-
-				case 'IMPLEMENTS_START':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'IMPLEMENTS';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'IMPLEMENTS':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
-						$this->state = ($nextToken == '{') ? 'PHP' : 'IMPLEMENTS_SEPARATOR';
-						$this->current = array('T_IMPLEMENTS', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					break;
-
-				case 'IMPLEMENTS_SEPARATOR':
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
-						$this->state = 'IMPLEMENTS';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken == '{') {
-						$this->state = 'PHP';
-						continue;
-					}
-					$this->expectTokens($token, array(T_WHITESPACE, ','));
-					break;
-
-				case 'FUNCTION':
-					if ($nextToken[0] == T_STRING) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token[0] == T_STRING) {
-						$this->state = 'PARAMETERS';
-						$this->current = array('T_FUNCTION', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'PARAMETERS':
-					if ($token == ')') {
-						$this->state = 'PHP';
-						if ($nextToken == '{') {
-							$this->state == 'PHP';
-							continue;
-						}
-						break;
-					}
-					if ($token == '=') { // A default value?
-						$this->state = 'PARAMETER_VALUE';
-						break;
-					}
-					if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR, T_ARRAY))) { // Type hint?
-						$this->state = 'TYPED_PARAMETER';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken[0] == T_VARIABLE) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($token[0] == T_VARIABLE) {
-						$this->current = array('T_PARAMETER', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_WHITESPACE, ',', '('));
-					break;
-
-				case 'TYPED_PARAMETER':
-					if ($token[0] == T_VARIABLE) {
-						$this->state = 'PARAMETERS';
-						$this->current = array('T_PARAMETER', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken[0] == T_WHITESPACE) {
-						$this->state = 'PARAMETERS';
-						$this->current = array('T_TYPE_HINT', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR, T_ARRAY));
-					break;
-
-				case 'PARAMETER_VALUE':
-					$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
-					if (in_array($nextToken[0], $valueTokens)) {
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if (in_array($token[0], $valueTokens)) { // The default value?
-						$this->state = 'PARAMETERS';
-						$this->current = array('T_PARAMETER_VALUE', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if ($nextToken[0] == T_ARRAY) { // default parameter is a array literal?
-						$this->state = 'PARAMETER_ARRAY_VALUE';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'PARAMETER_ARRAY_VALUE':
-					if ($token == '(') {
-						$arrayDepth++;
-					}
-					if ($token == ')') {
-						$arrayDepth--;
-						if ($arrayDepth == 0) { // end of array literal?
-							$this->state = 'PARAMETERS';
-							$this->current = array('T_PARAMETER_VALUE', $value, $line);
-							$this->tokenIndex++;
-							return;
-						}
-					}
-					if ($token[0] == T_VARIABLE) { // was "Array " was used as a Type check?
-						$this->state = 'PARAMETERS';
-						break;
-					}
-					if ($arrayDepth == 0) {
-						$this->expectTokens($token, array(T_ARRAY, T_WHITESPACE, '('));
-					}
-					break;
-
-				case 'COMPLEX_VARIABLE':
-					if ($token == '}') { // end of complex var
-						$this->state = 'PHP';
-						break;
-					}
-					if ($token == '$') {
-						// echo "123 {${$varname}[$index]} 456";
-						$this->state = 'INNER_COMPLEX_VARIABLE';
-						break;
-					}
-					$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, '[', T_CONSTANT_ENCAPSED_STRING, ']'));
-					break;
-
-				case 'INNER_COMPLEX_VARIABLE':
-					if ($token == '}') { // end of the inner complex var
-						$this->state = 'COMPLEX_VARIABLE';
-						break;
-					}
-					$this->expectTokens($token, array('{', T_VARIABLE));
-					break;
-
-				case 'NEW':
-					if (in_array($nextToken, array('(', ';')) || $nextToken[0] == T_VARIABLE) {
-						$this->state = 'PHP';
-						break;
-					}
-					if  (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING))) {
-						$this->state = 'NEW_OBJECT';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectToken($token, T_WHITESPACE);
-					break;
-
-				case 'NEW_OBJECT':
-					if (in_array($nextToken, array('(', ';'))) {
-						$this->state = 'PHP';
-						$this->current = array('T_OBJECT', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					if (in_array($nextToken, array(',', ')')) || $nextToken[0] == T_WHITESPACE) {
-						notice('Non-strict new declaration, Expecting "new '.$value.'(" on line '.$this->lineNumber);
-						$this->state = 'PHP';
-						$this->current = array('T_OBJECT', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					$this->expectTokens($nextToken, array(T_NS_SEPARATOR, T_STRING));
-					break;
-
-				case 'INSTANCEOF':
-					if (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING))) {
-						$this->state = 'INSTANCEOF_TYPE';
-						$this->current = array('T_PHP', $value, $line);
-						$this->tokenIndex++;
-						return;
-
-					}
-					$this->state = 'PHP'; // Unable to detect type
-					break;
-
-				case 'INSTANCEOF_TYPE':
-					if (in_array($nextToken[0], array(T_NS_SEPARATOR, T_STRING)) == false) {
-						$this->state = 'PHP';
-						$this->current = array('T_TYPE_HINT', $value, $line);
-						$this->tokenIndex++;
-						return;
-					}
-					break;
-
-				case 'CALL':
-					$previousToken = $this->tokens[$this->tokenIndex - 1];
-					$type = ($previousToken[0] == T_OBJECT_OPERATOR) ? 'T_METHOD_CALL' : 'T_CALL';
-					$this->state = 'PHP';
-					$this->current = array($type, $value, $line);
+				case 'LAST_TOKEN': // The current $token is the last token of the current state.
+					$this->state = $result['state'];
+					$this->current = array($result['token'], $value, $line);
 					$this->tokenIndex++;
 					return;
 
+				case 'SWITCH': // The current token belongs to another state
+					if (empty($result['token'])) {
+						$this->failure('return-token is required for a SWITCH');
+					}
+					$this->state = $result['state'];
+					if ($value != $tokenContents) {
+						$this->current = array($result['token'], substr($value, 0, 0 - strlen($tokenContents)), $line);
+						$this->validState = 'VALID';
+						return;
+					}
+					break;
+
+				case 'RESCAN': // The current token belongs to another state
+					$this->state = $result['state'];
+					if ($value == $tokenContents) {
+						$value = '';
+					} else {
+						$value = substr($value, 0, 0 - strlen($tokenContents));
+					}
+					$this->tokenIndex--;
+					break;
+
+				case 'SINGLE_TOKEN':
+					if (isset($result['state'])) { // state is optional
+						$this->failure('Can\'t change state for a SINGLE_TOKEN');
+					}
+					if ($value == $tokenContents) {
+						$this->current = array($result['token'], $value, $line);
+						$this->tokenIndex++;
+						return;
+					} else {
+						$this->current = array($result['tokenBefore'], substr($value, 0, 0 - strlen($tokenContents)), $line);
+						$this->validState = 'VALID';
+						return;
+					}
+					break;
+
+				case 'KEYWORD': // Switch state and skip whitespace
+					$this->state = $result['state'];
+					$this->expectToken($nextToken, T_WHITESPACE);
+					$value .= $nextToken[1];
+					if (isset($result['token'])) {
+						$this->current = array($result['token'], $value, $line);
+						$this->tokenIndex += 2;
+						return;
+					}
+					$this->tokenIndex++;
+					break;
+
+				case 'OPERATOR': // Switch state and optionally skip whitespace
+					$this->state = $result['state'];
+					if ($nextToken[0] == T_WHITESPACE) {
+						$value .= $nextToken[1];
+						if (isset($result['token'])) {
+							$this->current = array($result['token'], $value, $line);
+							$this->tokenIndex += 2;
+							return;
+						}
+						$this->tokenIndex++;
+					} elseif (isset($result['token'])) {
+						$this->current = array($result['token'], $value, $line);
+						$this->tokenIndex++;
+						return;
+					}
+					break;
+
+				case 'EMPTY_TOKEN':
+					$this->state = $result['state'];
+					if ($tokenContents != $value) {
+						$this->failure('Not yet supported');
+					}
+					$this->current = array($result['token'], '', $line);
+					return;
+
 				default:
-					$this->failure('Invalid state');
+					$this->failure('Unknown action: '.$result['action']);
 					break;
 			}
 		}
@@ -576,6 +238,302 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 	}
 
+	private function parse_HTML($token, $nextToken) {
+		if ($nextToken === false) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_HTML',
+				'state' => 'EOF'
+			);
+		}
+		if (in_array($nextToken[0], array(T_OPEN_TAG, T_OPEN_TAG_WITH_ECHO))) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_HTML',
+				'state' => 'PHP',
+			);
+		}
+		if (in_array($token[0], array(T_OPEN_TAG, T_OPEN_TAG_WITH_ECHO))) { // Dit is geen HTML token
+			return array(
+				'action' =>'SWITCH',
+				'token' => 'T_HTML',
+				'state' => 'PHP',
+			);
+		}
+		return array(
+			'action' => 'CONTINUE'
+		);
+	}
+
+	private function parse_PHP($token, $nextToken) {
+		if ($token[0] == T_CLOSE_TAG) { // end of php section?
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_PHP',
+				'state' => 'HTML',
+			);
+		}
+		if ($token == '{') {
+			return array(
+				'action' => 'SINGLE_TOKEN',
+				'token' => 'T_OPEN_BRACKET',
+				'tokenBefore' => 'T_PHP',
+			);
+		}
+		if ($token == '}') {
+			return array(
+				'action' => 'SINGLE_TOKEN',
+				'token' => 'T_CLOSE_BRACKET',
+				'tokenBefore' => 'T_PHP',
+			);
+		}
+//		if ($nextToken === false) { // end of file?
+//			return array('LAST TOKEN?');
+//		}
+
+		switch ($token[0]) {
+			case T_NAMESPACE:  return array('action'=> 'OPERATOR', 'token' => 'T_PHP', 'state' => 'NAMESPACE');
+			case T_USE:        return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'USE');
+			case T_INTERFACE:  return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'INTERFACE');
+			case T_CLASS:      return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'CLASS');
+			case T_EXTENDS:    return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'EXTENDS');
+			case T_IMPLEMENTS: return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'IMPLEMENTS');
+			case T_FUNCTION:   return array('action'=> 'CONTINUE_AS', 'state' => 'FUNCTION');
+			case T_NEW:        return array('action'=> 'KEYWORD', 'state' => 'TYPE');
+			case T_INSTANCEOF: return array('action'=> 'KEYWORD', 'state' => 'TYPE');
+			case T_CATCH:      return array('action' => 'CONTINUE_AS', 'state' => 'PARAMETERS');
+			case T_CURLY_OPEN: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
+			case T_DOLLAR_OPEN_CURLY_BRACES: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
+			case T_STRING:
+				if ($nextToken == '(') {
+					$previousToken = $this->tokens[$this->tokenIndex - 1];
+					$type = ($previousToken[0] == T_OBJECT_OPERATOR) ? 'T_METHOD_CALL': 'T_CALL';
+					return array('action' => 'SINGLE_TOKEN', 'token' => $type, 'tokenBefore' => 'T_PHP');
+				}
+				break;
+		}
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_NAMESPACE($token, $nextToken) {
+		if ($token[0] == '{') { // Global namespace?
+			return array('action' => 'EMPTY_TOKEN', 'token' => 'T_NAMESPACE', 'state' => 'PHP');
+		}
+		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_NAMESPACE',
+				'state' => 'PHP',
+			);
+		}
+	}
+
+	private function parse_USE($token, $nextToken) {
+		if ($nextToken == ';') {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_USE',
+				'state' => 'PHP',
+			);
+		}
+		if ($nextToken[0] == T_WHITESPACE) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_USE',
+				'state' => 'USE_AS',
+			);
+		}
+		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
+		return array('action' => 'CONTINUE');
+	}
+	private function parse_USE_AS($token, $nextToken) {
+		if (in_array($token, array(';', '{'))) {
+			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+		}
+		if ($token[0] == T_AS) {
+			return array('action' => 'KEYWORD', 'state' => 'USE_ALIAS', 'token' => 'T_PHP');
+
+		}
+		$this->expectToken($token, T_WHITESPACE);
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_USE_ALIAS($token, $nextToken) {
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_USE_ALIAS', 'state' => 'PHP');
+		}
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_CLASS($token, $nextToken) {
+		$this->expectToken($token, T_STRING);
+		return array(
+			'action' => 'LAST_TOKEN',
+			'token'=>'T_CLASS',
+			'state' => 'PHP'
+		);
+	}
+	private function parse_INTERFACE($token, $nextToken) {
+		$this->expectToken($token, T_STRING);
+		return array(
+			'action' => 'LAST_TOKEN',
+			'token'=>'T_INTERFACE',
+			'state' => 'PHP'
+		);
+	}
+	private function parse_EXTENDS($token, $nextToken) {
+		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token'=>'T_EXTENDS',
+				'state' => 'PHP'
+			);
+		}
+		return array('action' => 'CONTINUE');
+	}
+	private function parse_IMPLEMENTS($token, $nextToken) {
+		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token'=>'T_IMPLEMENTS',
+				'state' => 'IMPLEMENTS_MORE'
+			);
+		}
+		return array('action' => 'CONTINUE');
+	}
+	private function parse_IMPLEMENTS_MORE($token, $nextToken) {
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token'=>'T_PHP',
+				'state' => 'IMPLEMENTS'
+			);
+		}
+		if ($token == '{') {
+			return array(
+				'action' => 'RESCAN',
+				'state' => 'PHP',
+			);
+		}
+		$this->expectTokens($token, array(T_WHITESPACE, ','));
+		return array('action' => 'CONTINUE');
+
+	}
+
+	private function parse_FUNCTION($token, $nextToken) {
+		if ($token[0] == T_STRING) {
+			return array('action' => 'SINGLE_TOKEN', 'token'=> 'T_FUNCTION', 'tokenBefore' => 'T_PHP');
+		}
+		if ($token == '(') {
+			return array('action' => 'RESCAN', 'state' => 'PARAMETERS');
+		}
+		$this->expectTokens($token, array(T_WHITESPACE, '&'));
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_PARAMETERS($token, $nextToken) {
+		if ($token == ')') {
+			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+		}
+		if ($token == '=') { // A default value?
+			return array('action' => 'OPERATOR', 'state' => 'PARAMETER_VALUE', 'token' => 'T_PHP');
+		}
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR, T_ARRAY))) { // Type hint?
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_PHP', 'state' => 'PARAMETER_TYPE_HINT');
+		}
+		if ($token[0] == T_VARIABLE) {
+			return array('action' => 'SINGLE_TOKEN', 'token' => 'T_PARAMETER', 'tokenBefore' => 'T_PHP');
+		}
+		$this->expectTokens($token, array(T_WHITESPACE, ',', '(', '&'));
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_PARAMETER_TYPE_HINT($token, $nextToken) {
+		if ($nextToken[0] == T_WHITESPACE) {
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_TYPE_HINT', 'state' => 'PARAMETERS');
+		}
+		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR, T_ARRAY));
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_PARAMETER_VALUE($token, $nextToken) {
+		$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
+		if (in_array($token[0], $valueTokens)) {
+			return array('action' => 'LAST_TOKEN', 'token'=>'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
+		}
+		if ($token[0] == T_ARRAY) { // default parameter is a array literal?
+			$this->arrayDepth = 0;
+			return array('action' => 'RESCAN', 'state' => 'PARAMETER_ARRAY_VALUE');
+		}
+		if ($token == '-') {
+			return array('action' => 'CONTINUE');
+		}
+		$this->dump($token);
+		$this->failure('Unknown default value');
+	}
+
+	private function parse_PARAMETER_ARRAY_VALUE($token, $nextToken) {
+		if ($token == '(') {
+			$this->arrayDepth++;
+		} elseif ($token == ')') {
+			$this->arrayDepth--;
+			if ($this->arrayDepth == 0) { // end of array literal?
+				return array('action' => 'LAST_TOKEN', 'token'=>'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
+			}
+		}
+		if ($this->arrayDepth == 0) {
+			$this->expectTokens($token, array(T_ARRAY, T_WHITESPACE, '('));
+		}
+		return array('action' => 'CONTINUE');
+	}
+
+
+	// new X or instanceof Y
+	private function parse_TYPE($token, $nextToken) {
+		if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
+			return array('action' => 'SWITCH', 'state' => 'OBJECT', 'token' => 'T_PHP');
+		}
+		$this->expectToken($token, T_VARIABLE);
+		return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+	}
+
+	/**
+	 * Parse the classname and return to PHP state
+	 */
+	private function parse_OBJECT($token, $nextToken) {
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_OBJECT', 'state' => 'PHP');
+		}
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_COMPLEX_VARIABLE($token, $nextToken) {
+		if ($token == '}') { // end of complex var
+			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+		}
+		if ($token == '$') { // A variable inside a variable?
+			// echo "123 {${$varname}[$index]} 456";
+			return array('action' => 'CONTINUE_AS', 'state' => 'INNER_COMPLEX_VARIABLE');
+		}
+		$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, '[', T_CONSTANT_ENCAPSED_STRING, ']'));
+		return array('action' => 'CONTINUE');
+	}
+
+	private function parse_INNER_COMPLEX_VARIABLE($token, $nextToken) {
+		if ($token == '}') { // end of the inner complex var
+			return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
+		}
+		$this->expectTokens($token, array('{', T_VARIABLE));
+		return array('action' => 'CONTINUE');
+	}
+
+	/**
+	 * translates the int to the token_name (371 => T_WHITESPACE)
+	 * @param token $token
+	 */
 	private function dump($token) {
 		if (is_array($token)) {
 			$token[0] = token_name($token[0]);
@@ -589,7 +547,7 @@ class PHPTokenizer extends Object implements \Iterator {
 
 	private function expectToken($token, $expectedToken) {
 		if ($this->isEqual($token, $expectedToken) == false) {
-			$this->failure('Unexpected token: "'.$this->tokenName($token).'", expecting "'.$this->tokenName($expectedToken).'"');
+			$this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.$this->tokenName($expectedToken).'"');
 		}
 	}
 
@@ -606,17 +564,17 @@ class PHPTokenizer extends Object implements \Iterator {
 		foreach ($expectedTokens as $expectedToken) {
 			$names[] = $this->tokenName($expectedToken);
 		}
-		$this->failure('Unexpected token: "'.$this->tokenName($token).'", expecting "'.human_implode('" or "', $names, '", "').'"');
+		$this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.human_implode('" or "', $names, '", "').'"');
 	}
 
 	private function tokenName($token) {
 		if (is_array($token)) {
-			return token_name($token[0]);
+			return token_name($token[0]).' "'.$token[1].'"';
 		}
 		if (is_int($token)) {
 			return token_name($token);
 		}
-		return $token;
+		return '"'.$token.'"';
 	}
 
 	/**
