@@ -56,12 +56,28 @@ class TagIterator extends Object implements \Iterator {
 		while ($this->tokenizer->valid()) {
 			$token = $this->tokenizer->current();
 
-			if ($token[0] == 'T_OPEN' || $token == '<!') {
+			if ($token[0] == 'T_OPEN' || $token == '<!' || $token == '<!--') {
 				if ($content === '') {
-					if ($token == '<!') {
+					if ($token[0] == 'T_OPEN') {
+						$this->tag = $this->extractTag();
+					} elseif ($token == '<!') {
 						$this->tag = $this->extractEntity();
 					} else {
-						$this->tag = $this->extractTag();
+						$this->tokenizer->next();
+						$token = $this->tokenizer->current();
+						$comment = $token;
+						$this->tokenizer->next();
+						$token = $this->tokenizer->current();
+						$this->tokenizer->next();
+						if ($token !== '-->') {
+							throw new \Exception('Unterminated T_COMMENT');
+						}
+						$this->tag = array(
+							0 => '<!--',
+							1 => array($comment[1]),
+							2 => $token,
+							'html' => '<!--'.$comment[1].$token,
+						);
 					}
 				} else {
 					$this->tag = $content;
