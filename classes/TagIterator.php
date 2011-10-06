@@ -1,9 +1,9 @@
 <?php
 /**
  * Een iterator die de tags uit htmlcode haalt.
- * Met name geschikt voor html met fouten. 
- * Met de uitvoer kun je de exacte (foute) html weer reconstrueren.  
- * 
+ * Met name geschikt voor html met fouten.
+ * Met de uitvoer kun je de exacte (foute) html weer reconstrueren.
+ *
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
  * Gebruik in die gevallen niet deze iterator.
 
@@ -11,10 +11,10 @@
  */
 namespace SledgeHammer;
 class TagIterator extends Object implements \Iterator {
-	
+
 	public
 		$warnings;
-		
+
 	private
 		$tokenizer,
 		$toLowerCase,
@@ -23,18 +23,18 @@ class TagIterator extends Object implements \Iterator {
 		$valid;
 
 	/**
-	 * 
+	 *
 	 * @param string $html
 	 * @param bool $toLowerCase  Bij true worden alle tags en attributen omgezet naar lowercase. '<ImG SrC="TeSt">' wordt array('<img', array('src' => 'TeSt'),'>', 'html' => <ImG SrC='TeSt'>)
 	 */
 	function __construct($html, $toLowerCase = true) {
 		$this->tokenizer = new HTMLTokenizer($html);
 		$this->toLowerCase = $toLowerCase;
-		$this->warnings = & $this->tokenizer->warnings;	
+		$this->warnings = & $this->tokenizer->warnings;
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	function rewind() {
 		$this->tokenizer->rewind();
@@ -55,10 +55,14 @@ class TagIterator extends Object implements \Iterator {
 		$content = '';
 		while ($this->tokenizer->valid()) {
 			$token = $this->tokenizer->current();
-			
-			if ($token[0] == 'T_OPEN') {
+
+			if ($token[0] == 'T_OPEN' || $token == '<!') {
 				if ($content === '') {
-					$this->tag = $this->extractTag();
+					if ($token == '<!') {
+						$this->tag = $this->extractEntity();
+					} else {
+						$this->tag = $this->extractTag();
+					}
 				} else {
 					$this->tag = $content;
 				}
@@ -71,8 +75,8 @@ class TagIterator extends Object implements \Iterator {
 		$this->tag = $content;
 		$this->key++;
 	}
-	
-	private function extractTag() {		
+
+	private function extractTag() {
 		$tag = array(
 			0 => '', // tag '<a' of '</a'
 			1 => array(), // parameters
@@ -93,22 +97,22 @@ class TagIterator extends Object implements \Iterator {
 				$tag[2] = $token[1];
 				return $tag;
 			}
-			if ($token[0] !== 'T_WHITESPACE') {		
+			if ($token[0] !== 'T_WHITESPACE') {
 				switch ($state) {
-				
+
 					case 'NAME';
 						if ($token[0] == 'T_OPEN') {
 							$tag[0] = $token[1];
 							break;
 						}
-						if (!in_array($token[0], array('T_TAG', 'T_CLOSE_TAG'))) { 
+						if (!in_array($token[0], array('T_TAG', 'T_CLOSE_TAG'))) {
 							$this->warnings[] = 'TagIterator: Unexpected token: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
 							return $tag['html'];
 						}
 						$tag[0] .= ($this->toLowerCase ? strtolower($token[1]) : $token[1]);
 						$state = 'ATTRIBUTES';
 						break;
-						
+
 					case 'ATTRIBUTES':
 						if ($token[0] == 'T_ATTRIBUTE') {
 							$attribute = ($this->toLowerCase ? strtolower($token[1]) : $token[1]);
@@ -117,7 +121,6 @@ class TagIterator extends Object implements \Iterator {
 						if ($token[0] == 'T_VALUE') {
 							if ($attribute === null) {
 								$this->warnings[] = 'TagIterator: T_VALUE without T_ATTRIBUTE';
-								dump($token);
 							} else {
 								$tag[1][$attribute] = $token[1];
 								$attribute = null;
@@ -125,6 +128,36 @@ class TagIterator extends Object implements \Iterator {
 						}
 						break;
 				}
+			}
+		}
+	}
+
+	function extractEntity() {
+		$entity = array(
+			0 => '', // entity '<!DOCTYPE'
+			1 => array(), // parameters
+			2 => '', // > of />
+			'html' => '',
+		);
+		$token = $this->tokenizer->current();
+		if ($token !== '<!') { // Sanity check
+			throw new \Exception('Sanity check failed. Expected a "<!" token');
+		}
+		while ($this->tokenizer->valid()) {
+			$token = $this->tokenizer->current();
+			$this->tokenizer->next();
+			$entity['html'] .= is_array($token) ? $token[1] : $token;
+
+			if ($token[0] == 'T_DTD_ENTITY' || $token == '<!') {
+				$entity[0] .= is_array($token) ? $token[1] : $token;
+			} elseif ($token[0] == 'T_DTD_ATTRIBUTES') {
+				$entity[1][] = $token[1];
+			} elseif ($token == '>') {
+				$entity[2] = $token;
+				return $entity;
+			} else {
+				$this->warnings[] = 'TagIterator: Unexpected token in entity: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
+				return $entity['html'];
 			}
 		}
 	}
@@ -140,7 +173,7 @@ class TagIterator extends Object implements \Iterator {
 	 * @return array
 	 */
 	function current() {
-		return $this->tag;		
+		return $this->tag;
 	}
 
 	/**
