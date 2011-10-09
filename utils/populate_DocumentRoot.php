@@ -47,6 +47,10 @@ foreach ($targetFolders as $targetFolder) {
 	}
 	echo '  '.$fileCount." files copied\n";
 }
-echo "  done.\n";
+if (isset($modules['minify'])) {
+	include($modules['minify']['path'].'utils/minify_DocumentRoot.php');
+} else {
+	echo "  done.\n";
+}
 return true;
 ?>

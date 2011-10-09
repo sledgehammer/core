@@ -56,14 +56,9 @@ require (dirname(__FILE__).'/generate_static_library.php');
 // Populate de public map
 $populateSuccess = require (dirname(__FILE__).'/populate_DocumentRoot.php');
 
-if ($populateSuccess) {
-	// Minify js (& css) bestanden
-	require (dirname(__FILE__).'/minify_DocumentRoot.php');
-}
-
 // Herstel cli parameters
-$argv[1] = $environment;
-$argc = 2;
+//$argv[1] = $environment;
+//$argc = 2;
 /*
 if ($argc < 2) {
 	echo "Usage: php deploy.php [environment]\n\nAvailable environments:\n  ".implode("\n  ", $accepted_environments)."\n";

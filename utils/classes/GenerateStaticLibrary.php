@@ -9,9 +9,6 @@ class GenerateStaticLibrary extends Util {
 
 	function __construct() {
 		parent::__construct('Optimize AutoLoader');
-		if (!$this->isWritable()) {
-			$this->icon = 'denied.png';
-		}
 	}
 
 	function generateContent() {
