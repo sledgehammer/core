@@ -1,9 +1,9 @@
 <?php
 /**
- * Matched de URL tegen de bestanden in alle public/ mappen.
- * Zodra een bestand gevonden wordt, wordt deze gerendert en wordt het script gestopt.
- *
- * Dit script werkt o.b.v. mod_rewrite een *.php bestand in de DocumentRoot map
+ * Matches the request against the files in the "public" folders.
+ * When a file is found, that file will be sent to the browser.
+ * 
+ * This script must be the first include in the "rewrite.php"
  *
  * @package Core
  */
