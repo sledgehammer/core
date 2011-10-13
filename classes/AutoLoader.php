@@ -20,7 +20,7 @@ class AutoLoader extends Object {
 	/**
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
-	public $enableCache;
+	public $enableCache = true;
 	/**
 	 * @var string
 	 */
