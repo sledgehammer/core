@@ -8,6 +8,8 @@
 namespace SledgeHammer;
 use \ArrayIterator;
 
+const SORT_NATURAL = -1;
+
 class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
@@ -53,7 +55,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	}
 
 	/**
-	 * Return a subsection of the collection based on the condition criteria
+	 * Return a new Collection with a subsection of the collection based on the condition criteria
 	 *
 	 * @param array $conditions
 	 * @return Collection
@@ -79,6 +81,85 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	}
 
 	/**
+	 * Return a new collection sorted by the given field in ascending order.
+	 *
+	 * @param string $path
+	 * @param int $flag  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @return Collection
+	 */
+	function orderBy($path, $method = SORT_REGULAR) {
+		$sortOrder = array();
+		$items = array();
+		$indexed = true;
+		$counter = 0;
+		// Collect values
+		foreach ($this as $key => $item) {
+			$items[$key] = $item;
+			$sortOrder[$key] = PropertyPath::get($item, $path);
+			if ($key !== $counter) {
+				$indexed = false;
+			}
+			$counter++;
+		}
+		// Sort the values
+		if ($method == SORT_NATURAL) {
+			natsort($sortOrder);
+		} else {
+			asort($sortOrder, $method);
+		}
+		//
+		$sorted = array();
+		foreach (array_keys($sortOrder) as $key) {
+			if ($indexed) {
+				$sorted[] = $items[$key];
+			} else { // Keep keys intact
+				$sorted[$key] = $items[$key];
+			}
+		}
+		return new Collection($sorted);
+	}
+
+	/**
+	 * Return a new collection sorted by the given field in descending order.
+	 *
+	 * @param string $path
+	 * @param int $flag  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @return Collection
+	 */
+	function orderByDescending($path, $method = SORT_REGULAR) {
+		return $this->orderBy($path, $method)->reverse();
+	}
+
+	/**
+	 * Return a new collection in the reverse order
+	 * @return Collection
+	 */
+	function reverse() {
+		$order = array();
+		$indexed = true;
+		$counter = 0;
+		// Collect values
+		foreach ($this as $key => $item) {
+			$items[$key] = $item;
+			$order[] = $key;
+			if ($key !== $counter) {
+				$indexed = false;
+			}
+			$counter++;
+		}
+		rsort($order);
+		$reversed = array();
+		foreach ($order as $key) {
+			if ($indexed) {
+				$reversed[] = $items[$key];
+			} else { // Keep keys intact
+				$reversed[$key] = $items[$key];
+			}
+		}
+		return new Collection($reversed);
+	}
+
+	/**
 	 * Return the collection as an array
 	 *
 	 * @return array
@@ -89,8 +170,8 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
 	 * Return the number of elements in the collection.
-	 * count($collection) 
-	 * 
+	 * count($collection)
+	 *
 	 * @return int
 	 */
 	function count() {
@@ -100,9 +181,6 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	function __clone() {
 		$this->iterator = new ArrayIterator(iterator_to_array($this->iterator));
 //		$this->iterator = clone $this->iterator; // doesn't clone the data (in case of the ArrayIterator)
-	}
-	function __toString() {
-		return json_encode($this->toArray());
 	}
 
 	// Iterator functions

@@ -54,8 +54,8 @@ class CollectionTests extends \UnitTestCase {
 		// The second parameter determines the key
 		$list = $fruitsAndVegetables->select('name', '[id]');
 		$this->assertEqual($list->toArray(), array(
-			4 =>'apple',
-			6 =>'pear',
+			4 => 'apple',
+			6 => 'pear',
 			7 => 'banana',
 			8 => 'carrot',
 		));
@@ -71,14 +71,29 @@ class CollectionTests extends \UnitTestCase {
 			)
 		));
 	}
-	
+
 	function test_sorting() {
 		$fruitsAndVegetables = $this->getFruitsAndVegetables();
+		// indexed
+		$abc = $fruitsAndVegetables->orderBy('name')->select('name');
+		$this->assertEqual($abc->toArray(), array(
+			'apple',
+			'banana',
+			'carrot',
+			'pear',
+		));
+		$zxy = $fruitsAndVegetables->orderByDescending('name')->select('name');
+		$this->assertEqual($zxy->toArray(), array(
+			'pear',
+			'carrot',
+			'banana',
+			'apple',
+		));
 	}
 
 	/**
 	 * A collection containing fruit entries and a vegetable entry
-	 * @return Collection 
+	 * @return Collection
 	 */
 	private function getFruitsAndVegetables() {
 		return new Collection(array(
