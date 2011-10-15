@@ -1075,5 +1075,16 @@ namespace SledgeHammer {
 	function text($text, $charset = null) {
 		return new Text($text, $charset);
 	}
+
+	/**
+	 * Shorthand for creating an Collection object
+	 * Allows direct method-chaining:
+	 *   collection($array)->select('name');
+	 *
+	 * @return Collection
+	 */
+	function collection($iterator) {
+		return new Collection($iterator);
+	}
 }
 ?>
