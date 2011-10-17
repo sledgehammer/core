@@ -1,7 +1,0 @@
-
-Aanpassingen Core SH9
-----------------------------
-
-functions.php opsplitsen en deze bestanden vanuit functions.php includen.
-
-De AutoLoader niet alleen in de $module/classes submap laten zoeken.

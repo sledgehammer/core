@@ -2,16 +2,16 @@
  SledgeHammer Core
 -------------------
 
-Deze module (/ library / component ) verzocht de basis van het SledgeHammer Framework (/ Toolkit / Library).
+Deze module (/ library / component ) verzorgd de basis van het SledgeHammer Framework (/ Toolkit / Library).
 
 $_SERVER['SERVER_ADMIN'] wordt gebruikt als ErrorHander email in non-development modus.
 
 Scope
 ------
 * Framework initialisation (+Module detection & initialisation)
-* Diverse globale functies die eigenlijk in php zelf zouden moeten zit.
-* Debug & error functions
-* Serve static files via render() en render_content.php.
+* Diverse globale functies die eigenlijk in php zelf zouden moeten zitten.
+* Debugging & errorreporting functions
+* Serve static files via render() en render_public_folders.php.
 
 Buiten de scope
 ----------------
@@ -25,17 +25,20 @@ Onderdelen
 * dump()
 * Database wrappers (Bied verbeterde error handeling en iterator interface)
 * CSVIterator
+* Collection
+* Text
+* URL
 
 Constantes
 -----------
 MICROTIME_START
-  De waarde van microtime(true) aan het begin van het script. 
+  De waarde van microtime(true) aan het begin van het script.
 
 ENVIRONMENT
 	Bevat "development", "staging", of "production" waarop instellinge worden gebaseerd.
 
 PATH 
-  De server map waar het project/application in staat. (APP_ROOT?)
+  De server map waar het project in staat. (APP_ROOT?)
 
 E_MAX 
   Maximaal niveau van error reporting. (E_ALL + E_STRICT)

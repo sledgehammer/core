@@ -8,12 +8,9 @@ Om van sledgehammer gebruik te maken importeer je sledgehammer_core naar de “$
 Of voeg deze toe als gitmodule:
 `git submodule add git://github.com/bfanger/sledgehammer_core.git sledgehammer/core`
 
-SledgeHammer verwacht dat er een $project/tmp/ map bestaat.
-
-
 Vanuit je bootstrap.php voeg je de volgende code toe:
 
-define('ENVIRONMENT', 'development'); // andere optie is 'production'
+define('ENVIRONMENT', 'development'); // Een andere optie is 'production'
 $_SERVER['SERVER_ADMIN'] = 'email@waar.de.error.vestuurd.worden.nl'; // Deze wordt alleen in production modus gebruikt
 include("sledgehammer/core/init_framework.php");
 $AutoLoader->standalone = false; // Deze regel alleen toevoegen als je al gebruik maakt van een andere autoloader
@@ -25,3 +22,6 @@ dump($var);
 Daarnaast worden errors, warnings en notices nu door de SledgeHammer ErrorHandler afgehandeld. 
 
 API Documentatie kan worden gegenereerd met de introspectie tool "DevUtils" zie: https://github.com/bfanger/devutils
+
+Als er geen ENVIRONMENT constante is ingesteld, wordt er gekeken naar de $_SERVER['APPLICATION_ENV'] waarde, anders wordt "production" gekozen
+De APPLICATION_ENV kun je instellen door: "SetEnv APPLICATION_ENV development" in de .htaccess of in de httpd.conf te zetten.
