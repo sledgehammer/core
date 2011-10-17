@@ -24,7 +24,9 @@ class PropertyPath extends Object {
 
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
-	const TYPE_ANY = 'ANY';
+	const TYPE_ANY = 'ANY'; // object-property or array-element
+	const TYPE_METHOD = 'METHOD';
+
 	const CHAIN = 'CHAIN';
 
 	/**
@@ -57,9 +59,19 @@ class PropertyPath extends Object {
 						return;
 					}
 					break;
+
 				case self::TYPE_PROPERTY:
 					if (is_object($data)) {
 						$data = $data->{$part[1]};
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object');
+						return;
+					}
+					break;
+
+				case self::TYPE_METHOD:
+					if (is_object($data)) {
+						$data = $data->{$part[1]}();
 					} else {
 						notice('Unexpected type: '.gettype($data).', expecting an object');
 						return;
@@ -104,6 +116,7 @@ class PropertyPath extends Object {
 						return;
 					}
 					break;
+
 				case self::TYPE_PROPERTY:
 					if (is_object($data)) {
 						$data = &$data->{$part[1]};
@@ -159,6 +172,9 @@ class PropertyPath extends Object {
 			if ($part[0] == self::TYPE_PROPERTY && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
 				notice('Invalid property identifier "'.$part[1].'" in path "'.$path.'"');
 			}
+			if ($part[0] == self::TYPE_METHOD && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
+				notice('Invalid property identifier "'.$part[1].'" in path "'.$path.'"');
+			}
 		}
 		$cache[$path] = $parts;
 		return $parts;
@@ -179,6 +195,7 @@ class PropertyPath extends Object {
 		$arrowPos = self::arrowPosition($path);
 		$bracketPos = self::openBracketPosition($path);
 		$dotPos = self::dotPosition($path);
+		$parenthesesPos = self::parenthesesPosition($path);
 		if ($type === self::CHAIN) {
 			if ($dotPos === 0) {
 				return self::compilePath(substr($path, 1), self::TYPE_ANY);
@@ -188,11 +205,11 @@ class PropertyPath extends Object {
 			}
 			$type = self::TYPE_ANY;
 		}
-		if ($arrowPos === false && $bracketPos === false && $dotPos === false) {
+		if ($arrowPos === false && $bracketPos === false && $dotPos === false && $parenthesesPos === false) {
 			$tokens[] = array($type, $path);
 			return $tokens;
 		}
-		if ($arrowPos !== false && ($bracketPos === false || $arrowPos < $bracketPos) && ($dotPos === false || $arrowPos < $dotPos) ) {
+		if ($arrowPos !== false && ($bracketPos === false || $arrowPos < $bracketPos) && ($dotPos === false || $arrowPos < $dotPos)  && ($parenthesesPos === false || $arrowPos < $parenthesesPos) ) {
 			// PROPERTY(OBJECT)
 			if ($arrowPos !== 0) {
 				$tokens[] = array($type, substr($path, 0, $arrowPos));
@@ -211,7 +228,7 @@ class PropertyPath extends Object {
 //
 			return array_merge($tokens, self::compilePath(substr($path, $arrowPos + 2), self::TYPE_PROPERTY));
 		}
-		if ($bracketPos !== false && ($dotPos === false || $bracketPos < $dotPos)) {
+		if ($bracketPos !== false && ($dotPos === false || $bracketPos < $dotPos) && ($parenthesesPos === false || $bracketPos < $parenthesesPos)) {
 			// ELEMENT(ARRAY)
 			if ($bracketPos !== 0) {
 				$tokens[] = array($type, substr($path, 0, $bracketPos));
@@ -226,6 +243,21 @@ class PropertyPath extends Object {
 				return $tokens;
 			}
 			return array_merge($tokens, self::compilePath(substr($path, $closeBracketPos + 1), self::CHAIN));
+		}
+		if ($parenthesesPos !== false && ($dotPos === false || $parenthesesPos < $dotPos)) {
+			if ($parenthesesPos === 0) {
+				notice('no methodname given');
+				return array(array(self::TYPE_ANY, $path)); // return the entire path as identifier
+			}
+			if ($path[$parenthesesPos + 1] != ')') {
+				notice('Parameter not (yet) supported');
+				return array(array(self::TYPE_ANY, $path)); // return the entire path as identifier
+			}
+			$tokens[] = array(self::TYPE_METHOD, substr($path, 0, $parenthesesPos));
+			if ($parenthesesPos + 2 == strlen($path)) { // Laatste token?
+				return $tokens;
+			}
+			return array_merge($tokens, self::compilePath(substr($path, $parenthesesPos + 2), self::CHAIN));
 		}
 		// ANY (ARRAY or OBJECT)
 		if ($dotPos !== 0) {
@@ -248,6 +280,12 @@ class PropertyPath extends Object {
 	}
 	private static function closeBracketPosition($path, $offset = null) {
 		return strpos($path, ']', $offset);
+	}
+	/**
+	 * Postion of the next "("
+	 */
+	private static function parenthesesPosition($path, $offset = null) {
+		return strpos($path, '(', $offset);
 	}
 }
 
