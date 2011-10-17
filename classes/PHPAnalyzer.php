@@ -327,6 +327,9 @@ class PHPAnalyzer extends Object {
 	 * @param int $line  The line number it is used on
 	 */
 	private function addUsedIn($class, $filename, $line) {
+		if (strtolower($class) == 'array') {
+			return;
+		}
 		@$this->usedDefinitions[$class][$filename][] = $line;
 	}
 }

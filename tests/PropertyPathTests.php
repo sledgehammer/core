@@ -77,6 +77,7 @@ class PropertyPathTests extends \UnitTestCase {
 		$this->assertEqual(PropertyPath::get($array, 'object->id'), 6);
 		$this->assertEqual(PropertyPath::get($array, '[object]->id'), 6);
 
+		// @todo Add UnitTest for method notation "getFilename()"
 	}
 
 	function test_PropertyPath_set() {
