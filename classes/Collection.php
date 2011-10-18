@@ -37,12 +37,15 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	 */
 	function select($selector, $keyPath = null) {
 		$items = array();
+		$isClosure = (is_object($selector) && is_callable($selector));
 		foreach ($this as $key => $item) {
 			if ($keyPath !== null) {
 				$key = PropertyPath::get($item, $keyPath);
 			}
 			if (is_string($selector)) {
 				$items[$key] = PropertyPath::get($item, $selector);
+			} elseif ($isClosure) {
+				$items[$key] = $selector($item, $key);
 			} else {
 				$items[$key] = array();
 				foreach ($selector as $fieldPath => $valuePath) {
@@ -61,14 +64,21 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	 * @return Collection
 	 */
 	function where($conditions) {
+		$isClosure = (is_object($conditions) && is_callable($conditions));
 		$data = array();
 		$counter = -1;
 		foreach ($this as $key => $item) {
 			$counter++;
-			foreach ($conditions as $path => $expectation) {
-				$actual = PropertyPath::get($item, $path);
-				if (equals($actual, $expectation) == false) {
-					continue 2; // Skip this entry
+			if ($isClosure) {
+				if ($conditions($item, $key) == false) {
+					continue;
+				}
+			} else {
+				foreach ($conditions as $path => $expectation) {
+					$actual = PropertyPath::get($item, $path);
+					if (equals($actual, $expectation) == false) {
+						continue 2; // Skip this entry
+					}
 				}
 			}
 			if ($key != $counter) { // Is this an array
