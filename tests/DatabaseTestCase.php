@@ -39,7 +39,6 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
 				$db->reportWarnings = true;
-
 			}
 		}
 	}
@@ -183,9 +182,12 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$db = $this->getDatabase();
 		//dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));
 		if ($this->skipRebuildDatabase == false && $this->dbName) {
+			$reportWarnings = $db->reportWarnings;
+			$db->reportWarnings = false;
 			$db->query('DROP DATABASE '.$this->dbName);
 			$db->query('CREATE DATABASE '.$this->dbName);
 			$db->query('USE '.$this->dbName);
+			$db->reportWarnings = $reportWarnings;
 			$this->fillDatabase($db);
 		}
 		$this->queryCount = count($db->log);

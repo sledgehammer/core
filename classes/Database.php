@@ -9,31 +9,29 @@ namespace SledgeHammer;
 class Database extends \PDO {
 	
 	public
-		$reportWarnings = 'auto',
-		$throwExceptions = false, // Throw exceptions on sql errors 
-		$log = array(),
+		$reportWarnings = 'auto', // (bool) Report mysql warnings
+		$log = array(), // Structure containing all logged executed queries
 		$logLimit = 1000, // Het maximaal aantal queries dat gelogd worden en getoond wordt bij $this->debug()
 		$logBacktrace = false, // [bool] Het php-bestand en regelnummer waar de query werd aangeroepen onthouden
 		$executionTime = 0;
 
 	private
-		$driver,
 		$queryCount, // Number of executed queries.
 		$logStatementCharacterLimit = 51200; // Maximaal een 50KiB van een query onhouden in de log
 	
 	/**
 	 *
-	 * @param string $dsn Standard pdo-dsn "mysql:host=localhost"or an url: "mysql://root@localhost/my_database?charset=utf-8"
+	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
 	 * @param type $username
 	 * @param type $passwd
 	 * @param type $options 
 	 */
-	public function __construct($dsn, $username = null, $passwd = null, $options = null) {
+	public function __construct($dsn, $username = null, $passwd = null, $options = array()) {
 		$start = microtime(true);
-		if (preg_match('/^[a-z]+:\/\//i', $dsn, $match)) { // url syntax?
+		$isUrlStyle = preg_match('/^[a-z]+:\/\//i', $dsn, $match);
+		if ($isUrlStyle) { // url syntax?
 			$url = new URL($dsn);
 			$logMessage = 'CONNECT(\''.$url->host.'\');';
-
 			$config = $url->query;
 			$config['host'] = $url->host;
 			if ($url->port !== null) {
@@ -43,36 +41,53 @@ class Database extends \PDO {
 				$config['dbname'] = substr($url->path,  1); // strip "/"
 				$logMessage .= ' SELECT_DB(\''.$config['dbname'].'\');';
 			}
-			$this->driver = strtolower($url->scheme);
-			$dsn = $url->scheme.':';
-			if ($this->driver == 'mysql') {
-				$this->reportWarnings = true;
-				if (empty ($config['charset'])) {
-					switch (strtolower($GLOBALS['charset'])) {
-						
-						case 'utf-8': $config['charset'] = 'UTF8'; break;
-						case 'iso-8859-1': $config['charset'] = 'latin1'; break;
-						case 'iso-8859-15': $config['charset'] = 'latin1'; break;
-						default: $config['charset'] = $GLOBALS['charset']; break;
-					}
-				}
-				if (isset ($config['charset']) && version_compare(PHP_VERSION, '5.3.6') == -1) {
-					$options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES '.$this->quote($config['charset']);
-				}
-			} else {
-				$this->reportWarnings = false;
-			}
-			foreach ($config as $name => $value) {
-				$dsn .= $name.'='.$value.';';
-			}
+			$driver = strtolower($url->scheme);
 			$username = $url->user;
 			$passwd = $url->pass;
 		} else {
 			preg_match('/^([a-z]+):/i', $dsn, $match);
-			$this->driver = strtolower($match[1]);
+			$driver = strtolower($match[1]);
 			$logMessage = 'CONNECT(\''.$dsn.'\');';
 		}
+		
+		if ($driver == 'mysql') {
+			$this->reportWarnings = true;
+			if (isset($config['charset'])) {
+				$charset = $config['charset'];
+			} elseif (strpos($dsn, ';charset=')) {
+				notice('TODO: Extract $charset from dsn'); // @todo implement
+			} else {
+				// Use SledgeHammer setting (default utf-8)
+				switch (strtolower($GLOBALS['charset'])) {
+
+					case 'utf-8': $charset = 'UTF8'; break;
+					case 'iso-8859-1': $charset = 'latin1'; break;
+					case 'iso-8859-15': $charset = 'latin1'; break;
+					default: $charset = $GLOBALS['charset']; break;
+				}
+			}
+			if (empty ($config['charset'])) {
+			}
+			if (version_compare(PHP_VERSION, '5.3.6') == -1) {
+				$options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "'.mysql_escape_string($charset).'"';
+			} elseif ($isUrlStyle) {
+				$config['charset'] = $charset;
+			} else {
+				$dsn .= ";charset=".$charset;
+			}
+		} else {
+			$this->reportWarnings = false;
+		}
+		if ($isUrlStyle) {
+			$dsn = $driver.':';
+			foreach ($config as $name => $value) {
+				$dsn .= $name.'='.$value.';';
+			}
+		}
 		parent::__construct($dsn, $username, $passwd, $options);
+		$this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC); // Default to FETCH_ASSOC mode
+		$this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_WARNING); // Trigger warnings on sql errors
+			
 		$this->logStatement($logMessage, (microtime(true) - $start));
 		$this->queryCount = 0;
 	}
@@ -88,10 +103,8 @@ class Database extends \PDO {
 		$start = microtime(true);
 		$result = parent::exec($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
-		if ($result === false) {
-			$this->onError($statement);			
-		} else {
-			$this->checkWarnings($statement, $result);
+		if ($result !== false) {
+			$this->checkWarnings($statement);
 		}
 		return $result;
 	}
@@ -108,11 +121,9 @@ class Database extends \PDO {
 		
 		$result = parent::query($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
-		if ($result === false) {
-			$this->onError($statement);			
-		} else {
-			$result->setFetchMode(\PDO::FETCH_ASSOC);
-			$this->checkWarnings($statement, $result);
+		if ($result !== false) {
+//			$result->setFetchMode(\PDO::FETCH_ASSOC);
+			$this->checkWarnings($statement);
 		}
 		return $result;
 	}
@@ -315,20 +326,20 @@ class Database extends \PDO {
 	 */
 	function fetchRow($statement, $allow_empty_results = false) {
 		$result = $this->query($statement);
-		if (!$result) {
-			return false; // Foutieve query
+		if ($result == false) {  // Foutieve query
+			return false;
 		} elseif ($result->columnCount() == 0) { // UPDATE, INSERT query
-			warning('Unexpected SQL resultset, make sure a SELECT statement is issued');
+			warning('Resultset has no columns, expecting 1 or more columns');
 			return false;
 		}
 		if ($result->rowCount() > 1) {
-			$this->notice('Unexpected '.$result->rowCount().' rows, expecting 1 row', $statement);
+			notice('Unexpected '.$result->rowCount().' rows, expecting 1 row');
 			return false;
 		}
 		$row = $result->fetch();
 		if ($row === false) {
 			if (!$allow_empty_results) {
-				$this->notice('No record(s) found', $statement);
+				notice('No record(s) found');
 			}
 			return false;
 		}
@@ -497,16 +508,15 @@ class Database extends \PDO {
 	 * De MySQL waarschuwingen opvragen en naar de ErrorHandler sturen
 	 * @param \PDOStatement $result
 	 */
-	private function checkWarnings($statement, $result) {
+	private function checkWarnings($statement) {
 		if ($this->reportWarnings) {
 			$warnings = parent::query('SHOW WARNINGS');
 			if ($warnings->rowCount()) {
 				foreach ($warnings->fetchAll(\PDO::FETCH_ASSOC) as $warning) {
-					$this->notice('MySQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $statement);
+					notice('MySQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message']);
 				}
 				// @todo Clear warnings
-				 // PDO/MySQL doesn't clear the warnings on CREATE, USE, etc queries.
-
+				// PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.
 			}
 		}
 	}
@@ -557,38 +567,6 @@ class Database extends \PDO {
 			);
 		}
 		return false;
-	}
-	
-	/**
-	 * 
-	 * @param $message  The error message
-	 * @param string|SQL $statement
-	 * @return void
-	 */
-	protected function onError($statement) {
-		$error = $this->errorInfo();
-		$message = ucfirst($this->driver).' error['.$error[1].'] '.$error[2];
-		if ($this->throwExceptions) {
-			throw new \Exception($message);
-		}
-		$info = null;
-		if (gettype($statement) == 'object' && method_exists($statement, '__toString')) {
-			$info = array('SQL' => $statement->__toString());
-		}
-		notice($message, $info);
-	}
-
-	/**
-	 *
-	 * @param type $message
-	 * @param type $statemenr 
-	 */
-	private function notice($message, $statement) {
-		$info = null;
-		if (gettype($statement) == 'object' && method_exists($statement, '__toString')) {
-			$info = array('SQL' => $statement->__toString());
-		}
-		notice($message, $info);
 	}
 }
 ?>
