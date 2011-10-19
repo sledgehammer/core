@@ -29,16 +29,20 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 // Detect a writable tmp folder
-$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
-if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
-	define('SledgeHammer\TMP_DIR', $tmpDir);
-} else {
-	$tmpDir = '/tmp/sledgehammer-'.md5(PATH).'/';
-	if (function_exists('posix_getpwuid')) {
-		$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
-	}
-	define('SledgeHammer\TMP_DIR', $tmpDir);
+if (defined('SledgeHammer\TMP_DIR')) {
 	mkdirs(TMP_DIR);
+} else {
+	$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
+	if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
+		define('SledgeHammer\TMP_DIR', $tmpDir);
+	} else {
+		$tmpDir = '/tmp/sledgehammer-'.md5(PATH).'/';
+		if (function_exists('posix_getpwuid')) {
+			$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+		}
+		define('SledgeHammer\TMP_DIR', $tmpDir);
+		mkdirs(TMP_DIR);
+	}
 }
 
 // ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
