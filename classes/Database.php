@@ -87,7 +87,9 @@ class Database extends \PDO {
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC); // Default to FETCH_ASSOC mode
 		$this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_WARNING); // Trigger warnings on sql errors
-			
+		if ($this->reportWarnings) {
+			parent::exec('SET sql_warnings = ON');
+		}
 		$this->logStatement($logMessage, (microtime(true) - $start));
 		$this->queryCount = 0;
 	}
@@ -127,37 +129,7 @@ class Database extends \PDO {
 		}
 		return $result;
 	}
-	/**
-	 * Verbinding maken met de database server
-	 *
-	 * @return bool
-	 * /
-	function connect($host = null, $user = null, $password = NULL, $database = NULL, $port = NULL, $socket = NULL) {
-		$this->tableInfoCache = array();
-		$start_time = microtime(true);
-		$this->connected = false;
-		$success = parent::connect($host, $user, $password, $database, $port, $socket); 
-		$execution_time = (microtime(true) - $start_time);
-		if ($this->remember_queries) {
-			$sql = 'CONNECT(\''.$host.'\');';
-			if ($database !== NULL) {
-				$sql .= ' SELECT_DB(\''.$database.'\');';
-			}
-			$this->query_log[] = array('sql' => $sql, 'time' => $execution_time, 'truncated' => 0, 'backtrace' => $this->backtrace());
-		}
-		$this->execution_time += $execution_time;
-		if ($success === false) { // Geeft i.p.v "NULL of false" een "true of false"
-			return false;
-		} else {
-			$this->set_charset('utf8');
-			if ($this->report_warnings) {
-				$this->query('SET sql_warnings = ON');
-			}
-			$this->connected = true;
-			return true;
-		}
-	}
-
+	
 	/**
 	 * Meerdere sql queries uitvoeren (met foutdetectie en logging van queries)
 	 *
@@ -186,57 +158,14 @@ class Database extends \PDO {
 			}
 			return false;
 		}
-	}
-
-	/**
-	 * select_db(), maar dan met foutdetectie en logging
-	 * /
-	function select_db($database) {
-		$this->tableInfoCache = array();
-		$start_time = microtime(true);
-		$success = parent::select_db($database);
-		$execution_time = microtime(true) - $start_time;
-		if ($this->remember_queries) {
-			$this->remember_query('SELECT_DB(\''.$database.'\')', $execution_time);
-		}
-		if (!$success) {
-			$error_message = 'MySQL error['.$this->errno.'] '.$this->error;
-			notice($error_message);
-			if ($this->throw_exception_on_error) {
-				throw new \Exception($error_message);
-			}
-		}
-		return $success;
-	}
-
-	/**
-	 * Voert een real_escape_string() uit en zet er quotes om de waarde (als dat nodig is).
-	 * In tegenstelling tot de PDO variant zal null een '"NULL"' teruggeven, i.p.v. '""'
-	 *
-	 * @link php.net/manual/en/pdo.quote.php
-	 * /
-	function quote($value) {
-		switch (gettype($value)) {
-			case "NULL":
-				return 'NULL';
-
-			case 'integer':
-				return $value;
-
-			case 'double': // float
-				return $this->real_escape_string($value);
-
-			default:
-				return '"'.$this->real_escape_string($value).'"';
-		}
-	}
+	}*/
 
 	/**
 	 * Zet backticks ` om de kolomnaam, als dat nodig is
 	 * 
 	 * @param sting $identifier  Een kolom, tabel of databasenaam
 	 * @return string
-	 * /
+	 */
 	function quoteIdentifier($identifier) {
 		if (preg_match('/^[0-9a-z_]+$/i', $identifier)) { // Zit er geen vreemde karakter in de $identifier
 			return $identifier;
@@ -244,6 +173,20 @@ class Database extends \PDO {
 		return ('`'.str_replace('`', '``', $identifier) . '`');
 	}
 	
+	/**
+	 * Quotes a string for use in a query.
+	 * @link http://php.net/manual/en/pdo.quote.php
+	 * 
+	 * @param string $string  The string to be quoted.
+	 * @param int $parameter_type [optional] Provides a data type hint for drivers that have alternate quoting styles.
+	 * @return string  A quoted string that is safe to pass into an SQL statement. 
+	 */
+	public function quote($string, $parameterType = null) {
+		if ($parameterType === null && $string === null) {
+			return 'NULL';
+		}
+		return parent::quote($string, $parameterType);
+	}
 	/**
 	 * Escapes special characters in a string for use in a SQL statement, taking into account the current charset of the connection
 	 * /
@@ -373,7 +316,7 @@ class Database extends \PDO {
 	 * @param bool $strip_php_comments Bij true worden de regels met "/*" beginnen en eindingen met  "* /" genegeerd
 	 * @param false|callback $progress_callback Deze callback word na elke voltooide query aangeroepen met het regelnummer als parameter.
 	 * @return bool
-	 * /
+	 */
 	function import($filepath, &$error_message, $strip_php_comments = false, $progress_callback = false) {
 		if ($progress_callback && !is_callable($progress_callback)) {
 			notice('Invalid $progress_callback', $progress_callback);
@@ -436,6 +379,7 @@ class Database extends \PDO {
 		}
 		return true;
 	}
+	/*
 	
 	function tableInfo($table) {
 		if (isset($this->tableInfoCache[$table])) { // Staan deze gegevens in de (php_memory)cache?

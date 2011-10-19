@@ -95,7 +95,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			$message = 'SQL ['.$sql.'] should be executed';
 		}
 		$db = $this->getDatabase();
-		$query_log = array_slice($db->query_log, $this->queryCount); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
+		$query_log = array_slice($db->log, $this->queryCount); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
 		$queries = array();
 		foreach ($query_log as $row) {
 			$queries[] = (string) $row['sql'];
@@ -122,7 +122,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 	 */
 	function assertLastQuery($sql, $message = NULL) {
 		$db = $this->getDatabase();
-		$query =  $db->query_log[count($db->query_log) - 1];
+		$query =  $db->log[count($db->log) - 1];
 		if ($sql == $query['sql']) {
 			if ($message === NULL) {
 				$message = 'SQL ['.$sql.'] is executed';
@@ -146,7 +146,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 	 */
 	function assertQueryCount($expectedCount, $message = null) {
 		$db = $this->getDatabase();
-		$count = count($db->query_log) - $this->queryCount;
+		$count = count($db->log) - $this->queryCount;
 		if ($message === null) {
 			$message = 'Number of queries ('.$count.') should match '.$expectedCount;
 		}
