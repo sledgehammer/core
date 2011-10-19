@@ -11,8 +11,8 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
 
 	private 
-		$dbNname,
-		$query_nr;
+		$dbName,
+		$queryCount;
 
 	function __construct() {
 		parent::__construct();
@@ -26,23 +26,20 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		}
 			
 		if ($this->dbLink == '__NOT_CONNECTED__') {
-			$db = new MySQLiDatabase();
+			$db = new Database('mysql://root@localhost');
 			$host = php_uname('n');
-			$connected = $db->connect('localhost', 'root');
-			if (!$connected) {
-				throw new \Exception('Database connection FAILED');
-			}
 			$suffix = preg_replace('/[^0-9a-z]*/i', '', '_'.$_SERVER['HTTP_HOST']);
 			$this->dbName = 'UnitTestDB_'.$suffix; // Genereer databasenaam
 			$this->dbLink = $this->dbName;
-			$dbWarnings = $db->report_warnings = false;
+			$db->reportWarnings = false;
 			$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
-			$db->report_warnings = $dbWarnings;
 			$db->query('CREATE DATABASE '.$this->dbName);
-			$db->select_db($this->dbName);
+			$db->query('USE '.$this->dbName);
 			$GLOBALS['Databases'][$this->dbName] = $db;
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
+				$db->reportWarnings = true;
+
 			}
 		}
 	}
@@ -70,7 +67,6 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		}
 		if ($this->dbName) {
 			$db->query('DROP DATABASE '.$this->dbName);
-			$db->close();
 		}
 	}
 
@@ -80,6 +76,9 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 	abstract function fillDatabase($database);
 	
 
+	/**
+	 * @return Database 
+	 */
 	function getDatabase() {
 		return getDatabase($this->dbLink);
 	}		
@@ -97,7 +96,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			$message = 'SQL ['.$sql.'] should be executed';
 		}
 		$db = $this->getDatabase();
-		$query_log = array_slice($db->query_log, $this->query_nr); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
+		$query_log = array_slice($db->query_log, $this->queryCount); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
 		$queries = array();
 		foreach ($query_log as $row) {
 			$queries[] = (string) $row['sql'];
@@ -148,7 +147,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 	 */
 	function assertQueryCount($expectedCount, $message = null) {
 		$db = $this->getDatabase();
-		$count = count($db->query_log) - $this->query_nr;
+		$count = count($db->query_log) - $this->queryCount;
 		if ($message === null) {
 			$message = 'Number of queries ('.$count.') should match '.$expectedCount;
 		}
@@ -186,10 +185,10 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		if ($this->skipRebuildDatabase == false && $this->dbName) {
 			$db->query('DROP DATABASE '.$this->dbName);
 			$db->query('CREATE DATABASE '.$this->dbName);
-			$db->select_db($this->dbName);
+			$db->query('USE '.$this->dbName);
 			$this->fillDatabase($db);
 		}
-		$this->query_nr = count($db->query_log);
+		$this->queryCount = count($db->log);
 	}
 }
 ?>
