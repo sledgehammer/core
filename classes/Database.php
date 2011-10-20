@@ -1,13 +1,13 @@
 <?php
 /**
  * Een PDO Database connectie met extra debug informatie.
- * Adds error messages or exceptions and changes default fetch behaviour to FECTH_ASSOC 
+ * Adds error messages or exceptions and changes default fetch behaviour to FECTH_ASSOC
  *
  * @package Core
  */
 namespace SledgeHammer;
 class Database extends \PDO {
-	
+
 	public
 		$reportWarnings = 'auto', // (bool) Report mysql warnings
 		$log = array(), // Structure containing all logged executed queries
@@ -18,13 +18,13 @@ class Database extends \PDO {
 	private
 		$queryCount, // Number of executed queries.
 		$logStatementCharacterLimit = 51200; // Maximaal een 50KiB van een query onhouden in de log
-	
+
 	/**
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
 	 * @param type $username
 	 * @param type $passwd
-	 * @param type $options 
+	 * @param type $options
 	 */
 	public function __construct($dsn, $username = null, $passwd = null, $options = array()) {
 		$start = microtime(true);
@@ -49,7 +49,7 @@ class Database extends \PDO {
 			$driver = strtolower($match[1]);
 			$logMessage = 'CONNECT(\''.$dsn.'\');';
 		}
-		
+
 		if ($driver == 'mysql') {
 			$this->reportWarnings = true;
 			if (isset($config['charset'])) {
@@ -93,11 +93,11 @@ class Database extends \PDO {
 		$this->logStatement($logMessage, (microtime(true) - $start));
 		$this->queryCount = 0;
 	}
-	
+
 	/**
 	 * Execute an SQL statement and return the number of affected rows
 	 * @link http://php.net/manual/en/pdo.exec.php
-	 * 
+	 *
 	 * @param string $statement  The SQL statement to prepare and execute.
 	 * @return int|bool
 	 */
@@ -114,13 +114,13 @@ class Database extends \PDO {
 	/**
 	 * Executes an SQL statement, returning a result set as a PDOStatement object
 	 * @link http://php.net/manual/en/pdo.query.php
-	 * 
+	 *
 	 * @param string $statement  The SQL statement to prepare and execute.
 	 * @return PDOStatement
 	 */
 	public function query($statement) {
 		$start = microtime(true);
-		
+
 		$result = parent::query($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
 		if ($result !== false) {
@@ -129,7 +129,7 @@ class Database extends \PDO {
 		}
 		return $result;
 	}
-	
+
 	/**
 	 * Meerdere sql queries uitvoeren (met foutdetectie en logging van queries)
 	 *
@@ -162,7 +162,7 @@ class Database extends \PDO {
 
 	/**
 	 * Zet backticks ` om de kolomnaam, als dat nodig is
-	 * 
+	 *
 	 * @param sting $identifier  Een kolom, tabel of databasenaam
 	 * @return string
 	 */
@@ -172,19 +172,25 @@ class Database extends \PDO {
 		}
 		return ('`'.str_replace('`', '``', $identifier) . '`');
 	}
-	
+
 	/**
 	 * Quotes a string for use in a query.
 	 * @link http://php.net/manual/en/pdo.quote.php
-	 * 
+	 *
 	 * @param string $string  The string to be quoted.
 	 * @param int $parameter_type [optional] Provides a data type hint for drivers that have alternate quoting styles.
-	 * @return string  A quoted string that is safe to pass into an SQL statement. 
+	 * @return string  A quoted string that is safe to pass into an SQL statement.
 	 */
 	public function quote($string, $parameterType = null) {
-		if ($parameterType === null && $string === null) {
-			return 'NULL';
+		if ($parameterType === null) {
+			if ($string === null) {
+				return 'NULL';
+			}
+			if (is_int($string) || preg_match('/^[123456789]{1}[0-9]*$/', $string)) { // A number?
+				return $string;
+			}
 		}
+
 		return parent::quote($string, $parameterType);
 	}
 	/**
@@ -241,7 +247,7 @@ class Database extends \PDO {
 		echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>sec';
 		if (!$popup) {
 			echo '<br />';
-		} 
+		}
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
 				echo '<div id="'.$id.'" class="dbdebug" style="display:none;text-align:left;">';
@@ -259,10 +265,10 @@ class Database extends \PDO {
 			}
 		}
 	}
-	
+
 	/**
 	 * Haalt een enkele rij op uit de database
-	 * 
+	 *
 	 * @param string $statement De SQL query
 	 * @param bool $allow_empty_results Bij true word er geen foutmelding gegenereerd als er geen rij wordt gevonden
 	 * @return array|false
@@ -288,10 +294,10 @@ class Database extends \PDO {
 		}
 		return $row;
 	}
-	
+
 	/**
 	 * Haal een elke waarde op uit de database
-	 * 
+	 *
 	 * @param string $sql De SQL query
 	 * @param bool $allow_empty_results Bij true word er geen foutmelding gegenereerd als er geen rij wordt gevonden
 	 * @return string|NULL|false
@@ -349,7 +355,7 @@ class Database extends \PDO {
 			}
 			foreach ($pieces as $index => $piece) {
 				$concaternated_query .= $piece;
-				// De query controleren of deze foutief is afgekapt 
+				// De query controleren of deze foutief is afgekapt
 				foreach ($explode_exceptions as $tag) {
 					if (substr($concaternated_query, 1 - strlen($tag)) == $tag) {
 						$concaternated_query .= $piece.';';
@@ -380,7 +386,7 @@ class Database extends \PDO {
 		return true;
 	}
 	/*
-	
+
 	function tableInfo($table) {
 		if (isset($this->tableInfoCache[$table])) { // Staan deze gegevens in de (php_memory)cache?
 			return $this->tableInfoCache[$table];
@@ -401,15 +407,15 @@ class Database extends \PDO {
 				$info['defaults'][$column] = NULL; // Corrigeer de defaultwaarde "" naar NULL
 			} else {
 				$info['defaults'][$column] = $row['Default'];
-			} 
+			}
 		}
 		$this->tableInfoCache[$table] = $info;
 		return $info;
 	}
-	
+
 	/**
 	 * Shortcut for  tableInfo()s ['primary_keys']
-	 * @return string|array 
+	 * @return string|array
 	 * /
 	function getPrimaryKeys($table) {
 		if (isset($this->tableInfoCache[$table])) { // Staan deze gegevens in de (php_memory)cache?
@@ -471,7 +477,7 @@ class Database extends \PDO {
 	 *
 	 * @param string $statement
 	 * @param float $executedIn  The time it took to execute the query
-	 * @return void 
+	 * @return void
 	 */
 	private function logStatement($statement, $executedIn) {
 		$this->queryCount++;
@@ -502,7 +508,7 @@ class Database extends \PDO {
 		foreach (debug_backtrace() as $trace) {
 			if ($trace['file'] != __FILE__) {
 				break;
-			} 
+			}
 		}
 		if (isset($trace['file']) && isset($trace['line'])) {
 			return array(

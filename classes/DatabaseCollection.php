@@ -32,7 +32,7 @@ class DatabaseCollection extends Collection {
 	 * @return Collection
 	 */
 	function where($conditions) {
-		if ($this->iterator !== null || is_string($this->sql)) {
+		if ($this->data !== null || is_string($this->sql)) {
 			return parent::where($conditions);
 		}
 		$db = getDatabase($this->dbLink);
@@ -51,13 +51,16 @@ class DatabaseCollection extends Collection {
 
 	function count() {
 		$this->validateIterator();
+		if ($this->data instanceof \PDOStatement) {
+			return $this->data->rowCount();
+		}
 		return parent::count();
 	}
 
 	private function validateIterator() {
-		if ($this->iterator == null) {
+		if ($this->data === null) {
 			$db = getDatabase($this->dbLink);
-			$this->iterator = $db->query($this->sql);
+			$this->data = $db->query($this->sql);
 		} else {
 			// @todo? iterator isDirty check
 		}

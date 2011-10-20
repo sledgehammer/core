@@ -13,19 +13,15 @@ const SORT_NATURAL = -1;
 class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
-	 * @var Iterator
+	 * @var \Traversable
 	 */
-	protected $iterator;
+	protected $data;
 
 	/**
-	 * @param \Iterator|array $iterator
+	 * @param \Traversable|array $data
 	 */
-	function __construct($iterator) {
-		if (is_array($iterator)) {
-			$this->iterator = new ArrayIterator($iterator);
-		} else {
-			$this->iterator = $iterator;
-		}
+	function __construct($data) {
+		$this->data = $data;
 	}
 
 	/**
@@ -185,71 +181,112 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	 * @return int
 	 */
 	function count() {
-		return count($this->iterator);
+		if (is_array($this->data)) {
+			return count($this->data);
+		}
+		if ($this->data instanceof \Countable) {
+			return $this->data->count();
+		}
+		$this->dataToArray();
+		return count($this->data);
 	}
 
 	function __clone() {
-		$this->iterator = new ArrayIterator(iterator_to_array($this->iterator));
-//		$this->iterator = clone $this->iterator; // doesn't clone the data (in case of the ArrayIterator)
+		if (is_array($this->data) == false) {
+			$this->data = new ArrayIterator(iterator_to_array($this->data));	
+//		$this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
+		}
 	}
 
 	// Iterator functions
 
 	function current() {
-		return $this->iterator->current();
+		if (is_array($this->data)) {
+			return current($this->data);
+		}
+		return $this->data->current();
 	}
 
 	function key() {
-		return $this->iterator->key();
+		if (is_array($this->data)) {
+			return key($this->data);
+		}
+		return $this->data->key();
 	}
 
 	function next() {
-		return $this->iterator->next();
+		if (is_array($this->data)) {
+			return next($this->data);
+		}
+		return $this->data->next();
 	}
 
 	function rewind() {
-		if ($this->iterator instanceof \Iterator) {
-			return $this->iterator->rewind();
+		if (is_array($this->data)) {
+			reset($this->data);
+			return;
 		}
-		$type = gettype($this->iterator);
-		$type = ($type == 'object') ? get_class($this->iterator) : $type;
-		throw new \Exception(''.$type.' is not an Iterator');
+		if ($this->data instanceof \Iterator) {
+			return $this->data->rewind();
+		}
+		if ($this->data instanceof \Traversable) {
+			$this->dataToArray();
+			return;
+		}
+		$type = gettype($this->data);
+		$type = ($type == 'object') ? get_class($this->data) : $type;
+		throw new \Exception(''.$type.' is not an Traversable');
 	}
 
 	function valid() {
-		return $this->iterator->valid();
+		if (is_array($this->data)) {
+			return (key($this->data) !== null);
+		}
+		return $this->data->valid();
 	}
 
 	// ArrayAccess functions
 
 	function offsetExists($offset) {
-		if (($this->iterator instanceof ArrayIterator) == false) {
-			$this->iterator = new ArrayIterator(iterator_to_array($this));
-		}
-		return $this->iterator->offsetExists($offset);
+		$this->dataToArray();
+		return array_key_exists($offset, $this->data);
 	}
 
 	function offsetGet($offset) {
-		if (($this->iterator instanceof ArrayIterator) == false) {
-			$this->iterator = new ArrayIterator(iterator_to_array($this));
-		}
-		return $this->iterator->offsetGet($offset);
+		$this->dataToArray();
+		return $this->data[$offset];
 	}
 
 	function offsetSet($offset, $value) {
-		if (($this->iterator instanceof ArrayIterator) == false) {
-			$this->iterator = new ArrayIterator(iterator_to_array($this));
-		}
-		return $this->iterator->offsetSet($offset, $value);
+		$this->dataToArray();
+		return $this->data[$offset] = $value;
 	}
 
 	function offsetUnset($offset) {
-		if (($this->iterator instanceof ArrayIterator) == false) {
-			$this->iterator = new ArrayIterator(iterator_to_array($this));
-		}
-		return $this->iterator->offsetUnset($offset);
+		$this->dataToArray();
+		unset($this->data[$offset]);
 	}
+	/**
+	 * Convert this->data to an array
+	 * @return void
+	 */
+	private function dataToArray() {
+		if (is_array($this->data)) {
+			return;
+		}
+		if ($this->data instanceof \Iterator) {
+			$this->data = iterator_to_array($this->data);
+			return;
 
+		}
+		if ($this->data instanceof \Traversable) {
+			$items = array();
+			foreach ($this->data as $key => $item) {
+				$items[$key] = $item;
+			}
+			$this->data = $items;
+		}
+	}
 }
 
 ?>
