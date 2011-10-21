@@ -86,7 +86,6 @@ class Database extends \PDO {
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC); // Default to FETCH_ASSOC mode
-		$this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_WARNING); // Trigger warnings on sql errors
 		if ($this->reportWarnings) {
 			parent::exec('SET sql_warnings = ON');
 		}
@@ -105,8 +104,10 @@ class Database extends \PDO {
 		$start = microtime(true);
 		$result = parent::exec($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
-		if ($result !== false) {
-			$this->checkWarnings($statement);
+		if ($result === false) {
+			$this->reportError($statement);
+		} else {
+			$this->reportWarnings($statement);
 		}
 		return $result;
 	}
@@ -120,12 +121,12 @@ class Database extends \PDO {
 	 */
 	public function query($statement) {
 		$start = microtime(true);
-
 		$result = parent::query($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
-		if ($result !== false) {
-//			$result->setFetchMode(\PDO::FETCH_ASSOC);
-			$this->checkWarnings($statement);
+		if ($result === false) {
+			$this->reportError($statement);
+		} else {
+			$this->reportWarnings($statement);
 		}
 		return $result;
 	}
@@ -455,15 +456,36 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * De MySQL waarschuwingen opvragen en naar de ErrorHandler sturen
-	 * @param \PDOStatement $result
+	 * Report SQL error
+	 * A cleaner error than PDO::ERRMODE_WARNING generates would generate.
+	 *
+	 * @param string $statement
 	 */
-	private function checkWarnings($statement) {
+	private function reportError($statement) {
+		$error = $this->errorInfo();
+		if ($this->getAttribute(\PDO::ATTR_ERRMODE) == \PDO::ERRMODE_SILENT) { // The error issn't already reported?
+			$info = array();
+			if ($statement instanceof SQL) {
+				$info['SQL'] = (string) $statement;
+			}
+			notice('SQL error ['.$error[1].'] '.$error[2], $info);
+		}
+	}
+	/**
+	 * Report MySQL warnings if any
+	 *
+	 * @param string $result
+	 */
+	private function reportWarnings($statement) {
 		if ($this->reportWarnings) {
+			$info = array();
+			if ($statement instanceof SQL) {
+				$info['SQL'] = (string) $statement;
+			}
 			$warnings = parent::query('SHOW WARNINGS');
 			if ($warnings->rowCount()) {
 				foreach ($warnings->fetchAll(\PDO::FETCH_ASSOC) as $warning) {
-					notice('MySQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message']);
+					notice('MySQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
 				}
 				// @todo Clear warnings
 				// PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.
