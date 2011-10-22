@@ -84,6 +84,8 @@ class Database extends \PDO {
 				$dsn .= $name.'='.$value.';';
 			}
 		}
+		//	@todo Add support for config options like: 'report_warnings', 'throw_exception_on_error', 'remember_queries', 'remember_backtrace'
+
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC); // Default to FETCH_ASSOC mode
 		if ($this->reportWarnings) {
@@ -228,24 +230,13 @@ class Database extends \PDO {
 				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';">';
 			}
 		}
-		echo '<b>';
-		if ($this->queryCount == 0 && $this->logLimit) {
-			echo 'Not&nbsp;connected</b>';
-			if ($query_log_count == 0) {
-				return;
-			}
-		} else {
-			echo $this->queryCount.'</b>&nbsp;';
-		 	if ($this->queryCount == 1) {
-				echo 'query';
-			} else {
-				echo 'queries';
-			}
-		}
+		echo '<b>', $this->queryCount, '</b>&nbsp;queries';
 		if ($popup && $query_log_count > 0) {
 			echo '</a>';
 		}
-		echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>sec';
+		if ($this->queryCount != 0) {
+			echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>sec';
+		}
 		if (!$popup) {
 			echo '<br />';
 		}
@@ -472,7 +463,7 @@ class Database extends \PDO {
 		}
 	}
 	/**
-	 * Report MySQL warnings if any
+	 * Report MySQL warnings and notes if any
 	 *
 	 * @param string $result
 	 */
@@ -482,10 +473,12 @@ class Database extends \PDO {
 			if ($statement instanceof SQL) {
 				$info['SQL'] = (string) $statement;
 			}
+			$start = microtime(true);
 			$warnings = parent::query('SHOW WARNINGS');
+			$this->executionTime += (microtime(true) - $start);
 			if ($warnings->rowCount()) {
 				foreach ($warnings->fetchAll(\PDO::FETCH_ASSOC) as $warning) {
-					notice('MySQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
+					notice('SQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
 				}
 				// @todo Clear warnings
 				// PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.

@@ -158,14 +158,20 @@ class Framework {
 		$databases = self::extractDatabaseSettings($environment, $filename);
 		$success = true;
 		$links = array();
-		foreach ($databases as $link => $settings) {
-			$links[] = $link;
-			if (self::initDatabase($link, $settings, $filename) == false) {
-				$success = false;
+		foreach ($databases as $label => $dsn) {
+			if (isset($databases[$dsn])) {
+				$GLOBALS['Databases'][$label] = $dsn; // symlink
+			} else {
+				try {
+					$GLOBALS['Databases'][$label] = new Database($dsn);
+				} catch (\Exception $e) {
+					$GLOBALS['Databases'][$label] = '__NOT_CONNECTED__';
+					warning('Failed to connect to database['.$label.']: ', $e->getMessage());
+				}
 			}
 		}
-		if (count($links) == 1) {
-			$GLOBALS['Databases']['default'] = current($links); // de "default" database symlink maken.
+		if (count($GLOBALS['Databases']) == 1 && key($GLOBALS['Databases']) != 'deault') {
+			$GLOBALS['Databases']['default'] = key($GLOBALS['Databases']); // symlink "default" to the only database connection.
 		}
 		return $success;
 	}
@@ -202,14 +208,8 @@ class Framework {
 	 * @return void
 	 */
 	static function closeDatabases() {
-		if (!isset($GLOBALS['Databases'])) {
-			return;
-		}
-		foreach ($GLOBALS['Databases'] as $link => $Database) {
-			if (is_object($Database)) { // Is het geen symlink?
-				$GLOBALS['Databases'][$link]->close();
-			}
-		}
+		// @todo Keep query logs for statusbar?
+		unset($GLOBALS['Databases']);
 	}
 
 	/**
@@ -224,69 +224,25 @@ class Framework {
 			$environment = ENVIRONMENT;
 		}
 		if ($filename === null) {
-			$filename = PATH.'application/settings/database.ini';
+			$filename = APPLICATION_DIR.'/settings/database.ini';
 		}
 		$settings = parse_ini_file($filename, true);
 		if (!$settings) { // Staat er een fout in het ini bestand, of is deze leeg?
 			notice('File: "'.$filename.'" is invalid');
 			return false;
 		}
-		$database_links = array();
-		foreach ($settings as $environment_and_link => $settings) {
-			$info = explode('.', $environment_and_link);
-			if (count($info) != 2) {
-				notice('Unexpected database_link format: "'.$environment_and_link.'", expecting "[environment.link]"');
-				continue;
-			}
-			$database_environment = $info[0];
-			$database_link = $info[1];
-
-			$allowedEnvironments = array('development', 'staging', 'production');
-			if (!in_array($database_environment, $allowedEnvironments)) {
-				notice('Invalid environment: "'.$database_environment.'" for ['.$environment_and_link.'] in '.$filename, array('Allowed environments' => $allowedEnvironments));
-				continue;
-			}
-			if ($database_environment == $environment) {
-				$database_links[$database_link] = $settings;
+		$databases = array();
+		$allowedEnvironments = array('development', 'staging', 'production');
+		foreach ($settings as $group => $links) {
+			if (!in_array($group, $allowedEnvironments)) {
+				notice('Invalid environment: ['.$group.'] in '.$filename, array('Allowed environments' => $allowedEnvironments));
 			}
 		}
-		return $database_links;
-	}
-
-	/**
-	 * Maakt aan de hand van de $settings array een database connectie met de naam $link
-	 *
-	 * @return bool true bij succes
-	 */
-	private static function initDatabase($database_link, $settings, $ini_file) {
-		if (isset($settings['symlink'])) {
-			if (count($settings) > 1) {
-				notice($ini_file.' ['.$database_link.'] symlink="'.$settings['symlink'].'" overrules setting(s): "'.implode('","', array_diff(array_keys($settings), array('symlink'))).'"');
-			}
-			$GLOBALS['Databases'][$database_link] = $settings['symlink'];
-			return true;
-		} 
-		// Een database connectie maken
-		$GLOBALS['Databases'][$database_link] = new MySQLiDatabase();
-		$config_options = array('report_warnings', 'throw_exception_on_error', 'remember_queries', 'remember_backtrace', 'symlink');
-		$connection_parameters = array('host', 'database', 'user', 'password');
-		foreach($settings as $name => $value) {
-			if (in_array($name, $config_options)) {
-				$GLOBALS['Databases'][$database_link]->$name = $value;
-			} elseif (!in_array($name, $connection_parameters)) {
-				notice($ini_file.' ['.$database_link.'] '.$name.'="'.$value.'" is not supported', array('connection_parameters' => $connection_parameters, 'config_options' => $config_options));
-			}
+		if (isset($settings[$environment])) {
+			return $settings[$environment];
 		}
-		if (!isset($settings['host'])) {
-			$settings['host'] = NULL;
-		}
-		if (!isset($settings['database'])) {
-			$settings['database'] = NULL;
-		}
-		if (!isset($settings['password'])) {
-			$settings['password'] = NULL;
-		}
-		return $GLOBALS['Databases'][$database_link]->connect($settings['host'], $settings['user'], $settings['password'], $settings['database']);
+		notice('No databases configured for "'.$environment.'" environment');
+		return false;
 	}
 
 	/**
