@@ -225,7 +225,7 @@ class Database extends \PDO {
 	function debug($popup = true) {
 		$query_log_count = count($this->log); // Het aantal onthouden queries.
 		if ($query_log_count > 0) {
-			$id = 'dbDebug_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10,99); // Bereken een uniek ID (Count + Md5 + Rand)
+			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10,99); // Bereken een uniek ID (Count + Md5 + Rand)
 			if ($popup) {
 				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';">';
 			}
@@ -242,18 +242,18 @@ class Database extends \PDO {
 		}
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
-				echo '<div id="'.$id.'" class="dbdebug" style="display:none;text-align:left;box-shadow: 1px 1px 5px black">';
-				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" style="float:right; color: #d00; font: 22px sans-serif; text-decoration: none;">&#10062;</a>';
+				echo '<pre id="'.$id.'" class="sledegehammer_querylog" style="display:none;">';
+				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&#10062;</a>';
 			}
 			for($i = 0; $i < $query_log_count; $i++) {
 				$log = $this->log[$i];
-				echo $i.': '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'<br />';
+				echo '<div><span class="sledegehammer_querylog_number">'.$i.'</span> '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'</div>';
 			}
 			if ($this->queryCount == 0 && ($this->queryCount - $query_log_count) > 0) {
 				echo '<br /><b style="color:#ffa500">The other '.($this->number_of_queries - $query_log_count).' queries are suppressed.</b><br /><br />';
 			}
 			if ($popup) {
-				echo  '</div>';
+				echo  '</pre>';
 			}
 		}
 	}
@@ -377,45 +377,6 @@ class Database extends \PDO {
 		}
 		return true;
 	}
-	/*
-
-	function tableInfo($table) {
-		if (isset($this->tableInfoCache[$table])) { // Staan deze gegevens in de (php_memory)cache?
-			return $this->tableInfoCache[$table];
-		}
-		$info = array(
-			'primary_keys' => array(),
-			//'table' => $table,
-			'columns' => array(),
-			'defaults' => array()
-		);
-		$result = $this->query('DESCRIBE '.$table, 'Field');
-		foreach ($result as $column => $row) {
-			if ($row['Key'] == 'PRI') {
-				$info['primary_keys'][] = $column;
-			}
-			$info['columns'][] = $column;
-			if ($this->server_version < 50100 && $row['Default'] === '') { // Vanaf MySQL 5.1 is de Default waarde NULL ipv "" als er geen default is opgegeven
-				$info['defaults'][$column] = NULL; // Corrigeer de defaultwaarde "" naar NULL
-			} else {
-				$info['defaults'][$column] = $row['Default'];
-			}
-		}
-		$this->tableInfoCache[$table] = $info;
-		return $info;
-	}
-
-	/**
-	 * Shortcut for  tableInfo()s ['primary_keys']
-	 * @return string|array
-	 * /
-	function getPrimaryKeys($table) {
-		if (isset($this->tableInfoCache[$table])) { // Staan deze gegevens in de (php_memory)cache?
-			return $this->tableInfoCache[$table]['primary_keys'];
-		}
-		$info = $this->tableInfo($table);
-		return $info['primary_keys'];
-	}
 
 	/**
 	 * De sql query in het debug_blok overzichtelijk weergeven
@@ -423,7 +384,7 @@ class Database extends \PDO {
 	 */
 	private function highlight($sql, $truncated, $time, $backtrace) {
 		$sql = htmlspecialchars($sql, ENT_COMPAT, $GLOBALS['charset']);
-		$startKeywords = array('SELECT', 'UPDATE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW TABLES', 'START TRANSACTION', 'ROLLBACK');
+		$startKeywords = array('SELECT', 'UPDATE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
 		$inlineKeywords = array('SELECT', 'VALUES', 'SET', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'ASC', 'DESC', 'LIMIT', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'AS', 'ON');
 		$sql = preg_replace('/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/', '<b>\\0</b>', $sql);
 		$sql = str_replace("\n", '<br />', $sql);
@@ -443,7 +404,7 @@ class Database extends \PDO {
 		} elseif ($backtrace === false) {
 			$backtrace = ' backtrace failed';
 		}
-		return $sql.' <em style="color:'.$color.'">('.number_format($time, 3).' sec)</em>'.$backtrace;
+		return $sql.' <em class="execution_time" style="color:'.$color.'">('.number_format($time, 3).' sec)</em>'.$backtrace;
 	}
 
 	/**

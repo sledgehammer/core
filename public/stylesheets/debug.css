@@ -1,25 +1,53 @@
 /* Verborgen div voor de SQL queries */
-div.dbdebug {
+.sledegehammer_querylog {
 	position: fixed;
 	top: 10px;
 	left: 15px;
 	right: 15px;
 	bottom: 40px;
 	overflow: auto;
-	display: none;
-	padding: 7px;
-	border: 1px dashed #CFCFCF;
-	background-color: #FFFFE1;
-	color:#008000;
+	display: block;
+	padding: 3px 0;
+	background-color: white;
+	color:#555;
 	text-shadow: none;
+	text-align: left;
+	box-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+	font: 11px Menlo, monospace;
 }
-
-div.dbdebug img {
-	position: fixed;
-	top: 15px;
-	right: 24px;
+.sledegehammer_querylog_number {
+	color: #999999;
+	display: inline-block;
+	min-width: 20px;
+	text-align: right;
 }
-
+.sledegehammer_querylog div {
+	padding: 2px 7px;
+}
+.sledegehammer_querylog div:nth-child(odd) {
+	background: whiteSmoke;
+	border-top: 1px solid #F0F0FF;
+	border-bottom: 1px solid #F0F0FF;
+}
+.sledegehammer_querylog_close {
+	color: #909090;
+	font-size: 22px;
+	text-decoration: none;
+	margin-right: 10px;
+	margin-top: 5px;
+ }
+ .sledegehammer_querylog_close:hover {
+	 color: #808080;
+ }
+ .sledegehammer_querylog .execution_time {
+	 margin-left: 10px;
+ }
+ 
+.statusbar_hide {
+	margin-right: 4px;
+	font: 14px sans-serif;
+	text-decoration: none;
+}
 /* Debug blok in de voet */
 .statusbar, .statusbarcache {
 	color: #909090;
