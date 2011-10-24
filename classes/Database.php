@@ -227,7 +227,7 @@ class Database extends \PDO {
 		if ($query_log_count > 0) {
 			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10,99); // Bereken een uniek ID (Count + Md5 + Rand)
 			if ($popup) {
-				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';">';
+				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true)">';
 			}
 		}
 		echo '<b>', $this->queryCount, '</b>&nbsp;queries';

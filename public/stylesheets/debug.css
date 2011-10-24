@@ -7,14 +7,15 @@
 	bottom: 40px;
 	overflow: auto;
 	display: block;
-	padding: 3px 0;
+	padding: 6px 0;
 	background-color: white;
-	color:#333;
+	color: #333;
 	text-shadow: none;
 	text-align: left;
 	white-space: pre-wrap;
-	box-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+	box-shadow: 1px 1px 5px rgba(0,0,0,0.6);
 	font: 11px Menlo, monospace;
+	border-radius: 6px;
 }
 .sledegehammer_querylog_number {
 	color: #999999;
@@ -32,10 +33,10 @@
 }
 .sledegehammer_querylog_close {
 	color: #909090;
-	font-size: 22px;
+	font-size: 16px;
 	text-decoration: none;
-	margin-right: 10px;
-	margin-top: 5px;
+	right: 32px;
+	position: fixed;
  }
  .sledegehammer_querylog_close:hover {
 	color: #808080;
