@@ -141,6 +141,7 @@ class ErrorHandler {
 		} else {
 			$message_color  = '#cc0000';
 		}
+		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		echo '<div style="'.implode(';', $style).'"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/'.strtolower($this->error_types[$type]).'.gif" alt="" align="left" /><span style="color:'.$message_color.'">'."\n";
 		if (is_array($message)) {
 			$message = 'Array';

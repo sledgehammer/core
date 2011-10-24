@@ -1,4 +1,4 @@
-/* Verborgen div voor de SQL queries */
+/* Querylog popup styling */
 .sledegehammer_querylog {
 	position: fixed;
 	top: 10px;
@@ -9,9 +9,10 @@
 	display: block;
 	padding: 3px 0;
 	background-color: white;
-	color:#555;
+	color:#333;
 	text-shadow: none;
 	text-align: left;
+	white-space: pre-wrap;
 	box-shadow: 1px 1px 5px rgba(0,0,0,0.7);
 	font: 11px Menlo, monospace;
 }
@@ -37,12 +38,14 @@
 	margin-top: 5px;
  }
  .sledegehammer_querylog_close:hover {
-	 color: #808080;
+	color: #808080;
+	text-decoration: none;
  }
  .sledegehammer_querylog .execution_time {
-	 margin-left: 10px;
+	margin-left: 10px;
  }
  
+/* Statusbar styling */
 .statusbar_hide {
 	margin-right: 4px;
 	font: 14px sans-serif;
@@ -84,9 +87,9 @@
 	z-index: 10;
 	border-top: 1px solid #CCCCCC;
 	background: #F5F5F5;
-  display: none; 
+	display: none; 
 }
 
 #statusbar_parsetime:hover > span#statusbar_parsetimes {
-  display: block; 
+	display: block; 
 }
