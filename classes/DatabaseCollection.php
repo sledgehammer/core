@@ -39,7 +39,11 @@ class DatabaseCollection extends Collection {
 		$sql = $this->sql;
 		// The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
 		foreach ($conditions as $column => $value) {
-			$sql = $sql->andWhere($db->quoteIdentifier($column).' = '.$db->quote($value));
+			if ($value === null) {
+				$sql = $sql->andWhere($db->quoteIdentifier($column).' IS NULL');
+			} else {
+				$sql = $sql->andWhere($db->quoteIdentifier($column).' = '.$db->quote($value));
+			}
 		}
 		return new DatabaseCollection($sql, $this->dbLink);
 	}
