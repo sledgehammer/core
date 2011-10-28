@@ -520,9 +520,12 @@ namespace SledgeHammer {
 	 * Wordt o.a. gebruikt door Dump & ErrorHandler
 	 * De een kleuren worden bepaald in /css/datatypes.css uit webcore
 	 *
+	 * @param mixed $variabele
+	 * @param string $datatype  Skip autodetection/force a type
+	 * @param bool $noColor  Dont put the variable inside a <span> with a color tag.
 	 * @return string
 	 */
-	function syntax_highlight($variabele, $datatype = NULL) {
+	function syntax_highlight($variabele, $datatype = null, $noColor = false) {
 		if ($datatype === NULL) {
 			$datatype = gettype($variabele);
 		}
@@ -577,6 +580,9 @@ namespace SledgeHammer {
 			default:
 				notice('Datatype: "'.$datatype.'" is unknown');
 				break;
+		}
+		if ($noColor) {
+			return $variabele;
 		}
 		if (!isset($GLOBALS['highlight_colors'])) {
 			include(dirname(__FILE__).'/settings/highlight_colors.php');

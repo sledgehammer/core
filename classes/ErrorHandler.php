@@ -393,6 +393,36 @@ class ErrorHandler {
 								$kib = round((strlen($arg) - $this->max_string_length_backtrace) / 1024);
 								$arg = substr($arg, 0, $this->max_string_length_backtrace);
 								$args[] = syntax_highlight($arg).'<span style="color:red;">...'.$kib.'&nbsp;KiB&nbsp;truncated</span>';
+							} elseif (is_array($arg) || is_object($arg)) {
+								if (is_array($arg)) {
+									$title = "array(\n";
+									$elements = $arg;
+								} else {
+									$title = "(\n";
+									$elements = get_object_vars($arg);
+								}
+								$max = 25; // max
+								foreach ($elements as $key => $value) {
+									if ($max === 0 || strlen($title) > 512) {
+										$title .= "  ...\n";
+										break;
+									}
+									if (is_array($arg)) {
+										$title .= '  '.syntax_highlight($key, null, true).' => ';
+									} else {
+										$title .= '  '.$key.': ';
+									}
+									if (is_string($value) && strlen($value) > 100) {
+										$title .= syntax_highlight(substr($value, 0, 100), null, true)."... ,\n";
+
+									} else {
+										$title .= syntax_highlight($value, null, true).",\n";
+									}
+									$max--;
+								}
+								$title .= ')';
+								$title = str_replace(' ', '&nbsp;', $title);
+								$args[] = '<span title="'.$title.'"'.substr(syntax_highlight($arg), 5);
 							} else {
 								$args[] = syntax_highlight($arg);
 							}
