@@ -142,7 +142,7 @@ class ErrorHandler {
 			$message_color  = '#cc0000';
 		}
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
-		echo '<div style="'.implode(';', $style).'"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/'.strtolower($this->error_types[$type]).'.gif" alt="" align="left" /><span style="color:'.$message_color.'">'."\n";
+		echo '<div style="', implode(';', $style), '"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" /><span style="color:', $message_color, "\">\n";
 		if (is_array($message)) {
 			$message = 'Array';
 		}
@@ -172,16 +172,16 @@ class ErrorHandler {
 		} else {
 			echo $this->error_types[$type];
 		}
-		echo ':</b> '.$message_plain.'</span><br clear="all" />'."\n".'';
+		echo ':</b> ',$message_plain,'</span><br clear="all" />',"\n";
 		if ($information !== NULL && !empty($information)) {
 			echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 			if (is_array($information)) {
 				$this->export_array($information);
 			} elseif (is_object($information)) {
-				echo syntax_highlight($information).":<br />\n";
+				echo syntax_highlight($information), ":<br />\n";
 				$this->export_array($information);
 			} else {
-				echo $information."<br />\n";
+				echo $information, "<br />\n";
 			}
 			echo '</span>';
 		}
@@ -200,7 +200,7 @@ class ErrorHandler {
 					$popup = $this->email ? false : true;
 					foreach ($GLOBALS['Databases'] as $link => $Database) {
 						if (is_object($Database) && method_exists($Database, 'debug')) {
-							echo $link.': ';
+							echo $link, ': ';
 							$Database->debug($popup);
 							echo "<br />\n";
 						}
@@ -238,7 +238,7 @@ class ErrorHandler {
 				error_log($error_message);
 			}
 			if ($this->cli) {
-				echo '['.date('Y-m-d H:i:s').'] '.$error_message."\n";
+				echo '[', date('Y-m-d H:i:s'), '] ', $error_message."\n";
 			}
 		}
 		// Limiet contoleren
@@ -314,7 +314,7 @@ class ErrorHandler {
 	 * De bestanden, regelnummers, functie en objectnamen waar de fout optrad weergeven.
 	 */
 	private function backtrace($backtrace) {
-		echo '<b>Backtrace</b><div>'."\n";
+		echo "<b>Backtrace</b><div>\n";
 		// Pass 1:
 		//   Backtrace binnen de errorhandler niet tonen
 		//   Bij een Exception de $Exception->getTrace() tonen.
@@ -371,7 +371,7 @@ class ErrorHandler {
 	private function backtrace_highlight($call, $location_only = false) {
 		if (!$location_only) {
 			if (isset($call['object'])) {
-				echo syntax_highlight(get_class($call['object']), 'class');
+				echo '<span title="', $this->backtrace_highlight_title($call['object'], 512), '"'.substr(syntax_highlight(get_class($call['object']), 'class'), 5);
 				echo $call['type'];
 			} elseif (isset($call['class'])) {
 				echo syntax_highlight($call['class'], 'class');
@@ -387,47 +387,23 @@ class ErrorHandler {
 				} else {
 					echo '(';
 					if (isset($call['args'])) {
-						$args = array();
+						$first = true;
 						foreach ($call['args'] as $arg) {
+							if ($first) {
+								$first = false;
+							} else {
+								echo ', ';
+							}
 							if (is_string($arg) && strlen($arg) > $this->max_string_length_backtrace) {
 								$kib = round((strlen($arg) - $this->max_string_length_backtrace) / 1024);
 								$arg = substr($arg, 0, $this->max_string_length_backtrace);
-								$args[] = syntax_highlight($arg).'<span style="color:red;">...'.$kib.'&nbsp;KiB&nbsp;truncated</span>';
+								echo syntax_highlight($arg),'<span style="color:red;">...'.$kib.'&nbsp;KiB&nbsp;truncated</span>';
 							} elseif (is_array($arg) || is_object($arg)) {
-								if (is_array($arg)) {
-									$title = "array(\n";
-									$elements = $arg;
-								} else {
-									$title = "(\n";
-									$elements = get_object_vars($arg);
-								}
-								$max = 25; // max
-								foreach ($elements as $key => $value) {
-									if ($max === 0 || strlen($title) > 512) {
-										$title .= "  ...\n";
-										break;
-									}
-									if (is_array($arg)) {
-										$title .= '  '.syntax_highlight($key, null, true).' => ';
-									} else {
-										$title .= '  '.$key.': ';
-									}
-									if (is_string($value) && strlen($value) > 100) {
-										$title .= syntax_highlight(substr($value, 0, 100), null, true)."... ,\n";
-
-									} else {
-										$title .= syntax_highlight($value, null, true).",\n";
-									}
-									$max--;
-								}
-								$title .= ')';
-								$title = str_replace(' ', '&nbsp;', $title);
-								$args[] = '<span title="'.$title.'"'.substr(syntax_highlight($arg), 5);
+								echo '<span title="', $this->backtrace_highlight_title($arg, 1024), '"'.substr(syntax_highlight($arg), 5);
 							} else {
-								$args[] = syntax_highlight($arg);
+								echo syntax_highlight($arg);
 							}
 						}
-						echo implode(', ', $args);
 					}
 					echo ')';
 				}
@@ -435,15 +411,64 @@ class ErrorHandler {
 		}
 		if (!empty($call['file'])) {
 			if (strpos($call['file'], PATH) === 0) {
-				echo ' in&nbsp;<b title="'.htmlentities($call['file']).'">'.substr($call['file'], strlen(PATH)).'</b>'; // De bestandnaam opvragen en filteren.
+				echo ' in&nbsp;<b title="', htmlentities($call['file']), '">', substr($call['file'], strlen(PATH)), '</b>'; // De bestandnaam opvragen en filteren.
 			} else {
-				echo ' in&nbsp;<b>'.$call['file'].'</b>'; // De bestandnaam opvragen en filteren.
+				echo ' in&nbsp;<b>', $call['file'], '</b>'; // De bestandnaam opvragen en filteren.
 			}
 		}
 		if (isset($call['line'])) {
-			echo ' on&nbsp;line&nbsp;<b>'.$call['line'].'</b>';
+			echo ' on&nbsp;line&nbsp;<b>', $call['line'], '</b>';
 		}
-		echo '<br />'."\n";
+		echo "<br />\n";
+	}
+
+	/**
+	 * Show the contents of an object/array when you hover over the backtrace
+	 *
+	 * @param object|array $variable
+	 * @param int $maxLenght  Maximum number of characters for the title
+	 * @param int $level  Indenting level
+	 * @return type 
+	 */
+	function backtrace_highlight_title($variable, $maxLenght, $level = 1) {
+		if (is_array($variable)) {
+			$title = 'array(';
+			$elements = $variable;
+			$end = ')';
+		} else {
+			$title = '{';
+			$end = '}';
+			$elements = get_object_vars($variable);
+		}
+		if (count($elements) == 0) {
+			return $title.$end;
+		}
+		$linebreak = '&#10;';
+		$title .= $linebreak;
+		$indent = str_repeat('  ', $level);
+		if ($level != 1) {
+			$end = substr($indent, 2).$end.$linebreak;
+		}
+		foreach ($elements as $key => $value) {
+			if (strlen($title) > $maxLenght) {
+				$title .= $indent.'&hellip;'.$linebreak;
+				break;
+			}
+			if (is_array($variable)) {
+				$title .= $indent.syntax_highlight($key, null, true).' => ';
+			} else {
+				$title .= $indent.$key.': ';
+			}
+			if (is_string($value) && strlen($value) > 100) {
+				$title .= syntax_highlight(substr($value, 0, 100), null, true).'&hellip; ,'.$linebreak;
+			} elseif (is_array($value) && $level < 4) {
+				$title .= $this->backtrace_highlight_title($value, $maxLenght, $level + 1);
+			} else {
+				$title .= syntax_highlight($value, null, true).','.$linebreak;
+			}
+		}
+		$title .= $end;
+		return str_replace(' ', '&nbsp;', $title);
 	}
 
 	/**
@@ -498,10 +523,10 @@ class ErrorHandler {
 	private function server_info() {
 			echo "<div>\n";
 			echo "<b>Server information</b><br />\n";
-			echo '<b>Hostname:</b> '.php_uname('n')."<br />\n";
-			echo '<b>Environment:</b> '.ENVIRONMENT."<br />\n";
+			echo '<b>Hostname:</b> ', php_uname('n'), "<br />\n";
+			echo '<b>Environment:</b> ', ENVIRONMENT, "<br />\n";
 			if (isset($_SERVER['SERVER_SOFTWARE'])) {
-				echo '<b>Software:</b> '.$_SERVER['SERVER_SOFTWARE']."<br />\n";
+				echo '<b>Software:</b> ', $_SERVER['SERVER_SOFTWARE'], "<br />\n";
 			}
 			echo '</div>';
 
@@ -515,15 +540,15 @@ class ErrorHandler {
 				echo '<b>'.$key.':</b><br />'."\n";
 				if (is_indexed($value)) {
 					foreach($value as $value2) {
-						echo '&nbsp;&nbsp;'.syntax_highlight($value2)."<br />\n";
+						echo '&nbsp;&nbsp;', syntax_highlight($value2), "<br />\n";
 					}
 				} else {
 					foreach ($value as $key2 => $value2) {
-						echo '&nbsp;&nbsp;<em>'.$key2.':</em> '.syntax_highlight($value2)."<br />\n";
+						echo '&nbsp;&nbsp;<em>', $key2, ':</em> ', syntax_highlight($value2), "<br />\n";
 					}
 				}
 			} else {
-				echo '<b>'.$key.':</b> '.syntax_highlight($value).'<br />'."\n";
+				echo '<b>'.$key.':</b> ', syntax_highlight($value), "<br />\n";
 			}
 		}
 	}
