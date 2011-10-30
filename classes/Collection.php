@@ -56,23 +56,60 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	/**
 	 * Return a new Collection with a subsection of the collection based on the condition criteria
 	 *
-	 * @param array $conditions
+	 * @param array|Closure $conditions
 	 * @return Collection
 	 */
 	function where($conditions) {
-		$isClosure = (is_object($conditions) && is_callable($conditions));
+		if (is_object($conditions) && is_callable($conditions)) {
+			$isClosure = true;
+		} elseif (is_array($conditions) == false) { // Example: '<= 5' or '10'
+			// Compare the items directly
+			if (preg_match('/^(<|>|<=|>=|!=|==) (.*)$/', $conditions, $matches)) {
+				$operator = $matches[1];
+				$expectation = $matches[2];
+				$conditions = function ($value) use ($expectation, $operator) {
+					return compare($value, $operator, $expectation);
+				};
+				$isClosure = true;
+			} else {
+				// no operator ('!=','<' or '>') given.
+				$expectation = $conditions;
+				$conditions = function ($item) use ($expectation) {
+					return equals($item, $expectation);
+				};
+				$isClosure = true;
+			}
+		} else {
+			$isClosure = false;
+			$operators = array();
+			foreach ($conditions as $path => $expectation) {
+				if (preg_match('/^(.*) (<|>|<=|>=|!=|==)$/', $path, $matches)) {
+					unset($conditions[$path]);
+					$conditions[$matches[1]] = $expectation;
+					$operators[$matches[1]] = $matches[2];
+				} else {
+					$operators[$path] = false;
+				}
+			}
+		}
+				
 		$data = array();
 		$counter = -1;
 		foreach ($this as $key => $item) {
 			$counter++;
 			if ($isClosure) {
-				if ($conditions($item, $key) == false) {
+				if ($conditions($item, $key) === false) {
 					continue;
 				}
 			} else {
 				foreach ($conditions as $path => $expectation) {
 					$actual = PropertyPath::get($item, $path);
-					if (equals($actual, $expectation) == false) {
+					$operator = $operators[$path];
+					if ($operator) {
+						if (compare($actual, $operator, $expectation) === false) {
+							continue 2; // Skip this entry
+						}
+					} elseif (equals($actual, $expectation) === false) {
 						continue 2; // Skip this entry
 					}
 				}

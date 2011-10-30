@@ -91,6 +91,21 @@ class CollectionTests extends \UnitTestCase {
 		));
 	}
 
+	function test_where_operators() {
+		$numbers = new Collection(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+		$this->assertEqual(count($numbers->where('2')), 1);
+		$this->assertEqual(count($numbers->where('<= 2')), 2);
+		$this->assertEqual(count($numbers->where('> 5')), 5);
+		$vehicels = new Collection(array(
+			array('name' => 'car', 'wheels' => 4),
+			array('name' => 'trike', 'wheels' => 3),
+			array('name' => 'bike', 'wheels' => 2),
+		));
+		$this->assertEqual(count($vehicels->where(array('wheels >' => 3))), 1);
+//		dump($vehicels->where(array('wheels >' => 3))->select('name')->offsetGet(0));
+
+	}
+
 	/**
 	 * A collection containing fruit entries and a vegetable entry
 	 * @return Collection

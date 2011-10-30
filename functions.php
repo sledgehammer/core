@@ -277,6 +277,26 @@ namespace SledgeHammer {
 	}
 
 	/**
+	 *
+	 * @param mixed $item
+	 * @param string $operator
+	 * @param mixed $value
+	 * @return bool
+	 */
+	function compare($value, $operator, $expectation) {
+		switch ($operator) {
+			case '==':  return $value == $expectation;
+			case '===': return $value === $expectation;
+			case '<':   return $value < $expectation;
+			case '<=':  return $value <= $expectation;
+			case '>':   return $value > $expectation;
+			case '>=':  return $value >= $expectation;
+		}
+		$validOperators = array('==', '!=', '<>', '<', '<=', '>', '>=');
+		throw new \Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', $validOperators));
+	}
+
+	/**
 	 * Vergelijk de eigenschappen van 2 objecten met de equals functie.
 	 *
 	 * @param Object $object1
