@@ -105,6 +105,23 @@ class CollectionTests extends \UnitTestCase {
 //		dump($vehicels->where(array('wheels >' => 3))->select('name')->offsetGet(0));
 
 	}
+	function test_database_where() {
+		$fruits = $this->getDatabaseCollection();
+		$this->assertEqual($fruits->toArray(), $this->getFruitsAndVegetables()->toArray(), 'Sanity check'); // The contents of the database collections should identical to array based collection
+		$this->assertEqual((string) $fruits->sql, 'SELECT * FROM fruits');
+		$apple = $fruits->where(array('name' => 'apple'));
+		$this->assertEqual($apple->count(), 1);
+		$this->assertFalse(property_exists($apple, 'sql'), 'Filtering after the initial query is done in php (in the Collection class)');
+				restore_error_handler();
+
+		$apple = $this->getDatabaseCollection()->where(array('name' => 'apple'));
+		$this->assertEqual($apple->count(), 1);
+		$this->assertEqual((string) $apple->sql, "SELECT * FROM fruits WHERE name = 'apple'");
+
+		$lowIds = $this->getDatabaseCollection()->where(array('id <=' => 6));
+		$this->assertEqual($lowIds->count(), 2);
+		$this->assertEqual((string) $lowIds->sql, "SELECT * FROM fruits WHERE id <= 6");
+	}
 
 	/**
 	 * A collection containing fruit entries and a vegetable entry
@@ -117,6 +134,22 @@ class CollectionTests extends \UnitTestCase {
 				array('id' => 7, 'name' => 'banana', 'type' => 'fruit'),
 				array('id' => 8, 'name' => 'carrot', 'type' => 'vegetable'),
 			));
+	}
+
+	private function getDatabaseCollection() {
+		if (empty($GLOBALS['Databases'][__CLASS__])) {
+			$db = new Database('sqlite::memory:');
+			$db->query('CREATE TABLE fruits (
+				id INTEGER PRIMARY KEY,
+				name TEXT,
+				type TEXT)');
+			$GLOBALS['Databases'][__CLASS__] = $db;
+			$fruits = $this->getFruitsAndVegetables();
+			foreach ($fruits as $fruit) {
+				$db->query('INSERT INTO fruits VALUES ('.$fruit['id'].', '.$db->quote($fruit['name']).', '.$db->quote($fruit['type']).')');
+			}
+		}
+		return new DatabaseCollection(select('*')->from('fruits'), __CLASS__);
 	}
 
 }

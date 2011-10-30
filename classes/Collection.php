@@ -307,7 +307,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	 * Convert this->data to an array
 	 * @return void
 	 */
-	private function dataToArray() {
+	protected function dataToArray() {
 		if (is_array($this->data)) {
 			return;
 		}

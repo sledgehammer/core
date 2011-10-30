@@ -273,18 +273,17 @@ class Database extends \PDO {
 			warning('Resultset has no columns, expecting 1 or more columns');
 			return false;
 		}
-		if ($result->rowCount() > 1) {
-			notice('Unexpected '.$result->rowCount().' rows, expecting 1 row');
-			return false;
+		$results = $result->fetchAll();
+		$count = count($results);
+		if ($count == 1) {
+			return $results[0];
 		}
-		$row = $result->fetch();
-		if ($row === false) {
-			if (!$allow_empty_results) {
-				notice('No record(s) found');
-			}
-			return false;
+		if (count($results) > 1) {
+			notice('Unexpected '.count($results).' rows, expecting 1 row');
+		} elseif (!$allow_empty_results) {
+			notice('No record(s) found');
 		}
-		return $row;
+		return false;
 	}
 
 	/**

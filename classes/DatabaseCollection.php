@@ -32,17 +32,21 @@ class DatabaseCollection extends Collection {
 	 * @return Collection
 	 */
 	function where($conditions) {
-		if ($this->data !== null || is_string($this->sql)) {
+		if ($this->data !== null || is_string($this->sql) || (is_object($conditions) && is_callable($conditions))) {
 			return parent::where($conditions);
 		}
 		$db = getDatabase($this->dbLink);
 		$sql = $this->sql;
 		// The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
 		foreach ($conditions as $column => $value) {
-			if ($value === null) {
-				$sql = $sql->andWhere($db->quoteIdentifier($column).' IS NULL');
+			if (preg_match('/^(.*) (<|>|<=|>=|!=|==)$/', $column, $matches)) {
+				$sql = $sql->andWhere($db->quoteIdentifier($matches[1]).' '.$matches[2].' '.$db->quote($value));
 			} else {
-				$sql = $sql->andWhere($db->quoteIdentifier($column).' = '.$db->quote($value));
+				if ($value === null) {
+					$sql = $sql->andWhere($db->quoteIdentifier($column).' IS NULL');
+				} else {
+					$sql = $sql->andWhere($db->quoteIdentifier($column).' = '.$db->quote($value));
+				}
 			}
 		}
 		return new DatabaseCollection($sql, $this->dbLink);
@@ -54,11 +58,26 @@ class DatabaseCollection extends Collection {
 	}
 
 	function count() {
-		$this->validateIterator();
-		if ($this->data instanceof \PDOStatement) {
-			return $this->data->rowCount();
+		$this->dataToArray();
+		return count($this->data);
+	}
+
+	protected function dataToArray() {
+		if (is_array($this->data)) {
+			return;
 		}
-		return parent::count();
+		if ($this->data === null) {
+			$db = getDatabase($this->dbLink);
+			$this->data = $db->query($this->sql);
+		}
+		if ($this->data instanceof \PDOStatement) {
+			$this->data = $this->data->fetchAll();
+			return;
+		}
+		if ($this->data === false) {
+			throw new \InfoException('Unable to "fetchAll()", the query failed', (string) $this->sql);
+		}
+		return parent::dataToArray();
 	}
 
 	private function validateIterator() {
