@@ -180,34 +180,21 @@ class Database extends \PDO {
 	 * Quotes a string for use in a query.
 	 * @link http://php.net/manual/en/pdo.quote.php
 	 *
-	 * @param string $string  The string to be quoted.
-	 * @param int $parameter_type [optional] Provides a data type hint for drivers that have alternate quoting styles.
+	 * @param string $value  The string to be quoted.
+	 * @param int $parameterType [optional] Provides a data type hint for drivers that have alternate quoting styles.
 	 * @return string  A quoted string that is safe to pass into an SQL statement.
 	 */
-	public function quote($string, $parameterType = null) {
-		if ($parameterType === null) {
-			if ($string === null) {
-				return 'NULL';
-			}
-			if (is_int($string) || preg_match('/^[123456789]{1}[0-9]*$/', $string)) { // A number?
-				return $string;
-			}
+	public function quote($value, $parameterType = null) {
+		if ($parameterType === null && $value === null) {
+			return 'NULL';
 		}
-
-		return parent::quote($string, $parameterType);
-	}
-	/**
-	 * Escapes special characters in a string for use in a SQL statement, taking into account the current charset of the connection
-	 * /
-	function real_escape_string($value) {
 		if (is_float($value)) {
-			$previousLocale = setlocale(LC_NUMERIC, 'C'); // Forceer de puntnotatie
+			$previousLocale = setlocale(LC_NUMERIC, 'C'); // Force notation with a dot. "0.5"
 			$value = (string) $value;
-			setlocale(LC_NUMERIC, $previousLocale); // getalnotatie herstellen
+			setlocale(LC_NUMERIC, $previousLocale); // restore locale
 		}
-		return parent::real_escape_string($value);
+		return parent::quote($value, $parameterType);
 	}
-	 */
 
 	function __get($property) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');

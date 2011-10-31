@@ -263,6 +263,8 @@ namespace SledgeHammer {
 	 * Controleerd of 2 variabelen gelijk of bijna gelijk aan elkaar zijn.
 	 * equals((float) 1.000, (int) 1) == true
 	 * equals("1.1", 1.1) == true
+	 * equals("abc", "ABC") == f
+
 	 *
 	 * @return bool
 	 */
@@ -276,24 +278,34 @@ namespace SledgeHammer {
 		return false;
 	}
 
+	const COMPARE_OPERATORS = '==|!=|<|<=|>|>=';
+
 	/**
+	 * Compare two values with the given operator.
+	 * For '==' the values are compared with strcasecmp().
 	 *
-	 * @param mixed $item
-	 * @param string $operator
+	 * compare("1",'==', 1) == true
+	 * compare("abc", '==', "ABC") == true
+	 * compare("0", '==', 0) == true
+	 * compare("", '==', 0) == false
+	 *
+	 * @see CollectionTests for more examples
+	 *
 	 * @param mixed $value
+	 * @param string $operator
+	 * @param mixed $expectation
 	 * @return bool
 	 */
 	function compare($value, $operator, $expectation) {
 		switch ($operator) {
-			case '==':  return $value == $expectation;
-			case '===': return $value === $expectation;
-			case '<':   return $value < $expectation;
-			case '<=':  return $value <= $expectation;
-			case '>':   return $value > $expectation;
-			case '>=':  return $value >= $expectation;
+			case '==': return equals($value, $expectation);
+			case '!=': return !equals($value, $expectation);
+			case '<': return $value < $expectation;
+			case '>': return $value > $expectation;
+			case '<=': return $value <= $expectation;
+			case '>=': return $value >= $expectation;
 		}
-		$validOperators = array('==', '!=', '<>', '<', '<=', '>', '>=');
-		throw new \Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', $validOperators));
+		throw new \Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', explode('|', COMPARE_OPERATORS)));
 	}
 
 	/**

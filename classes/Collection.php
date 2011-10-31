@@ -54,36 +54,44 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	}
 
 	/**
-	 * Return a new Collection with a subsection of the collection based on the condition criteria
+	 * Return a new Collection with a subsection of the collection based on the conditions.
 	 *
-	 * @param array|Closure $conditions
+	 * @example
+	 * where('apple') returns the items with the value is "apple" (1D array)
+	 * where('> 5')   returns the items where the value is greater-than 5
+	 * where(array('id' => 4))  returns the items where the element or property 'id' is 4
+	 * where(array('user->id <' => 4))  returns the items where the property 'id' of element/property 'user' is smaller-than 4
+	 * where(function ($item) { return (strpos($item, 'needle') !== false); })  return the items which contain the text 'needle'
+	 *
+	 * @see PropertyPath::get() & compare() for supported paths and operators
+	 *
+	 * NOTE: The Collection class uses SledgeHammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
+	 *       this may cause different behaviour. For example "ABC" == "abc" might evalute to in MySQL (depends on the chosen collation)
+	 *
+	 * @param mixed $conditions array|Closure|expression
 	 * @return Collection
 	 */
 	function where($conditions) {
 		if (is_object($conditions) && is_callable($conditions)) {
 			$isClosure = true;
 		} elseif (is_array($conditions) == false) { // Example: '<= 5' or '10'
-			// Compare the items directly
-			if (preg_match('/^(<|>|<=|>=|!=|==) (.*)$/', $conditions, $matches)) {
+			// Compare the items directly (1D)
+			if (preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
 				$operator = $matches[1];
 				$expectation = $matches[2];
-				$conditions = function ($value) use ($expectation, $operator) {
-					return compare($value, $operator, $expectation);
-				};
-				$isClosure = true;
 			} else {
-				// no operator ('!=','<' or '>') given.
 				$expectation = $conditions;
-				$conditions = function ($item) use ($expectation) {
-					return equals($item, $expectation);
-				};
-				$isClosure = true;
+				$operator = '==';
 			}
+			$conditions = function ($value) use ($expectation, $operator) {
+				return compare($value, $operator, $expectation);
+			};
+			$isClosure = true;
 		} else {
 			$isClosure = false;
 			$operators = array();
 			foreach ($conditions as $path => $expectation) {
-				if (preg_match('/^(.*) (<|>|<=|>=|!=|==)$/', $path, $matches)) {
+				if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
 					unset($conditions[$path]);
 					$conditions[$matches[1]] = $expectation;
 					$operators[$matches[1]] = $matches[2];
@@ -92,7 +100,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 				}
 			}
 		}
-				
+
 		$data = array();
 		$counter = -1;
 		foreach ($this as $key => $item) {
@@ -230,7 +238,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	function __clone() {
 		if (is_array($this->data) == false) {
-			$this->data = new ArrayIterator(iterator_to_array($this->data));	
+			$this->data = new ArrayIterator(iterator_to_array($this->data));
 //		$this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
 		}
 	}

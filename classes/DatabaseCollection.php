@@ -25,8 +25,14 @@ class DatabaseCollection extends Collection {
 	}
 
 	/**
-	 * Return a subsection of the collection based on the condition criteria
-	 * (Refines the SQL object when appropriate)
+	 * Return a subsection of the collection based on the conditions.
+	 *
+	 * Convert the $conditions to SQL object when appropriate.
+	 *
+	 * auto converts
+	 *   ['x_id' => null]  to "x_id IS NULL"
+	 * 	 ['x_id !=' => null]  to "x_id IS NOT NULL"
+	 *  'hits' => 0]  to "hits = '0'"  (Because in mysql '' = 0 evaluates to true, '' = '0' to false)
 	 *
 	 * @param array $conditions
 	 * @return Collection
@@ -39,13 +45,45 @@ class DatabaseCollection extends Collection {
 		$sql = $this->sql;
 		// The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
 		foreach ($conditions as $column => $value) {
-			if (preg_match('/^(.*) (<|>|<=|>=|!=|==)$/', $column, $matches)) {
-				$sql = $sql->andWhere($db->quoteIdentifier($matches[1]).' '.$matches[2].' '.$db->quote($value));
+			if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $column, $matches)) {
+				$column = $matches[1];
+				$operator = $matches[2];
 			} else {
-				if ($value === null) {
-					$sql = $sql->andWhere($db->quoteIdentifier($column).' IS NULL');
+				$operator = '==';
+			}
+			if ($value === null) {
+				switch ($operator) {
+					case '==':
+						$operator = 'IS';
+						$expectation = 'NULL';
+						break;
+
+					case '!=':
+						$operator = 'IS NOT ';
+						$expectation = 'NULL';
+						break;
+
+					case '>':
+					case '<':
+					case '>=':
+					case '<=':
+						$expectation = "''";
+						break;
+
+					default:
+						warning('Unknown behaviour for NULL values with operator "'.$operator.'"'); //
+						$expectation = $db->quote($expectation);
+						break;
+				}
+				$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' '.$expectation);
+			} else {
+				if ($operator === '!=') {
+					$expression = '('.$db->quoteIdentifier($column).' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$db->quoteIdentifier($column).' IS NULL)'; // Include
 				} else {
-					$sql = $sql->andWhere($db->quoteIdentifier($column).' = '.$db->quote($value));
+					if ($operator === '==') {
+						$operator = '=';
+					}
+					$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' '.$this->quote($db, $column, $value));
 				}
 			}
 		}
@@ -87,6 +125,20 @@ class DatabaseCollection extends Collection {
 		} else {
 			// @todo? iterator isDirty check
 		}
+	}
+
+	/**
+	 * Don't put quotes around number for columns that are assumend to be integers ('id' or ending in '_id')
+	 *
+	 * @param Database $db
+	 * @param string $column
+	 * @param mixed $value
+	 */
+	private function quote($db, $column, $value) {
+		if ((is_int($value) || preg_match('/^[123456789]{1}[0-9]*$/', $value)) && ($column == 'id' || substr($column, -3) == '_id')) {
+			return $value;
+		}
+		return $db->quote($value);
 	}
 
 }

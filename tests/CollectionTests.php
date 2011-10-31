@@ -103,7 +103,18 @@ class CollectionTests extends \UnitTestCase {
 		));
 		$this->assertEqual(count($vehicels->where(array('wheels >' => 3))), 1);
 //		dump($vehicels->where(array('wheels >' => 3))->select('name')->offsetGet(0));
+	}
 
+	function test_compare() {
+		$this->assertTrue(compare('asd', '==', 'asd'));
+		$this->assertTrue(compare(2, '==', 2));
+		$this->assertFalse(compare('asd', '==', 'AsD')); // But MySQL will evalutate this to true, depending on the collation
+		$this->assertTrue(compare('1', '==', 1));
+		$this->assertTrue(compare(null, '==', null));
+		$this->assertTrue(compare(1, '>', null));
+		$this->assertTrue(compare(0, '>=', null));
+		$this->assertFalse(compare('', '==', 0));
+		$this->assertFalse(compare(0, '>', null));
 	}
 	function test_database_where() {
 		$fruits = $this->getDatabaseCollection();
@@ -122,6 +133,7 @@ class CollectionTests extends \UnitTestCase {
 		$this->assertEqual($lowIds->count(), 2);
 		$this->assertEqual((string) $lowIds->sql, "SELECT * FROM fruits WHERE id <= 6");
 	}
+
 
 	/**
 	 * A collection containing fruit entries and a vegetable entry
