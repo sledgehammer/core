@@ -188,6 +188,10 @@ class Database extends \PDO {
 		if ($parameterType === null && $value === null) {
 			return 'NULL';
 		}
+		if ($parameterType === \PDO::PARAM_INT && (is_int($value) || preg_match('/^[1-9]{1}[0-9]*$/', $value))) {
+			// No quotes around INT values.
+			return $value;
+		}
 		if (is_float($value)) {
 			$previousLocale = setlocale(LC_NUMERIC, 'C'); // Force notation with a dot. "0.5"
 			$value = (string) $value;
