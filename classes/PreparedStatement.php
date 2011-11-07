@@ -13,7 +13,6 @@ class PreparedStatement extends \PDOStatement {
 	 * @var Database
 	 */
 	private $database;
-
 	private $params = array();
 
 	private function __construct($database) {
@@ -24,17 +23,20 @@ class PreparedStatement extends \PDOStatement {
 		$start = microtime(true);
 		$result = parent::execute($input_parameters);
 		$query = $this->queryString;
+		$executedIn = (microtime(true) - $start);
 		if ($this->database->logLimit != 0) { // Only interpolate the query if it's going to be logged.
 			$params = (count($input_parameters) === 0) ? $this->params : $input_parameters;
-			$query = '[Executed] '.$this->interpolate($query, $params);
+			$query = $this->interpolate($query, $params);
 		}
-		$this->database->logStatement($query, (microtime(true) - $start));
-		return $result;		
+		$this->database->logStatement($query, $executedIn);
+		return $result;
 	}
+
 	function bindParam($parameter, &$variable, $data_type = null, $length = null, $driver_options = null) {
 		$this->params[$parameter] = &$variable;
 		return parent::bindParam($parameter, $variable, $data_type, $length, $driver_options);
 	}
+
 	public function bindValue($parameter, $value, $data_type = null) {
 		$this->params[$parameter] = $value;
 		return parent::bindValue($parameter, $value, $data_type);
@@ -63,6 +65,7 @@ class PreparedStatement extends \PDOStatement {
 		}
 		return preg_replace($keys, $params, $query, 1, $count);
 	}
+
 }
 
 ?>
