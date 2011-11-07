@@ -1,23 +1,48 @@
 <?php
 /**
- * Een PDO Database connectie met extra debug informatie.
- * Adds error messages or exceptions and changes default fetch behaviour to FECTH_ASSOC
+ * A PDO Database class with additional debugging functions.
+ * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behaviour to FECTH_ASSOC
  *
  * @package Core
  */
 namespace SledgeHammer;
+
 class Database extends \PDO {
 
-	public
-		$reportWarnings = 'auto', // (bool) Report mysql warnings
-		$log = array(), // Structure containing all logged executed queries
-		$logLimit = 1000, // Het maximaal aantal queries dat gelogd worden en getoond wordt bij $this->debug()
-		$logBacktrace = false, // [bool] Het php-bestand en regelnummer waar de query werd aangeroepen onthouden
-		$executionTime = 0;
+	/**
+	 * @var bool  Report mysql warnings
+	 */
+	public $reportWarnings = 'auto';
 
-	private
-		$queryCount, // Number of executed queries.
-		$logStatementCharacterLimit = 51200; // Maximaal een 50KiB van een query onhouden in de log
+	/**
+	 * @var array  Structure containing all logged executed queries
+	 */
+	public $log = array();
+
+	/**
+	 * @var int  The maximum amount of queries that will be logged in full.
+	 */
+	public $logLimit = 1000;
+
+	/**
+	 * @var bool  Add filename and linenumber traces to the log.
+	 */
+	public $logBacktrace = false;
+
+	/**
+	 * @var float  Total time it took to execute all queries (in seconds);
+	 */
+	public $executionTime = 0;
+
+	/**
+	 * @var int  Number of executed queries.
+	 */
+	private $queryCount;
+
+	/**
+	 * @var int  Only log the first 50KiB of a long query.
+	 */
+	private $logStatementCharacterLimit = 51200;
 
 	/**
 	 *
@@ -26,7 +51,7 @@ class Database extends \PDO {
 	 * @param type $passwd
 	 * @param type $options
 	 */
-	public function __construct($dsn, $username = null, $passwd = null, $options = array()) {
+	function __construct($dsn, $username = null, $passwd = null, $options = array()) {
 		$start = microtime(true);
 		$isUrlStyle = preg_match('/^[a-z]+:\/\//i', $dsn, $match);
 		if ($isUrlStyle) { // url syntax?
@@ -38,7 +63,7 @@ class Database extends \PDO {
 				$config['port'] = $url->port;
 			}
 			if ($url->path !== null && $url->path != '/') {
-				$config['dbname'] = substr($url->path,  1); // strip "/"
+				$config['dbname'] = substr($url->path, 1); // strip "/"
 				$logMessage .= ' SELECT_DB(\''.$config['dbname'].'\');';
 			}
 			$driver = strtolower($url->scheme);
@@ -60,13 +85,18 @@ class Database extends \PDO {
 				// Use SledgeHammer setting (default utf-8)
 				switch (strtolower($GLOBALS['charset'])) {
 
-					case 'utf-8': $charset = 'UTF8'; break;
-					case 'iso-8859-1': $charset = 'latin1'; break;
-					case 'iso-8859-15': $charset = 'latin1'; break;
-					default: $charset = $GLOBALS['charset']; break;
+					case 'utf-8': $charset = 'UTF8';
+						break;
+					case 'iso-8859-1': $charset = 'latin1';
+						break;
+					case 'iso-8859-15': $charset = 'latin1';
+						break;
+					default: $charset = $GLOBALS['charset'];
+						break;
 				}
 			}
-			if (empty ($config['charset'])) {
+			if (empty($config['charset'])) {
+				
 			}
 			if (version_compare(PHP_VERSION, '5.3.6') == -1) {
 				$options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "'.mysql_escape_string($charset).'"';
@@ -102,7 +132,7 @@ class Database extends \PDO {
 	 * @param string $statement  The SQL statement to prepare and execute.
 	 * @return int|bool
 	 */
-	public function exec($statement) {
+	function exec($statement) {
 		$start = microtime(true);
 		$result = parent::exec($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
@@ -121,7 +151,7 @@ class Database extends \PDO {
 	 * @param string $statement  The SQL statement to prepare and execute.
 	 * @return PDOStatement
 	 */
-	public function query($statement) {
+	function query($statement) {
 		$start = microtime(true);
 		$result = parent::query($statement);
 		$this->logStatement($statement, (microtime(true) - $start));
@@ -134,34 +164,28 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * Meerdere sql queries uitvoeren (met foutdetectie en logging van queries)
+	 * Prepares a statement for execution and returns a PDOStatement object
+	 * @link http://php.net/manual/en/pdo.prepare.php
 	 *
-	 * @param string $sql De sql queries
-	 * @return bool
-	 * /
-	function multi_query($sql) {
-		$start_time = microtime(true);
-		$success = parent::multi_query($sql);
-		$execution_time = microtime(true) - $start_time;
-		if ($this->report_warnings && $this->warning_count != 0) { // MySQL warnings tonen?
-			$this->report_warnings();
-		}
-		if (!$this->remember_queries) {
-			$this->remember_query($sql, $execution_time);
-		}
-		$this->execution_time += $execution_time;
-		$this->number_of_queries++;  // Bug: Er zijn waarschijnlijk meer dan 1 query uitgevoerd, maar hoeveel is onbekend.
-		if ($success) {
-			return true;
+	 * @param string $statement  The SQL statement to prepare
+	 * @param array $driver_options
+	 * @return \PDOStatement 
+	 */
+	function prepare($statement, $driver_options = array()) {
+		$start = microtime(true);
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PreparedStatement', array($this)));
+		$result = parent::prepare($statement, $driver_options);
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('PDOStatement')); // Restore default class
+		$this->logStatement('[Prepared] '.$statement, (microtime(true) - $start));
+		$this->queryCount--;
+		if ($result === false) {
+			$this->reportError($statement);
 		} else {
-			$error_message = 'MySQL error['.$this->errno.'] '.$this->error;
-			$this->notice($error_message);
-			if ($this->throw_exception_on_error) {
-				throw new \Exception($error_message);
-			}
-			return false;
+			$this->reportWarnings($statement);
 		}
-	}*/
+		array('PDOStatement');
+		return $result;
+	}
 
 	/**
 	 * Zet backticks ` om de kolomnaam, als dat nodig is
@@ -173,7 +197,7 @@ class Database extends \PDO {
 		if (preg_match('/^[0-9a-z_]+$/i', $identifier)) { // Zit er geen vreemde karakter in de $identifier
 			return $identifier;
 		}
-		return ('`'.str_replace('`', '``', $identifier) . '`');
+		return ('`'.str_replace('`', '``', $identifier).'`');
 	}
 
 	/**
@@ -203,10 +227,12 @@ class Database extends \PDO {
 	function __get($property) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
 	}
+
 	function __set($property, $value) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
 		$this->$property = $value;
 	}
+
 	/**
 	 * Debug informatie tonen
 	 *
@@ -216,7 +242,7 @@ class Database extends \PDO {
 	function debug($popup = true) {
 		$query_log_count = count($this->log); // Het aantal onthouden queries.
 		if ($query_log_count > 0) {
-			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10,99); // Bereken een uniek ID (Count + Md5 + Rand)
+			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
 			if ($popup) {
 				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true)">';
 			}
@@ -236,7 +262,7 @@ class Database extends \PDO {
 				echo '<pre id="'.$id.'" class="sledegehammer_querylog" style="display:none;">';
 				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&#10062;</a>';
 			}
-			for($i = 0; $i < $query_log_count; $i++) {
+			for ($i = 0; $i < $query_log_count; $i++) {
 				$log = $this->log[$i];
 				echo '<div><span class="sledegehammer_querylog_number">'.$i.'</span> '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'</div>';
 			}
@@ -244,7 +270,7 @@ class Database extends \PDO {
 				echo '<br /><b style="color:#ffa500">The other '.($this->number_of_queries - $query_log_count).' queries are suppressed.</b><br /><br />';
 			}
 			if ($popup) {
-				echo  '</pre>';
+				echo '</pre>';
 			}
 		}
 	}
@@ -413,6 +439,7 @@ class Database extends \PDO {
 			notice('SQL error ['.$error[1].'] '.$error[2], $info);
 		}
 	}
+
 	/**
 	 * Report MySQL warnings and notes if any
 	 *
@@ -438,14 +465,14 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * De SQL statement onthouden in de query_log
+	 * Add the SQL statement to the query_log
 	 * Bij hele groote queries wordt de alleen eerste ($this->remember_queries_max_length) karakters van de query gelogt
 	 *
 	 * @param string $statement
 	 * @param float $executedIn  The time it took to execute the query
 	 * @return void
 	 */
-	private function logStatement($statement, $executedIn) {
+	function logStatement($statement, $executedIn) {
 		$this->queryCount++;
 		$this->executionTime += $executedIn;
 		if ($this->logLimit == 0) {
@@ -484,5 +511,7 @@ class Database extends \PDO {
 		}
 		return false;
 	}
+
 }
+
 ?>

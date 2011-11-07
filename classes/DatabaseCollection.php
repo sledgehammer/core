@@ -71,7 +71,7 @@ class DatabaseCollection extends Collection {
 						break;
 
 					default:
-						warning('Unknown behaviour for NULL values with operator "'.$operator.'"'); //
+						warning('Unknown behaviour for NULL values with operator "'.$operator.'"');
 						$expectation = $db->quote($expectation);
 						break;
 				}
