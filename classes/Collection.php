@@ -181,6 +181,21 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 		return $this->orderBy($path, $method)->reverse();
 	}
 
+	function skip($offset) {
+		$this->dataToArray();
+		return new Collection(array_slice($this->data, $offset));
+	}
+
+	function take($lenght) {
+		$this->dataToArray();
+		return new Collection(array_slice($this->data, 0, $lenght));
+	}
+
+	function limit($offset, $length) {
+		$this->dataToArray();
+		return new Collection(array_slice($this->data, $offset, $lenght));
+	}
+
 	/**
 	 * Return a new collection in the reverse order
 	 * @return Collection
@@ -311,6 +326,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 		$this->dataToArray();
 		unset($this->data[$offset]);
 	}
+
 	/**
 	 * Convert this->data to an array
 	 * @return void
@@ -322,7 +338,6 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 		if ($this->data instanceof \Iterator) {
 			$this->data = iterator_to_array($this->data);
 			return;
-
 		}
 		if ($this->data instanceof \Traversable) {
 			$items = array();
@@ -332,6 +347,7 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 			$this->data = $items;
 		}
 	}
+
 }
 
 ?>
