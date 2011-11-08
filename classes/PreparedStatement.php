@@ -22,13 +22,18 @@ class PreparedStatement extends \PDOStatement {
 	function execute($input_parameters = array()) {
 		$start = microtime(true);
 		$result = parent::execute($input_parameters);
-		$query = $this->queryString;
+		$statement = $this->queryString;
 		$executedIn = (microtime(true) - $start);
 		if ($this->database->logLimit != 0) { // Only interpolate the query if it's going to be logged.
 			$params = (count($input_parameters) === 0) ? $this->params : $input_parameters;
-			$query = $this->interpolate($query, $params);
+			$statement = $this->interpolate($statement, $params);
 		}
-		$this->database->logStatement($query, $executedIn);
+		$this->database->logStatement($statement, $executedIn);
+		if ($result === false) {
+			$this->database->reportError($statement);
+		} else {
+			$this->database->checkWarnings($statement);
+		}
 		return $result;
 	}
 

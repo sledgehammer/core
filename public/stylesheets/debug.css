@@ -14,14 +14,21 @@
 	text-align: left;
 	white-space: pre-wrap;
 	box-shadow: 1px 1px 5px rgba(0,0,0,0.6);
-	font: 11px Menlo, monospace;
+	font: 10px Monaco, monospace;
 	border-radius: 6px;
+}
+.sledegehammer_querylog .sql_keyword {
+	color: blue;
+}
+.sledegehammer_querylog .sql_identifier {
+	color: #009;
 }
 .sledegehammer_querylog_number {
 	color: #999999;
 	display: inline-block;
 	min-width: 20px;
 	text-align: right;
+	margin-right: 4px;
 }
 .sledegehammer_querylog div {
 	padding: 2px 7px;
@@ -44,8 +51,9 @@
  }
  .sledegehammer_querylog .execution_time {
 	margin-left: 10px;
+	font: italic 11px sans-serif;
  }
- 
+
 /* Statusbar styling */
 .statusbar_hide {
 	margin-right: 4px;
@@ -54,8 +62,8 @@
 }
 /* Debug blok in de voet */
 .statusbar, .statusbarcache {
-	color: #909090;
-	font: normal 8pt Verdana,sans-serif;
+	color: #999;
+	font: normal 10px Monaco,sans-serif;
 	text-shadow: none;
 	padding: .2em 0 0 0;
 	margin: 5px 0 0 0;
@@ -64,7 +72,7 @@
 	text-align: center;
 	clear: both;
 	min-height: 18px;
-	opacity: 0.95;
+	opacity: 0.96;
 	position: fixed;
 	left: 0;
 	bottom: 0;
@@ -88,9 +96,9 @@
 	z-index: 10;
 	border-top: 1px solid #CCCCCC;
 	background: #F5F5F5;
-	display: none; 
+	display: none;
 }
 
 #statusbar_parsetime:hover > span#statusbar_parsetimes {
-	display: block; 
+	display: block;
 }

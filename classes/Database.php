@@ -10,17 +10,12 @@ namespace SledgeHammer;
 class Database extends \PDO {
 
 	/**
-	 * @var bool  Report mysql warnings
+	 * @var bool  Report MySQL warnings
 	 */
-	public $reportWarnings = 'auto';
+	public $reportWarnings;
 
 	/**
-	 * @var array  Structure containing all logged executed queries
-	 */
-	public $log = array();
-
-	/**
-	 * @var int  The maximum amount of queries that will be logged in full.
+	 * @var int  The remaining amount of queries that will be logged in full (when logLimit reaches 0, only the queryCount and executionTime will be logged).
 	 */
 	public $logLimit = 1000;
 
@@ -35,6 +30,11 @@ class Database extends \PDO {
 	public $executionTime = 0;
 
 	/**
+	 * @var array  Structure containing all logged executed queries
+	 */
+	public $log = array();
+
+	/**
 	 * @var int  Number of executed queries.
 	 */
 	private $queryCount;
@@ -42,21 +42,20 @@ class Database extends \PDO {
 	/**
 	 * @var int  Only log the first 50KiB of a long query.
 	 */
-	private $logStatementCharacterLimit = 51200;
+	private $logCharacterLimit = 51200;
 
 	/**
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
-	 * @param type $username
-	 * @param type $passwd
-	 * @param type $options
+	 * @param string $username
+	 * @param string $passwd
+	 * @param array $options
 	 */
 	function __construct($dsn, $username = null, $passwd = null, $options = array()) {
 		$start = microtime(true);
 		$isUrlStyle = preg_match('/^[a-z]+:\/\//i', $dsn, $match);
 		if ($isUrlStyle) { // url syntax?
 			$url = new URL($dsn);
-			$logMessage = 'CONNECT(\''.$url->host.'\');';
 			$config = $url->query;
 			$config['host'] = $url->host;
 			if ($url->port !== null) {
@@ -64,7 +63,6 @@ class Database extends \PDO {
 			}
 			if ($url->path !== null && $url->path != '/') {
 				$config['dbname'] = substr($url->path, 1); // strip "/"
-				$logMessage .= ' SELECT_DB(\''.$config['dbname'].'\');';
 			}
 			$driver = strtolower($url->scheme);
 			$username = $url->user;
@@ -72,7 +70,6 @@ class Database extends \PDO {
 		} else {
 			preg_match('/^([a-z]+):/i', $dsn, $match);
 			$driver = strtolower($match[1]);
-			$logMessage = 'CONNECT(\''.$dsn.'\');';
 		}
 
 		if ($driver == 'mysql') {
@@ -85,21 +82,24 @@ class Database extends \PDO {
 				// Use SledgeHammer setting (default utf-8)
 				switch (strtolower($GLOBALS['charset'])) {
 
-					case 'utf-8': $charset = 'UTF8';
+					case 'utf-8':
+						$charset = 'UTF8';
 						break;
-					case 'iso-8859-1': $charset = 'latin1';
+
+					case 'iso-8859-1':
+					case 'iso-8859-15':
+						$charset = 'latin1';
 						break;
-					case 'iso-8859-15': $charset = 'latin1';
-						break;
-					default: $charset = $GLOBALS['charset'];
+
+					default:
+						$charset = $GLOBALS['charset'];
 						break;
 				}
 			}
-			if (empty($config['charset'])) {
-				
-			}
 			if (version_compare(PHP_VERSION, '5.3.6') == -1) {
-				$options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "'.mysql_escape_string($charset).'"';
+				if (empty($options[\PDO::MYSQL_ATTR_INIT_COMMAND])) {
+					$options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "'.mysql_escape_string($charset).'"';
+				}
 			} elseif ($isUrlStyle) {
 				$config['charset'] = $charset;
 			} else {
@@ -114,14 +114,21 @@ class Database extends \PDO {
 				$dsn .= $name.'='.$value.';';
 			}
 		}
-		//	@todo Add support for config options like: 'report_warnings', 'throw_exception_on_error', 'remember_queries', 'remember_backtrace'
-
+		// Parse $options
+		foreach ($options as $property => $value) {
+			if (in_array($property, array('logLimit', 'logBacktrace', 'reportWarnings', 'logCharacterLimit'))) {
+				$this->$property = $value;
+				unset($options[$property]);
+			}
+		}
+		if (empty($options[\PDO::ATTR_DEFAULT_FETCH_MODE])) {
+			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
+		}
 		parent::__construct($dsn, $username, $passwd, $options);
-		$this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC); // Default to FETCH_ASSOC mode
 		if ($this->reportWarnings) {
 			parent::exec('SET sql_warnings = ON');
 		}
-		$this->logStatement($logMessage, (microtime(true) - $start));
+		$this->logStatement('[DSN] "'.$dsn.'"', (microtime(true) - $start));
 		$this->queryCount = 0;
 	}
 
@@ -139,7 +146,7 @@ class Database extends \PDO {
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
-			$this->reportWarnings($statement);
+			$this->checkWarnings($statement);
 		}
 		return $result;
 	}
@@ -158,7 +165,7 @@ class Database extends \PDO {
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
-			$this->reportWarnings($statement);
+			$this->checkWarnings($statement);
 		}
 		return $result;
 	}
@@ -176,21 +183,20 @@ class Database extends \PDO {
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PreparedStatement', array($this)));
 		$result = parent::prepare($statement, $driver_options);
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('PDOStatement')); // Restore default class
-		$this->logStatement('[Prepared] '.$statement, (microtime(true) - $start));
-		$this->queryCount--;
+		$this->executionTime += (microtime(true) - $start);
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
-			$this->reportWarnings($statement);
+			$this->checkWarnings($statement);
 		}
-		array('PDOStatement');
 		return $result;
 	}
 
 	/**
-	 * Zet backticks ` om de kolomnaam, als dat nodig is
+	 * When needed put backticks ` around the column- or tablename.
+	 * (Prevents SQL injection)
 	 *
-	 * @param sting $identifier  Een kolom, tabel of databasenaam
+	 * @param string $identifier  A column, table or database-name
 	 * @return string
 	 */
 	function quoteIdentifier($identifier) {
@@ -401,15 +407,15 @@ class Database extends \PDO {
 	private function highlight($sql, $truncated, $time, $backtrace) {
 		$sql = htmlspecialchars($sql, ENT_COMPAT, $GLOBALS['charset']);
 		$startKeywords = array('SELECT', 'UPDATE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
-		$inlineKeywords = array('SELECT', 'VALUES', 'SET', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'ASC', 'DESC', 'LIMIT', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'AS', 'ON');
-		$sql = preg_replace('/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/', '<b>\\0</b>', $sql);
-		$sql = str_replace("\n", '<br />', $sql);
+		$inlineKeywords = array('SELECT', 'VALUES', 'SET', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'ASC', 'DESC', 'LIMIT', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'AS', 'ON', 'IN');
+		$sql = preg_replace('/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/', '<span class="sql_keyword">\\0</span>', $sql);
+		$sql = preg_replace('/`[^`]+`/', '<span class="sql_identifier">\\0</span>', $sql);
 		if ($time > 0.1) {
-			$color = '#FF0000';
+			$color = 'red';
 		} elseif ($time > 0.01) {
-			$color = '#FFA500';
+			$color = '#ffa500';
 		} else {
-			$color = '#999999';
+			$color = '#999';
 		}
 		if ($truncated) {
 			$kib = round($truncated / 1024);
@@ -429,7 +435,7 @@ class Database extends \PDO {
 	 *
 	 * @param string $statement
 	 */
-	private function reportError($statement) {
+	function reportError($statement) {
 		$error = $this->errorInfo();
 		if ($this->getAttribute(\PDO::ATTR_ERRMODE) == \PDO::ERRMODE_SILENT) { // The error issn't already reported?
 			$info = array();
@@ -445,7 +451,7 @@ class Database extends \PDO {
 	 *
 	 * @param string $result
 	 */
-	private function reportWarnings($statement) {
+	function checkWarnings($statement) {
 		if ($this->reportWarnings) {
 			$info = array();
 			if ($statement instanceof SQL) {
@@ -465,10 +471,10 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * Add the SQL statement to the query_log
-	 * Bij hele groote queries wordt de alleen eerste ($this->remember_queries_max_length) karakters van de query gelogt
+	 * Append the statement to $this->log
+	 * Very large queries are trucated based on the $this->logCharacterLimit
 	 *
-	 * @param string $statement
+	 * @param string $statement  The SQL statement
 	 * @param float $executedIn  The time it took to execute the query
 	 * @return void
 	 */
@@ -481,25 +487,25 @@ class Database extends \PDO {
 		$sql = $statement;
 		$sql_length = strlen($sql);
 		$truncated = 0;
-		if ($sql_length > $this->logStatementCharacterLimit) {
-			$sql = substr($sql, 0, $this->logStatementCharacterLimit);
-			$truncated = ($sql_length - $this->logStatementCharacterLimit);
+		if ($sql_length > $this->logCharacterLimit) {
+			$sql = substr($sql, 0, $this->logCharacterLimit);
+			$truncated = ($sql_length - $this->logCharacterLimit);
 		}
 		$this->log[] = array('sql' => $sql, 'time' => $executedIn, 'truncated' => $truncated, 'backtrace' => $this->backtrace());
 		$this->logLimit--;
 	}
 
 	/**
-	 * Opzoeken vanuit welk bestand de query werdt aangeroepen
+	 * Trace the location where the query was executed from.
 	 *
 	 * @return NULL|false|array
 	 */
 	private function backtrace() {
 		if ($this->logBacktrace == false) {
-			return NULL;
+			return null;
 		}
 		foreach (debug_backtrace() as $trace) {
-			if ($trace['file'] != __FILE__) {
+			if ($trace['file'] != __FILE__ && isset($trace['function']) && $trace['function'] != 'logStatement') {
 				break;
 			}
 		}
