@@ -178,14 +178,15 @@ class AutoLoader extends Object {
 			$path = $path.'classes';
 			$settings = $this->settings; // Strict settings
 		} else {
-			$settings = $this->mergeSettings(array(
+			// Disable validations
+			$settings = array(
 				'matching_filename' => false,
 				'mandatory_definition' => false,
 				'mandatory_superclass' => false,
 				'one_definition_per_file' => false,
 				'revalidate_cache_delay' => 20,
 				'detect_accidental_output' => false,
-				), $settings);
+			);
 		}
 		$this->importFolder($path, $settings);
 	}
