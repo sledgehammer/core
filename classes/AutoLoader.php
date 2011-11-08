@@ -1,11 +1,15 @@
 <?php
 /**
- * Verantwoordelijk voor het on-the-fly inladen en declareren van classes en interfaces.
- * Dit verbeterd parsetijd/geheugenverbruik aanzienlijk, alleen de bestanden die je nodig hebt worden ge-include.
+ * Load class and interface definitions on demand.
+ * Improves performance (parsetime & memory usage), only classes that are used are loaded.
+ *
+ * Validates definiton files according to $this->settings.
+ * Detects and corrects namespace issues.
  *
  * @package Core
  */
 namespace SledgeHammer;
+
 class AutoLoader extends Object {
 
 	/**
@@ -17,10 +21,12 @@ class AutoLoader extends Object {
 	 * @var bool  If a class or interface doesn't exist in a namespace use the class from a higher namespace
 	 */
 	public $resolveNamespaces = true;
+
 	/**
 	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
 	 */
 	public $enableCache = true;
+
 	/**
 	 * @var string
 	 */
@@ -32,15 +38,17 @@ class AutoLoader extends Object {
 	 * @var array
 	 */
 	private $settings = array(
-		'matching_filename' => true,
-		'mandatory_definition' => true,
-		'mandatory_superclass' => true,
-		'one_definition_per_file' => true,
-		'ignore_folders' => array(),
-		'ignore_files' => array(),
-		'revalidate_cache_delay' => 10,
-		'detect_accidental_output' => true,
+		'matching_filename' => true, // The classname should match the filename.
+		'mandatory_definition' => true, // A php-file should declare a class or interface
+		'mandatory_superclass' => true, // A class should extend another class (preferably \SledgeHammer\Object as base)
+		'one_definition_per_file' => true, // A php-file should only contain one class or inferface definition.
+		'ignore_folders' => array(), // Exclude these folders (relative from autoloader.ini) otherwise use absolute paths
+		'ignore_files' => array(), // Exclude these files (relative from autoloader.ini) otherwise use absolute paths
+		'revalidate_cache_delay' => 10, // Check/detect changes every x seconds.
+		'detect_accidental_output' => true, // Check if the php-file contains html parts (which would send the http headers)
+		'cache_level' => 1, // Number of (sub)folders to create caches for
 	);
+
 	/**
 	 * @var array  Array containing the filename per class or interface.
 	 */
@@ -82,7 +90,6 @@ class AutoLoader extends Object {
 			}
 			if ($this->standalone) {
 				warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
-
 			}
 			return false;
 		}
@@ -121,7 +128,6 @@ class AutoLoader extends Object {
 		return array_keys($this->definitions);
 	}
 
-
 	/**
 	 *
 	 * @param string $definition Fully qualified class/interface name
@@ -133,11 +139,11 @@ class AutoLoader extends Object {
 		}
 		$namespaces = explode('\\', $definition);
 		$class = array_pop($namespaces);
-		$targetNamespace =  implode('\\', $namespaces);
+		$targetNamespace = implode('\\', $namespaces);
 		array_pop($namespaces); // een namespace laag hoger
 		$extends = implode('\\', $namespaces);
 		if ($extends == '') {
-			$extends  = $class;
+			$extends = $class;
 		} else {
 			$extends .= '\\'.$class;
 		}
@@ -158,11 +164,19 @@ class AutoLoader extends Object {
 		return true;
 	}
 
-
-	function importModule($module, $settings = array()) {
+	/**
+	 * Import definitions inside a module.
+	 * Uses strict validation rules when the module contains a classes folder.
+	 *
+	 * @param array $module
+	 * @param array $settings
+	 * @return void
+	 */
+	function importModule($module) {
 		$path = $module['path'];
 		if (file_exists($module['path'].'classes')) {
 			$path = $path.'classes';
+			$settings = $this->settings; // Strict settings
 		} else {
 			$settings = $this->mergeSettings(array(
 				'matching_filename' => false,
@@ -171,18 +185,36 @@ class AutoLoader extends Object {
 				'one_definition_per_file' => false,
 				'revalidate_cache_delay' => 20,
 				'detect_accidental_output' => false,
-			), $settings);
+				), $settings);
 		}
+		$this->importFolder($path, $settings);
+	}
+
+	/**
+	 * Import definitions inside a folder.
+	 * Checks "autoloader.ini" for additional settings.
+	 *
+	 * @param array $module
+	 * @param array $settings
+	 * @return void
+	 */
+	function importFolder($path, $settings = array()) {
 		$settings = $this->loadSettings($path, $settings);
-		if ($this->enableCache) {
-			$folder = basename($module['path']);
-			$cacheFile = TMP_DIR.'AutoLoader/'.substr(md5(dirname($module['path'])), 8, 16).'/'.$folder.'.php'; // md5(module_path)/module_naam(bv core).php
+		$useCache = ($this->enableCache && $settings['cache_level'] > 0);
+		if ($useCache) {
+			$settings['cache_level']--;
+			$folder = basename($path);
+			if ($folder == 'classes') {
+				$folder = basename(dirname($path));
+			}
+			$cacheFile = TMP_DIR.'AutoLoader/'.$folder.'_'.md5($path).'.php';
 			if (!mkdirs(dirname($cacheFile))) {
 				$this->enableCache = false;
+				$useCache = false;
 			} elseif (file_exists($cacheFile)) {
 				$mtimeCache = filemtime($cacheFile);
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-				if ($revalidateCache == false || $mtimeCache > mtime_folders($module['path'])) { // Is het cache bestand niet verouderd?
+				if ($revalidateCache == false || $mtimeCache > mtime_folders($path)) { // Is het cache bestand niet verouderd?
 					// Use the cacheFile
 					include($cacheFile);
 					$this->definitions += $definitions;
@@ -193,14 +225,7 @@ class AutoLoader extends Object {
 				}
 			}
 		}
-		$this->importFolder($path, $settings);
-		if ($this->enableCache) {
-			$this->writeCache($cacheFile, $this->relativePath($module['path']));
-		}
-	}
-
-	function importFolder($path, $settings = array()) {
-		$settings = $this->loadSettings($path, $settings);
+		// Import files & subfolders
 		try {
 			$dir = new \DirectoryIterator($path);
 		} catch (\Exception $e) {
@@ -222,6 +247,9 @@ class AutoLoader extends Object {
 					$this->importFile($entry->getPathname(), $settings);
 				}
 			}
+		}
+		if ($useCache) {
+			$this->writeCache($cacheFile, $this->relativePath($path));
 		}
 	}
 
@@ -263,7 +291,6 @@ class AutoLoader extends Object {
 						case T_INTERFACE:
 							$state = 'INTERFACE';
 							break;
-
 					}
 					break;
 
@@ -284,7 +311,7 @@ class AutoLoader extends Object {
 					if ($token[0] == T_STRING) {
 						if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $token[1]) {
 							notice('Filename doesn\'t match classname "'.$token[1].'" in "'.$filename.'"', array('settings' => $settings));
-					}
+						}
 						if ($namespace == '') {
 							$definition = $token[1];
 						} else {
@@ -299,12 +326,12 @@ class AutoLoader extends Object {
 					} elseif ($settings['mandatory_superclass'] && !in_array($definition, array('SledgeHammer\Object', 'SledgeHammer\Framework', 'SledgeHammer\ErrorHandler'))) {
 						notice('Class: "'.$definition.'" has no superclass, expection "class X extends Y"');
 					}
-					if ($token =='{' || $token[0] == T_IMPLEMENTS) {
+					if ($token == '{' || $token[0] == T_IMPLEMENTS) {
 						$state = 'DETECT';
 						break;
 					}
 					$this->unexpectedToken($token);
-					$state ='DETECT';
+					$state = 'DETECT';
 					break;
 
 				case 'INTERFACE':
@@ -319,7 +346,7 @@ class AutoLoader extends Object {
 						break;
 					}
 					$this->unexpectedToken($token);
-					$state ='DETECT';
+					$state = 'DETECT';
 					break;
 
 				default:
@@ -330,8 +357,8 @@ class AutoLoader extends Object {
 			notice('Invalid end of file. (html)output detected in "'.basename($filename).'"');
 		}
 		/* elseif ($token[0] == T_CLOSE_TAG && $token[1] != '?>') {
-			notice('Invalid end of file, accidental newline detected in "'.basename($filename).'"'); // newline directly after the close tag doesn't cause problems
-		} */
+		  notice('Invalid end of file, accidental newline detected in "'.basename($filename).'"'); // newline directly after the close tag doesn't cause problems
+		  } */
 		if (count($definitions) > 1) {
 			if ($settings['one_definition_per_file']) {
 				notice('Multiple definitions found in '.$filename, $definitions);
@@ -422,25 +449,29 @@ class AutoLoader extends Object {
 		ksort($definitions);
 		$php = "<?php\n/**\n * Generated AutoLoader Cache\n */\n\$definitions = array(\n";
 		foreach ($definitions as $definition => $filename) {
-			$php .= "\t'".  addslashes($definition)."' => '".  addslashes($filename)."',\n";
+			$php .= "\t'".addslashes($definition)."' => '".addslashes($filename)."',\n";
 		}
 		$php .= ");\n?>";
 		file_put_contents($cacheFile, $php);
 	}
 
 	private function mergeSettings($settings, $overrides = array()) {
+		$availableSettings = array_keys($this->settings);
 		foreach ($overrides as $key => $value) {
-			if (array_key_exists($key, $this->settings) == false) {
-				notice('Invalid setting: "'.$key.'" = '.syntax_highlight($value), array('Available settings' => array_keys($this->settings)));
+			if (array_key_exists($key, $this->settings)) {
+				$settings[$key] = $value;
+			} else {
+				notice('Invalid setting: "'.$key.'" = '.syntax_highlight($value), array('Available settings' => $availableSettings));
 			}
-			$settings[$key] = $value;
 		}
-		if (count($settings) !== count($this->settings)) {
-			// Use global settings values
-			foreach ($this->settings as $key => $value) {
-				if (array_key_exists($key, $settings) == false) {
-					$settings[$key] = $value;
-				}
+		if (array_keys($settings) != $availableSettings) {
+			$missing = array_diff_key($this->settings, $settings);
+			foreach ($missing as $key => $value) {
+				$settings[$key] = $value; // Use global setting
+			}
+			if (count($settings) !== count($this->settings)) { // Contains invalid settings?
+				$invalid = array_diff_key($settings, $this->settings);
+				notice('Invalid setting: "'.key($invalid).'" = '.syntax_highlight(current($invalid)), array('Available settings' => $availableSettings));
 			}
 		}
 		return $settings;
@@ -455,7 +486,7 @@ class AutoLoader extends Object {
 			$overrides = parse_ini_file($path.'/autoloader.ini', true);
 			if (isset($overrides['ignore_folders'])) {
 				$folders = array();
-				foreach(explode(',', $overrides['ignore_folders']) as $folder) {
+				foreach (explode(',', $overrides['ignore_folders']) as $folder) {
 					if (substr($folder, -1) == '/') {
 						$folder = substr($folder, 0, -1);
 					}
@@ -466,7 +497,7 @@ class AutoLoader extends Object {
 			if (isset($overrides['ignore_files'])) {
 
 				$files = array();
-				foreach(explode(',', $overrides['ignore_files']) as $filename) {
+				foreach (explode(',', $overrides['ignore_files']) as $filename) {
 					$files[] = $path.'/'.$filename;
 				}
 				$overrides['ignore_files'] = $files;
@@ -512,5 +543,7 @@ class AutoLoader extends Object {
 		// Anders was het een relatief path
 		return $this->path.$filename;
 	}
+
 }
+
 ?>
