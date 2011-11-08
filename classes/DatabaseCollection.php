@@ -113,7 +113,7 @@ class DatabaseCollection extends Collection {
 			return;
 		}
 		if ($this->data === false) {
-			throw new \InfoException('Unable to "fetchAll()", the query failed', (string) $this->sql);
+			throw new InfoException('Unable to "fetchAll()", the query failed', (string) $this->sql);
 		}
 		return parent::dataToArray();
 	}

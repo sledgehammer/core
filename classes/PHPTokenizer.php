@@ -344,6 +344,9 @@ class PHPTokenizer extends Object implements \Iterator {
 				'state' => 'USE_AS',
 			);
 		}
+		if ($token == '(') { // ( followed by a T_VARIABLE? This is a closure use, not a namespace use
+			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+		}
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		return array('action' => 'CONTINUE');
 	}
