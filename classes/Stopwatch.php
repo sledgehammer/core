@@ -1,17 +1,19 @@
 <?php
 /**
  * Stopwatch
+ *
+ * @package Core
  */
 namespace SledgeHammer;
 class Stopwatch extends Object{
-	
+
 	private $start;
 	private $lap;
-	
+
 	function __construct() {
 		$this->reset();
 	}
-	
+
 	/**
 	 * Reset the counters
 	 */
@@ -19,20 +21,20 @@ class Stopwatch extends Object{
 		$this->start = microtime(true);
 		$this->lap = $this->start;
 	}
-	
+
 	/**
 	 *
-	 * @param string $label 
+	 * @param string $label
 	 * @return string
 	 */
 	function getElapsedTime() {
 		$elapsed = microtime(true) - $this->start;
 		return format_parsetime($elapsed).' sec';
 	}
-	
+
 	/**
 	 *
-	 * @param string $label 
+	 * @param string $label
 	 * @return string
 	 */
 	function getLapTime() {
