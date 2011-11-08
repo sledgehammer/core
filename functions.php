@@ -486,31 +486,37 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * De nieuwste/hoogste mtime opvragen dat zich in het $path bevind.
-	 * Controleert de timestamps van alle
+	 * Get the timestamp for the latest change in the directory.
 	 *
 	 * @param string $path
 	 * @return int
 	 */
-	function mtime_folders($path, $exclude = array()) {
+	function mtime_folders($path) {
 		$max_ts = filemtime($path); // Vraag de mtime op van de map
 		if ($max_ts === false) { // Bestaat het $path niet?
 			return false;
 		}
+		if (substr($path, -1) != '/') {
+			$path .= '/';
+		}
 		// Controleer of een van de bestanden of submappen een nieuwere mtime heeft.
-		$dir = new \DirectoryIterator($path);
-		foreach ($dir as $entry) {
-			if ($entry->isDot() || in_array($entry->getFilename(), $exclude)) {
-				continue;
+		$dir = opendir($path);
+		if ($dir) {
+			while (($filename = readdir($dir)) !== false) {
+				if ($filename === '.' || $filename === '..') {
+					continue;
+				}
+				$filepath = $path.$filename;
+				if (is_dir($filepath)) {
+					$ts = mtime_folders($filepath.'/');
+				} else {
+					$ts = filemtime($filepath);
+				}
+				if ($ts > $max_ts) { // Heeft de submap een nieuwere timestamp?
+					$max_ts = $ts;
+				}
 			}
-			if ($entry->isDir()) {
-				$ts = mtime_folders($entry->getPathname());
-			} else {
-				$ts = filemtime($entry->getPathname());
-			}
-			if ($ts > $max_ts) { // Heeft de submap een nieuwere timestamp?
-				$max_ts = $ts;
-			}
+			closedir($dir);
 		}
 		return $max_ts;
 	}
