@@ -11,12 +11,11 @@ namespace SledgeHammer;
 if (!defined('SledgeHammer\MICROTIME_START')) {
 	define('SledgeHammer\MICROTIME_START', microtime(true));
 }
-
 $webpath = dirname((isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME']));
 if ($webpath != '/') {
 	$webpath .= '/';
 }
-$uriPath = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)); // Het path gedeelte van de uri
+$uriPath = rawurldecode(parse_url((isset($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : $_SERVER['REQUEST_URI']), PHP_URL_PATH)); // Het path gedeelte van de uri
 $relativeWebpath = substr($uriPath, strlen($webpath)); // Bestandsnaam is het gedeelte van de uriPath zonder de WEBPATH
 $modulePath = dirname(dirname(__FILE__));
 $files = array(
@@ -45,7 +44,7 @@ foreach($files as $filename) {
 	if (is_readable($filename)) {
 		if (substr($filename, -4) == '.php') { // Is het een php bestand?
 			if ($_SERVER['SCRIPT_FILENAME'] == $filename) { // Is het het php-bestand waar de mod_rewrite heen gaat?
-					break; // Deze niet includen, dit php-bestand is al actief en include juist dit bestand. (infinite loop)
+				break; // Deze niet includen, dit php-bestand is al actief en include juist dit bestand. (infinite loop)
 			}
 			chdir(dirname($filename));
 			include($filename); // Include het php bestand.
