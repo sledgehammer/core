@@ -6,53 +6,87 @@
  * @package Core
  */
 namespace SledgeHammer;
+
 class ErrorHandler {
 
-	public
-		// De verschillende afhandlings opties.
-		$log           = true,  // Schrijf de fout ook weg naar het php errorlog (/var/log/httpd/error.log?)
-		$cli           = false, // echo de foutmelding zonder extras' met een timestamp, (php cli.php > error.log)
-		$html          = false, // echo de foutmelding en extra informatie met html opmaak
-		$email         = false, // Email de foutmelding naar dit emailadres.
-
-		// Limiet aan het aantal email dat de ErrorHandler verstuurd.
-		// Bij waardes zoals false ("", 0, NULL) is er GEEN limiet
-		$emails_per_request = false, // Het aantal fouten dat gemaild gedurende 1 php script
-		$emails_per_minute = false, // Het aantal fouten dat gemaild mag worden per minuut
-		$emails_per_day = false; // Het aantal fouten dat gemaild mag worden per dag
-
-	private
-		$error_types = array(
-			E_WARNING => 'Warning',
-			E_NOTICE => 'Notice',
-			E_ERROR => 'Error',
-			E_USER_ERROR => 'Error',
-			E_USER_WARNING => 'Warning',
-			E_USER_NOTICE => 'Notice',
-			E_STRICT => 'PHP5_Strict',
-			4096 => 'RecoverableError', // E_RECOVERABLE_ERROR constante is pas bekend sinds php 5.2.0
-			8192 => 'Deprecated', //  E_DEPRECATED constante is pas bekend sinds php 5.3.0
-			16384 => 'Deprecated', // E_USER_DEPRECATED constante is pas bekend sinds php 5.3.0
-			'EXCEPTION' => 'Exception',
-			// Error levels that can't be caught or triggered directly, but could be retrieved with error_get_last()
-			E_COMPILE_WARNING => 'Warning',
-			E_COMPILE_ERROR => 'Error',
-			E_CORE_WARNING => 'Warning',
-			E_CORE_ERROR => 'Error',
-			E_PARSE => 'Error',
-
-		),
-		$max_string_length_backtrace = 51200, // Maximaal 50 KiB per argument in de backtrace weergeven
-		$isProcessing = false; // Wordt gebruikt voor het bepalen van fouten tijdens de error reporting
+	/**
+	 * @var Schrijf de fout ook weg naar het php errorlog (/var/log/httpd/error.log?)
+	 */
+	public $log = true;
 
 	/**
- 	 * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
- 	 */
+	 * @var echo de foutmelding zonder extras' met een timestamp, (php cli.php > error.log)
+	 */
+	public $cli = false;
+
+	/**
+	 * @var echo de foutmelding en extra informatie met html opmaak.
+	 */
+	public $html = false;
+
+	/**
+	 * @var Email de foutmelding naar dit emailadres.
+	 */
+	public $email = false;
+	// Limiet aan het aantal email dat de ErrorHandler verstuurd.
+	// Bij waardes zoals false ("", 0, NULL) is er GEEN limiet
+	/**
+	 * @var Het aantal fouten dat gemaild gedurende 1 php script.
+	 */
+	public $emails_per_request = false;
+
+	/**
+	 * @var Het aantal fouten dat gemaild mag worden per minuut.
+	 */
+	public $emails_per_minute = false;
+
+	/**
+	 * @var Het aantal fouten dat gemaild mag worden per dag.
+	 */
+	public $emails_per_day = false;
+
+	/**
+	 * @var error-type to title/color/icon mapping.
+	 */
+	private $error_types = array(
+		E_WARNING => 'Warning',
+		E_NOTICE => 'Notice',
+		E_ERROR => 'Error',
+		E_USER_ERROR => 'Error',
+		E_USER_WARNING => 'Warning',
+		E_USER_NOTICE => 'Notice',
+		E_STRICT => 'PHP5_Strict',
+		E_RECOVERABLE_ERROR => 'RecoverableError', // E_RECOVERABLE_ERROR (4096) available since php 5.2.0
+		E_DEPRECATED => 'Deprecated', // E_DEPRECATED (8192) available since php 5.3.0
+		E_USER_DEPRECATED => 'Deprecated', // E_USER_DEPRECATED (16384) available since php 5.3.0
+		'EXCEPTION' => 'Exception',
+		// Error levels that can't be caught or triggered directly, but could be retrieved with error_get_last()
+		E_COMPILE_WARNING => 'Warning',
+		E_COMPILE_ERROR => 'Error',
+		E_CORE_WARNING => 'Warning',
+		E_CORE_ERROR => 'Error',
+		E_PARSE => 'Error',
+	);
+
+	/**
+	 * @var Maximaal 50 KiB per argument in de backtrace weergeven.
+	 */
+	private $max_string_length_backtrace = 51200;
+
+	/**
+	 * @var Wordt gebruikt voor het bepalen van fouten tijdens de error reporting
+	 */
+	private $isProcessing = false;
+
+	/**
+	 * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
+	 */
 	function init() {
 		set_exception_handler(array($this, 'handle_exception'));
 		// Vanwege een bug in php5.3.x is de ErrorHandler::trigger_error_callback() vervangen door deze een globale functie
 		// Zie http://bugs.php.net/bug.php?id=50519 voor meer informatie
 		if (function_exists('ErrorHandler_trigger_error_callback') == false) {
+
 			// Defineer een globale nieuwe functie
 			function ErrorHandler_trigger_error_callback($type, $message, $filename = NULL, $line = NULL, $context = NULL) {
 				ErrorHandler::handle($type, $message);
@@ -60,15 +94,14 @@ class ErrorHandler {
 					exit();
 				}
 			}
-			function ErrorHandler_shutdown_callback() {
-        $error = error_get_last();
-        if ($error !== NULL && $error['type'] === E_ERROR) {
-					//ErrorHandler::handle($error['type'], $error['message'], $error['file'], $error['line']);
-					ErrorHandler::handle($error['type'], $error['message']);
-					//ErrorHandler_trigger_error_callback($error['type'], $error['message'], $error['file'], $error['line']);
 
-        }
+			function ErrorHandler_shutdown_callback() {
+				$error = error_get_last();
+				if ($error !== NULL && $error['type'] === E_ERROR) {
+					ErrorHandler::handle($error['type'], $error['message']);
+				}
 			}
+
 		}
 		register_shutdown_function('SledgeHammer\ErrorHandler_shutdown_callback');
 		set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
@@ -107,7 +140,10 @@ class ErrorHandler {
 				$type = E_USER_NOTICE;
 			}
 			echo '<span style="color:red">The ErrorHandler is not configured.</span><br />'."\n";
-			$message .= ' in <b>'.self::file().'</b> on line <b>'.self::line().'</b><br />'; // Het bericht uitbreiden met bestand en regelnummer informatie.
+			$location = self::location();
+			if ($location) {
+				$message .= ' in <b>'.$location['file'].'</b> on line <b>'.$location['line'].'</b><br />';
+			}
 		}
 		trigger_error($message, $type); // De fout doorgeven aan een andere error handler
 	}
@@ -137,9 +173,9 @@ class ErrorHandler {
 			$style[] = 'border: 1px dashed #cfcfcf';
 		}
 		if (strtolower($this->error_types[$type]) == 'notice') {
-			$message_color  = '#0000cc';
+			$message_color = '#0000cc';
 		} else {
-			$message_color  = '#cc0000';
+			$message_color = '#cc0000';
 		}
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		echo '<div style="', implode(';', $style), '"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" /><span style="color:', $message_color, "\">\n";
@@ -172,7 +208,7 @@ class ErrorHandler {
 		} else {
 			echo $this->error_types[$type];
 		}
-		echo ':</b> ',$message_plain,'</span><br clear="all" />',"\n";
+		echo ':</b> ', $message_plain, '</span><br clear="all" />', "\n";
 		if ($information !== NULL && !empty($information)) {
 			echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 			if (is_array($information)) {
@@ -231,14 +267,15 @@ class ErrorHandler {
 		$this->isProcessing = true;
 		if ($this->log || $this->cli) {
 			$error_message = $this->error_types[$type].': '.$message;
-			if ($file = self::file()) {
-				$error_message .= ' in '.$file.' on line '.self::line();
+			$location = self::location();
+			if ($location) {
+				$error_message .= ' in '.$location['file'].' on line '.$location['line'];
 			}
 			if ($this->log) {
 				error_log($error_message);
 			}
 			if ($this->cli) {
-				echo '[', date('Y-m-d H:i:s'), '] ', $error_message."\n";
+				echo '[', date('Y-m-d H:i:s'), '] ', $error_message, "\n";
 			}
 		}
 		// Limiet contoleren
@@ -277,37 +314,22 @@ class ErrorHandler {
 	}
 
 	/**
-	 * Bestand waar de fout in optrad
+	 * Returns the filename and linenumber where the error was triggered.
+	 *
+	 * @return array|false  array('file' => $filename, 'line' => $linenumber)
 	 */
-	static function file() {
-		$location = debug_backtrace();
-		$filename = false;
-		for($i = 0; $i < count($location); $i++) {
-			if (isset($location[$i]['file']) && $location[$i]['file'] !== __FILE__) {
-				if ($location[$i]['function'] == 'handle') {
-					continue;
-				}
-				$filename = $location[$i]['file'];
-				break;
+	static function location() {
+		$backtrace = debug_backtrace();
+		foreach ($backtrace as $call) {
+			;
+			if (isset($call['file']) && $call['file'] !== __FILE__ && $call['function'] !== 'handle') {
+				return array(
+					'file' => ((strpos($call['file'], PATH) === 0) ? substr($call['file'], strlen(PATH)) : $call['file']),
+					'line' => $call['line']
+				);
 			}
 		}
-		$filename = (strpos($filename, PATH) === 0) ? substr($filename, strlen(PATH)) : $filename;
-		return $filename;
-	}
-
-	/**
-	 * Regel waar de fout in optrad
-	 */
-	static function line() {
-		$location = debug_backtrace();
-		for ($i = 0; $i < count($location); $i++) {
-			if (isset($location[$i]['file']) && $location[$i]['file'] !== __FILE__) {
-				if ($location[$i]['function'] == 'handle') {
-					continue;
-				}
-				return $location[$i]['line'];
-			}
-		}
+		return false;
 	}
 
 	/**
@@ -382,7 +404,7 @@ class ErrorHandler {
 				$errorHandlerInvocations = array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
 				$databaseClasses = array('Database', 'mysqli', 'MySQLiDatabase', 'SledgeHammer\MySQLiDatabase'); // prevent showing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
-				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations)))  {
+				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
 					echo '(...)';
 				} else {
 					echo '(';
@@ -397,9 +419,9 @@ class ErrorHandler {
 							if (is_string($arg) && strlen($arg) > $this->max_string_length_backtrace) {
 								$kib = round((strlen($arg) - $this->max_string_length_backtrace) / 1024);
 								$arg = substr($arg, 0, $this->max_string_length_backtrace);
-								echo syntax_highlight($arg),'<span style="color:red;">...'.$kib.'&nbsp;KiB&nbsp;truncated</span>';
+								echo syntax_highlight($arg), '<span style="color:red;">...', $kib, '&nbsp;KiB&nbsp;truncated</span>';
 							} elseif (is_array($arg) || is_object($arg)) {
-								echo '<span title="', $this->backtrace_highlight_title($arg, 1024), '"'.substr(syntax_highlight($arg), 5);
+								echo '<span title="', $this->backtrace_highlight_title($arg, 1024), '"', substr(syntax_highlight($arg), 5);
 							} else {
 								echo syntax_highlight($arg);
 							}
@@ -521,16 +543,16 @@ class ErrorHandler {
 	 * Gegevens over de server
 	 */
 	private function server_info() {
-			echo "<div>\n";
-			echo "<b>Server information</b><br />\n";
-			echo '<b>Hostname:</b> ', php_uname('n'), "<br />\n";
-			echo '<b>Environment:</b> ', ENVIRONMENT, "<br />\n";
-			if (isset($_SERVER['SERVER_SOFTWARE'])) {
-				echo '<b>Software:</b> ', $_SERVER['SERVER_SOFTWARE'], "<br />\n";
-			}
-			echo '</div>';
-
+		echo "<div>\n";
+		echo "<b>Server information</b><br />\n";
+		echo '<b>Hostname:</b> ', php_uname('n'), "<br />\n";
+		echo '<b>Environment:</b> ', ENVIRONMENT, "<br />\n";
+		if (isset($_SERVER['SERVER_SOFTWARE'])) {
+			echo '<b>Software:</b> ', $_SERVER['SERVER_SOFTWARE'], "<br />\n";
+		}
+		echo '</div>';
 	}
+
 	/**
 	 * Een array printen met syntax highlighting.
 	 */
@@ -539,7 +561,7 @@ class ErrorHandler {
 			if (is_array($value) && count($value) != 0) {
 				echo '<b>'.$key.':</b><br />'."\n";
 				if (is_indexed($value)) {
-					foreach($value as $value2) {
+					foreach ($value as $value2) {
 						echo '&nbsp;&nbsp;', syntax_highlight($value2), "<br />\n";
 					}
 				} else {
@@ -596,7 +618,7 @@ class ErrorHandler {
 				$minute_limit = $this->emails_per_minute;
 				error_log('Resetting errorlimit');
 			} elseif ($tijdstip != @date('H:i')) { // Is het een andere minuut
-					$minute_limit = $this->emails_per_minute;// nieuwe minuut voorraad.
+				$minute_limit = $this->emails_per_minute; // nieuwe minuut voorraad.
 			}
 		}
 		$limit = 0; // Standaard instellen dat de limiet is bereikt.
@@ -695,5 +717,7 @@ class ErrorHandler {
 		}
 		return '"ErrorHandler ('.$hostname.')" <errorhandler@'.$domain.'>';
 	}
+
 }
+
 ?>
