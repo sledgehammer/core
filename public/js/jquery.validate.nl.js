@@ -1,31 +1,34 @@
 /*
  * Translated default messages for the jQuery validation plugin.
- * By Joost Baaij http://www.spacebabies.nl/ joost@spacebabies.nl
- * Language: NL
- * Skipped date/dateISO/number.
+ * Locale: NL
  */
 jQuery.extend(jQuery.validator.messages, {
-	required: "Dit veld is verplicht.",
-	maxlength: jQuery.format("U kunt niet meer dan {0} karakters invoeren."),
-	minlength: jQuery.format("U dient minimaal {0} karakters in te voeren."),
-	rangelength: jQuery.format("U dient minimaal {0} en maximaal {1} karakters in te voeren."),
-	email: "Een geldig emailadres is verplicht.",
-	url: "Een geldig URL is verplicht.",
-	date: "Een geldige datum is verplicht.",
-	number: "Een geldig getal is verplicht.",
-	digits: "Gebruik alleen cijfers.",
-	equalTo: "Herhaal de invoer nogmaals.",
-	range: jQuery.format("U dient een waarde tussen {0} en {1} in te voeren."),
-	max: jQuery.format("U dient een waarde kleiner dan of gelijk aan {0} in te voeren."),
-	min: jQuery.format("U dient een waarde groter dan of gelijk aan {0} in te voeren."),
-	creditcard: "Een geldig creditcardnummer is verplicht."
+	required: "Dit is een verplicht veld.",
+	remote: "Controleer dit veld.",
+	email: "Vul hier een geldig e-mailadres in.",
+	url: "Vul hier een geldige URL in.",
+	date: "Vul hier een geldige datum in.",
+	dateISO: "Vul hier een geldige datum in (ISO-formaat).",
+	number: "Vul hier een geldig getal in.",
+	digits: "Vul hier alleen getallen in.",
+	creditcard: "Vul hier een geldig creditcardnummer in.",
+	equalTo: "Vul hier dezelfde waarde in.",
+	accept: "Vul hier een waarde in met een geldige extensie.",
+	maxlength: jQuery.validator.format("Vul hier maximaal {0} tekens in."),
+	minlength: jQuery.validator.format("Vul hier minimaal {0} tekens in."),
+	rangelength: jQuery.validator.format("Vul hier een waarde in van minimaal {0} en maximaal {1} tekens."),
+	range: jQuery.validator.format("Vul hier een waarde in van minimaal {0} en maximaal {1}."),
+	max: jQuery.validator.format("Vul hier een waarde in kleiner dan of gelijk aan {0}."),
+	min: jQuery.validator.format("Vul hier een waarde in groter dan of gelijk aan {0}.")
 });
 
-// Vervang de date validatie
-$.validator.addMethod(
-	"date",
-	function (value, element) {
-		return value.match(/^\d\d?-\d\d?-\d\d\d\d$/); // dd-mm-jjjj
-	},
-	"Een geldige datum is verplicht (dd-mm-jjjj)"
-);
+
+/*
+ * Localized default methods for the jQuery validation plugin.
+ * Locale: NL
+ */
+jQuery.extend(jQuery.validator.methods, {
+	date: function(value, element) {
+		return this.optional(element) || /^\d\d?[\.\/-]\d\d?[\.\/-]\d\d\d?\d?$/.test(value);
+	}
+});
