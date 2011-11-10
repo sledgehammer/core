@@ -8,6 +8,7 @@
  * @package Core
  */
 namespace SledgeHammer;
+
 class Framework {
 
 	private static $cachedRequiredModules = array();
@@ -146,7 +147,7 @@ class Framework {
 			}
 		}
 	}
-	
+
 	/**
 	 * Vanuit een database.ini bestand (o.b.v de $environment) database connecties maken
 	 *
@@ -174,42 +175,6 @@ class Framework {
 			$GLOBALS['Databases']['default'] = key($GLOBALS['Databases']); // symlink "default" to the only database connection.
 		}
 		return $success;
-	}
-
-	/**
-	 * CLI parameters die aan "mysql" of "mysqldump" meegegeven kunnen worden.
-	 *
-	 * @param string $environment  De environment waar de connecties van gemaakt worden.
-	 * @param string $filename  De locatie van het ini bestand met database instellingen.
-	 * @return string
-	 */
-	function mysqlArgs($link, $environment = null, $filename = null) {
-		$databases = self::extractDatabaseSettings($environment, $filename);
-		if (empty($databases[$link])) {
-			throw new \Exception('Database "'.$link.'" not defined');
-		}
-		$settings = $databases[$link];
-		$params = array(
-				'--host='.escapeshellarg($settings['host']),
-				'--user='.escapeshellarg($settings['user']),
-				'--password='.escapeshellarg($settings['password']),
-				'--database '.escapeshellarg($settings['database']),
-		);
-		return ' '.implode(' ', $params).' ';
-	}
-
-
-
-	/**
-	 * Alle database verbindingen verbreken.
-	 * Als je bij het renderen van de pagina/templates geen database connectie nodig hebt is het verstandig om de database verbindingen te sluiten.
-	 * Anders zal de database connectie open blijven todat het html bestand gedownload is.
-	 *
-	 * @return void
-	 */
-	static function closeDatabases() {
-		// @todo Keep query logs for statusbar?
-		unset($GLOBALS['Databases']);
 	}
 
 	/**
@@ -250,18 +215,18 @@ class Framework {
 	 * 
 	 * @param string $modulePath
 	 * @return array
-	 */	
+	 */
 	private static function detectModules($modulesPath) {
 		$modules = array();
 		$Directory = new \DirectoryIterator($modulesPath);
 		foreach ($Directory as $entry) {
 			if ($entry->isDir() && substr($entry->getFilename(), 0, 1) != '.') { // Is het een niet verborgen map
-					$modules[] = $entry->getFilename();
+				$modules[] = $entry->getFilename();
 			}
 		}
 		return $modules;
 	}
-	
+
 	/**
 	 * Het pad waar de sledgehammer modules in staan.
 	 *
@@ -270,5 +235,7 @@ class Framework {
 	private static function getPath() {
 		return dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR;
 	}
+
 }
+
 ?>
