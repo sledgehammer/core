@@ -5,11 +5,10 @@
  *
  * @package Core
  */
+
 namespace SledgeHammer;
-use \ArrayIterator;
 
 const SORT_NATURAL = -1;
-
 class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
@@ -28,15 +27,21 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	 * Return a new collection where each element is a subselection of the original element.
 	 *
 	 * @param string|array $query  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
-	 * @param string|null $keyPath  (optional) The path that will be used as key.
+	 * @param string|null|false $selectKey  (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
 	 * @return Collection
 	 */
-	function select($selector, $keyPath = null) {
+	function select($selector, $selectKey = false) {
 		$items = array();
 		$isClosure = (is_object($selector) && is_callable($selector));
+		if ($selectKey === null) {
+			$index = -1;
+		}
 		foreach ($this as $key => $item) {
-			if ($keyPath !== null) {
-				$key = PropertyPath::get($item, $keyPath);
+			if ($selectKey === null) {
+				$index++;
+				$key = $index;
+			} elseif ($selectKey !== false) {
+				$key = PropertyPath::get($item, $selectKey);
 			}
 			if (is_string($selector)) {
 				$items[$key] = PropertyPath::get($item, $selector);
@@ -49,6 +54,21 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 					PropertyPath::set($items[$key], $fieldPath, $value);
 				}
 			}
+		}
+		return new Collection($items);
+	}
+
+	/**
+	 * Returns a new collection where the key is based on a property
+	 *
+	 * @param string $path  The path that will be used as key.
+	 * @return Collection
+	 */
+	function selectKey($path) {
+		$items = array();
+		foreach ($this as $key => $item) {
+			$key = PropertyPath::get($item, $path);
+			$items[$key] = $item;
 		}
 		return new Collection($items);
 	}
@@ -253,8 +273,8 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	function __clone() {
 		if (is_array($this->data) == false) {
-			$this->data = new ArrayIterator(iterator_to_array($this->data));
-//		$this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
+			// $this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
+			$this->data = iterator_to_array($this->data); // Still doesn't work with Traversables like DirectoryIterator
 		}
 	}
 
