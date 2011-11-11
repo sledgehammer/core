@@ -45,6 +45,11 @@ class Database extends \PDO {
 	private $logCharacterLimit = 51200;
 
 	/**
+	 * @var int  Remember the previous insertId when using warnings. (Because "SHOW WARNINGS" query resets the value of lastInsertId() to "0")
+	 */
+	private $previousInsertId;
+
+	/**
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
 	 * @param string $username
@@ -176,7 +181,7 @@ class Database extends \PDO {
 	 *
 	 * @param string $statement  The SQL statement to prepare
 	 * @param array $driver_options
-	 * @return \PDOStatement 
+	 * @return \PDOStatement
 	 */
 	function prepare($statement, $driver_options = array()) {
 		$start = microtime(true);
@@ -250,7 +255,7 @@ class Database extends \PDO {
 		if ($query_log_count > 0) {
 			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
 			if ($popup) {
-				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true)">';
+				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); return false">';
 			}
 		}
 		echo '<b>', $this->queryCount, '</b>&nbsp;queries';
@@ -401,6 +406,20 @@ class Database extends \PDO {
 	}
 
 	/**
+	 * Returns the ID of the last inserted row or sequence value.
+	 * @link http://php.net/manual/en/pdo.lastinsertid.php
+	 *
+	 * @param string $name [optional]
+	 * @return string
+	 */
+	public function lastInsertId($name = null) {
+		if ($name === null && $this->reportWarnings) {
+			return $this->previousInsertId;
+		}
+		return parent::lastInsertId($name);
+	}
+
+	/**
 	 * De sql query in het debug_blok overzichtelijk weergeven
 	 * De keywords van een sql query dik(<b>) maken en de querytijd een kleur geven (rood voor trage queries, orange voor middelmatige en grijs voor snelle queries)
 	 */
@@ -437,6 +456,7 @@ class Database extends \PDO {
 	 */
 	function reportError($statement) {
 		$error = $this->errorInfo();
+		$this->previousInsertId = '0';
 		if ($this->getAttribute(\PDO::ATTR_ERRMODE) == \PDO::ERRMODE_SILENT) { // The error issn't already reported?
 			$info = array();
 			if ($statement instanceof SQL) {
@@ -458,6 +478,7 @@ class Database extends \PDO {
 				$info['SQL'] = (string) $statement;
 			}
 			$start = microtime(true);
+			$this->previousInsertId = parent::lastInsertId();
 			$warnings = parent::query('SHOW WARNINGS');
 			$this->executionTime += (microtime(true) - $start);
 			if ($warnings->rowCount()) {
