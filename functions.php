@@ -6,8 +6,8 @@
  *
  * @package Core
  */
-
 // Functions that are available outside everywhere (global namespace)
+
 namespace {
 
 	/**
@@ -40,6 +40,7 @@ namespace {
 	function warning($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_WARNING, $message, $information, true);
 	}
+
 	/**
 	 * Een foutje. (Het script werkt, maar een iets niet helemaal lekker.)
 	 */
@@ -106,14 +107,14 @@ namespace {
 	 * @return string
 	 */
 	function human_implode($glueLast, $array, $glue = ', ') {
-		if (!$array || !count ($array)) { // sanity check
+		if (!$array || !count($array)) { // sanity check
 			return '';
 		}
-		$last = array_pop ($array); // get last element
-		if (!count ($array)) { // if it was the only element - return it
+		$last = array_pop($array); // get last element
+		if (!count($array)) { // if it was the only element - return it
 			return $last;
 		}
-		return implode ($glue, $array).$glueLast.$last;
+		return implode($glue, $array).$glueLast.$last;
 	}
 
 	/**
@@ -132,7 +133,7 @@ namespace {
 		return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
 	}
 
-		/**
+	/**
 	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
 	 *
 	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast
@@ -143,19 +144,21 @@ namespace {
 	function set_object_vars($Object, $values, $check_for_property = false) {
 		if ($check_for_property) {
 			foreach ($values as $property => $value) {
-			 if (property_exists($Object, $property)) {
+				if (property_exists($Object, $property)) {
 					$Object->$property = $value;
-			 }
+				}
 			}
-		}	else {
+		} else {
 			foreach ($values as $property => $value) {
 				$Object->$property = $value;
 			}
 		}
 	}
+
 }
 
 // Global functions inside the SledgeHammer namespace
+
 namespace SledgeHammer {
 
 	/**
@@ -244,7 +247,7 @@ namespace SledgeHammer {
 		preg_match_all("/\\[[^[]*\\]/", $identifier, $keys); // Deze reguliere exp. splits alle van alle subelementen af in een array. element[subelement1][subelement2] wordt array("[subelement1]", "[subelement2]")
 		$identifier = substr($identifier, 0, $bracket_position);
 		$php_variabele = "\$array[\"".addslashes($identifier)."\"]";
-		foreach($keys[0] as $key) {
+		foreach ($keys[0] as $key) {
 			$php_code = 'if (gettype(@'.$php_variabele.") == 'array') {\n\treturn false;\n}\nreturn true;";
 			if (eval($php_code)) {
 				return false;
@@ -299,7 +302,7 @@ namespace SledgeHammer {
 	function compare($value, $operator, $expectation) {
 		switch ($operator) {
 			case '==': return equals($value, $expectation);
-			case '!=': return !equals($value, $expectation);
+			case '!=': return!equals($value, $expectation);
 			case '<': return $value < $expectation;
 			case '>': return $value > $expectation;
 			case '<=': return $value <= $expectation;
@@ -334,6 +337,7 @@ namespace SledgeHammer {
 	function get_public_methods($class) {
 		return get_class_methods($class);
 	}
+
 	/**
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
@@ -448,7 +452,6 @@ namespace SledgeHammer {
 		return $counter;
 	}
 
-
 	/**
 	 * Een bestand verwijderen, met extra controle dat het bestand zich in de $basepath map bevind.
 	 *
@@ -476,7 +479,7 @@ namespace SledgeHammer {
 		if (!file_exists($filepath)) {
 			throw new \Exception('File "'.$filepath.'" not found');
 		}
-		if ($recursive ) {
+		if ($recursive) {
 			rmdir_recursive($filepath);
 			return;
 		}
@@ -558,51 +561,55 @@ namespace SledgeHammer {
 	 * Wordt o.a. gebruikt door Dump & ErrorHandler
 	 * De een kleuren worden bepaald in /css/datatypes.css uit webcore
 	 *
-	 * @param mixed $variabele
+	 * @param mixed $variable
 	 * @param string $datatype  Skip autodetection/force a type
-	 * @param bool $noColor  Dont put the variable inside a <span> with a color tag.
+	 * @param int $maxLenghtTitle  maximum length for the title attribute (which contains the contents of the array|object) 
 	 * @return string
 	 */
-	function syntax_highlight($variabele, $datatype = null, $noColor = false) {
+	function syntax_highlight($variable, $datatype = null, $maxLenghtTitle = 256) {
 		if ($datatype === NULL) {
-			$datatype = gettype($variabele);
+			$datatype = gettype($variable);
 		}
-		switch($datatype) {
+		$elements = false;
+		switch ($datatype) {
 
 			case 'string':
-				$variabele = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variabele))).'&#39;';
+				$color = 'string';
+				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, $GLOBALS['charset']))).'&#39;';
 				break;
 			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
-				$datatype = 'string';
-				$variabele = '&#39;'.htmlspecialchars($variabele).'&#39;';
+				$color = 'string';
+				$label = '&#39;'.htmlspecialchars($variable).'&#39;';
 				break;
 			case 'integer':
 			case 'double':
-				$datatype = 'number';
+				$color = 'number';
+				$label = $variable;
 				break;
 
 			case 'boolean':
-				$datatype = 'constant';
-				$variabele = $variabele ? 'true' : 'false';
+				$color = 'constant';
+				$label = $variable ? 'true' : 'false';
 				break;
 
 			case 'NULL':
-				$datatype = 'constant';
-				$variabele = 'NULL';
+				$color = 'constant';
+				$label = 'NULL';
 				break;
 
 			case 'array':
-				$datatype = 'method';
-				$variabele = 'array('.count($variabele).')';
+				$color = 'method';
+				$label = 'array('.count($variable).')';
 				break;
 
 			case 'object':
-				$datatype = 'class';
-				$variabele = get_class($variabele);
+				$color = 'class';
+				$label = get_class($variable);
 				break;
 
 			case 'resource':
 				$datatype = 'constant';
+				$label = $variable;
 				break;
 
 			// al geconverteerde datatypes
@@ -613,19 +620,95 @@ namespace SledgeHammer {
 			case 'class':
 			case 'attribute':
 			case 'method':
+				$color = $datatype;
+				$label = $variable;
 				break;
 
 			default:
 				notice('Datatype: "'.$datatype.'" is unknown');
 				break;
 		}
-		if ($noColor) {
-			return $variabele;
+		$html = '<span';
+		if (($datatype === 'object' || $datatype === 'array') && $maxLenghtTitle > 0) { // Built title attribute?
+			$title = partial_var_export($variable, $maxLenghtTitle, 4);
+			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, $GLOBALS['charset'])).'"';
 		}
 		if (!isset($GLOBALS['highlight_colors'])) {
 			include(dirname(__FILE__).'/settings/highlight_colors.php');
 		}
-		return '<span style="color:'.$GLOBALS['highlight_colors'][$datatype].'">'.$variabele.'</span>';
+		return $html.' style="color:'.$GLOBALS['highlight_colors'][$color].'">'.$label.'</span>';
+	}
+
+	/**
+	 * Returns human-readable information about a object or array variable.
+	 * Used in syntax_hightlight() title (Shows the contents of an object/array on hover)
+	 *
+	 * @param array|stdClass $variable
+	 * @param int $maxLenght
+	 * @param int|false $maxDepth
+	 * @param int $depth
+	 * @return string
+	 */
+	function partial_var_export($variable, $maxLenght, $maxDepth = false, $depth = 0) {
+		$end = array();
+		$title = '';
+		$hellip = html_entity_decode('&hellip;', ENT_NOQUOTES, $GLOBALS['charset']); // aka the '...' character
+		if (is_array($variable)) {
+			$title = 'array(';
+			$end = ')';
+			$elements = $variable;
+		} else {
+			$title = get_class($variable).'{';
+			$end = '}';
+			$elements = get_object_vars($variable);
+		}
+		if (count($elements) == 0) {
+			return $title.$end;
+		}
+		$indent = str_repeat('  ', $depth + 1);
+		if ($depth !== 0) {
+			$end = substr($indent, 2).$end;
+		}
+		$title .= "\n";
+		foreach ($elements as $key => $value) {
+			if (strlen($title) > $maxLenght) {
+				$title .= $indent.$hellip."\n";
+				break;
+			}
+			if (is_array($variable)) {
+				$title .= $indent;
+				if (is_string($key)) {
+					$title .= "'".$key."'";
+				} else {
+					$title .= $key;
+				}
+				$title .= ' => ';
+			} else {
+				$title .= $indent.$key.' = ';
+			}
+			if (is_string($value)) {
+				$charactersLeft = $maxLenght - strlen($title);
+				if (strlen($value) > $charactersLeft) {
+					if ($charactersLeft < 10) {
+						$charactersLeft = 8;
+					}
+					$title .= "'".substr($value, 0, $charactersLeft).$hellip."\n";
+				} else {
+					$title .= "'".$value."'\n";
+				}
+			} elseif (is_array($value)) {
+				if ($maxDepth !== false && $depth == $maxDepth) {
+					$title .= 'array('.count($value)."),\n";
+				} else {
+					$title .= partial_var_export($value, $maxLenght - strlen($title), $maxDepth, $depth + 1).",\n";
+				}
+			} elseif (is_object($value)) {
+				$title .= get_class($value).",\n";
+			} else {
+				$title .= $value.','."\n";
+			}
+		}
+		return $title.$end;
 	}
 
 	/**
@@ -654,7 +737,7 @@ namespace SledgeHammer {
 	function format_parsetime($seconds, $precision = 3) {
 		if ($seconds < 60) { // Duurde het genereren korter dan 1 minuut?
 			return number_format($seconds, $precision);
-		}  else {
+		} else {
 			$minutes = floor($seconds / 60);
 			$miliseconds = fmod($seconds, 1);
 			$seconds = str_pad($seconds % 60, 2, '0', STR_PAD_LEFT);
@@ -668,12 +751,12 @@ namespace SledgeHammer {
 	function statusbar() {
 		if (defined('SledgeHammer\MICROTIME_START')) {
 			$now = microtime(true);
-			echo '<span id="statusbar_parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START) .'</b>sec. ';
+			echo '<span id="statusbar_parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START).'</b>sec. ';
 			if (defined('SledgeHammer\MICROTIME_INIT')) {
-				echo '<span id="statusbar_parsetimes">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START) .'</b>sec.';
+				echo '<span id="statusbar_parsetimes">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START).'</b>sec.';
 				if (defined('SledgeHammer\MICROTIME_EXECUTE')) {
-					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT) .'</b>sec. ';
-					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE) .'</b>sec.';
+					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT).'</b>sec. ';
+					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE).'</b>sec.';
 				}
 				echo ')</span> ';
 			}
@@ -753,6 +836,7 @@ namespace SledgeHammer {
 		}
 		return $keys;
 	}
+
 	/**
 	 * Hiermee kun je de timeout van het script verlengen.
 	 * Bij $relative op true zal de timeout aanvuld worden zodat het script nog minimaal n seconden mag draaien.
@@ -857,9 +941,9 @@ namespace SledgeHammer {
 			$os = 'Overig';
 		}
 		$info = array(
-			'name'=> $browser,
-			'version'=> $version,
-			'os'=> $os,
+			'name' => $browser,
+			'version' => $version,
+			'os' => $os,
 		);
 		if ($part === NULL) { // Return all info?
 			return $info;
@@ -924,13 +1008,13 @@ namespace SledgeHammer {
 				$location = ', output started in '.$file.' on line '.$line;
 			}
 			if (class_exists('SledgeHammer\ErrorHandler', false)) {
-				notice('Couldn\'t sent header(s)'.$location,  array('headers' => $headers));
+				notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
 			} else {
-				trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers,'", "').'"'.$location,  E_USER_NOTICE);
+				trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
 			}
 		} else {
 			$notices = array();
-			foreach($headers as $header => $value) {
+			foreach ($headers as $header => $value) {
 				if ($header == 'Status') { // and != fastcgi?
 					header($_SERVER['SERVER_PROTOCOL'].' '.$value);
 				} elseif (is_numeric($header)) {
@@ -993,7 +1077,7 @@ namespace SledgeHammer {
 			}
 			throw new \Exception('readfile() failed');
 		} else {
-			 // Het gehele bestand sturen (resume support is untested)
+			// Het gehele bestand sturen (resume support is untested)
 			$success = readfile($filename);
 			if ($success) {
 				exit();
@@ -1001,9 +1085,7 @@ namespace SledgeHammer {
 			throw new \Exception('readfile() failed');
 			// #########################################
 			// Onderstaande CODE wordt nooit uitgevoerd.
-
 			// Een gedeelte van het bestand sturen
-
 			//check if http_range is sent by browser (or download manager)
 			list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
 			$range = '';
@@ -1018,8 +1100,8 @@ namespace SledgeHammer {
 
 		// set start and end based on range (if set), else set defaults
 		// also check for invalid ranges.
-		$seek_end = (empty($seek_end)) ? ($filesize - 1) : min(abs(intval($seek_end)),($filesize - 1));
-		$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+		$seek_end = (empty($seek_end)) ? ($filesize - 1) : min(abs(intval($seek_end)), ($filesize - 1));
+		$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);
 
 		// Only send partial content header if downloading a piece of the file (IE workaround)
 		if ($seek_start > 0 || $seek_end < ($filesize - 1)) {
@@ -1035,8 +1117,8 @@ namespace SledgeHammer {
 		fseek($fp, $seek_start); // seek to start of missing part
 		set_time_limit(0);
 		send_headers($headers);
-		while(!feof($fp)) {
-			print(fread($fp, 1024*16)); // Verstuur in blokken van 16KiB
+		while (!feof($fp)) {
+			print(fread($fp, 1024 * 16)); // Verstuur in blokken van 16KiB
 			flush();
 		}
 		return fclose($fp);
@@ -1096,7 +1178,6 @@ namespace SledgeHammer {
 		return file_put_contents($filename, $ini);
 	}
 
-
 	/**
 	 * Shorthand for creating an SQL object and selecting columns.
 	 * Allows direct method-chaining:
@@ -1130,5 +1211,6 @@ namespace SledgeHammer {
 	function collection($iterator) {
 		return new Collection($iterator);
 	}
+
 }
 ?>

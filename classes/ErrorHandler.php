@@ -46,12 +46,18 @@ class ErrorHandler {
 	public $emails_per_day = false;
 
 	/**
+	 * Some error levels can't be caught or triggered directly, but could be retrieved with error_get_last()
 	 * @var error-type to title/color/icon mapping.
 	 */
 	private $error_types = array(
-		E_WARNING => 'Warning',
-		E_NOTICE => 'Notice',
 		E_ERROR => 'Error',
+		E_WARNING => 'Warning',
+		E_PARSE => 'Error',
+		E_NOTICE => 'Notice',
+		E_CORE_ERROR => 'Error',
+		E_CORE_WARNING => 'Warning',
+		E_COMPILE_ERROR => 'Error',
+		E_COMPILE_WARNING => 'Warning',
 		E_USER_ERROR => 'Error',
 		E_USER_WARNING => 'Warning',
 		E_USER_NOTICE => 'Notice',
@@ -60,12 +66,6 @@ class ErrorHandler {
 		E_DEPRECATED => 'Deprecated', // E_DEPRECATED (8192) available since php 5.3.0
 		E_USER_DEPRECATED => 'Deprecated', // E_USER_DEPRECATED (16384) available since php 5.3.0
 		'EXCEPTION' => 'Exception',
-		// Error levels that can't be caught or triggered directly, but could be retrieved with error_get_last()
-		E_COMPILE_WARNING => 'Warning',
-		E_COMPILE_ERROR => 'Error',
-		E_CORE_WARNING => 'Warning',
-		E_CORE_ERROR => 'Error',
-		E_PARSE => 'Error',
 	);
 
 	/**
@@ -393,7 +393,7 @@ class ErrorHandler {
 	private function backtrace_highlight($call, $location_only = false) {
 		if (!$location_only) {
 			if (isset($call['object'])) {
-				echo '<span title="', $this->backtrace_highlight_title($call['object'], 512), '"'.substr(syntax_highlight(get_class($call['object']), 'class'), 5);
+				echo syntax_highlight($call['object'], null, 512);
 				echo $call['type'];
 			} elseif (isset($call['class'])) {
 				echo syntax_highlight($call['class'], 'class');
@@ -419,11 +419,9 @@ class ErrorHandler {
 							if (is_string($arg) && strlen($arg) > $this->max_string_length_backtrace) {
 								$kib = round((strlen($arg) - $this->max_string_length_backtrace) / 1024);
 								$arg = substr($arg, 0, $this->max_string_length_backtrace);
-								echo syntax_highlight($arg), '<span style="color:red;">...', $kib, '&nbsp;KiB&nbsp;truncated</span>';
-							} elseif (is_array($arg) || is_object($arg)) {
-								echo '<span title="', $this->backtrace_highlight_title($arg, 1024), '"', substr(syntax_highlight($arg), 5);
+								echo syntax_highlight($arg), '<span style="color:red;">&hellip;', $kib, '&nbsp;KiB&nbsp;truncated</span>';
 							} else {
-								echo syntax_highlight($arg);
+								echo syntax_highlight($arg, null, 1024);
 							}
 						}
 					}
@@ -442,55 +440,6 @@ class ErrorHandler {
 			echo ' on&nbsp;line&nbsp;<b>', $call['line'], '</b>';
 		}
 		echo "<br />\n";
-	}
-
-	/**
-	 * Show the contents of an object/array when you hover over the backtrace
-	 *
-	 * @param object|array $variable
-	 * @param int $maxLenght  Maximum number of characters for the title
-	 * @param int $level  Indenting level
-	 * @return type 
-	 */
-	function backtrace_highlight_title($variable, $maxLenght, $level = 1) {
-		if (is_array($variable)) {
-			$title = 'array(';
-			$elements = $variable;
-			$end = ')';
-		} else {
-			$title = '{';
-			$end = '}';
-			$elements = get_object_vars($variable);
-		}
-		if (count($elements) == 0) {
-			return $title.$end;
-		}
-		$linebreak = '&#10;';
-		$title .= $linebreak;
-		$indent = str_repeat('  ', $level);
-		if ($level != 1) {
-			$end = substr($indent, 2).$end.$linebreak;
-		}
-		foreach ($elements as $key => $value) {
-			if (strlen($title) > $maxLenght) {
-				$title .= $indent.'&hellip;'.$linebreak;
-				break;
-			}
-			if (is_array($variable)) {
-				$title .= $indent.syntax_highlight($key, null, true).' => ';
-			} else {
-				$title .= $indent.$key.': ';
-			}
-			if (is_string($value) && strlen($value) > 100) {
-				$title .= syntax_highlight(substr($value, 0, 100), null, true).'&hellip; ,'.$linebreak;
-			} elseif (is_array($value) && $level < 4) {
-				$title .= $this->backtrace_highlight_title($value, $maxLenght, $level + 1);
-			} else {
-				$title .= syntax_highlight($value, null, true).','.$linebreak;
-			}
-		}
-		$title .= $end;
-		return str_replace(' ', '&nbsp;', $title);
 	}
 
 	/**
@@ -559,16 +508,17 @@ class ErrorHandler {
 	private function export_array($array) {
 		foreach ($array as $key => $value) {
 			if (is_array($value) && count($value) != 0) {
-				echo '<b>'.$key.':</b><br />'."\n";
+				echo '<b>'.$key.':</b> array('."<br />\n";
 				if (is_indexed($value)) {
 					foreach ($value as $value2) {
 						echo '&nbsp;&nbsp;', syntax_highlight($value2), "<br />\n";
 					}
 				} else {
 					foreach ($value as $key2 => $value2) {
-						echo '&nbsp;&nbsp;<em>', $key2, ':</em> ', syntax_highlight($value2), "<br />\n";
+						echo '&nbsp;&nbsp;'.syntax_highlight($key).' => ', syntax_highlight($value2), "<br />\n";
 					}
 				}
+				echo ")<br />\n";;
 			} else {
 				echo '<b>'.$key.':</b> ', syntax_highlight($value), "<br />\n";
 			}
