@@ -198,17 +198,14 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * When needed put backticks ` around the column- or tablename.
+	 * Puts backticks '`' around a column- table or databasename.
 	 * (Prevents SQL injection)
 	 *
 	 * @param string $identifier  A column, table or database-name
 	 * @return string
 	 */
 	function quoteIdentifier($identifier) {
-		if (preg_match('/^[0-9a-z_]+$/i', $identifier)) { // Zit er geen vreemde karakter in de $identifier
-			return $identifier;
-		}
-		return ('`'.str_replace('`', '``', $identifier).'`');
+		return '`'.str_replace('`', '``', $identifier).'`';
 	}
 
 	/**
