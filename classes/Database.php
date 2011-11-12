@@ -37,18 +37,27 @@ class Database extends \PDO {
 	/**
 	 * @var int  Number of executed queries.
 	 */
-	private $queryCount;
+	public $queryCount;
 
 	/**
 	 * @var int  Only log the first 50KiB of a long query.
 	 */
-	private $logCharacterLimit = 51200;
+	public $logCharacterLimit = 51200;
 
 	/**
 	 * @var int  Remember the previous insertId when using warnings. (Because "SHOW WARNINGS" query resets the value of lastInsertId() to "0")
 	 */
 	private $previousInsertId;
 
+	/**
+	 * @var string  The \PDO::ATTR_DRIVER_NAME
+	 */
+	private $driver;
+
+	/**
+	 * @var array Cached quoted identifiers(column and table names) per database driver
+	 */
+	private static $quotedIdentifiers = array();
 	/**
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
@@ -130,6 +139,8 @@ class Database extends \PDO {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
+		$this->driver = $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
 		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			parent::exec('SET sql_warnings = ON');
 		}
@@ -199,13 +210,36 @@ class Database extends \PDO {
 
 	/**
 	 * Puts backticks '`' around a column- table or databasename.
+	 * Only adds quotes around columnname if needed.
 	 * (Prevents SQL injection)
 	 *
 	 * @param string $identifier  A column, table or database-name
 	 * @return string
 	 */
 	function quoteIdentifier($identifier) {
-		return '`'.str_replace('`', '``', $identifier).'`';
+		if (isset(self::$quotedIdentifiers[$this->driver][$identifier])) {
+			return self::$quotedIdentifiers[$this->driver][$identifier];
+		}
+		$addQuotes = false;
+		if (preg_match('/^[0-9a-z_]+$/i', $identifier) == false) { // Does the column contain a strange character?
+			$addQuotes = true;
+		} else {
+			// generic keywords (included in both sqlite and mysql)
+			$keywords = array('ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'BEFORE', 'BETWEEN', 'BY', 'CASCADE', 'CASE', 'CHECK', 'COLLATE', 'COLUMN', 'CONSTRAINT', 'CREATE', 'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'DATABASE', 'DEFAULT', 'DELETE', 'DESC', 'DISTINCT', 'DROP', 'EACH', 'ELSE', 'EXISTS', 'EXPLAIN', 'FOR', 'FOREIGN', 'FROM', 'GROUP', 'HAVING', 'IF', 'IGNORE', 'IN', 'INDEX', 'INNER', 'INSERT', 'INTO', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'MATCH', 'NATURAL', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'PRIMARY', 'REFERENCES', 'REGEXP', 'RELEASE', 'RENAME', 'REPLACE', 'RESTRICT', 'RIGHT', 'SELECT', 'SET', 'TABLE', 'THEN', 'TO', 'TRIGGER', 'UNION', 'UNIQUE', 'UPDATE', 'USING', 'VALUES', 'WHEN', 'WHERE');
+			if ($this->driver === 'mysql') {
+				$keywords = array_merge($keywords, array('ACCESSIBLE', 'ASENSITIVE', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'CALL', 'CHANGE', 'CHAR', 'CHARACTER', 'CONDITION', 'CONTINUE', 'CONVERT', 'CURRENT_USER', 'CURSOR', 'DATABASES', 'DAY_HOUR', 'DAY_MICROSECOND', 'DAY_MINUTE', 'DAY_SECOND', 'DEC', 'DECIMAL', 'DECLARE', 'DELAYED', 'DESCRIBE', 'DETERMINISTIC', 'DISTINCTROW', 'DIV', 'DOUBLE', 'DUAL', 'ELSEIF', 'ENCLOSED', 'ESCAPED', 'EXIT', 'FALSE', 'FETCH', 'FLOAT', 'FLOAT4', 'FLOAT8', 'FORCE', 'FULLTEXT', 'GENERAL', 'GRANT', 'HIGH_PRIORITY', 'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND', 'IGNORE_SERVER_IDS', 'INFILE', 'INOUT', 'INSENSITIVE', 'INT', 'INT1', 'INT2', 'INT3', 'INT4', 'INT8', 'INTEGER', 'INTERVAL', 'ITERATE', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LINEAR', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCK', 'LONG', 'LONGBLOB', 'LONGTEXT', 'LOOP', 'LOW_PRIORITY', 'MASTER_HEARTBEAT_PERIOD', 'MASTER_SSL_VERIFY_SERVER_CERT', 'MAXVALUE', 'MAXVALUE', 'MEDIUMBLOB', 'MEDIUMINT', 'MEDIUMTEXT', 'MIDDLEINT', 'MINUTE_MICROSECOND', 'MINUTE_SECOND', 'MOD', 'MODIFIES', 'NO_WRITE_TO_BINLOG', 'NUMERIC', 'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OUT', 'OUTFILE', 'PRECISION', 'PROCEDURE', 'PURGE', 'RANGE', 'READ', 'READS', 'READ_WRITE', 'REAL', 'REPEAT', 'REQUIRE', 'RESIGNAL', 'RESIGNAL', 'RETURN', 'REVOKE', 'RLIKE', 'SCHEMA', 'SCHEMAS', 'SECOND_MICROSECOND', 'SENSITIVE', 'SEPARATOR', 'SHOW', 'SIGNAL', 'SIGNAL', 'SLOW', 'SMALLINT', 'SPATIAL', 'SPECIFIC', 'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQL_BIG_RESULT', 'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT', 'SSL', 'STARTING', 'STRAIGHT_JOIN', 'TERMINATED', 'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TRAILING', 'TRUE', 'UNDO', 'UNLOCK', 'UNSIGNED', 'USAGE', 'USE', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VARBINARY', 'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHILE', 'WITH', 'WRITE', 'XOR', 'YEAR_MONTH', 'ZEROFILL'));
+			} elseif ($this->driver === 'sqlite') {
+				$keywords = array_merge($keywords, array('ABORT', 'ACTION', 'AFTER', 'ATTACH', 'AUTOINCREMENT', 'BEGIN', 'CAST', 'COMMIT', 'CONFLICT', 'DEFERRABLE', 'DEFERRED', 'DETACH', 'END', 'ESCAPE', 'EXCEPT', 'EXCLUSIVE', 'FAIL', 'FULL', 'GLOB', 'IMMEDIATE', 'INDEXED', 'INITIALLY', 'INSTEAD', 'INTERSECT', 'ISNULL', 'NO', 'NOTNULL', 'OF', 'OFFSET', 'PLAN', 'PRAGMA', 'QUERY', 'RAISE', 'REINDEX', 'ROLLBACK', 'ROW', 'SAVEPOINT', 'TEMP', 'TEMPORARY', 'TRANSACTION', 'VACUUM', 'VIEW', 'VIRTUAL'));
+			}
+			if (in_array(strtoupper($identifier), $keywords)) {
+				$addQuotes = true;
+			}
+		}
+		if ($addQuotes) {
+			$identifier = '`'.str_replace('`', '``', $identifier).'`';
+		}
+		self::$quotedIdentifiers[$this->driver][$identifier] = $identifier;
+		return $identifier;
 	}
 
 	/**
@@ -220,12 +254,16 @@ class Database extends \PDO {
 		if ($parameterType === null && $value === null) {
 			return 'NULL';
 		}
-		if ($parameterType === \PDO::PARAM_INT && (is_int($value) || preg_match('/^[1-9]{1}[0-9]*$/', $value))) {
-			// No quotes around INT values.
+		// No quotes around INT values.
+		if (is_int($value) && ($parameterType === null || $parameterType === \PDO::PARAM_INT)) {
 			return $value;
 		}
+		if ($parameterType === \PDO::PARAM_INT && preg_match('/^[1-9]{1}[0-9]*$/', $value)) {
+			return $value;
+		}
+		// Force notation with a dot. "0.5"
 		if (is_float($value)) {
-			$previousLocale = setlocale(LC_NUMERIC, 'C'); // Force notation with a dot. "0.5"
+			$previousLocale = setlocale(LC_NUMERIC, 'C');
 			$value = (string) $value;
 			setlocale(LC_NUMERIC, $previousLocale); // restore locale
 		}
@@ -306,7 +344,7 @@ class Database extends \PDO {
 		if (count($results) > 1) {
 			notice('Unexpected '.count($results).' rows, expecting 1 row');
 		} elseif (!$allow_empty_results) {
-			notice('No record(s) found');
+			notice('Row not found');
 		}
 		return false;
 	}
