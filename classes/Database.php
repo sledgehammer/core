@@ -111,7 +111,7 @@ class Database extends \PDO {
 				$dsn .= ";charset=".$charset;
 			}
 		} else {
-			$this->reportWarnings = false;
+			unset($this->reportWarnings); // Unset the reportWarning property for database drivers that don't support it
 		}
 		if ($isUrlStyle) {
 			$dsn = $driver.':';
@@ -130,7 +130,7 @@ class Database extends \PDO {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
-		if ($this->reportWarnings) {
+		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			parent::exec('SET sql_warnings = ON');
 		}
 		$this->logStatement('[DSN] "'.$dsn.'"', (microtime(true) - $start));
@@ -410,7 +410,7 @@ class Database extends \PDO {
 	 * @return string
 	 */
 	public function lastInsertId($name = null) {
-		if ($name === null && $this->reportWarnings) {
+		if ($name === null && isset($this->reportWarnings) && $this->reportWarnings === true) {
 			return $this->previousInsertId;
 		}
 		return parent::lastInsertId($name);
@@ -469,7 +469,7 @@ class Database extends \PDO {
 	 * @param string $result
 	 */
 	function checkWarnings($statement) {
-		if ($this->reportWarnings) {
+		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			$info = array();
 			if ($statement instanceof SQL) {
 				$info['SQL'] = (string) $statement;
@@ -477,6 +477,10 @@ class Database extends \PDO {
 			$start = microtime(true);
 			$this->previousInsertId = parent::lastInsertId();
 			$warnings = parent::query('SHOW WARNINGS');
+			if ($warnings === false) {
+				$this->reportError('SHOW WARNINGS');
+				return;
+			}
 			$this->executionTime += (microtime(true) - $start);
 			if ($warnings->rowCount()) {
 				foreach ($warnings->fetchAll(\PDO::FETCH_ASSOC) as $warning) {
