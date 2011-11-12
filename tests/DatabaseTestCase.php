@@ -14,7 +14,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$dbName,
 		$queryCount;
 
-	function __construct() {
+	function __construct($pdoDriver = 'sqlite') {
 		parent::__construct();
 		// Voorkom dat de default connectie gebruikt wordt.
 		if (isset($GLOBALS['Databases']['default'])) {
@@ -26,19 +26,31 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		}
 			
 		if ($this->dbLink == '__NOT_CONNECTED__') {
-			$db = new Database('mysql://root@localhost');
-			$host = php_uname('n');
-			$suffix = preg_replace('/[^0-9a-z]*/i', '', '_'.$_SERVER['HTTP_HOST']);
-			$this->dbName = 'UnitTestDB_'.$suffix; // Genereer databasenaam
+			$this->dbName = 'test__'.preg_replace('/[^0-9a-z_]*/i', '', get_class($this).'__'.$_SERVER['HTTP_HOST']); // Genereer databasenaam
 			$this->dbLink = $this->dbName;
-			$db->reportWarnings = false;
-			$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
-			$db->query('CREATE DATABASE '.$this->dbName);
-			$db->query('USE '.$this->dbName);
+
+			switch ($pdoDriver) {
+
+				case 'mysql':
+					$db = new Database('mysql://root@localhost');
+					$db->reportWarnings = false;
+					$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
+					$db->query('CREATE DATABASE '.$this->dbName);
+					$db->query('USE '.$this->dbName);
+					break;
+
+				case 'sqlite':
+					$db = new Database('sqlite::memory:');
+					break;
+				default:
+					throw new \Exception('Unsupported pdoDriver');
+			}					
 			$GLOBALS['Databases'][$this->dbName] = $db;
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
-				$db->reportWarnings = true;
+				if ($pdoDriver === 'mysql') {
+					$db->reportWarnings = true;
+				}
 			}
 		}
 	}
@@ -64,7 +76,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			$db->debug();
 			echo '<br />';
 		}
-		if ($this->dbName) {
+		if ($this->dbName && $db->getAttribute(\PDO::ATTR_DRIVER_NAME) == 'mysql') {
 			$db->query('DROP DATABASE '.$this->dbName);
 		}
 	}
@@ -182,12 +194,27 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		$db = $this->getDatabase();
 		//dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));
 		if ($this->skipRebuildDatabase == false && $this->dbName) {
-			$reportWarnings = $db->reportWarnings;
-			$db->reportWarnings = false;
-			$db->query('DROP DATABASE '.$this->dbName);
-			$db->query('CREATE DATABASE '.$this->dbName);
-			$db->query('USE '.$this->dbName);
-			$db->reportWarnings = $reportWarnings;
+			switch ($db->getAttribute(\PDO::ATTR_DRIVER_NAME)) {
+
+				case 'mysql':
+					$reportWarnings = $db->reportWarnings;
+					$db->reportWarnings = false;
+					$db->query('DROP DATABASE '.$this->dbName);
+					$db->query('CREATE DATABASE '.$this->dbName);
+					$db->query('USE '.$this->dbName);
+					$db->reportWarnings = $reportWarnings;
+					break;
+
+				case 'sqlite';
+					unset($GLOBALS['Databases'][$this->dbLink]);
+					$newDb = new Database('sqlite::memory:');
+					foreach ($db as $property => $value) {
+						$newDb->$property = $value;
+					}
+					$db = $newDb;
+					$GLOBALS['Databases'][$this->dbLink] = $newDb;
+					break;
+			}
 			$this->fillDatabase($db);
 		}
 		$this->queryCount = count($db->log);
