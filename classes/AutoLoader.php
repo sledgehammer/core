@@ -110,6 +110,9 @@ class AutoLoader extends Object {
 	 * @return string|null  Return null if the definion can't be found
 	 */
 	function getFilename($definition) {
+		if (substr($definition, 0, 1) === '\\') {
+			$definition = substr($definition, 1);
+		}
 		$filename = @$this->definitions[$definition];
 		if ($filename !== null) {
 			return $this->fullPath($filename);

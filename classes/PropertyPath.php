@@ -20,8 +20,8 @@
  * @package Core
  */
 namespace SledgeHammer;
-class PropertyPath extends Object {
 
+class PropertyPath extends Object {
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
 	const TYPE_ANY = 'ANY'; // object-property or array-element
@@ -72,6 +72,62 @@ class PropertyPath extends Object {
 				case self::TYPE_METHOD:
 					if (is_object($data)) {
 						$data = $data->{$part[1]}();
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object');
+						return;
+					}
+					break;
+
+				default:
+					throw new \Exception('Unsupported type: '.$part[0]);
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 *
+	 * @param array|object $data
+	 * @param string $path
+	 * @return mixed
+	 */
+	static function &getReference(&$data, $path) {
+		$parts = self::compile($path);
+		foreach ($parts as $part) {
+			switch ($part[0]) {
+
+				case self::TYPE_ANY:
+					if (is_object($data)) {
+						$data = &$data->{$part[1]};
+					} elseif (is_array($data)) {
+						$data = &$data[$part[1]];
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object or array');
+						return;
+					}
+					break;
+
+				case self::TYPE_ELEMENT:
+					if (is_array($data)) {
+						$data = &$data[$part[1]];
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an array');
+						return;
+					}
+					break;
+
+				case self::TYPE_PROPERTY:
+					if (is_object($data)) {
+						$data = &$data->{$part[1]};
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object');
+						return;
+					}
+					break;
+
+				case self::TYPE_METHOD:
+					if (is_object($data)) {
+						$data = &$data->{$part[1]}();
 					} else {
 						notice('Unexpected type: '.gettype($data).', expecting an object');
 						return;
@@ -179,6 +235,7 @@ class PropertyPath extends Object {
 		$cache[$path] = $parts;
 		return $parts;
 	}
+
 	/**
 	 *
 	 * @param string $path
@@ -209,13 +266,12 @@ class PropertyPath extends Object {
 			$tokens[] = array($type, $path);
 			return $tokens;
 		}
-		if ($arrowPos !== false && ($bracketPos === false || $arrowPos < $bracketPos) && ($dotPos === false || $arrowPos < $dotPos)  && ($parenthesesPos === false || $arrowPos < $parenthesesPos) ) {
+		if ($arrowPos !== false && ($bracketPos === false || $arrowPos < $bracketPos) && ($dotPos === false || $arrowPos < $dotPos) && ($parenthesesPos === false || $arrowPos < $parenthesesPos)) {
 			// PROPERTY(OBJECT)
 			if ($arrowPos !== 0) {
 				$tokens[] = array($type, substr($path, 0, $arrowPos));
 			} elseif ($type !== self::TYPE_ANY) {
 				notice('Invalid "->" in in the chain', array('path' => $path));
-
 			}
 //			if ($bracketPos === false) {
 //				$secondArrowPos = self::arrowPosition($path, $arrowPos + 2);
@@ -272,21 +328,26 @@ class PropertyPath extends Object {
 	private static function dotPosition($path, $offset = null) {
 		return strpos($path, '.', $offset);
 	}
+
 	private static function arrowPosition($path, $offset = null) {
 		return strpos($path, '->', $offset);
 	}
+
 	private static function openBracketPosition($path, $offset = null) {
 		return strpos($path, '[', $offset);
 	}
+
 	private static function closeBracketPosition($path, $offset = null) {
 		return strpos($path, ']', $offset);
 	}
+
 	/**
 	 * Postion of the next "("
 	 */
 	private static function parenthesesPosition($path, $offset = null) {
 		return strpos($path, '(', $offset);
 	}
+
 }
 
 ?>
