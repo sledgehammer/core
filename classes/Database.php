@@ -290,7 +290,7 @@ class Database extends \PDO {
 		if ($query_log_count > 0) {
 			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
 			if ($popup) {
-				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); return false">';
+				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); document.getElementById(\''.$id.'\').focus(); return false">';
 			}
 		}
 		echo '<b>', $this->queryCount, '</b>&nbsp;queries';
@@ -305,7 +305,7 @@ class Database extends \PDO {
 		}
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
-				echo '<pre id="'.$id.'" class="sledegehammer_querylog" style="display:none;">';
+				echo '<pre id="'.$id.'" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
 				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&#10062;</a>';
 			}
 			for ($i = 0; $i < $query_log_count; $i++) {

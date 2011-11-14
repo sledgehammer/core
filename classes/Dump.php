@@ -79,7 +79,6 @@ class Dump extends Object {
 	 * @return int
 	 */
 	private static function render_vardump($gegevens, $spaties = 0) {
-		$nixel = '/images/nixel.gif';
 		if ($gegevens[0] == '&') {
 			$gegevens = substr($gegevens, 1);
 			$positie = 1;
