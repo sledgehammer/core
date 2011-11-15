@@ -16,6 +16,7 @@
 	box-shadow: 1px 1px 5px rgba(0,0,0,0.6);
 	font: 10px Monaco, monospace;
 	border-radius: 6px;
+	outline: none;
 }
 .sledegehammer_querylog .sql_keyword {
 	color: blue;
