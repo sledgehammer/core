@@ -30,13 +30,22 @@ class PropertyPathTests extends \UnitTestCase {
 		$this->assertEqual(PropertyPath::compile('->property[element].any'), array(array($property, 'property'), array($element, 'element'), array($any, 'any')));
 	}
 
+	function test_assemble() {
+		$path = '[element]->property';
+		$this->assertEqual(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+		$path = 'any[element]->property';
+		$this->assertEqual(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+		$path = '->property[element].any';
+		$this->assertEqual(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+	}
+
 	function test_compile_warnings() {
 		$any = PropertyPath::TYPE_ANY;
 		$element = PropertyPath::TYPE_ELEMENT;
 		$property = PropertyPath::TYPE_PROPERTY;
 		$this->expectError('Path is empty');
 		$this->assertEqual(PropertyPath::compile(''), array());
-		$this->expectError('Use "." for chaining, not at the beginning');
+		$this->expectError('Invalid start: "." for path: ".any"');
 		$this->assertEqual(PropertyPath::compile('.any'), array(array($any, 'any')));
 		$this->expectError('Invalid chain, expecting a ".", "->" or "[" before "any"');
 		$this->assertEqual(PropertyPath::compile('[element]any'), array(array($element, 'element'), array($any, 'any')));

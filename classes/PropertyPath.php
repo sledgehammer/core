@@ -237,6 +237,41 @@ class PropertyPath extends Object {
 	}
 
 	/**
+	 * Build a path string from a (mutated) compiled path.
+	 *
+	 * @param array $compiledPath
+	 * @return string path
+	 */
+	static function assemble($compiledPath) {
+		$path = '';
+		// @todo Excape values
+		$tokens = array_values($compiledPath); // Force to first $index to 0
+		foreach ($tokens as $index => $token) {
+			switch ($token[0]) {
+				case self::TYPE_ANY:
+					if ($index != 0) {
+						$path .= '.';
+					}
+					$path .= $token[1];
+					break;
+
+				case self::TYPE_PROPERTY:
+					$path .= '->'.$token[1];
+					break;
+
+				case self::TYPE_ELEMENT:
+					$path .= '['.$token[1].']';
+					break;
+
+				default:
+					warning('Unsupported token', $token);
+
+			}
+		}
+		return $path;
+	}
+
+	/**
 	 *
 	 * @param string $path
 	 * @param TYPE $type start type
@@ -319,7 +354,7 @@ class PropertyPath extends Object {
 		if ($dotPos !== 0) {
 			$tokens[] = array($type, substr($path, 0, $dotPos));
 		} else {
-			notice('Use "." for chaining, not at the beginning', array('path' => $path));
+			notice('Invalid start: "." for path: "'.$path.'"', 'Use "." for chaining, not at the beginning of a path');
 		}
 		return array_merge($tokens, self::compilePath(substr($path, $dotPos), self::CHAIN));
 	}
