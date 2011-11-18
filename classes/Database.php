@@ -460,9 +460,13 @@ class Database extends \PDO {
 	 */
 	private function highlight($sql, $truncated, $time, $backtrace) {
 		$sql = htmlspecialchars($sql, ENT_COMPAT, $GLOBALS['charset']);
-		$startKeywords = array('SELECT', 'UPDATE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
-		$inlineKeywords = array('SELECT', 'VALUES', 'SET', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'ASC', 'DESC', 'LIMIT', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'AS', 'ON', 'IN');
-		$sql = preg_replace('/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/', '<span class="sql_keyword">\\0</span>', $sql);
+		static $regex = null;
+		if ($regex === null) {
+			$startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
+			$inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
+			$regex = '/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/';
+		}
+		$sql = preg_replace($regex, '<span class="sql_keyword">\\0</span>', $sql);
 		$sql = preg_replace('/`[^`]+`/', '<span class="sql_identifier">\\0</span>', $sql);
 		if ($time > 0.1) {
 			$color = 'red';
