@@ -515,7 +515,7 @@ class ErrorHandler {
 					}
 				} else {
 					foreach ($value as $key2 => $value2) {
-						echo '&nbsp;&nbsp;'.syntax_highlight($key).' => ', syntax_highlight($value2, null, 2048), "<br />\n";
+						echo '&nbsp;&nbsp;'.syntax_highlight($key2).' => ', syntax_highlight($value2, null, 2048), "<br />\n";
 					}
 				}
 				echo ")<br />\n";;
