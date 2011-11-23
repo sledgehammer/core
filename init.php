@@ -1,6 +1,6 @@
 <?php
 /**
- * SledgeHammer Core initialiseren
+ * Initialize the SledgeHammer Core module.
  *
  * @package Core
  */
@@ -8,22 +8,26 @@ namespace SledgeHammer;
 if (!defined('SledgeHammer\MICROTIME_START')) {
 	define('SledgeHammer\MICROTIME_START', microtime(true));
 }
-define('SledgeHammer\MODULES_DIR', dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR); // Het pad instellen. Dit is de map waar de sledgehammer map in staat.
-define('SledgeHammer\PATH', dirname(MODULES_DIR).DIRECTORY_SEPARATOR); // Het pad instellen. Dit is de map waar de sledgehammer map in staat.
+define('SledgeHammer\MODULES_DIR', dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR); // Configure the constante for the modules directory. Usually the "sledgehammer/" folder.
+define('SledgeHammer\PATH', dirname(MODULES_DIR).DIRECTORY_SEPARATOR); // Configure the constant for the project directory.
 define('SledgeHammer\APPLICATION_DIR', PATH.'application'.DIRECTORY_SEPARATOR);
-define('SledgeHammer\E_MAX', (E_ALL | E_STRICT)); /// Echt alle errors afvangen, inclusief de PHP5 STRICT hints
-error_reporting(E_MAX); // Foutniveau activeren
-if (ini_get('date.timezone') == '') { // Is er geen tijdzone ingesteld?
-	date_default_timezone_set('Europe/Amsterdam'); // Voorkom foutmeldingen door de tijdzone in te stellen
+define('SledgeHammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing level that includes all message types (E_ALL doesn't include E_STRICT)
+error_reporting(E_MAX); // Activate the maximum error_level
+if (ini_get('date.timezone') == '' && DIRECTORY_SEPARATOR === '/') { // No timezone configured in php.ini?
+	error_log('"date.timezone" is not defined in your php.ini');
+	date_default_timezone_set(`date +%Z`); // Use the system's timezone
 }
 $coreDir = dirname(__FILE__).'/';
-require_once($coreDir.'functions.php'); 
-require_once($coreDir.'classes/Object.php'); // De generieke superclass
-require_once($coreDir.'classes/Framework.php'); // Helper class voor modules e.d. 
+require_once($coreDir.'functions.php');
+require_once($coreDir.'classes/Object.php'); // The generic superclass
+require_once($coreDir.'classes/Framework.php'); // Helper class for extracting and loading SledgeHammer modules
 require($coreDir.'classes/ErrorHandler.php');
 require($coreDir.'classes/AutoLoader.php');
 
-$GLOBALS['charset'] = 'UTF-8';
+// Register UTF-8 as default charset
+if (empty($GLOBALS['charset'])) {
+	$GLOBALS['charset'] = 'UTF-8';
+}
 if (function_exists('mb_internal_encoding')) {
 	mb_internal_encoding($GLOBALS['charset']);
 }
@@ -32,7 +36,11 @@ if (function_exists('mb_internal_encoding')) {
 if (defined('SledgeHammer\TMP_DIR')) {
 	mkdirs(TMP_DIR);
 } else {
-	$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
+	if (DIRECTORY_SEPARATOR === '/') {
+		$tmpDir = PATH.'tmp/'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+	} else { // Windows?
+		$tmpDir = PATH.'tmp\\';
+	}
 	if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
 		define('SledgeHammer\TMP_DIR', $tmpDir);
 	} else {
@@ -45,11 +53,11 @@ if (defined('SledgeHammer\TMP_DIR')) {
 	}
 }
 
-// ErrorHandeler instellen (standaard configuratie: geeft geen output, maar logt deze naar de error_log())
+// Register the ErrorHandler & AutoLoader (But leave the the configuration &initialisation to init_framework.php)
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
 $GLOBALS['ErrorHandler']->init();
 
-$GLOBALS['AutoLoader'] = new AutoLoader(PATH); // De AutoLoader aanmaken. (maar om te functioneren moet de $AutoLoader->init() nog aangeroepen worden)
+$GLOBALS['AutoLoader'] = new AutoLoader(PATH);
 spl_autoload_register(array($GLOBALS['AutoLoader'], 'define'));
 
 unset($coreDir, $tmpDir);
