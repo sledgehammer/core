@@ -11,7 +11,11 @@
 namespace {
 
 	/**
-	 * Een zeer krachtige debug functie die de inhoud van een variabele (met htmlopmaak) toont
+	 * Dumps information about a variable, like var_dump() but with improved syntax and coloring.
+	 *
+	 * @param mixed $variable
+	 * @param bool $export
+	 * @return string|void
 	 */
 	function dump($variable, $export = false) {
 		if (!class_exists('SledgeHammer\Dump', false)) {
@@ -27,31 +31,46 @@ namespace {
 	}
 
 	/**
-	 * Een crusiale fout. (script kan niet meer functioneren)
-	 */
+	 * Report a fatal error (and end execution).
+     *
+     * It's preferred to throw Exceptions, which allows the calling code to react to the error.
+     *
+     *
+     * @param string $message  The error
+     * @param mixed $information  [optional] Additional information
+     */
 	function error($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_ERROR, $message, $information, true);
 		exit(1); // Het script direct stoppen.
 	}
 
 	/**
-	 * Een fout. (Het script kan beperkt zijn taak volbrengen)
-	 */
+	 * Report a warning
+     *
+     * @param string $message  The warning
+     * @param mixed $information  [optional] Additional information
+     */
 	function warning($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_WARNING, $message, $information, true);
 	}
 
 	/**
-	 * Een foutje. (Het script werkt, maar een iets niet helemaal lekker.)
-	 */
+	 * Report a notice
+     *
+     * @param string $message  The notice
+     * @param mixed $information  [optional] Additional information
+     */
 	function notice($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_NOTICE, $message, $information, true);
 	}
 
 	/**
-	 * Een verouderde functionaleit.
-	 */
-	function deprecated($message = 'Deze functionaliteit zal in de toekomst niet meer ondersteund worden.', $information = NULL) {
+	 * Report deprecated functionality.
+	 *
+     * @param string $message  The message
+     * @param mixed $information  [optional] Additional information
+     */
+	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_DEPRECATED, $message, $information, true); // Kan pas sinds php 5.3.0
 	}
 
@@ -94,64 +113,6 @@ namespace {
 		}
 		if (array_key_exists($key, $array)) {
 			return $array[$key];
-		}
-	}
-
-	/**
-	 * implode, maar dan zodat deze leesbaar is voor mensen.
-	 * Bv: echo human_implode(' of ', array('appel', 'peer', 'banaan')); wordt 'appel, peer of banaan'
-	 *
-	 * @param string $glueLast deze wordt gebruikt tussen de laaste en het eennalaatste element. bv: ' en ' of ' of '
-	 * @param array $array
-	 * @param string $glue
-	 * @return string
-	 */
-	function human_implode($glueLast, $array, $glue = ', ') {
-		if (!$array || !count($array)) { // sanity check
-			return '';
-		}
-		$last = array_pop($array); // get last element
-		if (!count($array)) { // if it was the only element - return it
-			return $last;
-		}
-		return implode($glue, $array).$glueLast.$last;
-	}
-
-	/**
-	 * Humam implode, but qith quotes (") around the values.
-	 *
-	 * @param string $glueLast
-	 * @param string $array
-	 * @param string $glue
-	 * @param string $quote
-	 * @return string
-	 */
-	function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"') {
-		if (count($array) == 0) {
-			return '';
-		}
-		return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
-	}
-
-	/**
-	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
-	 *
-	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast
-	 * @param array $values Een assoc array met als key de eigenschap. bv: array('id' => 1)
-	 * @param bool $check_for_propery Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
-	 * @return void
-	 */
-	function set_object_vars($Object, $values, $check_for_property = false) {
-		if ($check_for_property) {
-			foreach ($values as $property => $value) {
-				if (property_exists($Object, $property)) {
-					$Object->$property = $value;
-				}
-			}
-		} else {
-			foreach ($values as $property => $value) {
-				$Object->$property = $value;
-			}
 		}
 	}
 
@@ -223,6 +184,57 @@ namespace SledgeHammer {
 			return $default;
 		}
 		return $mimetype;
+	}
+
+	/**
+	 * implode(), maar dan zodat deze leesbaar is voor mensen.
+	 * Bv: echo human_implode(' of ', array('appel', 'peer', 'banaan')); wordt 'appel, peer of banaan'
+	 *
+	 * @param string $glueLast deze wordt gebruikt tussen de laaste en het eennalaatste element. bv: ' en ' of ' of '
+	 * @param array $array
+	 * @param string $glue
+	 * @return string
+	 */
+	function human_implode($glueLast, $array, $glue = ', ') {
+		if (!$array || !count($array)) { // sanity check
+			return '';
+		}
+		$last = array_pop($array); // get last element
+		if (!count($array)) { // if it was the only element - return it
+			return $last;
+		}
+		return implode($glue, $array).$glueLast.$last;
+	}
+
+	/**
+	 * human_implode(), but with quotes (") around the values.
+	 *
+	 * @param string $glueLast
+	 * @param string $array
+	 * @param string $glue
+	 * @param string $quote
+	 * @return string
+	 */
+	function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"') {
+		if (count($array) == 0) {
+			return '';
+		}
+		return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
+	}
+
+    /**
+	 * implode(), but with quotes (") around the values.
+	 *
+	 * @param string $glue
+     * @param string $array
+	 * @param string $quote
+	 * @return string
+	 */
+	function quoted_implode($glue, $array, $quote = '"') {
+		if (count($array) == 0) {
+			return '';
+		}
+		return $quote.mplode($quote.$glue.$quote, $array).$quote;
 	}
 
 	/**
@@ -326,6 +338,28 @@ namespace SledgeHammer {
 			}
 		}
 		return true; // Er zijn geen verschillen gevonden
+	}
+
+	/**
+	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
+	 *
+	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast
+	 * @param array $values Een assoc array met als key de eigenschap. bv: array('id' => 1)
+	 * @param bool $check_for_propery Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
+	 * @return void
+	 */
+	function set_object_vars($Object, $values, $check_for_property = false) {
+		if ($check_for_property) {
+			foreach ($values as $property => $value) {
+				if (property_exists($Object, $property)) {
+					$Object->$property = $value;
+				}
+			}
+		} else {
+			foreach ($values as $property => $value) {
+				$Object->$property = $value;
+			}
+		}
 	}
 
 	/**
@@ -563,7 +597,7 @@ namespace SledgeHammer {
 	 *
 	 * @param mixed $variable
 	 * @param string $datatype  Skip autodetection/force a type
-	 * @param int $maxLenghtTitle  maximum length for the title attribute (which contains the contents of the array|object) 
+	 * @param int $maxLenghtTitle  maximum length for the title attribute (which contains the contents of the array|object)
 	 * @return string
 	 */
 	function syntax_highlight($variable, $datatype = null, $maxLenghtTitle = 256) {

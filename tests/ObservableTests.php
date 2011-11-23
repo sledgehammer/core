@@ -8,7 +8,7 @@ namespace SledgeHammer;
 class ObservableTests extends \UnitTestCase {
 
 	function test_button() {
-		$button = $this->getButton();
+		$button = new TestButton();
 		// Test hasEvent
 		$this->assertTrue($button->hasEvent('click'));
 		$this->assertFalse($button->hasEvent('won_world_cup'));
@@ -43,28 +43,6 @@ class ObservableTests extends \UnitTestCase {
 		$button->fire('click', $button);
 		$this->assertEqual($button->clicked, 'custom event2');
 		$this->assertEqual($button->data, 'custom event3');
-	}
-
-	/**
-	 *
-	 * @return Observable
-	 */
-	private function getButton() {
-		eval('namespace SledgeHammer;
-class TestButton extends Observable {
-
-	protected $events = array(
-		"click" => array()
-	);
-	public $clicked = false;
-	public $data = false;
-
-	protected function onClick($sender) {
-		$this->clicked = "Clicked by ".get_class($sender);
-	}
-
-}');
-		return new TestButton();
 	}
 
 }
