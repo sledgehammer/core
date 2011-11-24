@@ -25,8 +25,13 @@ class Text extends Object implements \ArrayAccess {
 	 * @param string $charset  The charset of $text, null will auto-detect
 	 */
 	function __construct($text, $charset = null) {
+		unset($this->length);
 		if ($text instanceof Text) {
-			$this->text = $text->text;
+			$this->text = $text;
+			if ($charset !== null && $charset !== 'UTF-8') {
+				notice('Invalid charset given, an Text object will alway be UTF-8 encoded');
+			}
+			return;
 		}
 		if ($charset === null) {
 			$charset = mb_detect_encoding($text, array('ASCII', 'UTF-8', 'ISO-8859-15'), true);
@@ -36,7 +41,6 @@ class Text extends Object implements \ArrayAccess {
 			}
 		}
 		$this->text = mb_convert_encoding($text, 'UTF-8', $charset);
-		unset($this->length);
 	}
 
 	function __toString() {
@@ -103,6 +107,27 @@ class Text extends Object implements \ArrayAccess {
 	 */
 	function trimEnd($charlist = null) {
 		return new Text(rtrim($this->text, $charlist), 'UTF-8');
+	}
+
+	/**
+	 * Returns a truncated copy of this text.
+	 * Only appends the given suffix when the text was trucated.
+	 *
+	 * @param int $maxLenght
+	 * @param string $suffix [optional] Defaults to  the "..." character
+	 * @return Text
+	 */
+	function truncate($maxLenght, $suffix = null) {
+		if ($this->length < $maxLenght) {
+			return new Text($this->text, 'UTF-8');
+		}
+		if ($suffix === null) {
+			$suffix = html_entity_decode('&hellip;', ENT_NOQUOTES, 'UTF-8');
+		} else {
+			$suffix = new Text($suffix);
+		}
+		$pos = strrpos($this->substring(0, $maxLenght), ' ');
+		return $this->substring(0, $pos).$suffix;
 	}
 
 	/**
