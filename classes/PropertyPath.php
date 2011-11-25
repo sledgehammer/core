@@ -52,7 +52,7 @@ class PropertyPath extends Object {
 					break;
 
 				case self::TYPE_ELEMENT:
-					if (is_array($data)) {
+					if (is_array($data) || (is_object($data) && $data instanceof \ArrayAccess)) {
 						$data = $data[$part[1]];
 					} else {
 						notice('Unexpected type: '.gettype($data).', expecting an array');

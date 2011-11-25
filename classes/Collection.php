@@ -61,14 +61,19 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 	/**
 	 * Returns a new collection where the key is based on a property
 	 *
-	 * @param string $path  The path that will be used as key.
+	 * @param string|Closure $selector  The path that will be used as key.
 	 * @return Collection
 	 */
-	function selectKey($path) {
+	function selectKey($selector) {
 		$items = array();
-		foreach ($this as $key => $item) {
-			$key = PropertyPath::get($item, $path);
-			$items[$key] = $item;
+		if (is_object($selector) && is_callable($selector)) {
+			foreach ($this as $key => $item) {
+				$items[$selector($item, $key)] = $item;
+			}
+		} else {
+			foreach ($this as $item) {
+				$items[PropertyPath::get($item, $selector)] = $item;
+			}
 		}
 		return new Collection($items);
 	}
