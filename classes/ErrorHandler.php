@@ -25,7 +25,7 @@ class ErrorHandler {
 	public $html = false;
 
 	/**
-	 * @var Email de foutmelding naar dit emailadres.
+	 * @var string Email de foutmelding naar dit emailadres.
 	 */
 	public $email = false;
 	// Limiet aan het aantal email dat de ErrorHandler verstuurd.
@@ -33,17 +33,23 @@ class ErrorHandler {
 	/**
 	 * @var Het aantal fouten dat gemaild gedurende 1 php script.
 	 */
-	public $emails_per_request = false;
+	public $emails_per_request = 'NO_LIMIT';
 
 	/**
 	 * @var Het aantal fouten dat gemaild mag worden per minuut.
 	 */
-	public $emails_per_minute = false;
+	public $emails_per_minute = 'NO_LIMIT';
 
 	/**
 	 * @var Het aantal fouten dat gemaild mag worden per dag.
 	 */
-	public $emails_per_day = false;
+	public $emails_per_day = 'NO_LIMIT';
+
+	/**
+	 * @var int  Limit the amount of errors with a full backtrace. Setting this value too high may cause browser crashes. (The limit is measured per error-type)
+	 */
+	public $detail_limit = 50;
+	private $limits = array();
 
 	/**
 	 * Some error levels can't be caught or triggered directly, but could be retrieved with error_get_last()
@@ -177,12 +183,28 @@ class ErrorHandler {
 		} else {
 			$message_color = '#cc0000';
 		}
+		// Determine if a full report should be rendered
+		$showDetails = true;
+		if ($this->detail_limit !== 'NO_LIMIT') {
+			if (isset($this->limits['backtrace'][$type]) === false) {
+				$this->limits['backtrace'][$type] = $this->detail_limit;
+			}
+			if ($this->limits['backtrace'][$type] === 0) {
+				$showDetails = false;
+			} else {
+				$this->limits['backtrace'][$type]--;
+			}
+		}
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
-		echo '<div style="', implode(';', $style), '"><img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" /><span style="color:', $message_color, "\">\n";
+		echo '<div style="', implode(';', $style), '">';
+		if ($showDetails) {
+			echo '<img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" />';
+		}
+		echo '<span style="color:', $message_color, "\">\n";
 		if (is_array($message)) {
 			$message = 'Array';
 		}
-		$backtrace = debug_backtrace();
+		$backtrace = debug_backtrace(); // @todo Implement a more effient way to detect exceptions
 		$exception = false;
 		if (isset($backtrace[3]['function']) && $backtrace[3]['function'] == 'handle_exception' && $backtrace[3]['args'][0] instanceof \Exception) {
 			$exception = $backtrace[3]['args'][0];
@@ -198,7 +220,6 @@ class ErrorHandler {
 		if (strpos($message, '<span style="color:') === false) { // Alleen html van de syntax_hightlight functie toestaan, alle overige htmlkarakers escapen
 			$message_plain = htmlspecialchars($message_plain); // Vertaal alle html karakters
 		}
-
 		echo '<b>';
 		if ($exception) {
 			if ($type == E_USER_ERROR) {
@@ -208,41 +229,50 @@ class ErrorHandler {
 		} else {
 			echo $this->error_types[$type];
 		}
-		echo ':</b> ', $message_plain, '</span><br clear="all" />', "\n";
-		if ($information !== NULL && !empty($information)) {
-			echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
-			if (is_array($information)) {
-				$this->export_array($information);
-			} elseif (is_object($information)) {
-				echo syntax_highlight($information), ":<br />\n";
-				$this->export_array($information);
-			} else {
-				echo $information, "<br />\n";
-			}
-			echo '</span>';
-		}
-		if ($this->email) { // email specifieke informatie blokken genereren?
-			$this->client_info();
-			$this->server_info();
-		}
-		$this->backtrace($backtrace);
-		switch ($type) {
+		echo ':</b> ', $message_plain, '</span>';
 
-			case E_WARNING:
-			case E_USER_ERROR:
-			case E_USER_WARNING:
-				if (!empty($GLOBALS['Databases'])) {
-					echo '<b>Databases</b><br />';
-					$popup = $this->email ? false : true;
-					foreach ($GLOBALS['Databases'] as $link => $Database) {
-						if (is_object($Database) && method_exists($Database, 'debug')) {
-							echo $link, ': ';
-							$Database->debug($popup);
-							echo "<br />\n";
+		if ($showDetails || $this->email) {
+			echo '<br clear="all" />', "\n";
+			if ($information !== NULL && !empty($information)) {
+				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
+				if (is_array($information)) {
+					$this->export_array($information);
+				} elseif (is_object($information)) {
+					echo syntax_highlight($information), ":<br />\n";
+					$this->export_array($information);
+				} else {
+					echo $information, "<br />\n";
+				}
+				echo '</span>';
+			}
+			if ($this->email) { // email specifieke informatie blokken genereren?
+				$this->client_info();
+				$this->server_info();
+			}
+			$this->backtrace($backtrace);
+			switch ($type) {
+
+				case E_WARNING:
+				case E_USER_ERROR:
+				case E_USER_WARNING:
+					if (!empty($GLOBALS['Databases'])) {
+						echo '<b>Databases</b><br />';
+						$popup = $this->email ? false : true;
+						foreach ($GLOBALS['Databases'] as $link => $Database) {
+							if (is_object($Database) && method_exists($Database, 'debug')) {
+								echo $link, ': ';
+								$Database->debug($popup);
+								echo "<br />\n";
+							}
 						}
 					}
-				}
-				break;
+					break;
+			}
+		} else {
+			$location = $this->location();
+			if ($location !== false) {
+				echo '&nbsp;&nbsp; in <b>', $location['file'], '</b> on line <b>',$location['line'],'</b>';
+			}
 		}
 		echo '</div>';
 	}
