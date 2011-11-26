@@ -218,7 +218,8 @@ class AutoLoader extends Object {
 			} elseif (file_exists($cacheFile)) {
 				$mtimeCache = filemtime($cacheFile);
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-				if ($revalidateCache == false || $mtimeCache > mtime_folders($path)) { // Is het cache bestand niet verouderd?
+				$mtimeFolder = ($revalidateCache ? mtime_folders($path) : 0);
+				if ($mtimeFolder !== false && $mtimeCache > $mtimeFolder) { // Is het cache bestand niet verouderd?
 					// Use the cacheFile
 					include($cacheFile);
 					$this->definitions += $definitions;
