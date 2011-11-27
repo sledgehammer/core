@@ -36,18 +36,19 @@ if (function_exists('mb_internal_encoding')) {
 if (defined('SledgeHammer\TMP_DIR')) {
 	mkdirs(TMP_DIR);
 } else {
-	if (DIRECTORY_SEPARATOR === '/') {
+	if (function_exists('posix_getpwuid')) {
 		$tmpDir = PATH.'tmp/'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
-	} else { // Windows?
-		$tmpDir = PATH.'tmp\\';
+	} else {
+		$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
 	}
 	if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
 		define('SledgeHammer\TMP_DIR', $tmpDir);
 	} else {
-		$tmpDir = '/tmp/sledgehammer-'.md5(PATH).'/';
+		$tmpDir = '/tmp/sledgehammer-'.md5(PATH);
 		if (function_exists('posix_getpwuid')) {
-			$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+			$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name');
 		}
+		$tmpDir .= '/';
 		define('SledgeHammer\TMP_DIR', $tmpDir);
 		mkdirs(TMP_DIR);
 	}
