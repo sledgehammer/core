@@ -305,18 +305,18 @@ class Database extends \PDO {
 		}
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
-				echo '<pre id="'.$id.'" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
+				echo '<div id="'.$id.'" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
 				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&#10062;</a>';
 			}
 			for ($i = 0; $i < $query_log_count; $i++) {
 				$log = $this->log[$i];
-				echo '<div><span class="sledegehammer_querylog_number">'.$i.'</span> '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'</div>';
+				echo '<div class="sledegehammer_querylog_sql"><span class="sledegehammer_querylog_number">'.$i.'</span> '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'</div>';
 			}
 			if ($this->queryCount == 0 && ($this->queryCount - $query_log_count) > 0) {
 				echo '<br /><b style="color:#ffa500">The other '.($this->number_of_queries - $query_log_count).' queries are suppressed.</b><br /><br />';
 			}
 			if ($popup) {
-				echo '</pre>';
+				echo '</div>';
 			}
 		}
 	}

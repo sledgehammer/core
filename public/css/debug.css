@@ -12,11 +12,20 @@
 	color: #333;
 	text-shadow: none;
 	text-align: left;
-	white-space: pre-wrap;
 	box-shadow: 1px 1px 5px rgba(0,0,0,0.6);
-	font: 10px Monaco, monospace;
 	border-radius: 6px;
 	outline: none;
+}
+.sledegehammer_querylog_sql {
+	margin: 0;
+	padding: 2px 7px;
+	font: 10px Monaco, monospace;
+	white-space: pre-wrap;
+}
+.sledegehammer_querylog_sql:nth-child(odd) {
+	background: whiteSmoke;
+	border-top: 1px solid #F0F0FF;
+	border-bottom: 1px solid #F0F0FF;
 }
 .sledegehammer_querylog .sql_keyword {
 	color: blue;
@@ -30,14 +39,6 @@
 	min-width: 20px;
 	text-align: right;
 	margin-right: 4px;
-}
-.sledegehammer_querylog div {
-	padding: 2px 7px;
-}
-.sledegehammer_querylog div:nth-child(odd) {
-	background: whiteSmoke;
-	border-top: 1px solid #F0F0FF;
-	border-bottom: 1px solid #F0F0FF;
 }
 .sledegehammer_querylog_close {
 	color: #909090;
@@ -57,6 +58,7 @@
 
 /* Statusbar styling */
 .statusbar_hide {
+	float:right;
 	margin-right: 4px;
 	font: 14px sans-serif;
 	text-decoration: none;
@@ -73,7 +75,7 @@
 	text-align: center;
 	clear: both;
 	min-height: 18px;
-	opacity: 0.96;
+/*	opacity: 0.97;*/
 	position: fixed;
 	left: 0;
 	bottom: 0;
