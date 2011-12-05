@@ -376,7 +376,7 @@ namespace SledgeHammer {
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
 	 *
-	 * @param string $url  De URL van de
+	 * @param string $url
 	 * @param bool $permanent  Bij true wordt ook de "301 Moved Permanently" header verstuurd
 	 * @return exit()
 	 */

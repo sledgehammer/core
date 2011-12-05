@@ -1,7 +1,7 @@
 <?php
 /**
  * Vergelijkt 2 environments, en geeft aan constantes/database settings verschillen/ontbreken.
- * 
+ *
  */
 namespace SledgeHammer;
 class CompareEnvironments extends Util {
@@ -104,14 +104,14 @@ class CompareEnvironments extends Util {
 				if ($environment == $source) { // Is deze database setting voor de bron environment?
 					if (isset($database_settings[$target.'.'.$link])) { // Is deze link ook voor de target environment geconfigureerd?
 						$target_settings = $database_settings[$target.'.'.$link];
-					} else { 
+					} else {
 						$target_settings = array(); // Er zijn geen target settings
 					}
 					$data = formatted_diff($settings, $target_settings);
 				} elseif ($environment == $target) {
 					if (isset($database_settings[$source.'.'.$link])) { // Is deze link ook voor de target environment geconfigureerd?
 						$source_settings = $database_settings[$source.'.'.$link];
-					} else { 
+					} else {
 						$source_settings = array(); // Er zijn geen target settings
 					}
 					$data = formatted_diff($source_settings, $settings);
@@ -134,7 +134,7 @@ class CompareEnvironments extends Util {
 					'target' => '['.$target.']',
 					);
 			$ConstantsDiff->Iterator = $constants_diff;
-			$output .= '<h2>Constants.ini\'s</h2>'.component_to_string($ConstantsDiff);
+			$output .= '<h2>Constants.ini\'s</h2>'.export_view($ConstantsDiff);
 		}
 
 		if (count($database_diff) > 0) {
@@ -145,13 +145,13 @@ class CompareEnvironments extends Util {
 					'target' => '['.$target.']',
 					);
 			$DatabaseDiff->Iterator = $database_diff;
-			$output .= '<h2>Database.ini</h2>'.component_to_string($DatabaseDiff);
+			$output .= '<h2>Database.ini</h2>'.export_view($DatabaseDiff);
 		}
 
 		if ($output == '') {
-			$output .= component_to_string(new MessageBox('information.gif', 'No differences found', 'The environments are identical'));
+			$output .= export_view(new MessageBox('information.gif', 'No differences found', 'The environments are identical'));
 		}
-		return new HTML(component_to_string($Form).'<br />'.$output);
+		return new HTML(export_view($Form).'<br />'.$output);
 	}
 }
 ?>

@@ -1,9 +1,9 @@
 <?php
 /**
- * Verzorgt de implementatie van de dump() functie.
- * Maakt gebruik van var_dump() en voegt er dan syntax highlighting aan toe.
+ * A collection of static functions that implement the global dump() function.
+ * Parses an var_dump() and renders a syntax highlighted var_export();
  *
- * (Is compatible met Component interface uit Webcore)
+ * (Is compatible with the View interface from MVC)
  * @package Core
  */
 namespace SledgeHammer;
@@ -53,7 +53,7 @@ class Dump extends Object {
 			'padding:3px',
 			'padding-left: 9px',
 			'color: #777777',
-			'text-shadow: none',			
+			'text-shadow: none',
 		);
 		echo '<div style="'.implode(';', $dumptrace_style).'">';
 		if ($trace) {
@@ -231,7 +231,7 @@ class Dump extends Object {
 	}
 
 	/**
-	 * Achterhaald het bestand en regelnummer waarvan de dump functie is aangeroepen 
+	 * Achterhaald het bestand en regelnummer waarvan de dump functie is aangeroepen
 	 */
 	private static function trace() {
 		$trace = debug_backtrace();
@@ -270,7 +270,7 @@ class Dump extends Object {
 		$parts = explode(':', $attribute);
 		$partsCount = count($parts);
 		switch ($partsCount) {
-			
+
 			case 1: // Is de scope niet opgegeven?
 				echo syntax_highlight(substr($attribute, 1, -1), 'attribute');
 				break;
