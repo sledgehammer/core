@@ -72,7 +72,7 @@ class Framework {
 	}
 
 	/**
-	 * Initialiseerd een module. 
+	 * Initialiseerd een module.
 	 * laad de $module/functions.php en $module/init.php in
 	 *
 	 * @param string $path Absolute path van een module
@@ -178,6 +178,50 @@ class Framework {
 	}
 
 	/**
+	 * Stel de Locale in zodat getallen en datums op de juiste manier worden weergegeven
+	 *
+	 * @param NULL|string $language engelse benaming van de taal die moet worden ingesteld.
+	 * @return void
+	 */
+	static function initLanguage($language) {
+		switch ($language) {
+
+			case 'dutch':
+				$locales = array('nl_NL.utf8', 'nl_NL.UTF-8', 'dutch');
+				break;
+
+			default:
+				warning('Invalid language: "'.$language.'"');
+				return;
+		}
+		if (!setlocale(LC_ALL, $locales)) {
+			exec('locale -a', $available_locales);
+			notice('Setting locale to "'.implode('", "', $locales).'" has failed', 'Available locales: "'.implode('", "', $available_locales).'"');
+		} elseif (setlocale(LC_ALL, 0) == 'C') {
+			notice('setlocale() failed. (Cygwin issue)');
+		}
+	}
+
+	/**
+	 * De sessie starten, biedt de mogenlijkheid voor sessies in de database
+	 */
+	static function initSession() { // [void]
+		if (headers_sent($file, $line)) {
+			notice('Session could not be started. Output started in '.$file.' on line '.$line);
+		} else {
+			if (isset($_SESSION)) { // Is de sessie al gestart?
+				return;
+			}
+			// Voorkom PHPSESSID in de broncode bij zoekmachines
+			if (empty($_SERVER['HTTP_USER_AGENT'])) { // Is de browser meegegeven?
+				// Er is geen user_agent/browser opgegeven, waarschijnlijk dan geen browser
+				ini_set('url_rewriter.tags', ''); // Geen PHPSESSID in de html code stoppen
+			}
+			session_start();
+		}
+	}
+
+	/**
 	 * De settings van de databases van 1 environment uit een ini file halen.
 	 *
 	 * @param string $environment  De environment waar de connecties van gemaakt worden.
@@ -212,7 +256,7 @@ class Framework {
 
 	/**
 	 * Detecteer alle modules in de modules map
-	 * 
+	 *
 	 * @param string $modulePath
 	 * @return array
 	 */
