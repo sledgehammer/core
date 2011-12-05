@@ -3,7 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 namespace SledgeHammer;
-class SledgeHammerEnvironmentChecks extends \UnitTestCase {
+class SledgeHammerEnvironmentChecks extends TestCase {
 
 	/**
 	 * Controleer of de php.ini instellingen goed staan
@@ -18,7 +18,7 @@ class SledgeHammerEnvironmentChecks extends \UnitTestCase {
 	 * Controleer de PHP versie
 	 */
 	function test_php_version() {
-		$this->assertTrue(version_compare(PHP_VERSION, '5.2.6', '>='), 'PHP should be version 5.2.6 or higher'); 
+		$this->assertTrue(version_compare(PHP_VERSION, '5.2.6', '>='), 'PHP should be version 5.2.6 or higher');
 	}
 
 	/**

@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class PropertyPathTests extends \UnitTestCase {
+class PropertyPathTests extends TestCase {
 
 	function test_compile() {
 		$any = PropertyPath::TYPE_ANY;

@@ -3,7 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 namespace SledgeHammer;
-class HTMLTokenizerTests extends \UnitTestCase {
+class HTMLTokenizerTests extends TestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);
@@ -27,7 +27,7 @@ EOD;
 		$this->assertNoWarnings($tokens);
 	}
 
-	
+
 	function dont_test_plainText() {
 		$tokenizer = new HTMLTokenizer('Een plain tekst voorbeeld');
 		$this->prettyPrint($tokenizer);
@@ -45,7 +45,7 @@ EOD;
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
-	
+
 	function dont_test_before_after() {
 		$tokens = new HTMLTokenizer('before<br />middle<a href="test.html" empty="">TEST</a>after');
 		$this->prettyPrint($tokens);
@@ -57,7 +57,7 @@ EOD;
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
-		
+
 		$html = <<<EOD
 <!DOCTYPE NEWSPAPER [
 
@@ -67,7 +67,7 @@ EOD;
 <!ELEMENT BYLINE (#PCDATA)>
 <!ELEMENT LEAD (#PCDATA)>
 <!ELEMENT BODY (#PCDATA)>
-<!ELEMENT NOTES (#PCDATA)> 
+<!ELEMENT NOTES (#PCDATA)>
 
 <!ATTLIST ARTICLE AUTHOR CDATA #REQUIRED>
 <!ATTLIST ARTICLE EDITOR CDATA #IMPLIED>
@@ -105,7 +105,7 @@ EOD;
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
-	
+
 	function dont_test_unterminated_stuff() {
 		$cacheFile = PATH.'tmp/www.w3.org_index.html';
 		if (file_exists($cacheFile)) {
@@ -119,10 +119,10 @@ EOD;
 		$tokenizer = new HTMLTokenizer($html);
 		$this->prettyPrint($tokenizer);
 		$this->assertNoWarnings($tokenizer);
-		
+
 		//$tokens = iterator_to_array($tokenizer);
 		/*
-		
+
 		$start = microtime(true);
 		for($i = strlen($html); $i > 2; $i--) {
 			$tokenizer = new HTMLTokenizer($html);
@@ -136,8 +136,8 @@ EOD;
 		dump(microtime(true) - $start);
 		*/
 	}
-	
-	
+
+
 	private function prettyPrint($tokenizer) {
 		$errorColor = 'white:background:red';
 		$colors = array(
@@ -145,35 +145,35 @@ EOD;
 			'T_CLOSE_TAG' => 'purple',
 			'T_OPEN' => 'green',
 			'T_CLOSE' => 'green',
-		
+
 			'T_ATTRIBUTE' => 'brown',
 			'T_VALUE' => 'darkblue',
 			'T_COMMENT' => 'gray',
 			'T_DTD_ENTITY' => 'orange',
 			'T_DTD_ATTRIBUTES' => 'brown',
-		
+
 			'T_TEXT' => 'black',
 			'T_CDATA' => 'black',
 			'T_WHITESPACE' => 'red',
 			'T_INVALID' => $errorColor,
 			'T_LT' => $errorColor,
 			'T_GT' => $errorColor,
-		
+
 			'T_PARSER_TAG' => 'Aquamarine',
-		
+
 			'T_DELIMITER' => 'orange',
 		);
 		echo '<pre style="background:white;overflow:auto;padding:10px;color:red">';
 		foreach ($tokenizer as $index => $token) {
 			if (is_array($token)) {
-				echo '<span title="', $token[0] ,'" style="color:' , $colors[$token[0]], '">', htmlentities($token[1]), '</span>';				
+				echo '<span title="', $token[0] ,'" style="color:' , $colors[$token[0]], '">', htmlentities($token[1]), '</span>';
 			} else {
 				echo '<span style="color:green">', htmlentities($token), '</span>';
 			}
 		}
 		echo "</pre>";
-	}	
-	
+	}
+
 	private function assertNoWarnings($tokenizer) {
 		foreach($tokenizer->warnings as $warning) {
 			$this->fail($warning);

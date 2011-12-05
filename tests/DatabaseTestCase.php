@@ -3,14 +3,14 @@
  * Breidt de UnitTestCase class uit met assert functies voor het controleren van queries en tabellen.
  */
 namespace SledgeHammer;
-abstract class DatabaseTestCase extends \UnitTestCase {
+abstract class DatabaseTestCase extends TestCase {
 
 	protected
 		$skipRebuildDatabase = false,
 		$dbLink = '__NOT_CONNECTED__',
 		$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
 
-	private 
+	private
 		$dbName,
 		$queryCount;
 
@@ -24,14 +24,17 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 		if(ENVIRONMENT != 'development') {
 			return;
 		}
-			
+
 		if ($this->dbLink == '__NOT_CONNECTED__') {
-			$this->dbName = 'test__'.preg_replace('/[^0-9a-z_]*/i', '', get_class($this).'__'.$_SERVER['HTTP_HOST']); // Genereer databasenaam
+			$parts = explode('\\', get_class($this));
+			$class = preg_replace('/Tests$/', '', array_pop($parts)); // Classname without namespace and "Tests" suffix
+			$this->dbName = 'TestDB_'.preg_replace('/[^0-9a-z_]*/i', '', $class); // Genereer databasenaam
 			$this->dbLink = $this->dbName;
 
 			switch ($pdoDriver) {
 
 				case 'mysql':
+					$this->dbLink .= '_'.$_SERVER['HTTP_HOST'];;
 					$db = new Database('mysql://root@localhost');
 					$db->reportWarnings = false;
 					$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
@@ -44,8 +47,8 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 					break;
 				default:
 					throw new \Exception('Unsupported pdoDriver');
-			}					
-			$GLOBALS['Databases'][$this->dbName] = $db;
+			}
+			$GLOBALS['Databases'][$this->dbLink] = $db;
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
 				if ($pdoDriver === 'mysql') {
@@ -54,7 +57,7 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 			}
 		}
 	}
-	
+
 	function getTests() {
 		if(ENVIRONMENT != 'development') {
 			$this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
@@ -64,36 +67,34 @@ abstract class DatabaseTestCase extends \UnitTestCase {
 	}
 
 	/**
-	 * Laatste test in de UnitTest
+	 * The last test in the TestCase
 	 */
-	function test_debug() {
+	function test_cleanup() {
+		// Restore default database connection
 		if (isset($GLOBALS['Databases']['default_backup'])) {
 			$GLOBALS['Databases']['default'] = $GLOBALS['Databases']['default_backup'];
 			unset($GLOBALS['Databases']['default_backup']);
 		}
+		// DROP test database
 		$db = $this->getDatabase();
-		if ($this->debug) {
-			$db->debug();
-			echo '<br />';
-		}
 		if ($this->dbName && $db->getAttribute(\PDO::ATTR_DRIVER_NAME) == 'mysql') {
 			$db->query('DROP DATABASE '.$this->dbName);
 		}
 	}
 
 	/**
-	 * 
+	 * Shoud be used to fill the testdatabase with content (CREATEs and INSERTs)
 	 */
 	abstract function fillDatabase($database);
-	
+
 
 	/**
-	 * @return Database 
+	 * @return Database
 	 */
 	function getDatabase() {
 		return getDatabase($this->dbLink);
-	}		
-	
+	}
+
 
 	/**
 	 * Controleer of de $sql query is uitgevoerd sinds de start van de test_*()

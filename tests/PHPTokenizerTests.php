@@ -4,12 +4,12 @@
  *
  */
 namespace SledgeHammer;
-class PHPTokenizerTests extends \UnitTestCase {
-	
+class PHPTokenizerTests extends TestCase {
+
 	function donttest_tokenizer() {
 		$filename = $GLOBALS['AutoLoader']->getFilename('SledgeHammer\FFVideo');
 		$this->assertEqualTokenizer($filename);
-		
+
 		try {
 			$tokenizer = new PHPTokenizer(file_get_contents($filename));
 			$tokens = iterator_to_array($tokenizer);
@@ -24,17 +24,17 @@ class PHPTokenizerTests extends \UnitTestCase {
 //			dump($tokenizer);
 //			dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);	
+			ErrorHandler::handle_exception($e);
 		}
 	}
-	
+
 	function donttest_tokenizer_merged_output() {
 		$files = $this->getDefinitionFiles();
 		foreach ($files as $filename) {
-			$this->assertEqualTokenizer($filename); 
+			$this->assertEqualTokenizer($filename);
 		}
 	}
-	
+
 	private function assertEqualTokenizer($filename) {
 		$content = file_get_contents($filename); //$GLOBALS['AutoLoader']->getFilename('SledgeHammer\GoogleAnalytics');
 		try {
@@ -51,7 +51,7 @@ class PHPTokenizerTests extends \UnitTestCase {
 			$this->fail($e->getMessage());
 		}
 	}
-	
+
 	private function getDefinitionFiles() {
 		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
 		$files = array();

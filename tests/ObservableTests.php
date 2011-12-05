@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class ObservableTests extends \UnitTestCase {
+class ObservableTests extends TestCase {
 
 	function test_button() {
 		$button = new TestButton();

@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class TextTests extends \UnitTestCase {
+class TextTests extends TestCase {
 
 	function test_length_and_encoding_detection() {
 		$utf8 = $this->getString('UTF-8');

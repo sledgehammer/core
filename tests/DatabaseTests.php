@@ -1,12 +1,20 @@
 <?php
 /**
  * Test Database behaviour
+ *
+ * @package Core
  */
 namespace SledgeHammer;
 
 class DatabaseTests extends DatabaseTestCase {
 
-	function donttest_connect() {
+	function __construct() {
+		parent::__construct();
+//		parent::__construct('mysql');
+//		parent::__construct('sqlite');
+	}
+
+	function test_connect() {
 		$dbDsn = new Database('mysql:host=localhost', 'root');
 		$dbUrl = new Database('mysql://root@localhost');
 	}
@@ -16,8 +24,8 @@ class DatabaseTests extends DatabaseTestCase {
 		$this->expectError(true, 'An invalid query should generate an error');
 		$result = $db->exec('this is not even a query');
 		$this->assertEqual($result, false);
-		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'mysql') {
-		} else {
+		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql') {
+			// MySQL reports truncated warnings
 			$this->expectError();
 			$result = $db->exec('INSERT INTO ducks (name) VALUES ("0123456789ABCDEF")');
 		}

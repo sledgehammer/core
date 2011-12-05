@@ -3,7 +3,7 @@
  * Controleer diverse globale SledgeHammer functies
  */
 namespace SledgeHammer;
-class CoreFunctionsTests extends \UnitTestCase {
+class CoreFunctionsTests extends TestCase {
 
 	function test_value_function() {
 		$bestaat = 'Wel';
@@ -12,6 +12,6 @@ class CoreFunctionsTests extends \UnitTestCase {
 		// Kon ik dit maar voorkomen....
 		$this->assertTrue(array_key_exists('bestaatNiet', get_defined_vars()), 'Na de value() bestaat de var $bestaatNiet en heeft de waarde NULL');
 	}
-	
+
 }
 ?>

@@ -3,12 +3,12 @@
  * Controleer of alle benodige php extenties geinstalleerd zijn
  */
 namespace SledgeHammer;
-class RequiredPhpExtensions extends \UnitTestCase {
+class RequiredPhpExtensions extends TestCase {
 
-	private 
+	private
 		$classes_folders_only = true, // switch off to scan all files in the PATH
 		$functions_per_extention,
-		$function_to_extention_map = array(), // assoc array waarvan de key de functie/class is en de value de extentie. 
+		$function_to_extention_map = array(), // assoc array waarvan de key de functie/class is en de value de extentie.
 		$extention_to_files_map = array(); // assoc array met als key de extentie gevult met alle bestanden die deze extentie gebruiken.
 
 	/**
@@ -108,7 +108,7 @@ class RequiredPhpExtensions extends \UnitTestCase {
 		$classes = array();
 		$functions = array();
 		$tokens = token_get_all(file_get_contents($file));
-		$html = true; // 
+		$html = true; //
 		$possible_function = false;
 		$possible_class = false;
 		foreach ($tokens as $token) {

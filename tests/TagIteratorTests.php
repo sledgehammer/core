@@ -4,7 +4,7 @@
  */
 namespace SledgeHammer;
 
-class TagIteratorTests extends \UnitTestCase {
+class TagIteratorTests extends TestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);
@@ -109,7 +109,7 @@ class TagIteratorTests extends \UnitTestCase {
 //<!ELEMENT BYLINE (#PCDATA)>
 //<!ELEMENT LEAD (#PCDATA)>
 //<!ELEMENT BODY (#PCDATA)>
-//<!ELEMENT NOTES (#PCDATA)> 
+//<!ELEMENT NOTES (#PCDATA)>
 //
 //<!ATTLIST ARTICLE AUTHOR CDATA #REQUIRED>
 //<!ATTLIST ARTICLE EDITOR CDATA #IMPLIED>
@@ -181,7 +181,7 @@ EOD;
 	}
 
 	/**
-	 * 
+	 *
 	 * @param $html
 	 * @param array $expectedOutput
 	 * @return void
@@ -201,7 +201,7 @@ EOD;
 			dump($expectedOutput);
 			dump($output);
 		}
-		//$this->assertWarnings($tags, $warnings);	
+		//$this->assertWarnings($tags, $warnings);
 	}
 
 }
