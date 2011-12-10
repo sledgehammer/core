@@ -39,9 +39,9 @@ class PHPTokenizer extends Object implements \Iterator {
 	 */
 	private $current;
 	/**
-	 * @var enum 'VALID|LAST|INVALID'
+	 * @var bool|'LAST'
 	 */
-	private $validState = 'INVALID';
+	private $valid = false;
 	/**
 	 * @var int
 	 */
@@ -74,15 +74,15 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->current = null;
 		$this->lineNumber = 1;
 		if (count($this->tokens) == 0) {
-			$this->validState = 'INVALID';
+			$this->valid = false;
 		} else {
-			$this->validState = 'VALID';
+			$this->valid = true;
 			$this->next();
 		}
 	}
 
 	function valid() {
-		return ($this->validState !== 'INVALID');
+		return (bool) $this->valid;
 	}
 
 	function key() {
@@ -95,8 +95,8 @@ class PHPTokenizer extends Object implements \Iterator {
 	}
 
 	function next() {
-		if ($this->validState ===  'LAST') {
-			$this->validState = 'INVALID';
+		if ($this->valid ===  'LAST') {
+			$this->valid = false;
 			$this->current = null;
 			return;
 		}
@@ -109,7 +109,7 @@ class PHPTokenizer extends Object implements \Iterator {
 			$token = $this->tokens[$this->tokenIndex];
 			if ($this->tokenIndex === ($count - 1)) { // laatste token?
 				$nextToken = false;
-				$this->validState = 'LAST';
+				$this->valid = 'LAST';
 			} else {
 				$nextToken = $this->tokens[$this->tokenIndex + 1];
 			}
@@ -148,7 +148,7 @@ class PHPTokenizer extends Object implements \Iterator {
 					$this->state = $result['state'];
 					if ($value != $tokenContents) {
 						$this->current = array($result['token'], substr($value, 0, 0 - strlen($tokenContents)), $line);
-						$this->validState = 'VALID';
+						$this->valid = true;
 						return;
 					}
 					break;
@@ -173,7 +173,7 @@ class PHPTokenizer extends Object implements \Iterator {
 						return;
 					} else {
 						$this->current = array($result['tokenBefore'], substr($value, 0, 0 - strlen($tokenContents)), $line);
-						$this->validState = 'VALID';
+						$this->valid = true;
 						return;
 					}
 					break;
