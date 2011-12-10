@@ -15,17 +15,14 @@
 namespace SledgeHammer;
 class SQL extends Object {
 
-	private
+	public
 		$select = 'SELECT', // Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
 		$columns = array(), // array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
-		$tables = array(); // array(array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
-	public
-		$where = ''; // string|array met voorwaarden, wordt verbonden via operator (recursief)
-	private
+		$tables = array(), // array('alias1'=> 'table1', 't2' => array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
+		$where = '', // string|array met voorwaarden, wordt verbonden via operator (recursief)
 		$group_by = array(), // array met group by info, wordt verbonden met ', '
 		$having = '', // zie where
-		$order_by = array(); // index is naam, waarde is DESC of ASC
-	public
+		$order_by = array(), // index is naam, waarde is DESC of ASC
 		$limit = false, // false|int
 		$offset = false; // false|int
 
@@ -37,6 +34,50 @@ class SQL extends Object {
 			ErrorHandler::handle_exception($e);
 			return '';
 		}
+	}
+
+	/**
+	 * Set the $tables
+	 *
+	 * @param mixed $table
+	 */
+	function setFrom($table) {
+		if (count($this->tables) != 0) {
+			notice('Overruling from');
+			$this->tables = array();
+		}
+		if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
+			$tables = $table;
+		} else {
+			$tables = func_get_args();
+		}
+		foreach ($tables as $alias => $table) {
+			$alias = $this->extractAlias($table);
+			if (isset($this->tables[$alias])) {
+				throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
+			}
+			$this->tables[$alias] = $table;
+		}
+	}
+
+	/**
+	 * Set/Append a join to the FROM
+	 *
+	 * @param string $type 'INNER JOIN', ',', 'LEFT JOIN'
+	 * @param string $table
+	 * @param string $on
+	 */
+	function setJoin($table, $type = ',', $on = null) {
+		$type = strtoupper($type);
+		$alias = $this->extractAlias($table);
+		if (isset($this->tables[$alias])) {
+			throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
+		}
+		$this->tables[$alias] = array(
+			'type' => $type,
+			'table' => $table,
+			'on' => $on
+		);
 	}
 
 	/**
@@ -56,6 +97,12 @@ class SQL extends Object {
 		}
 	}
 
+	/**
+	 *
+	 * @param string $column
+	 * @param string $alias
+	 * @return SQL
+	 */
 	function addColumn($column, $alias = null) {
 		if ($alias === null) {
 			$columns = array($column);
@@ -65,6 +112,11 @@ class SQL extends Object {
 		return $this->addColumns($columns);
 	}
 
+	/**
+	 *
+	 * @param array $columns
+	 * @return SQL
+	 */
 	function addColumns($columns) {
 		$sql = clone $this;
 		foreach ($columns as $alias => $column) {
@@ -81,6 +133,11 @@ class SQL extends Object {
 		return $sql;
 	}
 
+	/**
+	 *
+	 * @param string $alias
+	 * @return SQL
+	 */
 	function removeColumn($alias) {
 		$sql = clone $this;
 		unset($sql->columns[$alias]);
@@ -96,22 +153,7 @@ class SQL extends Object {
 	 */
 	function from($table) {
 		$sql = clone $this;
-		if (count($sql->tables) != 0) {
-			notice('Overruling from');
-			$sql->tables = array();
-		}
-		if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
-			$tables = $table;
-		} else {
-			$tables = func_get_args();
-		}
-		foreach ($tables as $alias => $table) {
-			$alias = $sql->extractAlias($table);
-			if (isset($sql->tables[$alias])) {
-				throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
-			}
-			$sql->tables[$alias] = $table;
-		}
+		$sql->setFrom($table);
 		return $sql;
 	}
 
@@ -193,12 +235,12 @@ class SQL extends Object {
 	}
 
 	/**
-	 * @param string $column
+	 * @param string|array $columns
 	 * @return SQL
 	 */
-	function groupBy($column) {
+	function groupBy($columns) {
 		$sql = clone $this;
-		$sql->group_by[] = $column;
+		$sql->group_by = $columns;
 		return $sql;
 	}
 
@@ -217,20 +259,25 @@ class SQL extends Object {
 
 	/**
 	 * limit(20) => LIMIT 20
-	 * limit(20, 10) => LIMIT 20, 10
 	 *
-	 * @param int $offset De offet of limit
 	 * @param int $limit De limit of leeg
 	 * @return SQL
 	 */
-	function limit($offset, $limit = null) {
+	function limit($limit) {
 		$sql = clone $this;
-		if ($limit === null) {
-			$sql->limit = $offset;
-			return $sql;
-		}
-		$sql->offset = $offset;
 		$sql->limit = $limit;
+		return $sql;
+	}
+
+	/**
+	 * offset(20) => OFFSET 20
+	 *
+	 * @param int $offset De limit of leeg
+	 * @return SQL
+	 */
+	function offset($offset) {
+		$sql = clone $this;
+		$sql->offset = $offset;
 		return $sql;
 	}
 
@@ -247,33 +294,41 @@ class SQL extends Object {
 			throw new \Exception('1 or tables are required, Call '.get_class($this).'->from($table)');
 		}
 		$sql = $this->select." ";
-		$columns = array();
-		foreach ($this->columns as $alias => $column) { // kolommen opbouwen
-			if ($alias != $column) {
-				$column .= ' AS '.$alias;
+		if (is_string($this->columns)) {
+			$sql .= $this->columns;
+		} else {
+			$columns = array();
+			foreach ($this->columns as $alias => $column) { // kolommen opbouwen
+				if ($alias != $column) {
+					$column .= ' AS '.$alias;
+				}
+				$columns[] = $column;
 			}
-			$columns[] = $column;
+			$sql .= implode(', ', $columns);
 		}
-		$sql .= implode(', ', $columns);
 
 		$sql .= ' FROM ';
-		$first = true;
-		foreach ($this->tables as $table) {
-			if (is_string($table)) { // Is er een table (geen join)
-				$join = array('table' => $table);
-			} else {
-				$join = $table;
-			}
-			if (isset($join['type'])) {
-				$sql .= " ".$join['type'].' '; // INNER JOIN etc
-			} elseif (!$first) {
+		if (is_string($this->tables)) {
+			$sql .= $this->tables;
+		} else {
+			$first = true;
+			foreach ($this->tables as $table) {
+				if (is_string($table)) { // Is er een table (geen join)
+					$join = array('table' => $table);
+				} else {
+					$join = $table;
+				}
+				if (isset($join['type'])) {
+					$sql .= " ".$join['type'].' '; // INNER JOIN etc
+				} elseif (!$first) {
 					$sql .= ', ';
+				}
+				$sql .= $join['table'];
+				if (isset($join['on'])) {
+					$sql .= ' ON ('.$join['on'].')';
+				}
+				$first = false;
 			}
-			$sql .= $join['table'];
-			if (isset($join['on'])) {
-				$sql .= ' ON ('.$join['on'].')';
-			}
-			$first = false;
 		}
 		$where = $this->composeRestrictions($this->where);
 		if ($where != '') {
@@ -386,18 +441,12 @@ class SQL extends Object {
 	 * @return SQL
 	 */
 	private function join($type, $table, $on) {
-		$alias = $this->extractAlias($table);
-		if (isset($sql->tables[$alias])) {
-			throw new \Exception('Table (or alias) "'.$alias.'" is not unique');
-		}
 		$sql = clone $this;
-		$sql->tables[$alias] = array(
-			'type' => $type,
-			'table' => $table,
-			'on' => $on
-		);
+		$sql->setJoin($table, $type, $on);
 		return $sql;
 	}
+
+
 
 	/**
 	 * De alias van een kolom of tabel uitzoeken.
