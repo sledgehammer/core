@@ -5,34 +5,54 @@
  * @package Core
  */
 namespace SledgeHammer;
+
 class URL extends Object {
-	
+
 	/**
 	 * @var string The protocol schema
 	 */
 	public $scheme;
+
 	/**
 	 * @var string The hostname/ip
 	 */
 	public $host;
+
 	/**
 	 * @var int Portnumber
 	 */
 	public $port;
+
 	/**
 	 * @var string The (unescaped) path
 	 */
 	public $path;
+
 	/**
 	 * @var array The parameters in the querystring
 	 */
 	public $query = array();
-	
-	public
-		$user,
-		$pass,
-		$fragment;
-	
+
+	/**
+	 * @var string  The #hash
+	 */
+	public $fragment;
+
+	/**
+	 * @var string The username
+	 */
+	public $user;
+
+	/**
+	 * @var string  The password
+	 */
+	public $pass;
+
+	/**
+	 * @var URL  The url of the current page
+	 */
+	private static $current;
+
 	/**
 	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
@@ -42,18 +62,18 @@ class URL extends Object {
 			throw new \Exception('Invalid url: "'.$url.'"');
 		}
 		if (isset($info['query'])) {
-			 parse_str($info['query'], $info['query']); // Zet de query om naar een array
+			parse_str($info['query'], $info['query']); // Zet de query om naar een array
 		}
 		if (isset($info['path'])) {
 			$info['path'] = rawurldecode($info['path']); // "%20" omzetten naar " " e.d.
 		}
 		set_object_vars($this, $info);
 	}
-	
+
 	/**
 	 * Generate the url as a string.
-	 * 
-	 * @return string 
+	 *
+	 * @return string
 	 */
 	function __toString() {
 		$url = '';
@@ -65,7 +85,7 @@ class URL extends Object {
 					$url .= ':'.$this->pass;
 				}
 				$url .= '@';
-			}			
+			}
 			$url .= $this->host;
 			if ($this->port) {
 				$url .= ':'.$this->port;
@@ -84,7 +104,7 @@ class URL extends Object {
 		}
 		return $url;
 	}
-	
+
 	/**
 	 * Get foldes in a array (based on the path)
 	 * @return array
@@ -94,13 +114,13 @@ class URL extends Object {
 		array_pop($parts); // remove filename part
 		$folders = array();
 		foreach ($parts as $folder) {
-			if ($folder !== '') { // dont add the root and skip "//" 
+			if ($folder !== '') { // dont add the root and skip "//"
 				$folders[] = $folder;
 			}
 		}
 		return $folders;
 	}
-	
+
 	/**
 	 * Get de filename (or "index.html" if no filename is given.)
 	 * @return string
@@ -111,19 +131,35 @@ class URL extends Object {
 		}
 		return basename($this->path);
 	}
-	
+
 	/**
-	 * Gets the current url based on the information in $_SERVER
+	 * Gets the current url based on the information in the $_SERVER array
+	 *
 	 * @return URL
 	 */
 	static function getCurrentURL() {
-		$url = 'http';
-		if (array_value($_SERVER, 'HTTPS') == 'on') {
-			$url .= 's';
+		if (self::$current === null) {
+			$url = 'http';
+			if (array_value($_SERVER, 'HTTPS') == 'on') {
+				$url .= 's';
+			}
+			$url .= '://';
+			$url .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+			self::$current = new URL($url);
 		}
-		$url .= '://';
-		$url .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-		return new URL($url);
+		return clone self::$current;
+	}
+
+	/**
+	 * Set the current url (Mock an request)
+	 *
+	 * @param string|URL $url
+	 */
+	static function setCurrentURL($url) {
+		if (is_string($url)) {
+			$url = new URL($url);
+		}
+		self::$current = $url;
 	}
 
 	/**
@@ -141,22 +177,22 @@ class URL extends Object {
 		$url = new URL($url);
 		return $url->$part;
 	}
-	
+
 	static function uri() {
 		deprecated('Use the OOP "new URL()" syntax');
 		$url = new URL();
 		return $url->__toString();
 	}
-	
+
 	static function extract_path() {
 		deprecated('Use the OOP "new URL()" syntax');
 		$url = URL::getCurrentURL();
 		return array(
 			'filename' => $url->getFilename(),
-			'folders'  => $url->getFolders(),
+			'folders' => $url->getFolders(),
 		);
 	}
-	
+
 	/**
 	 * Multi-functionele functie om parameters op te vragen en toe te voegen
 	 *
@@ -180,10 +216,10 @@ class URL extends Object {
 		}
 		return array_merge(array_diff_key($stack, $append), $append); // De array kan gebruikt worden in een http_build_query()
 	}
-	
-		/**
+
+	/**
 	 * Een sub-domein opvragen van een domein
-	 * 
+	 *
 	 * @param int $index Bepaald welke subdomein van de subdomeinen er wordt opgevraagd. 0 = eerste subdomein van links, -1 =  eerste subdomein van rechts
 	 * @param NULL|string $uri de uri waarvan het subdomein opgevraagd moet worden
 	 * @return string
@@ -198,22 +234,24 @@ class URL extends Object {
 		$count = count($parts);
 		if ($index < 0) { // is $index negatief?
 			$index = $count - 2 + $index; // van links naar rechts
-		} elseif ($index + 2 >= $count) { // is $index groter dan aantal subdomeinen? 
+		} elseif ($index + 2 >= $count) { // is $index groter dan aantal subdomeinen?
 			return '';
 		}
 		$subdomain = @$parts[$index];
 		return ($subdomain === NULL) ? '' : $subdomain;
 	}
-	
+
 	static function domain() {
 		deprecated('Maar nog geen alternatief beschikbaar');
 
 		$hostname = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : php_uname('n');
 		$regexDomain = '/[a-z0-9]+([a-z]{2}){0,1}.[a-z]{2,4}$/i';
-		if (preg_match($regexDomain, $hostname, $match)) { // Zit er een domeinnaam in de hostname? 
+		if (preg_match($regexDomain, $hostname, $match)) { // Zit er een domeinnaam in de hostname?
 			return $match[0];
 		}
-		return 'example.com'; 	
+		return 'example.com';
 	}
+
 }
+
 ?>
