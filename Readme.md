@@ -7,7 +7,7 @@ Core fasilitates the base and intialisation of the SledgeHammer Framework.
 Scope
 ------
 * Framework initialisation (+Module detection & initialisation)
-* A collection of globale functions (that should be included in php)
+* A collection of global functions (that should be included in php)
 * Debugging & Error-reporting and Profiling functionality.
 
 
