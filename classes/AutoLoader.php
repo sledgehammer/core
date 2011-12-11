@@ -341,6 +341,9 @@ class AutoLoader extends Object {
 
 				case 'INTERFACE':
 					if ($token[0] == T_STRING) {
+						if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $token[1]) {
+							notice('Filename doesn\'t match interface-name "'.$token[1].'" in "'.$filename.'"', array('settings' => $settings));
+						}
 						if ($namespace == '') {
 							$definition = $token[1];
 						} else {
