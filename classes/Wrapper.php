@@ -5,6 +5,7 @@
  * @package Filter
  */
 namespace SledgeHammer;
+
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 
 	protected $_data;
@@ -61,7 +62,6 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	/**
 	 * Magic getter en setter functies zodat je dat de eigenschappen zowel als object->eigenschap kunt opvragen
 	 */
-
 	function __get($property) {
 		return $this->out($this->_data->$property, $property, 'object');
 	}
@@ -74,21 +74,23 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	/**
 	 * ArrayAccess wrapper functies die er voor zorgen dat de eigenschappen ook als array['element'] kunt opgevragen
 	 */
-
 	function offsetGet($key) {
 		if (is_array($this->_data)) {
 			return $this->out($this->_data[$key], $key, 'array');
 		}
 	}
+
 	function offsetSet($key, $value) {
 		if (is_array($this->_data)) {
 			$value = $this->in($value, $key, 'array');
 			$this->_data[$key] = $value;
 		}
 	}
+
 	function offsetUnset($property) {
 		throw new \Exception('Not (yet) supported');
 	}
+
 	function offsetExists($property) {
 		throw new \Exception('Not (yet) supported');
 	}
@@ -100,32 +102,44 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	function rewind() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->_data->rewind();
+		} elseif (is_array($this->_data)) {
+			reset($this->_data);
 		}
 	}
 
 	function current() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->out($this->_data->current(), 'current', 'iterator');
+		} elseif (is_array($this->_data)) {
+			return $this->out(current($this->_data), 'current', 'iterator');
 		}
 	}
 
 	function next() {
 		if ($this->_data instanceof \Iterator) {
 			$this->_data->next();
+		} elseif (is_array($this->_data)) {
+			next($this->_data);
 		}
 	}
 
 	function key() {
 		if ($this->_data instanceof \Iterator) {
-			return $this->out($this->_data->next(), 'key', 'iterator');
+			return $this->out($this->_data->key(), 'key', 'iterator');
+		} elseif (is_array($this->_data)) {
+			return $this->out(key($this->_data), 'key', 'iterator');
 		}
 	}
 
 	function valid() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->_data->valid();
+		} elseif (is_array($this->_data)) {
+			return key($this->_data) !== null;
 		}
 		return false;
 	}
+
 }
+
 ?>
