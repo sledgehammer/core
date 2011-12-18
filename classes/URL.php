@@ -94,9 +94,9 @@ class URL extends Object {
 		if ($this->path !== null) {
 			$url .= str_replace('%2F', '/', rawurlencode($this->path));
 		}
-		if (is_string($this->query)) {
+		if (is_string($this->query) && trim($this->query) !== '') {
 			$url .= '?'.$this->query;
-		} elseif (count($this->query) != 0) {
+		} elseif (is_array($this->query) && count($this->query) != 0) {
 			$url .= '?'.http_build_query($this->query);
 		}
 		if ($this->fragment !== null) {
