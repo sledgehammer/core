@@ -33,26 +33,21 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 // Detect a writable tmp folder
-if (defined('SledgeHammer\TMP_DIR')) {
-	mkdirs(TMP_DIR);
-} else {
-	if (function_exists('posix_getpwuid')) {
-		$tmpDir = PATH.'tmp/'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
-	} else {
-		$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
-	}
-	if (is_dir($tmpDir) && is_writable($tmpDir)) {  // Use the project tmp folder?
-		define('SledgeHammer\TMP_DIR', $tmpDir);
+if (defined('SledgeHammer\TMP_DIR') === false) {
+	$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
+	if (is_dir($tmpDir) && is_writable($tmpDir)) { // A local temp folder exist?
+		if (function_exists('posix_getpwuid')) {
+			$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+		}
 	} else {
 		$tmpDir = '/tmp/sledgehammer-'.md5(PATH);
 		if (function_exists('posix_getpwuid')) {
 			$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name');
 		}
-		$tmpDir .= '/';
-		define('SledgeHammer\TMP_DIR', $tmpDir);
-		mkdirs(TMP_DIR);
 	}
+	define('SledgeHammer\TMP_DIR', $tmpDir);
 }
+mkdirs(TMP_DIR);
 
 // Register the ErrorHandler & AutoLoader (But leave the the configuration &initialisation to init_framework.php)
 $GLOBALS['ErrorHandler'] = new ErrorHandler;
