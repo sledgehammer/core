@@ -106,7 +106,8 @@ class DatabaseCollection extends Collection {
 		}
 		if ($this->data === null) {
 			$db = getDatabase($this->dbLink);
-			$this->data = $db->query($this->sql);
+			$this->data = $db->fetchAll($this->sql);
+			return;
 		}
 		if ($this->data instanceof \PDOStatement) {
 			$this->data = $this->data->fetchAll();

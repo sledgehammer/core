@@ -138,6 +138,9 @@ class Database extends \PDO {
 		if (empty($options[\PDO::ATTR_DEFAULT_FETCH_MODE])) {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}
+		if (empty($options[\PDO::ATTR_STATEMENT_CLASS])) {
+			$options[\PDO::ATTR_STATEMENT_CLASS] = array('SledgeHammer\PDOStatement');
+		}
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->driver = $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
@@ -192,13 +195,13 @@ class Database extends \PDO {
 	 *
 	 * @param string $statement  The SQL statement to prepare
 	 * @param array $driver_options
-	 * @return \PDOStatement
+	 * @return PreparedStatement
 	 */
 	function prepare($statement, $driver_options = array()) {
 		$start = microtime(true);
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PreparedStatement', array($this)));
 		$result = parent::prepare($statement, $driver_options);
-		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('PDOStatement')); // Restore default class
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PDOStatement')); // Restore default class
 		$this->executionTime += (microtime(true) - $start);
 		if ($result === false) {
 			$this->reportError($statement);
@@ -322,10 +325,24 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * Haalt een enkele rij op uit de database
+	 * Execute the query and return the resultset as array
 	 *
-	 * @param string $statement De SQL query
-	 * @param bool $allow_empty_results Bij true word er geen foutmelding gegenereerd als er geen rij wordt gevonden
+	 * @param string $statement  The SQL statement
+	 * @return array|false
+	 */
+	function fetchAll($statement) {
+		$result = $this->query($statement);
+		if ($result instanceof \PDOStatement) {
+			return $result->fetchAll();
+		}
+		return $result;
+	}
+
+	/**
+	 * Fetch a single row
+	 *
+	 * @param string $statement  The SQL query
+	 * @param bool $allow_empty_results  true: Suppress the notice when no record is found.
 	 * @return array|false
 	 */
 	function fetchRow($statement, $allow_empty_results = false) {
@@ -350,10 +367,12 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * Haal een elke waarde op uit de database
+	 * Fetch a single value
+	 * The resultset may contain only 1 record with only 1 column.
 	 *
-	 * @param string $sql De SQL query
-	 * @param bool $allow_empty_results Bij true word er geen foutmelding gegenereerd als er geen rij wordt gevonden
+	 *
+	 * @param string $sql  The SQL query
+	 * @param bool $allow_empty_results  true: Suppress the notice when no record is found.
 	 * @return string|NULL|false
 	 */
 	function fetchValue($sql, $allow_empty_results = false) {

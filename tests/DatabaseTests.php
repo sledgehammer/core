@@ -33,16 +33,38 @@ class DatabaseTests extends DatabaseTestCase {
 
 	function test_fetch() {
 		$db = $this->getDatabase();
+		$this->assertEqual($db->fetchAll('SELECT * FROM ducks'), array(
+			array(
+				'id' => '1',
+				'name' => 'Kwik',
+			),
+			array(
+				'id' => '2',
+				'name' => 'Kwek',
+			),
+			array(
+				'id' => '3',
+				'name' => 'Kwak',
+			),
+		));
 		// Fetch row
 		$kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
 		$this->assertEqual($kwik, array(
 			'id' => '1',
 			'name' => 'Kwik',
 		));
+		// Fetch value
 		$this->assertEqual($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
 		$this->expectError('Resultset has no columns, expecting 1 or more columns');
 		$fail = $db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
+	}
+
+	function test_count() {
+		$db = $this->getDatabase();
+		$result = $db->query('SELECT * FROM ducks');
+		$this->assertIsA($result, 'SledgeHammer\PDOStatement');
+		$this->assertEqual(count($result), 3); //, 'count() should return the number of rows found');
 	}
 
 	/**

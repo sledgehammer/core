@@ -7,7 +7,7 @@
  */
 namespace SledgeHammer;
 
-class PreparedStatement extends \PDOStatement {
+class PreparedStatement extends PDOStatement {
 
 	/**
 	 * @var Database
@@ -49,7 +49,7 @@ class PreparedStatement extends \PDOStatement {
 
 	/**
 	 * Replaces any parameter placeholders in a query with the value of that
-	 * parameter. Useful for debugging. Assumes anonymous parameters from 
+	 * parameter. Useful for debugging. Assumes anonymous parameters from
 	 * $params are are in the same order as specified in $query
 	 *
 	 * @param string $query The sql query with parameter placeholders
