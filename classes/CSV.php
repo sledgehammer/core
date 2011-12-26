@@ -1,14 +1,15 @@
 <?php
 /**
- * Een generieke snelle manier om een csv bestand in te lezen. 
- * Kan ook csv bestanden genereren met CSVIterator->write()
+ * Een generieke snelle manier om een csv bestand in te lezen.
+ * Kan ook csv bestanden genereren met CSV::write()
  *
  * De eerste regel van het csv bestand kan gebruikt worden om de kolomnamen te defineren.
  *
  * @package Core
  */
 namespace SledgeHammer;
-class CSVIterator extends Object implements \Iterator {
+
+class CSV extends Object implements \Iterator {
 
 	private
 		$filename, // path van het csv bestand
@@ -19,16 +20,17 @@ class CSVIterator extends Object implements \Iterator {
 		$fp, // [resource] file pointer/handler
 		$keys, // Veranderd een $row van een indexed array naar assoc array
 		$values, // [array] huidige rij
-		$line, // [int] huidige regelnummer (Begint bij 2 en komt overeen met de regelnummers in excel/openoffice)
+		$index,
 
-		$eol = "\r\n"; // De linebreak die gebruikt wordt bij een write() 
+		$eol = "\r\n"; // De linebreak die gebruikt wordt bij een write()
 
 	/**
 	 * @param string $filename  Het path waar het csv bestand zich bevind
-	 * @param array $columns  Hiermee geef je aan welke kolommen ingelezen moeten worden. $value = kolomnaam, $key = array_key  
+	 * @param array $columns  Hiermee geef je aan welke kolommen ingelezen moeten worden. $value = kolomnaam, $key = array_key
 	 * @param char $delimiter  Scheidingsteken, ';' als default omdat dit nederlandse excel standaard is.
 	 * @param char $enclosure  Karakter dat gebruikt word om tekst waarbinnen het scheidingsteken kan voorkomen te omsluiten
 	 */
+
 	function __construct($filename = null, $columns = null, $delimiter = ';', $enclosure = '"') {
 		$this->columns = $columns;
 		$this->filename = $filename;
@@ -45,23 +47,17 @@ class CSVIterator extends Object implements \Iterator {
 	/**
 	 * Schrijf de waarden in de $iterator weg naar $filename die in de constuctor is meegegeven.
 	 * D.m.v "php://output" kan het csv bestand direct naar de browser verstuurd worden.
-	 * 
+	 *
 	 * @param Iterator $iterator  Brongegevens voor de csv. Elementen worden bepaald d.m.v. de $keys in de $this->columns array.
 	 * @return void
 	 */
-	function write($iterator) {
-		if ($this->fp) {
-			throw new \Exception('CSVIterator is in read-mode');
+	static function write($filename = null, $iterator, $columns = null, $delimiter = ';', $enclosure = '"') {
+		$fp = fopen($filename, 'w');
+		if (!$fp) {
+			throw new \Exception('Failed to open "'.$filename.'" for writing');
 		}
-		$this->fp =	fopen($this->filename, 'w');
-		if (!$this->fp) {
-			throw new \Exception('Failed to open "'.$this->filename.'" for writing');
-		} 
 		// De kolomnamen op de eerste csv regel zetten
-		if ($this->columns !== null) {
-			$this->fputcsv($this->columns);
-			$columnKeys = array_keys($this->columns);
-		} else {
+		if ($columns === null) {
 			// Detecteer colomnamen (gebruik de array keys)
 			if (is_array($iterator)) {
 				reset($iterator);
@@ -71,24 +67,27 @@ class CSVIterator extends Object implements \Iterator {
 				$row = $iterator->current();
 			}
 			$columnKeys = array_keys($row);
-			$this->fputcsv($columnKeys);
+			$columns = $columnKeys;
+		} elseif ($columns !== false) {
+			$columnKeys = array_keys($columns);
 		}
+		fputcsv($fp, $columns, $delimiter, $enclosure);
+
 		foreach ($iterator as $row) {
 			$values = array();
 			foreach ($columnKeys as $key) {
 				$values[] = $row[$key];
 			}
-			$this->fputcsv($values);
+			fputcsv($fp, $values, $delimiter, $enclosure);
 		}
-		fclose($this->fp);
-		$this->fp = null;
+		fclose($fp);
 	}
 
 	/**
 	 * Het csv bestand (opnieuw) openen en de eerste rij inlezen als kolomnamen.
 	 */
 	function rewind() {
-		$this->line = null;
+		$this->index = null;
 		if ($this->fp) {
 			fclose($this->fp);
 		}
@@ -116,12 +115,12 @@ class CSVIterator extends Object implements \Iterator {
 				if ($index !== false) {
 					$this->keys[$index] = $key;
 				} else {
-					throw new \Exception('Column: "'.$column.'" not found. Available columns: "'.implode('", "',$keys).'"');
+					throw new \Exception('Column: "'.$column.'" not found. Available columns: "'.implode('", "', $keys).'"');
 					return false;
 				}
 			}
 		}
-		$this->line++;
+		$this->index = -1;
 		$this->next();
 	}
 
@@ -133,16 +132,18 @@ class CSVIterator extends Object implements \Iterator {
 	function next() {
 		$this->values = array();
 		$row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
-		$this->line++;
 		if ($row) { // Is het einde (eof) nog niet bereikt?
+			$this->index++;
 			foreach ($this->keys as $index => $key) {
-				if (isset($row[$index])) { // Is er voor deze kolom een waarde? 
+				if (isset($row[$index])) { // Is er voor deze kolom een waarde?
 					$this->values[$key] = $row[$index];
 				} else {
 					$filename = (strpos($this->filename, PATH) === 0) ? substr($this->filename, strlen(PATH)) : $this->filename; // Waar mogelijk het PATH er van af halen
-					notice('Row too short, missing column '.$index.'('.$this->columns[$key].') in '.$filename.' on line '.$this->line, $row);
+					notice('Row too short, missing column '.$index.'('.$this->columns[$key].') in '.$filename.' on line '.$this->index + 2, $row); // @todo Calculate line offset compared to the index ()
 				}
 			}
+		} else {
+			$this->index = null;
 		}
 	}
 
@@ -152,7 +153,7 @@ class CSVIterator extends Object implements \Iterator {
 	 * @return bool
 	 */
 	function valid() {
-		return !feof($this->fp); // Is het einde van het bestand NIET bereikt?
+		return!feof($this->fp); // Is het einde van het bestand NIET bereikt?
 	}
 
 	/**
@@ -170,34 +171,9 @@ class CSVIterator extends Object implements \Iterator {
 	 * @return int
 	 */
 	function key() {
-		return $this->line;
+		return $this->index;
 	}
 
-	/**
-	 * Een array omzetten naar een csv regel en wegschrijven naar de filepointer
-	 * Tegenovergestelde van de fgetcsv
-   *
-	 * @param array $values
-	 * @return void
-	 */
-	private function fputcsv($values) {
-		$escapedValues = array();
-		foreach ($values as $value) {
-			$escapedValues[] = $this->quote($value);
-		}
-		fputs($this->fp, implode($this->delimiter, $escapedValues).$this->eol);
-	}
-
-	/**
-	 * Een waarde escapen en omsluiten, Een PDO::quote voor CSV bestanden.
-	 * @link php.net/manual/en/pdo.quote.php
-	 *
-	 * @param string $value
-	 * @return string
-	 */
-	private function quote($value) {
-		$stuffedValue = str_replace($this->enclosure, $this->enclosure.$this->enclosure, $value); // Een '"' vervangen door '""'
-		return $this->enclosure.$stuffedValue.$this->enclosure;
-	}
 }
+
 ?>
