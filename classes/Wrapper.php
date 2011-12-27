@@ -1,7 +1,9 @@
 <?php
 /**
- * Wrap the object/array into readonly container
-
+ * Wrap the object/array into container object
+ *
+ * @see \SledgeHammer\Readonly for an example implementation.
+ *
  * @package Filter
  */
 namespace SledgeHammer;

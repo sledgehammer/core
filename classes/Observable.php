@@ -46,7 +46,7 @@ abstract class Observable extends Object {
 	 * @param stdClass $sender
 	 * @param mixed $args (optional)
 	 */
-	function fire($event, $sender, $args = null) {
+	function trigger($event, $sender, $args = null) {
 		if (isset($this->events[$event])) {
 			$method = 'on'.ucfirst($event);
 			$arguments = func_get_args();
@@ -65,12 +65,14 @@ abstract class Observable extends Object {
 
 
 	/**
+	 * Add a callback for an event
 	 *
 	 * @param string $event
 	 * @param Closure|string|array $callback
+	 * @param string $identifier  The
 	 * @return bool
 	 */
-	function addListener($event, $callback) {
+	function addListener($event, $callback, $identifier = null) {
 		if (is_callable($callback) == false) {
 			warning('Parameter $callback issn\'t callable', $callback);
 			return false;
@@ -79,12 +81,44 @@ abstract class Observable extends Object {
 			warning('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
 			return false;
 		}
-		$this->events[$event][] = $callback;
+		if ($identifier === null) {
+			$this->events[$event][] = $callback;
+		} elseif (isset($this->events[$event][$identifier])) {
+			warning('Identifier: "'.$identifier.'" in already in use for event: "'.$event.'"');
+			return false;
+		} else {
+			$this->events[$event][$identifier] = $callback;
+		}
 		return true;
 	}
 
+	/**
+	 * Check if the observable has registered the given event.
+	 *
+	 * @param string $event
+	 * @return bool
+	 */
 	function hasEvent($event) {
 		return array_key_exists($event, $this->events);
+	}
+
+	/**
+	 * Remove a callback from an event
+	 *
+	 * @param string $event
+	 * @param string $identifier
+	 */
+	function removeListener($event, $identifier) {
+		if ($this->hasEvent($event) === false) {
+			warning('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
+			return false;
+		}
+		if (empty($this->events[$event][$identifier])) {
+			warning('Identifier: "'.$identifier.'" not found in listeners for event: "'.$event.'"', 'Available identifiers: '.quoted_human_implode(', ', array_keys($this->events[$event])));
+			return false;
+		}
+		unset($this->events[$event][$identifier]);
+		return true;
 	}
 
 	/**

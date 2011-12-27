@@ -14,16 +14,16 @@ class ObservableTests extends TestCase {
 		$this->assertFalse($button->hasEvent('won_world_cup'));
 
 		$this->expectError('Event: "won_word_cup" not registered');
-		$button->fire('won_word_cup', $this);
+		$button->trigger('won_word_cup', $this);
 
 		// Test onClick method
-		$button->fire('click', $this);
+		$button->trigger('click', $this);
 		$this->assertEqual($button->clicked, 'Clicked by SledgeHammer\ObservableTests');
 		// Test custom event via property
 		$button->onClick = function ($sender) {
 				$sender->data = 'custom event';
 			};
-		$button->fire('click', $button);
+		$button->trigger('click', $button);
 		$this->assertEqual($button->data, 'custom event');
 		$this->assertEqual($button->clicked, 'Clicked by SledgeHammer\TestButton');
 
@@ -31,7 +31,7 @@ class ObservableTests extends TestCase {
 				$sender->clicked = 'custom event2'; // modify clicked not data.
 			};
 		$button->data = 'reset';
-		$button->fire('click', $button);
+		$button->trigger('click', $button);
 		$this->assertEqual($button->clicked, 'custom event2');
 		$this->assertEqual($button->data, 'reset', 'The first "custom event" is overwitten. and no longer gets triggered');
 
@@ -40,7 +40,7 @@ class ObservableTests extends TestCase {
 				$sender->data = 'custom event3';
 			});
 		$button->clicked = false;
-		$button->fire('click', $button);
+		$button->trigger('click', $button);
 		$this->assertEqual($button->clicked, 'custom event2');
 		$this->assertEqual($button->data, 'custom event3');
 	}
