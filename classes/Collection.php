@@ -1,7 +1,9 @@
 <?php
 /**
  * Collection: Array on Steriods
- * Provides a filtering and other utility funtions for collections.
+ * Provides a filtering, sorting, events and other utility functions for collections.
+ *
+ * Inspired by LinQ and Underscore.php
  *
  * @package Core
  */
@@ -9,12 +11,21 @@
 namespace SledgeHammer;
 
 const SORT_NATURAL = -1;
-class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
+class Collection extends Observable implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
 	 * @var \Traversable
 	 */
 	protected $data;
+
+	/**
+	 * @var array Events
+	 */
+
+	protected $events = array(
+		'changing' => array(),
+		'changed' => array(),
+	);
 
 	/**
 	 * @param \Traversable|array $data
@@ -344,12 +355,20 @@ class Collection extends Object implements \Iterator, \Countable, \ArrayAccess {
 
 	function offsetSet($offset, $value) {
 		$this->dataToArray();
-		return $this->data[$offset] = $value;
+		$this->trigger('changing', $this);
+		if ($offset === null) {
+			$this->data[] = $value;
+		} else {
+			$this->data[$offset] = $value;
+		}
+		$this->trigger('changed', $this);
 	}
 
 	function offsetUnset($offset) {
 		$this->dataToArray();
+		$this->trigger('changing', $this);
 		unset($this->data[$offset]);
+		$this->trigger('changed', $this);
 	}
 
 	/**
