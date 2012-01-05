@@ -1,10 +1,11 @@
 <?php
 /**
  * Wrap the object/array into container object
+ * Allow filters and accesscontrol to any object or array.
  *
  * @see \SledgeHammer\Readonly for an example implementation.
  *
- * @package Filter
+ * @package Core
  */
 namespace SledgeHammer;
 
@@ -71,6 +72,14 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	function __set($property, $value) {
 		$value = $this->in($value, $property, 'object');
 		$this->_data->$property = $value;
+	}
+
+	function __call($method, $arguments) {
+		$filtered = array();
+		foreach ($arguments as $key => $value) {
+			$filtered[$key] = $this->in($value, $method.'['.$key.']', 'parameter');
+		}
+		return $this->out(call_user_func_array(array($this->_data, $method), $filtered), $method, 'method');
 	}
 
 	/**

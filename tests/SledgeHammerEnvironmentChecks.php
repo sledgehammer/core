@@ -3,6 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 namespace SledgeHammer;
+
 class SledgeHammerEnvironmentChecks extends TestCase {
 
 	/**
@@ -43,7 +44,7 @@ class SledgeHammerEnvironmentChecks extends TestCase {
 			$this->assertTrue(isset($module_ini['name']), 'A module.ini should contain a "name" value');
 			//$this->assertTrue(isset($module_ini['owner']), 'Module: "'.$module['name'].'" zou een "owner" moeten hebben');
 			//if ($this->assertTrue(isset($module_ini['owner_email']), 'Module: "'.$module['name'].'" zou een "owner_email" moeten hebben')) {
-				// @todo: Email notatie controleren
+			// @todo: Email notatie controleren
 			//}
 			$this->assertTrue(isset($module_ini['version']), 'Module: "'.$module['name'].'" zou een "version" moeten hebben');
 		}
@@ -57,5 +58,7 @@ class SledgeHammerEnvironmentChecks extends TestCase {
 			}
 		}
 	}
+
 }
+
 ?>

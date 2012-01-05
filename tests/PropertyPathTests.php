@@ -1,7 +1,6 @@
 <?php
 /**
  * PropertyPathTests
- * @package Record
  */
 namespace SledgeHammer;
 

@@ -5,6 +5,7 @@
  * @package Core
  */
 namespace SledgeHammer;
+
 class URLTests extends TestCase {
 
 	function test_url_parts() {
@@ -30,6 +31,7 @@ class URLTests extends TestCase {
 		$this->assertEqual($url->path, '/path with spaces.html');
 		$this->assertEqual($url->__toString(), '/path%20with%20spaces.html');
 	}
+
 	function test_query() {
 		// querystring notation
 		$url = new URL('/');
@@ -73,4 +75,5 @@ class URLTests extends TestCase {
 		$url->path = '/folder1/test2.html';
 		$this->assertEqual($url->getFilename(), 'test2.html');
 	}
+
 }

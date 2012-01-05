@@ -1,10 +1,10 @@
 <?php
-
 /**
  * CSVTests
  *
  */
 namespace SledgeHammer;
+
 class CSVTests extends TestCase {
 
 	function test_csv() {
@@ -14,8 +14,8 @@ class CSVTests extends TestCase {
 		$this->assertEqual(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");
 		$csv = new CSV($filename);
 		$this->assertEqual(iterator_to_array($csv), $data);
-
 	}
+
 }
 
 ?>

@@ -123,8 +123,6 @@ class DatabaseCollection extends Collection {
 		if ($this->data === null) {
 			$db = getDatabase($this->dbLink);
 			$this->data = $db->query($this->sql);
-		} else {
-			// @todo? iterator isDirty check
 		}
 	}
 
