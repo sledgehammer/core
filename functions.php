@@ -642,7 +642,7 @@ namespace SledgeHammer {
 				break;
 
 			case 'resource':
-				$datatype = 'constant';
+				$color = 'constant';
 				$label = $variable;
 				break;
 

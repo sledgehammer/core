@@ -80,9 +80,9 @@ class URL extends Object {
 		if ($this->scheme !== null && $this->host !== null) {
 			$url .= $this->scheme.'://';
 			if (empty($this->user) == false) {
-				$url .= $this->user;
+				$url .= rawurlencode($this->user);
 				if (empty($this->pass) == false) {
-					$url .= ':'.$this->pass;
+					$url .= ':'.rawurlencode($this->pass);
 				}
 				$url .= '@';
 			}

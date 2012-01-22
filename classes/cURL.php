@@ -23,11 +23,12 @@ class cURL extends Object {
 	private $curl;
 	private $options = array();
 
-	function __construct($url = null) {
+	function __construct($url = null, $options = array()) {
 		$this->curl = curl_init();
 		if ($url !== null) {
-			$this->setOption(CURLOPT_URL, $url);
+			$options[CURLOPT_URL] = (string)$url;
 		}
+		$this->setOptions($options);
 	}
 
 	function __destruct() {
@@ -56,8 +57,15 @@ class cURL extends Object {
 	}
 
 	function setOption($option, $value) {
+		if (is_string($option)) {
+			$const = 'CURLOPT_'.strtoupper($option);
+			$option = eval('return '.$const.';');
+			if ($option === null) {
+				throw new \Exception('Option lookup failed');
+			}
+		}
 		if (curl_setopt($this->curl, $option, $value) === false) {
-			throw new Exception('Setting option'.$option.' failed');
+			throw new \Exception('Setting option:'. self::optionName($option).' failed');
 		}
 		if (ENVIRONMENT === 'development') {
 			$option = self::optionName($option);
@@ -65,23 +73,35 @@ class cURL extends Object {
 		$this->options[$option] = $value;
 	}
 
+	function setOptions($options) {
+		dump($options);
+		foreach ($options as $option => $value) {
+			$this->setOption($option, $value);
+		}
+	}
+
 	function getInfo($option = CURLINFO_EFFECTIVE_URL) {
 		return curl_getinfo($this->curl, $option);
 	}
 
-	/**
-	 *
-	 * @param type $params
-	 */
-	function get($params = array()) {
-		$this->setOption(CURLOPT_RETURNTRANSFER, true);
-		$response = $this->execute();
-		dump($this);
-		return $response;
+	static function get($url, $options = array()) {
+		$defaults = array(
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_FAILONERROR => true,
+		);
+		$request = new cURL($url, $options + $defaults);
+		return $request->execute();
 	}
 
-	function post($params = array()) {
-
+	static function post($url, $params = array(), $options = array()) {
+		$defaults = array(
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => $params,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_FAILONERROR => true,
+		);
+		$request = new cURL($url, $options + $defaults);
+		return $request->execute();
 	}
 
 	function execute() {
@@ -89,7 +109,7 @@ class cURL extends Object {
 		if ($success === false) {
 			$error = curl_errno($this->curl);
 			if ($error !== 0) {
-				notice('[cURL error '.$error.'] '.curl_errno($this->curl));
+				throw new InfoException('[cURL error '.$error.'] '.curl_error($this->curl), $this->options);
 			}
 		}
 		return $success;
@@ -102,11 +122,14 @@ class cURL extends Object {
 			$constants = get_defined_constants();
 			foreach ($constants as $constant => $constant_value) {
 				if (substr($constant, 0, 8) === 'CURLOPT_') {
-					$lookup[$constant_value] = strtolower(substr($constant, 8));
+					$lookup[$constant_value] = $constant;
 				}
 			}
 		}
-		return $lookup[$number];
+		if (array_key_exists($number, $lookup)) {
+			return $lookup[$number];
+		}
+		return $number;
 	}
 
 }
