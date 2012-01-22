@@ -1,6 +1,14 @@
 <?php
 /**
- * cURL
+ * cURL, an OOP wrapper for curl functions.
+ *
+ * Setting options:
+ *   Classic: $cURL->setOption(CURLOPT_URL, "http://example.com");
+ *   Propery: $cURL->url = "http://example.com";
+ *
+ * Reading output:
+ *   Classic: $cURL->getInfo(CURLINFO_HTTP_CODE);
+ *   Property: $cURL->http_code;
  *
  * @property string $url
  */
@@ -51,6 +59,9 @@ class cURL extends Object {
 		if (curl_setopt($this->curl, $option, $value) === false) {
 			throw new Exception('Setting option'.$option.' failed');
 		}
+		if (ENVIRONMENT === 'development') {
+			$option = self::optionName($option);
+		}
 		$this->options[$option] = $value;
 	}
 
@@ -63,14 +74,17 @@ class cURL extends Object {
 	 * @param type $params
 	 */
 	function get($params = array()) {
-		$this->execute();
+		$this->setOption(CURLOPT_RETURNTRANSFER, true);
+		$response = $this->execute();
+		dump($this);
+		return $response;
 	}
 
 	function post($params = array()) {
 
 	}
 
-	private function execute() {
+	function execute() {
 		$success = curl_exec($this->curl);
 		if ($success === false) {
 			$error = curl_errno($this->curl);
@@ -78,6 +92,21 @@ class cURL extends Object {
 				notice('[cURL error '.$error.'] '.curl_errno($this->curl));
 			}
 		}
+		return $success;
+	}
+
+	static function optionName($number) {
+		static $lookup = null;
+		if ($lookup === null) {
+			$lookup = array();
+			$constants = get_defined_constants();
+			foreach ($constants as $constant => $constant_value) {
+				if (substr($constant, 0, 8) === 'CURLOPT_') {
+					$lookup[$constant_value] = strtolower(substr($constant, 8));
+				}
+			}
+		}
+		return $lookup[$number];
 	}
 
 }
