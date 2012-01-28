@@ -36,12 +36,12 @@ class cURL extends Object {
 	private $request = array();
 
 	/**
-	 * @var string
+	 * @var string  RUNNING | COMPLETED | ABORTED | ERROR
 	 */
 	private $state;
 
 	/**
-	 * @var resource The curl request
+	 * @var resource cURL handle
 	 */
 	private $curl;
 
@@ -51,11 +51,12 @@ class cURL extends Object {
 	static private $pool;
 
 	/**
-	 * @var int
+	 * @var int  Number of tranfers in the pool
 	 */
 	static private $tranferCount = 0;
 
 	/**
+	 * Create a new cURL request/response.
 	 *
 	 * @param array $options  The CURLOPT_* request options
 	 * @throws \Exception
@@ -84,7 +85,7 @@ class cURL extends Object {
 	 *
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
-	 * @return \SledgeHammer\cURL
+	 * @return \SledgeHammer\cURL  cURL response
 	 */
 	static function get($url, $options = array()) {
 		$options[CURLOPT_URL] = $url;
@@ -97,11 +98,11 @@ class cURL extends Object {
 	}
 
 	/**
-	 * Preform an asynchonous GET request
+	 * Preform an asynchonous POST request
 	 *
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
-	 * @return \SledgeHammer\cURL
+	 * @return \SledgeHammer\cURL  cURL response
 	 */
 	static function post($url, $params = array(), $options = array()) {
 		$options[CURLOPT_URL] = $url;
@@ -113,6 +114,60 @@ class cURL extends Object {
 		);
 		$request = new cURL($options + $defaults);
 		return $request;
+	}
+
+	/**
+	 * Get information about the response.
+	 *
+	 * @param int $option (optional)CURLINFO_* value (Returns an array with all info if no $option is given)
+	 * @return mixed
+	 */
+	function getInfo($option = null) {
+		$this->waitForCompletion();
+		if ($option === null) {
+			return curl_getinfo($this->curl);
+		}
+		return curl_getinfo($this->curl, $option);
+	}
+
+	/**
+	 * The response body.
+	 * (If the CURLOPT_RETURNTRANSFER option is set)
+	 *
+	 * @return string
+	 */
+	function getContent() {
+		$this->waitForCompletion();
+		return curl_multi_getcontent($this->curl);
+	}
+
+	/**
+	 * Access CURLINFO_* info as properties.
+	 *
+	 * @param string $property
+	 * @return mixed
+	 */
+	function __get($property) {
+		$const = 'CURLINFO_'.strtoupper($property);
+		if (defined($const)) {
+			$option = eval('return '.$const.';');
+			$this->waitForCompletion();
+			return curl_getinfo($this->curl, $option);
+		}
+		return parent::__get($property);
+	}
+
+	/**
+	 * Returns the response body
+	 * @return string
+	 */
+	function __toString() {
+		try {
+			return $this->getContent();
+		} catch (\Exception $e) {
+			ErrorHandler::handle_exception($e);
+			return '';
+		}
 	}
 
 	/**
@@ -158,56 +213,14 @@ class cURL extends Object {
 		return false;
 	}
 
-	function __get($property) {
-		$const = 'CURLINFO_'.strtoupper($property);
-		if (defined($const)) {
-			$option = eval('return '.$const.';');
-			$this->waitForCompletion();
-			return curl_getinfo($this->curl, $option);
-		}
-		return parent::__get($property);
-	}
-
-	/**
-	 * Get information about the response.
-	 *
-	 * @param int $option (optional)CURLINFO_* value
-	 * @return mixed  Array with all info if no $option is given
-	 */
-	function getInfo($option = null) {
-		$this->waitForCompletion();
-		if ($option === null) {
-			return curl_getinfo($this->curl);
-		}
-		return curl_getinfo($this->curl, $option);
-	}
-
-	/**
-	 * The response.
-	 * (If the CURLOPT_RETURNTRANSFER option is set)
-	 *
-	 * @return string
-	 */
-	function getContent() {
-		$this->waitForCompletion();
-		return curl_multi_getcontent($this->curl);
-	}
-
-	function __toString() {
-		try {
-			return $this->getContent();
-		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
-			return '';
-		}
-	}
-
 	/**
 	 * Reuse the curl handle/connection to (re)send an request
-	 * Use the options to overide settings from the previous request.
+	 * Use the options to override settings from the previous request.
+	 *
+	 * @param array Additional/override  CURLOPT_* settings.
 	 */
 	function resend($options = array()) {
-		$this->waitForCompletion();
+//		$this->waitForCompletion();
 		if ($this->state !== 'ABORTED') {
 			$this->abort();
 		}
@@ -270,6 +283,27 @@ class cURL extends Object {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
 		}
 		$this->state = 'RUNNING';
+	}
+
+	/**
+	 * Wait for the request to complete
+	 *
+	 * @throws \Exception
+	 */
+	private function waitForCompletion() {
+		if ($this->isComplete()) {
+			return;
+		}
+		$active = 0;
+		do {
+			// Wait for (incomming) data
+			if (curl_multi_select(self::$pool) === -1) {
+				throw new \Exception('Failed to detect changes in the cURL multi handle');
+			}
+			if ($this->isComplete($active)) {
+				return;
+			}
+		} while ($active > 0);
 	}
 
 	/**
@@ -339,27 +373,6 @@ class cURL extends Object {
 			return $lookup[$number];
 		}
 		return $number;
-	}
-
-	/**
-	 * Wait for the request to complete
-	 *
-	 * @throws \Exception
-	 */
-	private function waitForCompletion() {
-		if ($this->isComplete()) {
-			return;
-		}
-		$active = 0;
-		do {
-			// Wait for (incomming) data
-			if (curl_multi_select(self::$pool) === -1) {
-				throw new \Exception('Failed to detect changes in the cURL multi handle');
-			}
-			if ($this->isComplete($active)) {
-				return;
-			}
-		} while ($active > 0);
 	}
 
 }
