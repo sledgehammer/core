@@ -33,7 +33,7 @@ class cURL extends Object {
 	/**
 	 * @var array All the given CURLOPT_* options
 	 */
-	private $options = array();
+	private $request = array();
 
 	/**
 	 * @var string
@@ -73,7 +73,7 @@ class cURL extends Object {
 			if (ENVIRONMENT === 'development') {
 				$option = self::optionName($option);
 			}
-			$this->options[$option] = $value;
+			$this->request[$option] = $value;
 		}
 
 		// multi curl init
@@ -179,10 +179,11 @@ class cURL extends Object {
 			if ($message['handle'] === $this->curl) {
 				unset($messages[$index]); // cleanup the (global) $messages array
 				$this->state = 'COMPLETE';
-				$error = curl_errno($this->curl);
-				if ($error !== CURLE_OK) {
+				$errno = curl_errno($this->curl);
+				$error = curl_error($this->curl);
+				if ($error !== '' || $errno !== 0) {
 					$this->state = 'ERROR';
-					throw new InfoException('[cURL error '.$error.'] '.curl_error($this->curl), $this->options);
+					throw new InfoException('cURL error['.$errno.'] '.$error, $this->request);
 				}
 				return true;
 			}
@@ -227,8 +228,7 @@ class cURL extends Object {
 
 	function __toString() {
 		try {
-			$this->waitForCompletion();
-			return curl_multi_getcontent($this->curl);
+			return $this->getContent();
 		} catch (\Exception $e) {
 			ErrorHandler::handle_exception($e);
 			return '';

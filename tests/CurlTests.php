@@ -1,6 +1,6 @@
 <?php
 /**
- * CollectionTests
+ * CurlTests
  *
  */
 namespace SledgeHammer;
@@ -37,7 +37,15 @@ class CurlTests extends TestCase {
 		$this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel downloads are faster');
 	}
 
-
+	function test_exception_on_error() {
+		$response = cURL::get('https://404.bfanger.nl/');
+		try {
+			$response->getContent();
+			$this->fail('Non-existing domain should throw an Exception');
+		} catch (\Exception $e) {
+			$this->pass('Exception was thrown succesfully ');
+		}
+	}
 }
 
 ?>
