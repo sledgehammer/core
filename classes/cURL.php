@@ -179,11 +179,20 @@ class cURL extends Object {
 			if ($message['handle'] === $this->curl) {
 				unset($messages[$index]); // cleanup the (global) $messages array
 				$this->state = 'COMPLETE';
-				$errno = curl_errno($this->curl);
-				$error = curl_error($this->curl);
-				if ($error !== '' || $errno !== 0) {
+				$error = $message['result'];
+				if ($error !== CURLE_OK) {
 					$this->state = 'ERROR';
-					throw new InfoException('cURL error['.$errno.'] '.$error, $this->request);
+					static $errors = null;
+					if ($errors === null) {
+						$errors = array();
+						$constants = get_defined_constants();
+						foreach ($constants as $constant => $constant_value) {
+							if (substr($constant, 0, 6) === 'CURLE_') {
+								$errors[$constant_value] = $constant;
+							}
+						}
+					}
+					throw new InfoException('['.$errors[$error].'] '.curl_error($this->curl), $this->request);
 				}
 				return true;
 			}
