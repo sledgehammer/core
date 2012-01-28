@@ -46,6 +46,19 @@ class CurlTests extends TestCase {
 			$this->pass('Exception was thrown succesfully ');
 		}
 	}
+
+	function test_curl_debugging() {
+		$fp = fopen('php://memory', 'w+');
+		$response = cURL::get('http://bfanger.nl/', array(
+			CURLOPT_STDERR => $fp,
+			CURLOPT_VERBOSE => true,
+		));
+		$this->assertEqual($response->http_code, 200);
+		rewind($fp);
+		$log = stream_get_contents($fp);
+		fclose($fp);
+		$this->assertTrue(strstr($log, 'About to connect() to '), 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+	}
 }
 
 ?>
