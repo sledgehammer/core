@@ -27,9 +27,16 @@ namespace SledgeHammer;
  * @property mixed $content_length_download  content-length of download, read from Content-Length: field
  * @property mixed $content_length_upload    Specified size of upload
  * @property mixed $content_type    Content-Type: of the requested document, NULL indicates server did not send valid Content-Type: header
+ *
+ * @property Closure $onLoad  Event fires when the request has successfully completed.
+ * @property Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
  */
-class cURL extends Object {
+class cURL extends Observable {
 
+	protected $events = array(
+		'load' => array(),
+		'abort' => array(),
+	);
 	/**
 	 * @var array All the given CURLOPT_* options
 	 */
@@ -62,16 +69,26 @@ class cURL extends Object {
 	 * @throws \Exception
 	 */
 	function __construct($options = array()) {
-		$this->state = 'ERROR';
-		self::$tranferCount++;
 		$this->curl = curl_init();
+		if ($this->curl === false) {
+			throw new \Exception('Failed to create cURL handle');
+		}
 		$this->send($options);
 	}
 
 	function __destruct() {
 		if ($this->curl !== null) {
-			curl_multi_remove_handle(self::$pool, $this->curl);
-			self::$tranferCount--;
+			if ($this->state === 'RUNNING') {
+				$this->waitForCompletion(); // Complete the request/upload
+			}
+			if ($this->state !== 'ABORTED') {
+				// Remove the cURL handle from the pool
+				$error = curl_multi_remove_handle(self::$pool, $this->curl);
+				self::$tranferCount--;
+				if ($error !== CURLM_OK) {
+					throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
+				}
+			}
 			curl_close($this->curl);
 			if (self::$tranferCount === 0) {
 				curl_multi_close(self::$pool);
@@ -124,6 +141,9 @@ class cURL extends Object {
 	 */
 	function getInfo($option = null) {
 		$this->waitForCompletion();
+		if ($this->state !== 'COMPLETED') {
+			throw new InfoException('No information available for a failed request', $this->request);
+		}
 		if ($option === null) {
 			return curl_getinfo($this->curl);
 		}
@@ -138,6 +158,9 @@ class cURL extends Object {
 	 */
 	function getContent() {
 		$this->waitForCompletion();
+		if ($this->state !== 'COMPLETED') {
+			throw new InfoException('No content available for a failed request', $this->request);
+		}
 		return curl_multi_getcontent($this->curl);
 	}
 
@@ -186,7 +209,7 @@ class cURL extends Object {
 			$error = curl_multi_exec(self::$pool, $activeTransferCount);
 		}
 		if ($error !== CURLM_OK) {
-			throw new \Exception('Failed to execute cURL multi handle (error: '.self::multiErrorName($error).')');
+			throw new \Exception('['.self::multiErrorName($error).'Failed to execute cURL multi handle');
 		}
 		static $messages = array();
 		$queued = 0;
@@ -204,9 +227,9 @@ class cURL extends Object {
 				$error = $message['result'];
 				if ($error !== CURLE_OK) {
 					$this->state = 'ERROR';
-
 					throw new InfoException('['.self::errorName($error).'] '.curl_error($this->curl), $this->request);
 				}
+				$this->trigger('load', $this);
 				return true;
 			}
 		}
@@ -220,7 +243,6 @@ class cURL extends Object {
 	 * @param array Additional/override  CURLOPT_* settings.
 	 */
 	function resend($options = array()) {
-//		$this->waitForCompletion();
 		if ($this->state !== 'ABORTED') {
 			$this->abort();
 		}
@@ -233,11 +255,19 @@ class cURL extends Object {
 	 * @throws \Exception
 	 */
 	function abort() {
-		$error = curl_multi_remove_handle(self::$pool, $this->curl);
-		if ($error !== CURLM_OK) {
-			throw new \Exception('Failed to remove cURL handle (error: '.self::multiErrorName($error).')');
+		$this->isComplete(); // Check if the transfer has completed successfully (and trigger events)
+		if ($this->state !== 'ABORTED') {
+			$error = curl_multi_remove_handle(self::$pool, $this->curl);
+			self::$tranferCount--;
+			if ($error !== CURLM_OK) {
+				throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
+			}
 		}
+		$previous_state = $this->state;
 		$this->state = 'ABORTED';
+		if ($previous_state === 'RUNNING') { //
+			$this->trigger('abort', $this);
+		}
 	}
 
 	/**
@@ -250,6 +280,7 @@ class cURL extends Object {
 	 * @throws \Exception
 	 */
 	private function send($options) {
+		$this->state = 'ERROR';
 		// Setting options
 		foreach ($options as $option => $value) {
 			if (curl_setopt($this->curl, $option, $value) === false) {
@@ -274,6 +305,7 @@ class cURL extends Object {
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to add cURL handle');
 		}
+		self::$tranferCount++;
 		// Start request
 		$error = CURLM_CALL_MULTI_PERFORM;
 		while ($error === CURLM_CALL_MULTI_PERFORM) {

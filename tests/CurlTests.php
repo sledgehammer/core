@@ -3,6 +3,7 @@
  * CurlTests
  *
  */
+
 namespace SledgeHammer;
 
 class CurlTests extends TestCase {
@@ -38,27 +39,44 @@ class CurlTests extends TestCase {
 	}
 
 	function test_exception_on_error() {
-		$response = cURL::get('https://404.bfanger.nl/');
+		$response = cURL::get('noprotocol://bfanger.nl/');
 		try {
 			$response->getContent();
-			$this->fail('Non-existing domain should throw an Exception');
+			$this->fail('Requests to an invalid protocol should throw an exception');
 		} catch (\Exception $e) {
-			$this->pass('Exception was thrown succesfully ');
+			$this->pass('Requests to an invalid protocol should throw an exception');
 		}
+		try {
+			$response->getInfo();
+			$this->fail('Retrieving info on a failed tranfer should throw an exception');
+		} catch (\Exception $e) {
+			$this->pass('Retrieving info on a failed tranfer should throw an exception');
+		}
+	}
+
+	function test_events() {
+		$response = cURL::get('http://bfanger.nl/');
+		$output = false;
+		$response->onLoad = function ($response) use (&$output) { $output = $response->http_code; };
+		$this->assertEqual($output, false);
+		unset($response);
+		$this->assertEqual($output, 200);
 	}
 
 	function test_curl_debugging() {
 		$fp = fopen('php://memory', 'w+');
-		$response = cURL::get('http://bfanger.nl/', array(
+		$options = array(
 			CURLOPT_STDERR => $fp,
 			CURLOPT_VERBOSE => true,
-		));
+		);
+		$response = cURL::get('http://bfanger.nl/', $options);
 		$this->assertEqual($response->http_code, 200);
 		rewind($fp);
 		$log = stream_get_contents($fp);
 		fclose($fp);
 		$this->assertTrue(strstr($log, 'About to connect() to '), 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
 	}
+
 }
 
 ?>
