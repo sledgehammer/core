@@ -50,7 +50,7 @@ class cURL extends Observable {
 	/**
 	 * @var resource cURL handle
 	 */
-	private $curl;
+	private $handle;
 
 	/**
 	 * @var resource cURL multi handle
@@ -69,27 +69,27 @@ class cURL extends Observable {
 	 * @throws \Exception
 	 */
 	function __construct($options = array()) {
-		$this->curl = curl_init();
-		if ($this->curl === false) {
+		$this->handle = curl_init();
+		if ($this->handle === false) {
 			throw new \Exception('Failed to create cURL handle');
 		}
 		$this->send($options);
 	}
 
 	function __destruct() {
-		if ($this->curl !== null) {
+		if (is_resource($this->handle)) {
 			if ($this->state === 'RUNNING') {
 				$this->waitForCompletion(); // Complete the request/upload
 			}
 			if ($this->state !== 'ABORTED') {
 				// Remove the cURL handle from the pool
-				$error = curl_multi_remove_handle(self::$pool, $this->curl);
+				$error = curl_multi_remove_handle(self::$pool, $this->handle);
 				self::$tranferCount--;
 				if ($error !== CURLM_OK) {
 					throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
 				}
 			}
-			curl_close($this->curl);
+			curl_close($this->handle);
 			if (self::$tranferCount === 0) {
 				curl_multi_close(self::$pool);
 				self::$pool = null;
@@ -142,12 +142,12 @@ class cURL extends Observable {
 	function getInfo($option = null) {
 		$this->waitForCompletion();
 		if ($this->state !== 'COMPLETED') {
-			throw new InfoException('No information available for a failed request', $this->request);
+			throw new InfoException('No information available for a '.$this->state.' request', $this->request);
 		}
 		if ($option === null) {
-			return curl_getinfo($this->curl);
+			return curl_getinfo($this->handle);
 		}
-		return curl_getinfo($this->curl, $option);
+		return curl_getinfo($this->handle, $option);
 	}
 
 	/**
@@ -159,9 +159,9 @@ class cURL extends Observable {
 	function getContent() {
 		$this->waitForCompletion();
 		if ($this->state !== 'COMPLETED') {
-			throw new InfoException('No content available for a failed request', $this->request);
+			throw new InfoException('No content available for a '.$this->state.' request', $this->request);
 		}
-		return curl_multi_getcontent($this->curl);
+		return curl_multi_getcontent($this->handle);
 	}
 
 	/**
@@ -175,7 +175,7 @@ class cURL extends Observable {
 		if (defined($const)) {
 			$option = eval('return '.$const.';');
 			$this->waitForCompletion();
-			return curl_getinfo($this->curl, $option);
+			return curl_getinfo($this->handle, $option);
 		}
 		return parent::__get($property);
 	}
@@ -196,6 +196,7 @@ class cURL extends Observable {
 	/**
 	 * Check if this request is complete
 	 *
+	 * @param int $activeTransferCount
 	 * @return boolean
 	 * @throws InfoException
 	 */
@@ -211,28 +212,29 @@ class cURL extends Observable {
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'Failed to execute cURL multi handle');
 		}
-		static $messages = array();
 		$queued = 0;
 		do {
-			$info = curl_multi_info_read(self::$pool, $queued);
-			if ($info !== false) {
-				$messages[] = $info;
+			$message = curl_multi_info_read(self::$pool, $queued);
+			if ($message !== false) {
+				// Scan the (global) curl pool for curl handle specified in the handle
+				foreach ($GLOBALS['SledgeHammer']['cURL'] as $index => $curl) {
+					if ($curl->handle === $message['handle']) {
+						unset($GLOBALS['SledgeHammer']['cURL'][$index]); // Cleanup global curl pool
+						$curl->state = 'COMPLETED';
+						$error = $message['result'];
+						if ($error !== CURLE_OK) {
+							$curl->state = 'ERROR';
+							throw new InfoException('['.self::errorName($error).'] '.curl_error($curl->handle), $curl->request);
+						}
+						$curl->trigger('load', $curl);
+						if ($curl === $this) {
+							return true;
+						}
+						break;
+					}
+				}
 			}
 		} while ($queued > 0);
-		// Scan the (global) $messages for $this->curl handle
-		foreach ($messages as $index => $message) {
-			if ($message['handle'] === $this->curl) {
-				unset($messages[$index]); // cleanup the (global) $messages array
-				$this->state = 'COMPLETE';
-				$error = $message['result'];
-				if ($error !== CURLE_OK) {
-					$this->state = 'ERROR';
-					throw new InfoException('['.self::errorName($error).'] '.curl_error($this->curl), $this->request);
-				}
-				$this->trigger('load', $this);
-				return true;
-			}
-		}
 		return false;
 	}
 
@@ -246,6 +248,10 @@ class cURL extends Observable {
 		if ($this->state !== 'ABORTED') {
 			$this->abort();
 		}
+		$index = array_search($this, $GLOBALS['SledgeHammer']['cURL'], true);
+		if ($index !== false) {
+			unset($GLOBALS['SledgeHammer']['cURL'][$index]);
+		}
 		$this->send($options);
 	}
 
@@ -257,7 +263,7 @@ class cURL extends Observable {
 	function abort() {
 		$this->isComplete(); // Check if the transfer has completed successfully (and trigger events)
 		if ($this->state !== 'ABORTED') {
-			$error = curl_multi_remove_handle(self::$pool, $this->curl);
+			$error = curl_multi_remove_handle(self::$pool, $this->handle);
 			self::$tranferCount--;
 			if ($error !== CURLM_OK) {
 				throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
@@ -281,9 +287,10 @@ class cURL extends Observable {
 	 */
 	private function send($options) {
 		$this->state = 'ERROR';
+		$GLOBALS['SledgeHammer']['cURL'][] = $this; // Watch changes
 		// Setting options
 		foreach ($options as $option => $value) {
-			if (curl_setopt($this->curl, $option, $value) === false) {
+			if (curl_setopt($this->handle, $option, $value) === false) {
 				throw new \Exception('Setting option:'.self::optionName($option).' failed');
 			}
 			if (ENVIRONMENT === 'development') {
@@ -297,11 +304,10 @@ class cURL extends Observable {
 			self::$pool = curl_multi_init();
 			if (self::$pool === false) {
 				throw new \Exception('Failed to create cURL multi handle');
-				;
 			}
 		}
 		// Add request
-		$error = curl_multi_add_handle(self::$pool, $this->curl);
+		$error = curl_multi_add_handle(self::$pool, $this->handle);
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to add cURL handle');
 		}

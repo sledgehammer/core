@@ -9,12 +9,14 @@ namespace SledgeHammer;
 class CurlTests extends TestCase {
 
 	function test_single_get() {
+		$this->assertEmptyPool();
 		$response = cURL::get('http://www.bfanger.nl/');
 		$this->assertEqual($response->http_code, 200);
 		$this->assertEqual($response->effective_url, 'http://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
 	}
 
 	function test_async() {
+		$this->assertEmptyPool();
 		$now = microtime(true);
 		$response = cURL::get('http://bfanger.nl/');
 		$this->assertFalse($response->isComplete());
@@ -29,6 +31,7 @@ class CurlTests extends TestCase {
 	}
 
 	function test_paralell_get() {
+		$this->assertEmptyPool();
 		$response = cURL::get('http://bfanger.nl/');
 		$paralell = cURL::get('http://bfanger.nl/');
 		$now = microtime(true);
@@ -39,6 +42,7 @@ class CurlTests extends TestCase {
 	}
 
 	function test_exception_on_error() {
+		$this->assertEmptyPool();
 		$response = cURL::get('noprotocol://bfanger.nl/');
 		try {
 			$response->getContent();
@@ -55,15 +59,19 @@ class CurlTests extends TestCase {
 	}
 
 	function test_events() {
+		$this->assertEmptyPool();
 		$response = cURL::get('http://bfanger.nl/');
 		$output = false;
-		$response->onLoad = function ($response) use (&$output) { $output = $response->http_code; };
+		$response->onLoad = function ($response) use (&$output) {
+					$output = $response->http_code;
+				};
 		$this->assertEqual($output, false);
-		unset($response);
+		$this->assertEqual($response->getInfo(CURLINFO_HTTP_CODE), 200); // calls waitForCompletion which triggers the event
 		$this->assertEqual($output, 200);
 	}
 
 	function test_curl_debugging() {
+		$this->assertEmptyPool();
 		$fp = fopen('php://memory', 'w+');
 		$options = array(
 			CURLOPT_STDERR => $fp,
@@ -75,6 +83,12 @@ class CurlTests extends TestCase {
 		$log = stream_get_contents($fp);
 		fclose($fp);
 		$this->assertTrue(strstr($log, 'About to connect() to '), 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+	}
+
+	private function assertEmptyPool() {
+		if (isset($GLOBALS['SledgeHammer']['cURL']) && count($GLOBALS['SledgeHammer']['cURL']) > 0) {
+			$this->fail('Global cURL pool shoud be emtpy');
+		}
 	}
 
 }
