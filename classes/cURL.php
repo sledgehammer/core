@@ -73,7 +73,7 @@ class cURL extends Observable {
 		if ($this->handle === false) {
 			throw new \Exception('Failed to create cURL handle');
 		}
-		$this->send($options);
+		$this->start($options);
 	}
 
 	function __destruct() {
@@ -82,18 +82,9 @@ class cURL extends Observable {
 				$this->waitForCompletion(); // Complete the request/upload
 			}
 			if ($this->state !== 'ABORTED') {
-				// Remove the cURL handle from the pool
-				$error = curl_multi_remove_handle(self::$pool, $this->handle);
-				self::$tranferCount--;
-				if ($error !== CURLM_OK) {
-					throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
-				}
+				$this->stop(); // Remove the cURL handle from the pool
 			}
 			curl_close($this->handle);
-			if (self::$tranferCount === 0) {
-				curl_multi_close(self::$pool);
-				self::$pool = null;
-			}
 		}
 	}
 
@@ -252,7 +243,7 @@ class cURL extends Observable {
 		if ($index !== false) {
 			unset($GLOBALS['SledgeHammer']['cURL'][$index]);
 		}
-		$this->send($options);
+		$this->start($options);
 	}
 
 	/**
@@ -262,16 +253,9 @@ class cURL extends Observable {
 	 */
 	function abort() {
 		$this->isComplete(); // Check if the transfer has completed successfully (and trigger events)
-		if ($this->state !== 'ABORTED') {
-			$error = curl_multi_remove_handle(self::$pool, $this->handle);
-			self::$tranferCount--;
-			if ($error !== CURLM_OK) {
-				throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
-			}
-		}
 		$previous_state = $this->state;
-		$this->state = 'ABORTED';
-		if ($previous_state === 'RUNNING') { //
+		$this->stop();
+		if ($previous_state === 'RUNNING') {
 			$this->trigger('abort', $this);
 		}
 	}
@@ -285,7 +269,7 @@ class cURL extends Observable {
 	 * @param array $options
 	 * @throws \Exception
 	 */
-	private function send($options) {
+	private function start($options) {
 		$this->state = 'ERROR';
 		$GLOBALS['SledgeHammer']['cURL'][] = $this; // Watch changes
 		// Setting options
@@ -321,6 +305,26 @@ class cURL extends Observable {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
 		}
 		$this->state = 'RUNNING';
+	}
+
+	/**
+	 * Remove the request from the pool
+	 *
+	 * @throws \Exception
+	 */
+	private function stop() {
+		if ($this->state !== 'ABORTED') {
+			$error = curl_multi_remove_handle(self::$pool, $this->handle);
+			self::$tranferCount--;
+			if ($error !== CURLM_OK) {
+				throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
+			}
+			if (self::$tranferCount === 0) {
+				curl_multi_close(self::$pool);
+				self::$pool = null;
+			}
+		}
+		$this->state = 'ABORTED';
 	}
 
 	/**

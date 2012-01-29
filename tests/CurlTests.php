@@ -17,7 +17,6 @@ class CurlTests extends TestCase {
 
 	function test_async() {
 		$this->assertEmptyPool();
-		$now = microtime(true);
 		$response = cURL::get('http://bfanger.nl/');
 		$this->assertFalse($response->isComplete());
 		for ($i = 0; $i < 10; $i++) {
