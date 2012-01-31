@@ -85,7 +85,7 @@ class Json extends Object {
 		$json = json_encode($data, $optionMask);
 		$error = json_last_error();
 		if ($error !== JSON_ERROR_NONE) {
-			$this->throwError($error);
+			throw new \Exception(self::errorMessage($error),$error);
 		}
 		return $json;
 	}
@@ -116,7 +116,7 @@ class Json extends Object {
 		}
 		$error = json_last_error();
 		if ($error !== JSON_ERROR_NONE) {
-			$this->throwError($error);
+			throw new \Exception(self::errorMessage($error), $error);
 		}
 		return $data;
 	}
@@ -149,7 +149,7 @@ class Json extends Object {
 	 * @param int $errno
 	 * @return type
 	 */
-	private static function throwError($errno) {
+	private static function errorMessage($errno) {
 		static $lookup = null;
 		if ($lookup === null) {
 			$lookup = array();
@@ -186,7 +186,7 @@ class Json extends Object {
 				break;
 			default: $message = 'Unknown error';
 		}
-		throw new Exception($message, $errno);
+		return $message;
 	}
 
 }
