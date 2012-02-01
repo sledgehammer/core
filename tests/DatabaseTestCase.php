@@ -3,13 +3,13 @@
  * Breidt de UnitTestCase class uit met assert functies voor het controleren van queries en tabellen.
  */
 namespace SledgeHammer;
+
 abstract class DatabaseTestCase extends TestCase {
 
 	protected
 		$skipRebuildDatabase = false,
 		$dbLink = '__NOT_CONNECTED__',
 		$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
-
 	private
 		$dbName,
 		$queryCount;
@@ -21,7 +21,7 @@ abstract class DatabaseTestCase extends TestCase {
 			$GLOBALS['Databases']['default_backup'] = $GLOBALS['Databases']['default'];
 			unset($GLOBALS['Databases']['default']);
 		}
-		if(ENVIRONMENT != 'development') {
+		if (ENVIRONMENT != 'development') {
 			return;
 		}
 
@@ -34,7 +34,8 @@ abstract class DatabaseTestCase extends TestCase {
 			switch ($pdoDriver) {
 
 				case 'mysql':
-					$this->dbLink .= '_'.$_SERVER['HTTP_HOST'];;
+					$this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
+					;
 					$db = new Database('mysql://root@localhost');
 					$db->reportWarnings = false;
 					$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
@@ -59,7 +60,7 @@ abstract class DatabaseTestCase extends TestCase {
 	}
 
 	function getTests() {
-		if(ENVIRONMENT != 'development') {
+		if (ENVIRONMENT != 'development') {
 			$this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
 			return array();
 		}
@@ -87,14 +88,12 @@ abstract class DatabaseTestCase extends TestCase {
 	 */
 	abstract function fillDatabase($database);
 
-
 	/**
 	 * @return Database
 	 */
 	function getDatabase() {
 		return getDatabase($this->dbLink);
 	}
-
 
 	/**
 	 * Controleer of de $sql query is uitgevoerd sinds de start van de test_*()
@@ -135,7 +134,7 @@ abstract class DatabaseTestCase extends TestCase {
 	 */
 	function assertLastQuery($sql, $message = NULL) {
 		$db = $this->getDatabase();
-		$query =  $db->log[count($db->log) - 1];
+		$query = $db->log[count($db->log) - 1];
 		if ($sql == $query['sql']) {
 			if ($message === NULL) {
 				$message = 'SQL ['.$sql.'] is executed';
@@ -190,7 +189,6 @@ abstract class DatabaseTestCase extends TestCase {
 		return false;
 	}
 
-
 	function setUp() {
 		$db = $this->getDatabase();
 		//dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));
@@ -220,5 +218,7 @@ abstract class DatabaseTestCase extends TestCase {
 		}
 		$this->queryCount = count($db->log);
 	}
+
 }
+
 ?>

@@ -90,6 +90,15 @@ class DatabaseCollection extends Collection {
 		return new DatabaseCollection($sql, $this->dbLink);
 	}
 
+	/**
+	 *
+	 * @param string|SQL $sql
+	 */
+	function setQuery($sql) {
+		$this->sql = $sql;
+		$this->data = null;
+	}
+
 	function rewind() {
 		$this->validateIterator();
 		parent::rewind();

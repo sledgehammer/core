@@ -3,6 +3,7 @@
  * Controleer of alle benodige php extenties geinstalleerd zijn
  */
 namespace SledgeHammer;
+
 class RequiredPhpExtensions extends TestCase {
 
 	private
@@ -14,6 +15,7 @@ class RequiredPhpExtensions extends TestCase {
 	/**
 	 * tests/data/required_php_extentions.db.php inlezen en omzetten naar de $function_to_extention_map
 	 */
+
 	function __construct() {
 		$this->functions_per_extention = include(dirname(__FILE__).'/data/required_php_extentions_functions.db.php');
 		foreach ($this->functions_per_extention as $extention => $functions_or_classes) {
@@ -50,7 +52,7 @@ class RequiredPhpExtensions extends TestCase {
 			$functions_or_classes = $this->functions_per_extention[$extention];
 			$not_fully_installed = false;
 			foreach ($functions_or_classes as $function_or_class) {
-				if (! (function_exists($function_or_class) || class_exists($function_or_class, false))) {
+				if (!(function_exists($function_or_class) || class_exists($function_or_class, false))) {
 					$this->fail('Class or function "'.$function_or_class.'" is not defined');
 					$not_fully_installed = true;
 				}
@@ -89,7 +91,7 @@ class RequiredPhpExtensions extends TestCase {
 		$info = $this->parse_file($file);
 		$functions_or_classes = array_merge($info['classes'], $info['functions']);
 		$extentions = array();
-		foreach($functions_or_classes as $function_or_class) {
+		foreach ($functions_or_classes as $function_or_class) {
 			$key = strtolower($function_or_class);
 			if (isset($this->function_to_extention_map[$key])) {
 				$extentions[$this->function_to_extention_map[$key]] = true;
@@ -128,7 +130,7 @@ class RequiredPhpExtensions extends TestCase {
 				$previous_token = $token;
 				continue;
 			}
-			switch($token[0]) {
+			switch ($token[0]) {
 
 				case T_CLOSE_TAG:
 					$html = true;
@@ -175,5 +177,7 @@ class RequiredPhpExtensions extends TestCase {
 	private function echo_token($token) {
 		echo token_name($token[0]).': '.htmlentities($token[1])."\n";
 	}
+
 }
+
 ?>

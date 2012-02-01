@@ -4,6 +4,7 @@
  *
  */
 namespace SledgeHammer;
+
 class PHPTokenizerTests extends TestCase {
 
 	function donttest_tokenizer() {
@@ -60,5 +61,7 @@ class PHPTokenizerTests extends TestCase {
 		}
 		return array_unique($files);
 	}
+
 }
+
 ?>

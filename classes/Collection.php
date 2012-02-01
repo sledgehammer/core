@@ -287,6 +287,15 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return count($this->data);
 	}
 
+	/**
+	 * Change the internal query.
+	 *
+	 * @param mixed $query
+	 */
+	function setQuery($query) {
+		throw new \Exception('The setQuery() method is not supported by '.get_class($this));
+	}
+
 	function __clone() {
 		if (is_array($this->data) == false) {
 			// $this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
