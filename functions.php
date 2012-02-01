@@ -172,10 +172,68 @@ namespace SledgeHammer {
 		if ($extension === null) {
 			$mimetype = null;
 		} else {
-			if (empty($GLOBALS['mimetypes.ini'])) {
-				$GLOBALS['mimetypes.ini'] = parse_ini_file(dirname(__FILE__).'/settings/mimetypes.ini');
-			}
-			$mimetype = value($GLOBALS['mimetypes.ini'][strtolower($extension)]);
+			// extension => Content-Type
+			$mimetypes = array(
+				'htm' => 'text/html',
+				'html' => 'text/html',
+				'php' => 'text/html',
+				'css' => 'text/css',
+				'js' => 'text/javascript',
+				'json' => 'application/json',
+				'xml' => 'text/xml',
+				'swf' => 'application/x-shockwave-flash',
+				'wsdl' => 'text/xml',
+				'xsd' => 'text/xml',
+				'txt' => 'text/plain',
+				'ini' => 'text/plain',
+				// Images
+				'png' => 'image/png',
+				'jpe' => 'image/jpeg',
+				'jpeg' => 'image/jpeg',
+				'jpg' => 'image/jpeg',
+				'gif' => 'image/gif',
+				'bmp' => 'image/bmp',
+				'ico' => 'image/x-icon', //image/vnd.microsoft.icon
+				'tiff' => 'image/tiff',
+				'tif' => 'image/tiff',
+				'svg' => 'image/svg+xml',
+				'svgz' => 'image/svg+xml',
+				// Archives
+				'zip' => 'application/zip',
+				'rar' => 'application/x-rar-compressed',
+				'exe' => 'application/x-msdownload',
+				'msi' => 'application/x-msdownload',
+				'cab' => 'application/vnd.ms-cab-compressed',
+				// Audio/Video
+				'mp3' => 'audio/mpeg',
+				'flv' => 'video/x-flv',
+				'mpg' => 'video/mpeg',
+				'mpeg' => 'video/mpeg',
+				'qt' => 'video/quicktime',
+				'mov' => 'video/quicktime',
+				'avi' => 'video/msvideo',
+				'wmv' => 'video/x-ms-video',
+				'mp4' => 'video/mp4',
+				'mkv' => 'video/x-matroska',
+				'3gp' => 'video/3gpp',
+				// Adobe
+				'pdf' => 'application/pdf',
+				'psd' => 'image/vnd.adobe.photoshop',
+				'ai' => 'application/postscript',
+				'eps' => 'application/postscript',
+				'ps' => 'application/postscript',
+				// Microsoft Office
+				'doc' => 'application/msword',
+				'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				'rtf' => 'application/rtf',
+				'xls' => 'application/vnd.ms-excel',
+				'ppt' => 'application/vnd.ms-powerpoint',
+				// OpenOffice
+				'odt' => 'application/vnd.oasis.opendocument.text',
+				'ott' => 'application/vnd.oasis.opendocument.text-template',
+				'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+			);
+			$mimetype = value($mimetypes[strtolower($extension)]);
 		}
 		if ($mimetype === NULL) {
 			if (!$allow_unknown_types) {
@@ -667,10 +725,18 @@ namespace SledgeHammer {
 			$title = partial_var_export($variable, $maxLenghtTitle, 4);
 			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, $GLOBALS['charset'])).'"';
 		}
-		if (!isset($GLOBALS['highlight_colors'])) {
-			include(dirname(__FILE__).'/settings/highlight_colors.php');
-		}
-		return $html.' style="color:'.$GLOBALS['highlight_colors'][$color].'">'.$label.'</span>';
+		$colorCodes = array(
+			'string' => '#808080',
+			'number' => '#ff0000',
+			'constant' => '#ff8000',
+			'resource' => '#408040',
+			'method' => '#0000ff',
+			'class' => '#800080',
+			'attribute' => '#804040',
+			'operator' => '#008000',
+			'comment' => '#008080',
+		);
+		return $html.' style="color:'.$colorCodes[$color].'">'.$label.'</span>';
 	}
 
 	/**

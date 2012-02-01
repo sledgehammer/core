@@ -10,11 +10,19 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	if (!defined('ENVIRONMENT') && !defined('SledgeHammer\ENVIRONMENT')) {
 		define('SledgeHammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
 	}
-	$configFile = (ENVIRONMENT == 'development') ? 'development' : 'defaults'; 
-	$config = parse_ini_file(dirname(__FILE__).'/settings/sledgehammer_'.$configFile.'.ini'); 
-	ini_set('display_errors', (bool) $config['display_errors']);
+	if (ENVIRONMENT === 'development') {
+		ini_set('display_errors', true);
+	} else {
+		ini_set('display_errors', false);
+	}
 	require_once(dirname(__FILE__).'/init.php'); // Core module laden
-	if (ENVIRONMENT != 'development') {
+	if (ENVIRONMENT === 'development') {
+		$GLOBALS['ErrorHandler']->html = true;
+		$GLOBALS['ErrorHandler']->emails_per_request = 10;
+	} else {
+		$GLOBALS['ErrorHandler']->emails_per_request = 2;
+		$GLOBALS['ErrorHandler']->emails_per_minute = 6;
+		$GLOBALS['ErrorHandler']->emails_per_day = 100;
 		$email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
 		if (preg_match('/^.+@.+\..+$/', $email) && !in_array($email, array('you@example.com'))) { // Is het geen emailadres, of het standaard apache emailadres?
 			$GLOBALS['ErrorHandler']->email = $email;
@@ -22,12 +30,6 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 			error_log('Invalid $_SERVER["SERVER_ADMIN"]: "'.$email.'", expecting an valid emailaddress');
 		}
 	}
-	$GLOBALS['ErrorHandler']->html = (bool) $config['error_handler_html'];
-	$GLOBALS['ErrorHandler']->cli = (bool) $config['error_handler_cli'];
-	$GLOBALS['ErrorHandler']->log = (bool) $config['error_handler_log'];
-	$GLOBALS['ErrorHandler']->emails_per_request = $config['error_handler_emails_per_request'];
-	$GLOBALS['ErrorHandler']->emails_per_minute = $config['error_handler_emails_per_minute'];
-	$GLOBALS['ErrorHandler']->emails_per_day = $config['error_handler_emails_per_day'];
 
 	if (!isset($debug_override_variable)) {
 		$debug_override_variable = 'debug'; // Gebruik de debug variabele
@@ -69,7 +71,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	foreach($modules as $module) {
 		Framework::initModule($module['path']);
 	}
-	unset($configFile, $config, $email, $success, $modules, $module, $showDebugInfo); 
+	unset($email, $success, $modules, $module, $showDebugInfo);
 
 	if ($debug_override_variable == 'debug') {
 		unset($debug_override_variable);

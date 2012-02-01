@@ -35,14 +35,14 @@ if (function_exists('mb_internal_encoding')) {
 // Detect a writable tmp folder
 if (defined('SledgeHammer\TMP_DIR') === false) {
 	$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
-	if (is_dir($tmpDir) && is_writable($tmpDir)) { // A local temp folder exist?
+	if (is_dir($tmpDir) && is_writable($tmpDir)) { // A writable local tmp folder exist?
 		if (function_exists('posix_getpwuid')) {
 			$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
 		}
 	} else {
 		$tmpDir = '/tmp/sledgehammer-'.md5(PATH);
 		if (function_exists('posix_getpwuid')) {
-			$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name');
+			$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
 		}
 	}
 	define('SledgeHammer\TMP_DIR', $tmpDir);
