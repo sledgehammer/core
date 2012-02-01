@@ -125,6 +125,28 @@ class cURL extends Observable {
 	}
 
 	/**
+	 * Wait for all requests to complete
+	 *
+	 * @throws \Exception
+	 */
+	static function synchronize() {
+		if (self::$pool === null) {
+			return;
+		}
+		do {
+			// Wait for (incomming) data
+			if (curl_multi_select(self::$pool) === -1) {
+				throw new \Exception('Failed to detect changes in the cURL multi handle');
+			}
+			$active = 0;
+			foreach ($GLOBALS['SledgeHammer']['cURL'] as $curl) {
+				$curl->isComplete($active);
+				break;
+			}
+		} while ($active > 0);
+	}
+
+	/**
 	 * Get information about the response.
 	 *
 	 * @param int $option (optional)CURLINFO_* value (Returns an array with all info if no $option is given)
