@@ -93,46 +93,58 @@ class cURL extends Observable {
 	 *
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
+	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
 	 * @return \SledgeHammer\cURL  cURL response
 	 */
-	static function get($url, $options = array()) {
+	static function get($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
 		$defaults = array(
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FAILONERROR => true,
 			CURLOPT_FOLLOWLOCATION => true,
 		);
-		return new cURL($options + $defaults);
+		$response = new cURL($options + $defaults);
+		if ($callback !== null) {
+			$response->addListener('load', $callback);
+		}
+		return $response;
 	}
 
 	/**
 	 * Preform an asynchonous POST request
 	 *
 	 * @param string $url
+	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
+	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
 	 * @return \SledgeHammer\cURL  cURL response
 	 */
-	static function post($url, $params = array(), $options = array()) {
+	static function post($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
 		$defaults = array(
 			CURLOPT_POST => true,
-			CURLOPT_POSTFIELDS => $params,
+			CURLOPT_POSTFIELDS => $data,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FAILONERROR => true,
 		);
-		$request = new cURL($options + $defaults);
-		return $request;
+		$response = new cURL($options + $defaults);
+		if ($callback !== null) {
+			$response->addListener('load', $callback);
+		}
+		return $response;
 	}
 
 	/**
 	 * Wait for all requests to complete
 	 *
 	 * @throws \Exception
+	 * @return int  Maximum number of simultaneous requests.
 	 */
 	static function synchronize() {
 		if (self::$pool === null) {
-			return;
+			return 0;
 		}
+		$max = 0;
 		do {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool) === -1) {
@@ -141,9 +153,13 @@ class cURL extends Observable {
 			$active = 0;
 			foreach ($GLOBALS['SledgeHammer']['cURL'] as $curl) {
 				$curl->isComplete($active);
+				if ($max < $active) {
+					$max = $active;
+				}
 				break;
 			}
 		} while ($active > 0);
+		return $max;
 	}
 
 	/**
@@ -239,7 +255,11 @@ class cURL extends Observable {
 							$curl->state = 'ERROR';
 							throw new InfoException('['.self::errorName($error).'] '.curl_error($curl->handle), $curl->request);
 						}
+						$tranferCount = self::$tranferCount;
 						$curl->trigger('load', $curl);
+						if ($activeTransferCount === 0 && self::$tranferCount > $tranferCount) { // New transfers where added?
+							$activeTransferCount = (self::$tranferCount - $tranferCount);
+						}
 						if ($curl === $this) {
 							return true;
 						}
