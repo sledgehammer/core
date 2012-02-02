@@ -34,7 +34,7 @@ class CurlTests extends TestCase {
 		$response = cURL::get('http://bfanger.nl/');
 		$paralell = cURL::get('http://bfanger.nl/');
 		$now = microtime(true);
-		$this->assertEqual(cUrl::synchronize(), 2);//, 'The tranfers run simultaneous');
+		cUrl::synchronize(); // wait for both request to complete
 		$elapsed = microtime(true) - $now;
 		$this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel downloads are faster');
 	}

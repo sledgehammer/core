@@ -37,6 +37,7 @@ class cURL extends Observable {
 		'load' => array(),
 		'abort' => array(),
 	);
+
 	/**
 	 * @var array All the given CURLOPT_* options
 	 */
@@ -138,28 +139,23 @@ class cURL extends Observable {
 	 * Wait for all requests to complete
 	 *
 	 * @throws \Exception
-	 * @return int  Maximum number of simultaneous requests.
 	 */
 	static function synchronize() {
 		if (self::$pool === null) {
 			return 0;
 		}
-		$max = 0;
 		do {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool) === -1) {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
-			$active = 0;
+			$wait = false;
 			foreach ($GLOBALS['SledgeHammer']['cURL'] as $curl) {
-				$curl->isComplete($active);
-				if ($max < $active) {
-					$max = $active;
+				if ($curl->isComplete() == false) {
+					$wait = true;
 				}
-				break;
 			}
-		} while ($active > 0);
-		return $max;
+		} while ($wait);
 	}
 
 	/**
@@ -211,6 +207,7 @@ class cURL extends Observable {
 
 	/**
 	 * Returns the response body
+	 *
 	 * @return string
 	 */
 	function __toString() {
@@ -225,18 +222,17 @@ class cURL extends Observable {
 	/**
 	 * Check if this request is complete
 	 *
-	 * @param int $activeTransferCount
+	 * @throws \Exception
 	 * @return boolean
-	 * @throws InfoException
 	 */
-	function isComplete(&$activeTransferCount = null) {
+	function isComplete() {
 		if ($this->state !== 'RUNNING') {
 			return true;
 		}
 		// Add messages from the curl_multi handle to the $messages array.
 		$error = CURLM_CALL_MULTI_PERFORM;
 		while ($error === CURLM_CALL_MULTI_PERFORM) {
-			$error = curl_multi_exec(self::$pool, $activeTransferCount);
+			$error = curl_multi_exec(self::$pool, $active);
 		}
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'Failed to execute cURL multi handle');
@@ -257,9 +253,6 @@ class cURL extends Observable {
 						}
 						$tranferCount = self::$tranferCount;
 						$curl->trigger('load', $curl);
-						if ($activeTransferCount === 0 && self::$tranferCount > $tranferCount) { // New transfers where added?
-							$activeTransferCount = (self::$tranferCount - $tranferCount);
-						}
 						if ($curl === $this) {
 							return true;
 						}
@@ -303,12 +296,12 @@ class cURL extends Observable {
 	}
 
 	/**
-	 * Send a request to the
+	 * Start the request
 	 * 1. Set the CURLOPT_* options
 	 * 2. Add the request to the pool
 	 * 3. Starts the request.
 	 *
-	 * @param array $options
+	 * @param array $options CURLOPT_* options
 	 * @throws \Exception
 	 */
 	private function start($options) {
@@ -378,16 +371,12 @@ class cURL extends Observable {
 		if ($this->isComplete()) {
 			return;
 		}
-		$active = 0;
-		do {
+		while ($this->isComplete() === false) {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool) === -1) {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
-			if ($this->isComplete($active)) {
-				return;
-			}
-		} while ($active > 0);
+		}
 	}
 
 	/**
