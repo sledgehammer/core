@@ -7,6 +7,8 @@ namespace SledgeHammer;
  * Simplifies asynchronous requests & paralell downloads.
  * Uses the curl functions and throws exceptions on errors.
  *
+ * @package Core
+ *
  * @property string $effective_url  Last effective URL
  * @property string $http_code      Last received HTTP code
  * @property mixed $filetime        Remote time of the retrieved document, if -1 is returned the time of the document is unknown
