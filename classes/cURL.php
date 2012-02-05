@@ -138,6 +138,36 @@ class cURL extends Observable {
 	}
 
 	/**
+	 * Download a file to the filesystem.
+	 *
+	 * @param string $url
+	 * @param string $filename
+	 * @param array $options
+	 * @param bool $async
+	 * @throws \Exception
+	 */
+	static function download($url, $filename, $options = array (), $async = false) {
+		$fp = fopen($filename, 'w');
+		if ($fp === false) {
+			throw new \Exception('Unable to write to "'.$filename.'"');
+		}
+		$defaults = array(
+			CURLOPT_URL => $url,
+			CURLOPT_FILE => $fp,
+			CURLOPT_FAILONERROR => true,
+		);
+		$response = new cURL($options + $defaults);
+		if ($async) {
+			$response->addListener('load', function () use ($fp) {
+				fclose($fp);
+			});
+		} else {
+			$response->waitForCompletion();
+			fclose($fp);
+		}
+	}
+
+	/**
 	 * Wait for all requests to complete
 	 *
 	 * @throws \Exception

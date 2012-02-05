@@ -455,12 +455,13 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * Een bestand downloaden(naar het geheugen) en opslaan.
+	 * Download a  bestand downloaden(naar het geheugen) en opslaan.
 	 * retourneert de groote van het bestand (in karakters)
 	 *
 	 * @return int|false
 	 */
 	function wget($url, $filename) {
+		deprecated('Use cURL::download() instead');
 		$contents = file_get_contents($url);
 		if ($contents) {
 			if (file_put_contents($filename, $contents)) {
