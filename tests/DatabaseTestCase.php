@@ -17,9 +17,9 @@ abstract class DatabaseTestCase extends TestCase {
 	function __construct($pdoDriver = 'sqlite') {
 		parent::__construct();
 		// Voorkom dat de default connectie gebruikt wordt.
-		if (isset($GLOBALS['Databases']['default'])) {
-			$GLOBALS['Databases']['default_backup'] = $GLOBALS['Databases']['default'];
-			unset($GLOBALS['Databases']['default']);
+		if (isset($GLOBALS['SledgeHammer']['Databases']['default'])) {
+			$GLOBALS['SledgeHammer']['Databases']['default_backup'] = $GLOBALS['SledgeHammer']['Databases']['default'];
+			$GLOBALS['SledgeHammer']['Databases']['default'] = 'INVALID';
 		}
 		if (ENVIRONMENT != 'development') {
 			return;
@@ -49,7 +49,7 @@ abstract class DatabaseTestCase extends TestCase {
 				default:
 					throw new \Exception('Unsupported pdoDriver');
 			}
-			$GLOBALS['Databases'][$this->dbLink] = $db;
+			$GLOBALS['SledgeHammer']['Databases'][$this->dbLink] = $db;
 			if ($this->skipRebuildDatabase) {
 				$this->fillDatabase($db);
 				if ($pdoDriver === 'mysql') {
@@ -72,9 +72,9 @@ abstract class DatabaseTestCase extends TestCase {
 	 */
 	function test_cleanup() {
 		// Restore default database connection
-		if (isset($GLOBALS['Databases']['default_backup'])) {
-			$GLOBALS['Databases']['default'] = $GLOBALS['Databases']['default_backup'];
-			unset($GLOBALS['Databases']['default_backup']);
+		if (isset($GLOBALS['SledgeHammer']['Databases']['default_backup'])) {
+			$GLOBALS['SledgeHammer']['Databases']['default'] = $GLOBALS['Databases']['default_backup'];
+			unset($GLOBALS['SledgeHammer']['Databases']['default_backup']);
 		}
 		// DROP test database
 		$db = $this->getDatabase();
@@ -205,13 +205,13 @@ abstract class DatabaseTestCase extends TestCase {
 					break;
 
 				case 'sqlite';
-					unset($GLOBALS['Databases'][$this->dbLink]);
+					unset($GLOBALS['SledgeHammer']['Databases'][$this->dbLink]);
 					$newDb = new Database('sqlite::memory:');
 					foreach ($db as $property => $value) {
 						$newDb->$property = $value;
 					}
 					$db = $newDb;
-					$GLOBALS['Databases'][$this->dbLink] = $newDb;
+					$GLOBALS['SledgeHammer']['Databases'][$this->dbLink] = $newDb;
 					break;
 			}
 			$this->fillDatabase($db);

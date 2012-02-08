@@ -256,10 +256,10 @@ class ErrorHandler {
 				case E_WARNING:
 				case E_USER_ERROR:
 				case E_USER_WARNING:
-					if (!empty($GLOBALS['Databases'])) {
+					if (!empty($GLOBALS['SledgeHammer']['Databases'])) {
 						echo '<b>Databases</b><br />';
 						$popup = $this->email ? false : true;
-						foreach ($GLOBALS['Databases'] as $link => $Database) {
+						foreach ($GLOBALS['SledgeHammer']['Databases'] as $link => $Database) {
 							if (is_object($Database) && method_exists($Database, 'debug')) {
 								echo $link, ': ';
 								$Database->debug($popup);

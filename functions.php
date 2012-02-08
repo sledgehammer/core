@@ -819,16 +819,29 @@ namespace SledgeHammer {
 	 * @return Database
 	 */
 	function getDatabase($link = 'default') {
-		if (isset($GLOBALS['Databases'][$link])) {
-			if (is_string($GLOBALS['Databases'][$link])) { // Is dit een verwijzing naar een andere database?
-				return getDatabase($GLOBALS['Databases'][$link]);
+		if (isset($GLOBALS['SledgeHammer']['Databases'][$link])) {
+			if (is_string($GLOBALS['SledgeHammer']['Databases'][$link])) { // Is dit een verwijzing naar een andere database?
+				return getDatabase($GLOBALS['SledgeHammer']['Databases'][$link]);
 			}
-			return $GLOBALS['Databases'][$link];
+			return $GLOBALS['SledgeHammer']['Databases'][$link];
 		}
-		if (empty($GLOBALS['Databases'])) {
-			throw new \Exception('No databases are configured in $GLOBALS[\'Databases\']');
+		static $settings = null;
+		if ($settings === null) {
+			$all_settings = parse_ini_file(APPLICATION_DIR.'settings/database.ini', true);
+			$settings = $all_settings[ENVIRONMENT];
 		}
-		throw new InfoException('Database connection: $GLOBALS[\'Databases\'][\''.$link.'\'] is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($GLOBALS['Databases'])));
+		if (empty($settings)) {
+			throw new \Exception('No databases are configured for '.ENVIRONMENT);
+		}
+		if (isset($settings[$link])) {
+			$GLOBALS['SledgeHammer']['Databases'][$link] = new Database($settings[$link]);
+			return $GLOBALS['SledgeHammer']['Databases'][$link];
+		}
+		if ($link == 'default' && count($settings) == 1) {
+			$GLOBALS['SledgeHammer']['Databases']['default'] = current($settings);
+			return getDatabase(current($settings));
+		}
+		throw new InfoException('Database connection: \''.$link.'\' is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($settings)));
 		return false;
 	}
 
@@ -870,9 +883,9 @@ namespace SledgeHammer {
 			}
 			echo 'MiB.'."\n";
 		}
-		if (isset($GLOBALS['Databases'])) {
+		if (isset($GLOBALS['SledgeHammer']['Databases'])) {
 			echo 'Databases: ';
-			foreach ($GLOBALS['Databases'] as $link => $Database) {
+			foreach ($GLOBALS['SledgeHammer']['Databases'] as $link => $Database) {
 				if (is_object($Database)) {
 					echo '['.$link.'&nbsp;';
 					$Database->debug();

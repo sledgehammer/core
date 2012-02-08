@@ -149,35 +149,6 @@ class Framework {
 	}
 
 	/**
-	 * Vanuit een database.ini bestand (o.b.v de $environment) database connecties maken
-	 *
-	 * @param string $environment  De environment waar de connecties van gemaakt worden.
-	 * @param string $filename  De locatie van het ini bestand met database instellingen.
-	 * @return bool Alle connecties zijn succesvol gemaakt
-	 */
-	static function initDatabases($environment = null, $filename = null) {
-		$databases = self::extractDatabaseSettings($environment, $filename);
-		$success = true;
-		$links = array();
-		foreach ($databases as $label => $dsn) {
-			if (isset($databases[$dsn])) {
-				$GLOBALS['Databases'][$label] = $dsn; // symlink
-			} else {
-				try {
-					$GLOBALS['Databases'][$label] = new Database($dsn);
-				} catch (\Exception $e) {
-					$GLOBALS['Databases'][$label] = '__NOT_CONNECTED__';
-					warning('Failed to connect to database['.$label.']: ', $e->getMessage());
-				}
-			}
-		}
-		if (count($GLOBALS['Databases']) == 1 && key($GLOBALS['Databases']) != 'deault') {
-			$GLOBALS['Databases']['default'] = key($GLOBALS['Databases']); // symlink "default" to the only database connection.
-		}
-		return $success;
-	}
-
-	/**
 	 * Stel de Locale in zodat getallen en datums op de juiste manier worden weergegeven
 	 *
 	 * @param NULL|string $language engelse benaming van de taal die moet worden ingesteld.
@@ -219,39 +190,6 @@ class Framework {
 			}
 			session_start();
 		}
-	}
-
-	/**
-	 * De settings van de databases van 1 environment uit een ini file halen.
-	 *
-	 * @param string $environment  De environment waar de connecties van gemaakt worden.
-	 * @param string $filename  De locatie van het ini bestand met database instellingen.
-	 * @return array
-	 */
-	private static function extractDatabaseSettings($environment = null, $filename = null) {
-		if ($environment === null) {
-			$environment = ENVIRONMENT;
-		}
-		if ($filename === null) {
-			$filename = APPLICATION_DIR.'/settings/database.ini';
-		}
-		$settings = parse_ini_file($filename, true);
-		if (!$settings) { // Staat er een fout in het ini bestand, of is deze leeg?
-			notice('File: "'.$filename.'" is invalid');
-			return false;
-		}
-		$databases = array();
-		$allowedEnvironments = array('development', 'staging', 'production');
-		foreach ($settings as $group => $links) {
-			if (!in_array($group, $allowedEnvironments)) {
-				notice('Invalid environment: ['.$group.'] in '.$filename, array('Allowed environments' => $allowedEnvironments));
-			}
-		}
-		if (isset($settings[$environment])) {
-			return $settings[$environment];
-		}
-		notice('No databases configured for "'.$environment.'" environment');
-		return false;
 	}
 
 	/**
