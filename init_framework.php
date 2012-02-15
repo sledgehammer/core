@@ -31,30 +31,29 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 		}
 	}
 
-	if (!isset($debug_override_variable)) {
-		$debug_override_variable = 'debug'; // Gebruik de debug variabele
+	if (!defined('DEBUG_VAR') && !defined('SledgeHammer\DEBUG_VAR')) {
+		define('SledgeHammer\DEBUG_VAR', 'debug'); // Use de default DEBUG_VAR "debug"
 	}
-	if (empty($debug_override_variable) == false) { // Is de override variable ingesteld? (not false)
-		$showDebugInfo = NULL;
-		if (isset($_GET[$debug_override_variable])) { // Is er een debug instelling bekend?
-			$showDebugInfo = $_GET[$debug_override_variable];
-			switch ($showDebugInfo) {
+	if (DEBUG_VAR != false) { // Is the DEBUG_VAR enabled?
+		$overrideDebugOutput = null;
+		if (isset($_GET[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_GET parameters?
+			$overrideDebugOutput = $_GET[DEBUG_VAR];
+			switch ($overrideDebugOutput) {
 
 				case 'cookie':
-					setcookie($debug_override_variable, true);
+					setcookie(DEBUG_VAR, true);
 					break;
 
 				case 'nocookie':
-					setcookie($debug_override_variable, false, 0);
+					setcookie(DEBUG_VAR, false, 0);
 					break;
 			}
-		} elseif (isset($_COOKIE[$debug_override_variable])) {
-			$showDebugInfo = $_COOKIE[$debug_override_variable];
+		} elseif (isset($_COOKIE[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_COOKIE?
+			$overrideDebugOutput = $_COOKIE[DEBUG_VAR];
 		}
-		if ($showDebugInfo !== NULL) { // Is de override variabele niet opgegegeven?
-			// Debug instellingen overschrijven
-			ini_set('display_errors', (bool) $showDebugInfo);
-			$GLOBALS['ErrorHandler']->html = (bool) $showDebugInfo;
+		if ($overrideDebugOutput !== null) {
+			ini_set('display_errors', (bool) $overrideDebugOutput);
+			$GLOBALS['ErrorHandler']->html = (bool) $overrideDebugOutput;
 		}
 	}
 	$GLOBALS['AutoLoader']->init(); // De AutoLoader initialiseren
@@ -65,11 +64,8 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	foreach($modules as $module) {
 		Framework::initModule($module['path']);
 	}
-	unset($email, $success, $modules, $module, $showDebugInfo);
+	unset($email, $modules, $module, $overrideDebugOutput);
 
-	if ($debug_override_variable == 'debug') {
-		unset($debug_override_variable);
-	}
 	define('SledgeHammer\MICROTIME_INIT', microtime(true));
 }
 ?>
