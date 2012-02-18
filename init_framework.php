@@ -58,6 +58,28 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	}
 	$GLOBALS['AutoLoader']->init(); // De AutoLoader initialiseren
 
+
+	if (file_exists(APPLICATION_DIR.'pear')) { // Does the application have PEAR packages installed?
+		// Configure pear include path
+		$include_paths = array('.', APPLICATION_DIR.'pear');
+		foreach (explode(PATH_SEPARATOR, get_include_path()) as $path) {
+			if ($path != '.') {
+				$include_paths[] = $path;
+			}
+		}
+		set_include_path(implode(PATH_SEPARATOR, $include_paths));
+		// Add classes to the AutoLoader
+		$GLOBALS['AutoLoader']->importFolder(APPLICATION_DIR.'pear', array(
+			'matching_filename' => false,
+			'mandatory_definition' => false,
+			'mandatory_superclass' => false,
+			'one_definition_per_file' => false,
+			'revalidate_cache_delay' => 30,
+			'detect_accidental_output' => false,
+			'cache_level' => 2,
+		));
+	}
+
 	// Per module de constants.ini, functions.php en init.php inladen en defineren
 	$modules = Framework::getModules();
 	unset($modules['core']);
