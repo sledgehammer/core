@@ -7,6 +7,9 @@ namespace SledgeHammer;
  */
 class PearInstaller extends Observable {
 
+	public $targets = array(
+
+	);
 	protected $events = array(
 		'installing' => array(),
 		'installed' => array(),
@@ -23,7 +26,22 @@ class PearInstaller extends Observable {
 	 */
 	private $packages = array();
 
-	/**
+	function __construct() {
+		$this->targets = array(
+			'php' => APPLICATION_DIR.'pear',
+			'data' => PATH.'data',
+			'script' => APPLICATION_DIR.'utils',
+			'doc' => PATH.'docs',
+			'www' => APPLICATION_DIR.'public'
+//			'test' => ? // Skip tests
+//			'src' => ?,
+//			'ext' => ?,
+//			'extsrc' => ?,
+		);
+
+	}
+
+/**
 	 *
 	 * @param string $domain  Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
 	 */
@@ -83,11 +101,7 @@ class PearInstaller extends Observable {
 	 * @throws Exceptions on failure
 	 */
 	function install($package, $options = array()) {
-		$targetFolder = array_value($options, 'target') ? : APPLICATION_DIR.'pear';
 		$version = array_value($options, 'version') ? : 'stable';
-		if (mkdirs($targetFolder) == false || is_writable($targetFolder) == false) {
-			throw new \Exception('Target "'.$targetFolder.'" not writable');
-		}
 		if (isset($options['channel'])) {
 			$channel = $options['channel'];
 			$this->addChannel($channel);
@@ -129,7 +143,6 @@ class PearInstaller extends Observable {
 //				throw new InfoException('Dependancy "'.$dependancy->name.'" not found (Requires channel: "'.$dependancy->channel.'")', 'Current channels: '.quoted_human_implode(' and ', array_keys($this->channels)));
 //			}
 			$this->install((string) $dependancy->name, array(
-				'target' => $targetFolder,
 				'channel' => (string) $dependancy->channel,
 			));
 		}
@@ -143,27 +156,19 @@ class PearInstaller extends Observable {
 		}
 		$files = $this->extractFiles($info->contents->dir, '', '/', $renames);
 		foreach ($files as $file) {
-			switch ($file['role']) {
-				case 'test':
-					continue; // Skip tests
-
-				case 'doc': // @todo Install docs into /docs/$packageName
-				case 'script': // @todo Install into utils
-				case 'www': // @todo Install to public
-				case 'src':
-				case 'ext':
-				case 'sxtsrc':
-					continue; // Skip file
-
-				case 'php':
-				case 'data': // @todo Install  data into data/$packageName
-					$target = $targetFolder.'/'.$file['to'];
-					mkdirs(dirname($target));
-					copy($tmpFolder.$folderName.'/'.$folderName.'/'.$file['from'], $target);
-					break;
-
-				default:
-					notice('Unknown role:"'.$file['role'].'"', $file);
+			if (isset($this->targets[$file['role']])) {
+				$dir = $this->targets[$file['role']];
+				if (in_array($file['role'], array('doc', 'www'))) {
+					$dir = $this->makePath($dir, $package);
+				}
+				$target = $this->makePath($dir, $file['to']);
+				if (mkdirs(dirname($target)) == false || is_writable(dirname($target)) == false) {
+					throw new \Exception('Target "'.$target.'" is not writable');
+				}
+				$source = $this->makePath($tmpFolder.$folderName.'/'.$folderName, $file['from']);
+				if (copy($source, $target) == false) {
+//					var_dump($file);
+				}
 			}
 		}
 		rmdir_recursive($tmpFolder.$folderName.'/'.$folderName);
@@ -191,9 +196,6 @@ class PearInstaller extends Observable {
 		if ($dir['baseinstalldir'] !== null) {
 			$to = (string) $dir['baseinstalldir'];
 		}
-		if (substr($from, -1) !== '/') {
-			$from .= '/';
-		}
 		$files = array();
 		foreach ($dir->dir as $subdir) {
 			$files += $this->extractFiles($subdir, $from, $to, $renames);
@@ -205,19 +207,32 @@ class PearInstaller extends Observable {
 			}
 			$file = array(
 				'role' => (string)$data['role'],
-				'from' => $from.$data['name'],
-				'to' => $to.'/'.$target,
+				'from' => $this->makePath($from, $data['name']),
+				'to' => $this->makePath($to, $target),
 			);
 			if ($data['md5sum']) {
 				$file['md5'] = (string)$data['md5sum'];
 			}
 			// @todo extract tasks
 			if ($data['baseinstalldir']) {
-				$file['to'] = $data['baseinstalldir'].'/'.$target;
+				$file['to'] = $this->makePath($data['baseinstalldir'], $target);
 			}
 			$files[] = $file;
 		}
 		return $files;
+	}
+
+	private function makePath($folder, $filename) {
+		if (substr($folder, -1) === '/') {
+			if (substr($filename, 0, 1) === '/') {
+				return $folder.substr($filename, 1);
+			}
+			return $folder.$filename;
+		}
+		if (substr($filename, 0, 1) === '/') {
+			return $folder.$filename;
+		}
+		return $folder.'/'.$filename;
 	}
 }
 
