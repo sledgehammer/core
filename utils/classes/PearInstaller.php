@@ -23,7 +23,6 @@ class PearInstaller extends Observable {
 	 */
 	private $packages = array();
 
-
 	/**
 	 *
 	 * @param string $domain  Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
@@ -39,15 +38,15 @@ class PearInstaller extends Observable {
 			'categories' => array(),
 			'packages' => array(),
 		);
-		$pm = $this;
+		$pear = $this;
 
 		$xml = simplexml_load_file($baseurl.'c/categories.xml');
 		foreach ($xml->c as $category) {
 			$url = $category->attributes('http://www.w3.org/1999/xlink');
 			$category = (string) $category;
 			$this->channels[$domain]['categories'][] = $category;
-			cURL::get('http://'.$domain.dirname($url['href']).'/packages.xml', array(), function ($data) use ($pm, $domain, $category) {
-						$pm->registerCategory($domain, $category, simplexml_load_string($data)->p);
+			cURL::get('http://'.$domain.dirname($url['href']).'/packages.xml', array(), function ($data) use ($pear, $domain, $category) {
+						$pear->registerCategory($domain, $category, simplexml_load_string($data)->p);
 					});
 		}
 		cURL::synchronize();
@@ -64,7 +63,6 @@ class PearInstaller extends Observable {
 				'category' => $category,
 				'path' => (string) $url['href']
 			);
-
 		}
 	}
 
@@ -84,8 +82,8 @@ class PearInstaller extends Observable {
 	 * @throws Exceptions on failure
 	 */
 	function install($package, $options = array()) {
-		$targetFolder = array_value($options, 'target') ?: APPLICATION_DIR.'pear';
-		$version = array_value($options, 'version') ?: 'stable';
+		$targetFolder = array_value($options, 'target') ? : APPLICATION_DIR.'pear';
+		$version = array_value($options, 'version') ? : 'stable';
 		if (mkdirs($targetFolder) == false || is_writable($targetFolder) == false) {
 			throw new \Exception('Target "'.$targetFolder.'" not writable');
 		}
@@ -97,7 +95,15 @@ class PearInstaller extends Observable {
 			}
 			$release = $this->findRelease($this->channels[$channel]['packages'][$package], $version);
 		} else {
+			if (count($this->channels) === 0) {
+				$this->addChannel('pear.php.net');
+			}
 			if (empty($this->packages[$package])) {
+				foreach ($this->packages as $name => $channel) {
+					if (strcasecmp($name, $package) === 0) {
+						return $this->install($name, $options);
+					}
+				}
 				throw new InfoException('Package "'.$package.'" not found in channels: '.quoted_human_implode(' and ', array_keys($this->channels)), 'Available packages: '.quoted_human_implode(' and ', array_keys($this->packages)));
 			}
 			$release = $this->findRelease($this->channels[$this->packages[$package]]['packages'][$package], $version);
@@ -131,14 +137,14 @@ class PearInstaller extends Observable {
 		foreach ($info->phprelease as $release) {
 			if ($release->count() > 0) {
 				foreach ($release->filelist->install as $move) {
-					$renames[(string)$move['name']] = (string)$move['as'];
+					$renames[(string) $move['name']] = (string) $move['as'];
 				}
 			}
 		}
 		foreach ($info->contents->dir as $dir) {
 			foreach ($dir->file as $file) {
 				if ($file['role'] == 'php') {
-					$target = (string)$file['name'];
+					$target = (string) $file['name'];
 					if (isset($renames[$target])) {
 						$target = $renames[$target];
 					}
@@ -161,13 +167,6 @@ class PearInstaller extends Observable {
 			}
 		}
 		return simplexml_load_file($url.$version.'.xml');
-	}
-
-	private function callback($method) {
-		$pm = $this;
-		return function ($curl) use ($pm, $method) {
-					$pm->$method($curl);
-				};
 	}
 
 }

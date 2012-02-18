@@ -5,9 +5,10 @@
  * @package Core
  */
 namespace SledgeHammer;
-require (dirname(__FILE__).'/../../core/init_framework.php');
+require (dirname(__FILE__).'/../init_framework.php');
 $ErrorHandler->html = false;
 $ErrorHandler->cli = true;
+$AutoLoader->importFolder(dirname(__FILE__).'/classes');
 if ($argc < 2) {
 	echo "  Usage: php ".$argv[0]." channel/package [channel] [channel/package]\n ";
 	echo "  Examples:\n";
