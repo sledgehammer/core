@@ -71,6 +71,7 @@ class PearInstaller extends Observable {
 	}
 
 	/**
+	 * Download and install a PEAR package.
 	 *
 	 * @param type $package
 	 * @param type $version
@@ -115,11 +116,11 @@ class PearInstaller extends Observable {
 		mkdirs(dirname($tarFile));
 		if (file_exists($tarFile) === false) { // Is this package already in the tmp folder
 			cURL::download($release->g.'.tar', $tarFile);
-			chdir(dirname($tarFile));
-			system('tar xf '.escapeshellarg($tarFile), $exit);
-			if ($exit !== 0) {
-				throw new \Exception('Unable to untar "'.$tarFile.'"');
-			}
+		}
+		chdir(dirname($tarFile));
+		system('tar xf '.escapeshellarg($tarFile), $exit);
+		if ($exit !== 0) {
+			throw new \Exception('Unable to untar "'.$tarFile.'"');
 		}
 		$info = simplexml_load_file(dirname($tarFile).'/package.xml');
 		// Install dependencies first
@@ -133,7 +134,6 @@ class PearInstaller extends Observable {
 			));
 		}
 		$renames = array();
-//		$x = new \SimpleXMLElement();
 		foreach ($info->phprelease as $release) {
 			if ($release->count() > 0) {
 				foreach ($release->filelist->install as $move) {
@@ -141,19 +141,32 @@ class PearInstaller extends Observable {
 				}
 			}
 		}
-		foreach ($info->contents->dir as $dir) {
-			foreach ($dir->file as $file) {
-				if ($file['role'] == 'php') {
-					$target = (string) $file['name'];
-					if (isset($renames[$target])) {
-						$target = $renames[$target];
-					}
-					$target = $targetFolder.'/'.$target;
+		$files = $this->extractFiles($info->contents->dir, '', '/', $renames);
+		foreach ($files as $file) {
+			switch ($file['role']) {
+				case 'test':
+					continue; // Skip tests
+
+				case 'doc': // @todo Install docs into /docs/$packageName
+				case 'script': // @todo Install into utils
+				case 'www': // @todo Install to public
+				case 'src':
+				case 'ext':
+				case 'sxtsrc':
+					continue; // Skip file
+
+				case 'php':
+				case 'data': // @todo Install  data into data/$packageName
+					$target = $targetFolder.'/'.$file['to'];
 					mkdirs(dirname($target));
-					copy($tmpFolder.$folderName.'/'.$folderName.'/'.$file['name'], $target);
-				}
+					copy($tmpFolder.$folderName.'/'.$folderName.'/'.$file['from'], $target);
+					break;
+
+				default:
+					notice('Unknown role:"'.$file['role'].'"', $file);
 			}
 		}
+		rmdir_recursive($tmpFolder.$folderName.'/'.$folderName);
 		$this->trigger('installed', $this, $package, $version);
 	}
 
@@ -169,6 +182,43 @@ class PearInstaller extends Observable {
 		return simplexml_load_file($url.$version.'.xml');
 	}
 
+	/**
+	 * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
+	 * @param type $contents
+	 */
+	private function extractFiles($dir, $from = '', $to ='', $renames = array()) {
+		$from .= (string) $dir['name'];
+		if ($dir['baseinstalldir'] !== null) {
+			$to = (string) $dir['baseinstalldir'];
+		}
+		if (substr($from, -1) !== '/') {
+			$from .= '/';
+		}
+		$files = array();
+		foreach ($dir->dir as $subdir) {
+			$files += $this->extractFiles($subdir, $from, $to, $renames);
+		}
+		foreach ($dir->file as $data) {
+			$target = (string) $data['name'];
+			if (isset($renames[$target])) {
+				$target = $renames[$target];
+			}
+			$file = array(
+				'role' => (string)$data['role'],
+				'from' => $from.$data['name'],
+				'to' => $to.'/'.$target,
+			);
+			if ($data['md5sum']) {
+				$file['md5'] = (string)$data['md5sum'];
+			}
+			// @todo extract tasks
+			if ($data['baseinstalldir']) {
+				$file['to'] = $data['baseinstalldir'].'/'.$target;
+			}
+			$files[] = $file;
+		}
+		return $files;
+	}
 }
 
 ?>
