@@ -29,8 +29,9 @@ class PearInstaller extends Observable {
 	function __construct() {
 		$this->targets = array(
 			'php' => APPLICATION_DIR.'pear',
-			'data' => PATH.'data',
+			'data' => APPLICATION_DIR.'pear/data',
 			'script' => APPLICATION_DIR.'utils',
+			'bin' => APPLICATION_DIR.'utils',
 			'doc' => PATH.'docs',
 			'www' => APPLICATION_DIR.'public'
 //			'test' => ? // Skip tests
@@ -106,6 +107,13 @@ class PearInstaller extends Observable {
 			$channel = $options['channel'];
 			$this->addChannel($channel);
 			if (empty($this->channels[$channel]['packages'][$package])) {
+				if (isset($this->channels[$channel]['packages'])) {
+					foreach ($this->channels[$channel]['packages'] as $name => $info) {
+						if (strcasecmp($name, $package) === 0) {
+							return $this->install($name, $options);
+						}
+					}
+				}
 				throw new InfoException('Package "'.$package.'" not found in channel: '.$channel, quoted_human_implode(' and ', array_keys($this->channels[$channel]['packages'])));
 			}
 			$release = $this->findRelease($this->channels[$channel]['packages'][$package], $version);
@@ -159,15 +167,52 @@ class PearInstaller extends Observable {
 			if (isset($this->targets[$file['role']])) {
 				$dir = $this->targets[$file['role']];
 				if (in_array($file['role'], array('doc', 'www'))) {
-					$dir = $this->makePath($dir, $package);
+					if (text($file['to'])->startsWith($package) == false) {
+						$dir = $this->makePath($dir, $package);
+					}
 				}
 				$target = $this->makePath($dir, $file['to']);
 				if (mkdirs(dirname($target)) == false || is_writable(dirname($target)) == false) {
 					throw new \Exception('Target "'.$target.'" is not writable');
 				}
 				$source = $this->makePath($tmpFolder.$folderName.'/'.$folderName, $file['from']);
-				if (copy($source, $target) == false) {
-//					var_dump($file);
+				if (isset($file['tasks'])) {
+					$contents = file_get_contents($source);
+					foreach ($file['tasks'] as $task) {
+						$value = null;
+						if ($task['type'] === 'package-info') {
+							if ($task['to'] == 'version') {
+								$value = $version;
+							} elseif ($task['to'] == 'state') {
+								$value = (string) $info->stability->release;
+							}
+						} elseif ($task['type'] == 'pear-config') {
+							if (substr($task['to'], -4) === '_dir') {
+								$role = substr($task['to'], 0, -4);
+								if (isset($this->targets[$role])) {
+									$value = (string)$this->targets[$role];
+									// @todo calculate relative paths
+									notice('Harcoding path "'.$role.'_dir" into "'.$file['to'].'"', $file);
+								}
+							} elseif ($task['to'] == 'php_bin') {
+//								$value = `which php`;
+//								notice('Harcoding path "php_bin" into "'.$file['to'].'"', $file);
+								$value = 'php'; // assume php is in the PATH
+							}
+						}
+						if ($task['task'] === 'replace') {
+							if ($value != '') {
+								$contents = str_replace($task['from'], $value, $contents);
+							} else {
+								notice($task['type'].' "'.$task['to'].'" not yet supported');
+							}
+						} else {
+							notice('task "'.$task['task'].'" not implemented');
+						}
+					}
+					file_put_contents($target, $contents);
+				} else {
+					copy($source, $target);
 				}
 			}
 		}
@@ -213,7 +258,20 @@ class PearInstaller extends Observable {
 			if ($data['md5sum']) {
 				$file['md5'] = (string)$data['md5sum'];
 			}
-			// @todo extract tasks
+			$tasks = $data->children('http://pear.php.net/dtd/tasks-1.0');
+			if ($tasks->count() > 0) {
+				foreach ($tasks as $task) {
+					if ($task->getName() == 'replace') {
+						$replace = $task->attributes();
+						$file['tasks'][] = array(
+							'task' => 'replace',
+							'type' => (string)$replace['type'],
+							'from' => (string)$replace['from'],
+							'to'   => (string)$replace['to']
+						);
+					}
+				}
+			}
 			if ($data['baseinstalldir']) {
 				$file['to'] = $this->makePath($data['baseinstalldir'], $target);
 			}

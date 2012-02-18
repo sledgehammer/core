@@ -76,6 +76,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 			'one_definition_per_file' => false,
 			'revalidate_cache_delay' => 30,
 			'detect_accidental_output' => false,
+			'ignore_folders' => array('data'),
 			'cache_level' => 2,
 		));
 	}
