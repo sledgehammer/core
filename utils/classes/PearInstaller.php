@@ -7,15 +7,19 @@ namespace SledgeHammer;
  */
 class PearInstaller extends Observable {
 
-	public $targets = array(
-
-	);
+	/**
+	 * @var array The events/listeners
+	 */
 	protected $events = array(
 		'installing' => array(),
 		'installed' => array(),
 		'channelAdded' => array(),
 	);
 
+	/**
+	 * @var array The target directories per role. array("php" => PATH.'pear/classes')
+	 */
+	private $targets;
 	/**
 	 * @var array domain => restUrl;
 	 */
@@ -26,20 +30,11 @@ class PearInstaller extends Observable {
 	 */
 	private $packages = array();
 
-	function __construct() {
-		$this->targets = array(
-			'php' => APPLICATION_DIR.'pear',
-			'data' => APPLICATION_DIR.'pear/data',
-			'script' => APPLICATION_DIR.'utils',
-			'bin' => APPLICATION_DIR.'utils',
-			'doc' => PATH.'docs',
-			'www' => APPLICATION_DIR.'public'
-//			'test' => ? // Skip tests
-//			'src' => ?,
-//			'ext' => ?,
-//			'extsrc' => ?,
-		);
-
+	/**
+	 * @param array $targets The target directories per role. array("php" => PATH.'pear/classes', 'doc' => ...)
+	 */
+	function __construct($targets) {
+		$this->targets = $targets;
 	}
 
 	/**
