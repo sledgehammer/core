@@ -42,7 +42,7 @@ class PearInstaller extends Observable {
 
 	}
 
-/**
+	/**
 	 *
 	 * @param string $domain  Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
 	 */
@@ -116,7 +116,7 @@ class PearInstaller extends Observable {
 				}
 				throw new InfoException('Package "'.$package.'" not found in channel: '.$channel, quoted_human_implode(' and ', array_keys($this->channels[$channel]['packages'])));
 			}
-			$release = $this->findRelease($this->channels[$channel]['packages'][$package], $version);
+			$packageLocation = &$this->channels[$channel]['packages'][$package];
 		} else {
 			if (count($this->channels) === 0) {
 				$this->addChannel('pear.php.net');
@@ -129,7 +129,12 @@ class PearInstaller extends Observable {
 				}
 				throw new InfoException('Package "'.$package.'" not found in channels: '.quoted_human_implode(' and ', array_keys($this->channels)), 'Available packages: '.quoted_human_implode(' and ', array_keys($this->packages)));
 			}
-			$release = $this->findRelease($this->channels[$this->packages[$package]]['packages'][$package], $version);
+			$packageLocation = &$this->channels[$this->packages[$package]]['packages'][$package];
+		}
+		$release = $this->findRelease($packageLocation, $version);
+		if (array_value($packageLocation, 'installed') === $version) {
+			return;
+
 		}
 		$this->trigger('installing', $this, $package, $version);
 		$tmpFolder = TMP_DIR.'PearInstaller/';
@@ -217,6 +222,7 @@ class PearInstaller extends Observable {
 			}
 		}
 		rmdir_recursive($tmpFolder.$folderName.'/'.$folderName);
+		$packageLocation['installed'] = $version;
 		$this->trigger('installed', $this, $package, $version);
 	}
 
