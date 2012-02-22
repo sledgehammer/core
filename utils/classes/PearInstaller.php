@@ -190,14 +190,13 @@ class PearInstaller extends Observable {
 							if (substr($task['to'], -4) === '_dir') {
 								$role = substr($task['to'], 0, -4);
 								if (isset($this->targets[$role])) {
-									$value = (string)$this->targets[$role];
+									$value = $this->targets[$role];
 									// @todo calculate relative paths
-									notice('Harcoding path "'.$role.'_dir" into "'.$file['to'].'"', $file);
+									notice('Harcoding path "'.$value.'" into "'.$file['to'].'"', $file);
 								}
 							} elseif ($task['to'] == 'php_bin') {
-//								$value = `which php`;
-//								notice('Harcoding path "php_bin" into "'.$file['to'].'"', $file);
-								$value = 'php'; // assume php is in the PATH
+								$value = trim(`which php`);
+								notice('Harcoding path "'.$value.'" into "'.$file['to'].'"', $file);
 							}
 						}
 						if ($task['task'] === 'replace') {
