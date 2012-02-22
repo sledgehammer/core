@@ -4,7 +4,7 @@
  */
 namespace SledgeHammer;
 
-class TagIteratorTests extends TestCase {
+class TagIteratorTest extends TestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);

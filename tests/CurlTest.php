@@ -6,7 +6,7 @@
 
 namespace SledgeHammer;
 
-class CurlTests extends TestCase {
+class CurlTest extends TestCase {
 
 	function test_single_get() {
 		$this->assertEmptyPool();

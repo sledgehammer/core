@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class CSVTests extends TestCase {
+class CSVTest extends TestCase {
 
 	function test_csv() {
 		$data = array(array('id' => 1, 'name' => 'John'), array('id' => 2, 'name' => 'Doe'));

@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class WrapperTests extends TestCase {
+class WrapperTest extends TestCase {
 
 	function test_readonly_array() {
 		$data = array(

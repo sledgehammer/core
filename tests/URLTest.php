@@ -6,7 +6,7 @@
  */
 namespace SledgeHammer;
 
-class URLTests extends TestCase {
+class URLTest extends TestCase {
 
 	function test_url_parts() {
 		$urlString = 'http://me:mypass@example.com:8080/path/file?name=value#top';

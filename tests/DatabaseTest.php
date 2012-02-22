@@ -6,7 +6,7 @@
  */
 namespace SledgeHammer;
 
-class DatabaseTests extends DatabaseTestCase {
+class DatabaseTest extends DatabaseTestCase {
 
 	function __construct() {
 		parent::__construct();

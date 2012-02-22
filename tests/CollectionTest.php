@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class CollectionTests extends TestCase {
+class CollectionTest extends TestCase {
 
 	function test_where() {
 		$fruitsAndVegetables = $this->getFruitsAndVegetables();

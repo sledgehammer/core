@@ -5,7 +5,7 @@
  */
 namespace SledgeHammer;
 
-class PHPTokenizerTests extends TestCase {
+class PHPTokenizerTest extends TestCase {
 
 	function donttest_tokenizer() {
 		$filename = $GLOBALS['AutoLoader']->getFilename('SledgeHammer\FFVideo');

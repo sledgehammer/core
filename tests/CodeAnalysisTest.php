@@ -3,7 +3,7 @@
  * Controleer diverse SledgeHammer vereisten
  */
 namespace SledgeHammer;
-class CodeAnalysisTests extends TestCase {
+class CodeAnalysisTest extends TestCase {
 
 	function test_definitions() {
 		$loader = new AutoLoader(PATH);

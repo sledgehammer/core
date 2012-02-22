@@ -4,7 +4,7 @@
  */
 namespace SledgeHammer;
 
-class HTMLTokenizerTests extends TestCase {
+class HTMLTokenizerTest extends TestCase {
 
 	function setUp() {
 		ini_set('display_errors', true);

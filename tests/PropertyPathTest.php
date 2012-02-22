@@ -4,7 +4,7 @@
  */
 namespace SledgeHammer;
 
-class PropertyPathTests extends TestCase {
+class PropertyPathTest extends TestCase {
 
 	function test_compile() {
 		$any = PropertyPath::TYPE_ANY;
