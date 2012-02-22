@@ -1,13 +1,11 @@
 <?php
+namespace SledgeHammer;
 /**
  * Renders the data as Json
  * Compatible with MVC's the Document/View inferface.
  *
  * @package Core
  */
-
-namespace SledgeHammer;
-
 class Json extends Object {
 
 	/**
@@ -57,12 +55,26 @@ class Json extends Object {
 	}
 
 	/**
-	 * Render a standalone document
+	 * Render as a standalone document
 	 *
-	 * @return bool
+	 * @return true
 	 */
 	function isDocument() {
 		return true;
+	}
+
+	/**
+	 * @return string
+	 */
+	function __toString() {
+		try {
+			ob_start();
+			$this->render();
+			return ob_get_contents();
+		} catch (\Exception $e) {
+			ErrorHandler::handle_exception($e);
+			return '';
+		}
 	}
 
 	/**
@@ -85,7 +97,7 @@ class Json extends Object {
 		$json = json_encode($data, $optionMask);
 		$error = json_last_error();
 		if ($error !== JSON_ERROR_NONE) {
-			throw new \Exception(self::errorMessage($error),$error);
+			throw new \Exception(self::errorMessage($error), $error);
 		}
 		return $json;
 	}
@@ -122,6 +134,45 @@ class Json extends Object {
 	}
 
 	/**
+	 * Reports the error/exception to the ErrorHandler and returns the error as Json object.
+	 * The javascript client should detect and report the error to the user:
+	 *   if (result.succes !== true) { alert(result.error); }
+	 *
+	 * @param string|Exception $error  The error message or Exception
+	 * @return Json
+	 */
+	static function error($error) {
+		if ($error instanceof \Exception) {
+			ErrorHandler::handle_exception($error);
+			$error = $error->getMessage();
+		} else {
+			warning($error);
+		}
+		return new Json(array(
+			'success' => false,
+			'error' => $error
+		));
+	}
+
+	/**
+	 * Short for "new Json(array('success' => true))"
+	 *
+	 * @param mixed $data [optional] Gegevens die naast de success worden meegestuurd.
+	 * @return Json
+	 */
+	static function success($data = null) {
+		if ($data === null) {
+			return new Json(array(
+				'success' => true)
+			);
+		}
+		return new Json(array(
+			'success' => true,
+			'data' => $data
+		));
+	}
+
+	/**
 	 *
 	 * @param mixed       $data     The non UTF-8 encoded data
 	 * @param string|null $charset  The from_encoding, Use null for autodetection
@@ -145,9 +196,10 @@ class Json extends Object {
 	}
 
 	/**
+	 * Translates a json error into a human readable error.
 	 *
-	 * @param int $errno
-	 * @return type
+	 * @param int $errno JSON_ERROR_*
+	 * @return string
 	 */
 	private static function errorMessage($errno) {
 		static $lookup = null;
