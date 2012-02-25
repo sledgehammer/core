@@ -117,7 +117,9 @@ class PHPAnalyzer extends Object {
 					break;
 
 				case 'T_TYPE_HINT':
-					$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
+					if (strtolower($value) !== 'array') {
+						$this->addUsedIn($this->prefixNamespace($namespace, $value, $uses), $filename, $token[2]);
+					}
 					break;
 
 				case 'T_PARAMETER':
@@ -327,9 +329,6 @@ class PHPAnalyzer extends Object {
 	 * @param int $line  The line number it is used on
 	 */
 	private function addUsedIn($class, $filename, $line) {
-		if (strtolower($class) == 'array') {
-			return;
-		}
 		@$this->usedDefinitions[$class][$filename][] = $line;
 	}
 }
