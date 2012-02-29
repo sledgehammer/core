@@ -23,7 +23,7 @@ class DatabaseTest extends DatabaseTestCase {
 		$db = $this->getDatabase();
 		$this->expectError(true, 'An invalid query should generate an error');
 		$result = $db->exec('this is not even a query');
-		$this->assertEqual($result, false);
+		$this->assertEquals($result, false);
 		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql') {
 			// MySQL reports truncated warnings
 			$this->expectError();
@@ -33,7 +33,7 @@ class DatabaseTest extends DatabaseTestCase {
 
 	function test_fetch() {
 		$db = $this->getDatabase();
-		$this->assertEqual($db->fetchAll('SELECT * FROM ducks'), array(
+		$this->assertEquals($db->fetchAll('SELECT * FROM ducks'), array(
 			array(
 				'id' => '1',
 				'name' => 'Kwik',
@@ -49,12 +49,12 @@ class DatabaseTest extends DatabaseTestCase {
 		));
 		// Fetch row
 		$kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
-		$this->assertEqual($kwik, array(
+		$this->assertEquals($kwik, array(
 			'id' => '1',
 			'name' => 'Kwik',
 		));
 		// Fetch value
-		$this->assertEqual($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
+		$this->assertEquals($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
 		$this->expectError('Resultset has no columns, expecting 1 or more columns');
 		$fail = $db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
@@ -64,7 +64,7 @@ class DatabaseTest extends DatabaseTestCase {
 		$db = $this->getDatabase();
 		$result = $db->query('SELECT * FROM ducks');
 		$this->assertIsA($result, 'SledgeHammer\PDOStatement');
-		$this->assertEqual(count($result), 3); //, 'count() should return the number of rows found');
+		$this->assertEquals(count($result), 3); //, 'count() should return the number of rows found');
 	}
 
 	/**

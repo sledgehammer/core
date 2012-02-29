@@ -63,7 +63,7 @@ class RequiredPhpExtensions extends TestCase {
 				$required_by .= $this->extention_to_files_map[$extention][0].'"';
 				$this->fail('PHP extention "'.$extention.'" should be installed (required by '.$required_by.')');
 			} elseif (!in_array($extention, $extention_whitelist)) {
-				$this->pass('PHP extention "'.$extention.'" is installed');
+				$this->assertTrue(true, 'PHP extention "'.$extention.'" is installed');
 			}
 		}
 		//echo '<pre>';

@@ -46,7 +46,7 @@ class PHPTokenizerTest extends TestCase {
 				$mergedTokens .= $token[1];
 				$tokens[] = $token;
 			}
-			$this->assertEqual($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
+			$this->assertEquals($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
 		} catch (\Exception $e) {
 			ErrorHandler::handle_exception($e);
 			$this->fail($e->getMessage());

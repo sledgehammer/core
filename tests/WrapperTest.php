@@ -13,27 +13,27 @@ class WrapperTest extends TestCase {
 			'subarray' => array('element' => 'value'),
 		);
 		$wrapped = new Readonly($data);
-		$this->assertEqual($wrapped['greeting'], 'Hello');
-		$this->assertIsA($wrapped['subarray'], 'SledgeHammer\Readonly');
+		$this->assertEquals($wrapped['greeting'], 'Hello');
+		$this->assertInstanceOf('SledgeHammer\Readonly', $wrapped['subarray']);
 
 		try {
 			$wrapped['greeting'] = 'new value';
 			$this->fail('Readonly should not allow a new value');
 		} catch (\Exception $e) {
-			$this->assertEqual($e->getMessage(), 'The array is marked readonly');
+			$this->assertEquals($e->getMessage(), 'The array is marked readonly');
 		}
 		$counter = 0;
 		foreach ($wrapped as $key => $value) {
 			$counter++;
 			if ($counter == 1) {
-				$this->assertEqual($key, 'greeting');
-				$this->assertEqual($value, 'Hello');
+				$this->assertEquals($key, 'greeting');
+				$this->assertEquals($value, 'Hello');
 			} elseif ($counter == 2) {
-				$this->assertEqual($key, 'subarray');
-				$this->assertEqual($value['element'], 'value');
+				$this->assertEquals($key, 'subarray');
+				$this->assertEquals($value['element'], 'value');
 			}
 		}
-		$this->assertEqual($counter, 2, '$data has 2 elements');
+		$this->assertEquals($counter, 2, '$data has 2 elements');
 	}
 
 }

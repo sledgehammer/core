@@ -59,7 +59,7 @@ class CodeAnalysisTest extends TestCase {
 			$passes[] = count($newDefinitions);
 		}
 		if ($failed == false) {
-			$this->pass('The '.count($analyzer->usedDefinitions).' detected definitions are found');
+			$this->assertTrue(true, 'The '.count($analyzer->usedDefinitions).' detected definitions are found');
 		}
 //		dump($passes);
 	}
@@ -119,7 +119,7 @@ class CodeAnalysisTest extends TestCase {
 			}
 		}
 		if ($failed == false) {
-			$this->pass('All '.count($analyzer->usedDefinitions).' definitions are found');
+			$this->assertTrue(true, 'All '.count($analyzer->usedDefinitions).' definitions are found');
 		}
 	}
 
@@ -143,7 +143,7 @@ class CodeAnalysisTest extends TestCase {
 			}
 		}
 		if ($failed == false) {
-			$this->pass('All '.count($analyzer->usedDefinitions).' definitions are found');
+			$this->assertTrue(true, 'All '.count($analyzer->usedDefinitions).' definitions are found');
 		}
 	}
 

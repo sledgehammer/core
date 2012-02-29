@@ -114,7 +114,7 @@ abstract class DatabaseTestCase extends TestCase {
 		}
 		foreach ($queries as $query) {
 			if ($sql == $query) {
-				$this->pass($message);
+				$this->assertTrue(true, $message);
 				return true;
 			}
 		}
@@ -139,7 +139,7 @@ abstract class DatabaseTestCase extends TestCase {
 			if ($message === NULL) {
 				$message = 'SQL ['.$sql.'] is executed';
 			}
-			$this->pass($message);
+			$this->assertTrue(true, $message);
 			return true;
 		} else {
 			if ($message === NULL) {
@@ -162,7 +162,7 @@ abstract class DatabaseTestCase extends TestCase {
 		if ($message === null) {
 			$message = 'Number of queries ('.$count.') should match '.$expectedCount;
 		}
-		$this->assertEqual($count, $expectedCount, $message);
+		$this->assertEquals($count, $expectedCount, $message);
 	}
 
 	/**
@@ -179,7 +179,7 @@ abstract class DatabaseTestCase extends TestCase {
 		if ($message === NULL) {
 			$message = 'Table "'.$table.' should match contents. %s';
 		}
-		if ($this->assertEqual($expected_contents, $table_contents, $message)) {
+		if ($this->assertEquals($expected_contents, $table_contents, $message)) {
 			return true;
 		}
 		if ($this->debug) {

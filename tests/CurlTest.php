@@ -11,8 +11,8 @@ class CurlTest extends TestCase {
 	function test_single_get() {
 		$this->assertEmptyPool();
 		$response = cURL::get('http://www.bfanger.nl/');
-		$this->assertEqual($response->http_code, 200);
-		$this->assertEqual($response->effective_url, 'http://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
+		$this->assertEquals($response->http_code, 200);
+		$this->assertEquals($response->effective_url, 'http://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
 	}
 
 	function test_async() {
@@ -46,13 +46,13 @@ class CurlTest extends TestCase {
 			$response->getContent();
 			$this->fail('Requests to an invalid protocol should throw an exception');
 		} catch (\Exception $e) {
-			$this->pass('Requests to an invalid protocol should throw an exception');
+			$this->assertTrue(true, 'Requests to an invalid protocol should throw an exception');
 		}
 		try {
 			$response->getInfo();
 			$this->fail('Retrieving info on a failed tranfer should throw an exception');
 		} catch (\Exception $e) {
-			$this->pass('Retrieving info on a failed tranfer should throw an exception');
+			$this->assertTrue(true, 'Retrieving info on a failed tranfer should throw an exception');
 		}
 	}
 
@@ -63,9 +63,9 @@ class CurlTest extends TestCase {
 		$response->onLoad = function ($response) use (&$output) {
 					$output = $response->http_code;
 				};
-		$this->assertEqual($output, false);
-		$this->assertEqual($response->getInfo(CURLINFO_HTTP_CODE), 200); // calls waitForCompletion which triggers the event
-		$this->assertEqual($output, 200);
+		$this->assertEquals($output, false);
+		$this->assertEquals($response->getInfo(CURLINFO_HTTP_CODE), 200); // calls waitForCompletion which triggers the event
+		$this->assertEquals($output, 200);
 	}
 
 	function test_curl_debugging() {
@@ -76,11 +76,11 @@ class CurlTest extends TestCase {
 			CURLOPT_VERBOSE => true,
 		);
 		$response = cURL::get('http://bfanger.nl/', $options);
-		$this->assertEqual($response->http_code, 200);
+		$this->assertEquals($response->http_code, 200);
 		rewind($fp);
 		$log = stream_get_contents($fp);
 		fclose($fp);
-		$this->assertTrue(strstr($log, 'About to connect() to '), 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+		$this->assertTrue(strstr($log, 'About to connect() to ') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
 	}
 
 	private function assertEmptyPool() {
