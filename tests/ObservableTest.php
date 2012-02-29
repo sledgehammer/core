@@ -18,31 +18,64 @@ class ObservableTest extends TestCase {
 
 		// Test onClick method
 		$button->trigger('click', $this);
-		$this->assertEqual($button->clicked, 'Clicked by SledgeHammer\ObservableTests');
+		$this->assertEquals($button->lastClickedBy, 'SledgeHammer\ObservableTest');
 		// Test custom event via property
-		$button->onClick = function ($sender) {
-				$sender->data = 'custom event';
+		$tempvar = false;
+		$button->onClick = function ($sender) use (&$tempvar){
+				$tempvar = 'custom event';
 			};
-		$button->trigger('click', $button);
-		$this->assertEqual($button->data, 'custom event');
-		$this->assertEqual($button->clicked, 'Clicked by SledgeHammer\TestButton');
+		$button->click();
+		$this->assertEquals($tempvar, 'custom event');
+		$this->assertEquals($button->lastClickedBy, 'SledgeHammer\TestButton');
 
-		$button->onClick = function ($sender) {
-				$sender->clicked = 'custom event2'; // modify clicked not data.
+		$tempvar = 'reset';
+		$tempvar2 = false;
+		$button->onClick = function ($sender) use (&$tempvar2) {
+				$tempvar2 = 'custom event2'; // modify clicked not data.
 			};
-		$button->data = 'reset';
-		$button->trigger('click', $button);
-		$this->assertEqual($button->clicked, 'custom event2');
-		$this->assertEqual($button->data, 'reset', 'The first "custom event" is overwitten. and no longer gets triggered');
+
+		$button->click();
+		$this->assertEquals($tempvar2, 'custom event2');
+		$this->assertEquals($tempvar, 'reset', 'The first "custom event" is overwitten. and no longer gets triggered');
 
 		// Test custom event via addListener
-		$button->addListener('click', function ($sender) {
-				$sender->data = 'custom event3';
+		$tempvar3 = false;
+		$button->addListener('click', function ($sender) use (&$tempvar3){
+				$tempvar3 = 'custom event3';
 			});
-		$button->clicked = false;
+		$tempvar2 = 'reset';
 		$button->trigger('click', $button);
-		$this->assertEqual($button->clicked, 'custom event2');
-		$this->assertEqual($button->data, 'custom event3');
+		$this->assertEquals($tempvar2, 'custom event2');
+		$this->assertEquals($tempvar3, 'custom event3');
+	}
+
+	function test_kvo() {
+		$button = new TestButton();
+		$this->assertEquals($button->title, 'Button1');
+		$this->assertTrue($this->property_exists($button, 'title'), 'The title propertty is a normal property'); // When no events are bound to a property change
+		$eventArguments = false;
+		$button->addListener('change:title', function ($button, $new, $old) use (&$eventArguments) {
+			$eventArguments = func_get_args();
+		});
+		$this->assertFalse($this->property_exists($button, 'title'), 'The title is now a virtual property');
+		$this->assertEquals($button->title, 'Button1', 'The property should still have its value');
+
+		$button->title = 'Click me';
+		$this->assertEquals(array(
+			$button,
+			'Click me',
+			'Button1'
+		), $eventArguments);
+		$this->assertEquals($button->title, 'Click me', 'The property changed to the new value');
+	}
+
+	private function property_exists($object, $property) {
+		if (property_exists($object, $property)) {
+			// When property is unset (and doesn't exist) property_exists() still returns true
+			$properties = get_object_vars($object);
+			return array_key_exists($property, $properties);
+		}
+		return false;
 	}
 
 }

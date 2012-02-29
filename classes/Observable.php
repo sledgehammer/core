@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Observable, an Event/Listener
  *
@@ -26,21 +27,22 @@
  * // reset all listeners.
  * $this->onClick = null;
  *
- *
- *
  * @package Core
  */
-namespace SledgeHammer;
-
 abstract class Observable extends Object {
 
 	/**
+	 * @var array Storage array for the properties with KVO (Key Value Observer) listeners
+	 */
+	private $_properties = array();
+	/**
+	 * @abstract
 	 * @var array  The events/listeners. array($event1 => array($listener1, ...), ...)
 	 */
 	protected $events = array();
 
 	/**
-	 * Trigger the event.
+	 * Trigger an event.
 	 *
 	 * @param string $event
 	 * @param stdClass $sender
@@ -99,7 +101,16 @@ abstract class Observable extends Object {
 	 * @return bool
 	 */
 	function hasEvent($event) {
-		return array_key_exists($event, $this->events);
+		$found = array_key_exists($event, $this->events);
+		if ($found === false && preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
+			$property = $matches[1];
+			if (property_exists($this, $property)) {
+				$found = true;
+				$this->_properties[$property] = $this->$property;
+				unset($this->$property);
+			}
+		}
+		return $found;
 	}
 
 	/**
@@ -122,10 +133,23 @@ abstract class Observable extends Object {
 	}
 
 	/**
+	 * Getting a non-existing or KVO property
 	 *
-	 * @param type $property
-	 * @param type $value
-	 * @return type
+	 * @param string $property
+	 * @return mixed
+	 */
+	function __get($property) {
+		if (array_key_exists($property, $this->_properties)) {
+			return $this->_properties[$property];
+		}
+		return parent::__get($property);
+	}
+
+	/**
+	 * Setting a non-existing or KVO property
+	 *
+	 * @param string $property
+	 * @param mixed $value
 	 */
 	function __set($property, $value) {
 		if (preg_match('/^on[A-Z]/', $property)) { // An event? like "onClick"
@@ -138,7 +162,13 @@ abstract class Observable extends Object {
 				return;
 			}
 		}
-		return parent::__set($property, $value);
+		if (array_key_exists($property, $this->_properties)) {
+			$this->_properties[$property];
+			$this->trigger('change:'.$property, $this, $value, $this->_properties[$property]);
+			$this->_properties[$property] = $value;
+			return;
+		}
+		parent::__set($property, $value);
 	}
 
 }
