@@ -67,6 +67,23 @@ class ObservableTest extends TestCase {
 			'Button1'
 		), $eventArguments);
 		$this->assertEquals($button->title, 'Click me', 'The property changed to the new value');
+
+		$changeLog = array();
+		// Monitor all changes
+		$button->onChange = function ($button, $field, $new, $old) use (&$changeLog) {
+			$changeLog[$field][] = $new;
+		};
+		$button->clicked = 10;
+		$button->click();
+		$this->assertEquals(array(
+			'clicked' => array(
+				10,
+				11,
+			),
+			'lastClickedBy' => array(
+				'SledgeHammer\TestButton',
+			),
+		), $changeLog);
 	}
 
 	private function property_exists($object, $property) {

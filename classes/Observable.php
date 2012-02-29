@@ -91,6 +91,15 @@ abstract class Observable extends Object {
 		} else {
 			$this->events[$event][$identifier] = $callback;
 		}
+		if ($event === 'change') {
+			$properties = array_merge(array_keys(get_public_vars($this)), array_keys($this->_properties));
+			$self = $this;
+			foreach ($properties as $property) {
+				$this->addListener('change:'.$property, function ($sender, $new, $old) use ($self, $property) {
+					$self->trigger('change', $sender, $property, $new, $old);
+				});
+			}
+		}
 		return true;
 	}
 
@@ -102,12 +111,17 @@ abstract class Observable extends Object {
 	 */
 	function hasEvent($event) {
 		$found = array_key_exists($event, $this->events);
-		if ($found === false && preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
-			$property = $matches[1];
-			if (property_exists($this, $property)) {
-				$found = true;
-				$this->_properties[$property] = $this->$property;
-				unset($this->$property);
+		if ($found === false) {
+			if ($event === 'change') {
+				return ((count(get_public_vars($this)) + count($this->_properties)) !== 0); // A class without public properties doenst have a change event.
+			}
+			if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
+				$property = $matches[1];
+				if (property_exists($this, $property)) {
+					$found = true;
+					$this->_properties[$property] = $this->$property;
+					unset($this->$property);
+				}
 			}
 		}
 		return $found;
@@ -154,7 +168,7 @@ abstract class Observable extends Object {
 	function __set($property, $value) {
 		if (preg_match('/^on[A-Z]/', $property)) { // An event? like "onClick"
 			$event = lcfirst(substr($property, 2));
-			if (isset($this->events[$event])) {
+			if ($this->hasEvent($event)) {
 				$this->events[$event] = array(); // Reset listeners.
 				if ($value !== null) {
 					$this->addListener($event, $value);
@@ -162,7 +176,7 @@ abstract class Observable extends Object {
 				return;
 			}
 		}
-		if (array_key_exists($property, $this->_properties)) {
+		if (array_key_exists($property, $this->_properties)) { // A property with a change listener?
 			$this->_properties[$property];
 			$this->trigger('change:'.$property, $this, $value, $this->_properties[$property]);
 			$this->_properties[$property] = $value;

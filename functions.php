@@ -431,6 +431,20 @@ namespace SledgeHammer {
 	}
 
 	/**
+	 * Get the properties that are publicly accessable
+	 *
+	 * @param string|object $class
+	 * @return array
+	 */
+	function get_public_vars($class) {
+		if (is_string($class)) {
+			return get_class_vars($class);
+		} else {
+			return get_object_vars($class);
+		}
+	}
+
+	/**
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
 	 *
