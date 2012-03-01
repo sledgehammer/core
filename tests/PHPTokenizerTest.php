@@ -8,7 +8,7 @@ namespace SledgeHammer;
 class PHPTokenizerTest extends TestCase {
 
 	function donttest_tokenizer() {
-		$filename = $GLOBALS['AutoLoader']->getFilename('SledgeHammer\FFVideo');
+		$filename = Framework::$autoLoader->getFilename('SledgeHammer\FFVideo');
 		$this->assertEqualTokenizer($filename);
 
 		try {
@@ -37,7 +37,7 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	private function assertEqualTokenizer($filename) {
-		$content = file_get_contents($filename); //$GLOBALS['AutoLoader']->getFilename('SledgeHammer\GoogleAnalytics');
+		$content = file_get_contents($filename); //Framework::$autoLoader->getFilename('SledgeHammer\GoogleAnalytics');
 		try {
 			$tokenIterator = new PHPTokenizer($content);
 			$mergedTokens = '';
@@ -54,10 +54,10 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	private function getDefinitionFiles() {
-		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
+		$definitions = Framework::$autoLoader->getDefinitions();
 		$files = array();
 		foreach ($definitions as $definition) {
-			$files[] = $GLOBALS['AutoLoader']->getFilename($definition);
+			$files[] = Framework::$autoLoader->getFilename($definition);
 		}
 		return array_unique($files);
 	}

@@ -682,7 +682,7 @@ namespace SledgeHammer {
 
 			case 'string':
 				$color = 'string';
-				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, $GLOBALS['charset']))).'&#39;';
+				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
 				break;
 			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
 				$color = 'string';
@@ -738,7 +738,7 @@ namespace SledgeHammer {
 		$html = '<span';
 		if (($datatype === 'object' || $datatype === 'array') && $maxLenghtTitle > 0) { // Built title attribute?
 			$title = partial_var_export($variable, $maxLenghtTitle, 4);
-			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, $GLOBALS['charset'])).'"';
+			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
 		}
 		$colorCodes = array(
 			'string' => '#808080',
@@ -767,7 +767,7 @@ namespace SledgeHammer {
 	function partial_var_export($variable, $maxLenght, $maxDepth = false, $depth = 0) {
 		$end = array();
 		$title = '';
-		$hellip = html_entity_decode('&hellip;', ENT_NOQUOTES, $GLOBALS['charset']); // aka the '...' character
+		$hellip = html_entity_decode('&hellip;', ENT_NOQUOTES, Framework::$charset); // aka the '...' character
 		if (is_array($variable)) {
 			$title = 'array(';
 			$end = ')';
@@ -833,11 +833,11 @@ namespace SledgeHammer {
 	 * @return Database
 	 */
 	function getDatabase($link = 'default') {
-		if (isset($GLOBALS['SledgeHammer']['Databases'][$link])) {
-			if (is_string($GLOBALS['SledgeHammer']['Databases'][$link])) { // Is dit een verwijzing naar een andere database?
-				return getDatabase($GLOBALS['SledgeHammer']['Databases'][$link]);
+		if (isset(Database::$instances[$link])) {
+			if (is_string(Database::$instances[$link])) { // Is dit een verwijzing naar een andere database?
+				return getDatabase(Database::$instances[$link]);
 			}
-			return $GLOBALS['SledgeHammer']['Databases'][$link];
+			return Database::$instances[$link];
 		}
 		static $settings = null;
 		if ($settings === null) {
@@ -848,11 +848,11 @@ namespace SledgeHammer {
 			throw new \Exception('No databases are configured for '.ENVIRONMENT);
 		}
 		if (isset($settings[$link])) {
-			$GLOBALS['SledgeHammer']['Databases'][$link] = new Database($settings[$link]);
-			return $GLOBALS['SledgeHammer']['Databases'][$link];
+			Database::$instances[$link] = new Database($settings[$link]);
+			return Database::$instances[$link];
 		}
 		if ($link == 'default' && count($settings) == 1) {
-			$GLOBALS['SledgeHammer']['Databases']['default'] = current($settings);
+			Database::$instances['default'] = current($settings);
 			return getDatabase(current($settings));
 		}
 		throw new InfoException('Database connection: \''.$link.'\' is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($settings)));
@@ -897,12 +897,12 @@ namespace SledgeHammer {
 			}
 			echo 'MiB.'."\n";
 		}
-		if (isset($GLOBALS['SledgeHammer']['Databases'])) {
+		if (isset(Database::$instances)) {
 			echo 'Databases: ';
-			foreach ($GLOBALS['SledgeHammer']['Databases'] as $link => $Database) {
-				if (is_object($Database)) {
-					echo '['.$link.'&nbsp;';
-					$Database->debug();
+			foreach (Database::$instances as $name => $database) {
+				if (is_object($database)) {
+					echo '['.$name.'&nbsp;';
+					$database->debug();
 					echo '] ';
 				}
 			}

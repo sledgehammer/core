@@ -149,13 +149,13 @@ class CollectionTest extends TestCase {
 	}
 
 	private function getDatabaseCollection() {
-		if (empty($GLOBALS['SledgeHammer']['Databases'][__CLASS__])) {
+		if (empty(Database::$instances[__CLASS__])) {
 			$db = new Database('sqlite::memory:');
 			$db->query('CREATE TABLE fruits (
 				id INTEGER PRIMARY KEY,
 				name TEXT,
 				type TEXT)');
-			$GLOBALS['SledgeHammer']['Databases'][__CLASS__] = $db;
+			Database::$instances[__CLASS__] = $db;
 			$fruits = $this->getFruitsAndVegetables();
 			foreach ($fruits as $fruit) {
 				$db->query('INSERT INTO fruits VALUES ('.$fruit['id'].', '.$db->quote($fruit['name']).', '.$db->quote($fruit['type']).')');

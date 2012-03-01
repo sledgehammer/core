@@ -138,8 +138,8 @@ class ErrorHandler {
 				return;
 			}
 		}
-		if (get_class(@ $GLOBALS['ErrorHandler']) == 'SledgeHammer\ErrorHandler') {
-			$GLOBALS['ErrorHandler']->process($type, $message, $information);
+		if (get_class(@ Framework::$errorHandler) == 'SledgeHammer\ErrorHandler') {
+			Framework::$errorHandler->process($type, $message, $information);
 			return;
 		} else {
 			if ($type == E_STRICT) {
@@ -256,10 +256,10 @@ class ErrorHandler {
 				case E_WARNING:
 				case E_USER_ERROR:
 				case E_USER_WARNING:
-					if (!empty($GLOBALS['SledgeHammer']['Databases'])) {
+					if (!empty(Database::$instances)) {
 						echo '<b>Databases</b><br />';
 						$popup = $this->email ? false : true;
-						foreach ($GLOBALS['SledgeHammer']['Databases'] as $link => $Database) {
+						foreach (Database::$instances as $link => $Database) {
 							if (is_object($Database) && method_exists($Database, 'debug')) {
 								echo $link, ': ';
 								$Database->debug($popup);

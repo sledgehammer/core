@@ -6,9 +6,9 @@
  */
 namespace SledgeHammer;
 require (dirname(__FILE__).'/../init_framework.php');
-$ErrorHandler->html = false;
-$ErrorHandler->cli = true;
-$AutoLoader->importFolder(dirname(__FILE__).'/classes');
+Framework::$errorHandler->html = false;
+Framework::$errorHandler->cli = true;
+Framework::$autoLoader->importFolder(dirname(__FILE__).'/classes');
 if ($argc < 2) {
 	echo "  Usage: php ".$argv[0]." [channel] [channel/]package[-version] ...\n ";
 	echo "  Examples:\n";

@@ -55,6 +55,12 @@ class Database extends \PDO {
 	private $driver;
 
 	/**
+	 * @var array|Database
+	 */
+	static $instances = array();
+
+
+	/**
 	 * @var array Cached quoted identifiers(column and table names) per database driver
 	 */
 	private static $quotedIdentifiers = array();
@@ -94,7 +100,7 @@ class Database extends \PDO {
 				notice('TODO: Extract $charset from dsn'); // @todo implement
 			} else {
 				// Use SledgeHammer setting (default utf-8)
-				switch (strtolower($GLOBALS['charset'])) {
+				switch (strtolower(Framework::$charset)) {
 
 					case 'utf-8':
 						$charset = 'UTF8';
@@ -106,7 +112,7 @@ class Database extends \PDO {
 						break;
 
 					default:
-						$charset = $GLOBALS['charset'];
+						$charset = Framework::$charset;
 						break;
 				}
 			}
@@ -478,7 +484,7 @@ class Database extends \PDO {
 	 * De keywords van een sql query dik(<b>) maken en de querytijd een kleur geven (rood voor trage queries, orange voor middelmatige en grijs voor snelle queries)
 	 */
 	private function highlight($sql, $truncated, $time, $backtrace) {
-		$sql = htmlspecialchars($sql, ENT_COMPAT, $GLOBALS['charset']);
+		$sql = htmlspecialchars($sql, ENT_COMPAT, Framework::$charset);
 		static $regex = null;
 		if ($regex === null) {
 			$startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');

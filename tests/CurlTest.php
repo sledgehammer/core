@@ -84,7 +84,7 @@ class CurlTest extends TestCase {
 	}
 
 	private function assertEmptyPool() {
-		if (isset($GLOBALS['SledgeHammer']['cURL']) && count($GLOBALS['SledgeHammer']['cURL']) > 0) {
+		if (isset(cURL::$requests) && count(cURL::$requests) > 0) {
 			$this->fail('Global cURL pool shoud be emtpy');
 		}
 	}

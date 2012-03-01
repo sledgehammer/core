@@ -17,17 +17,17 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	}
 	require_once(dirname(__FILE__).'/init.php'); // Core module laden
 	if (ENVIRONMENT === 'development') {
-		$GLOBALS['ErrorHandler']->html = true;
-		$GLOBALS['ErrorHandler']->emails_per_request = 10;
+		Framework::$errorHandler->html = true;
+		Framework::$errorHandler->emails_per_request = 10;
 	} else {
-		$GLOBALS['ErrorHandler']->emails_per_request = 2;
-		$GLOBALS['ErrorHandler']->emails_per_minute = 6;
-		$GLOBALS['ErrorHandler']->emails_per_day = 100;
-		$email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
-		if (preg_match('/^.+@.+\..+$/', $email) && !in_array($email, array('you@example.com'))) { // Is het geen emailadres, of het standaard apache emailadres?
-			$GLOBALS['ErrorHandler']->email = $email;
-		} elseif ($email != '') { // Is het email niet leeg of false?
-			error_log('Invalid $_SERVER["SERVER_ADMIN"]: "'.$email.'", expecting an valid emailaddress');
+		Framework::$errorHandler->emails_per_request = 2;
+		Framework::$errorHandler->emails_per_minute = 6;
+		Framework::$errorHandler->emails_per_day = 100;
+		$_email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
+		if (preg_match('/^.+@.+\..+$/', $_email) && !in_array($_email, array('you@example.com'))) { // Is het geen emailadres, of het standaard apache emailadres?
+			Framework::$errorHandler->email = $_email;
+		} elseif ($_email != '') { // Is het email niet leeg of false?
+			error_log('Invalid $_SERVER["SERVER_ADMIN"]: "'.$_email.'", expecting an valid emailaddress');
 		}
 	}
 
@@ -53,10 +53,10 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 		}
 		if ($overrideDebugOutput !== null) {
 			ini_set('display_errors', (bool) $overrideDebugOutput);
-			$GLOBALS['ErrorHandler']->html = (bool) $overrideDebugOutput;
+			Framework::$errorHandler->html = (bool) $overrideDebugOutput;
 		}
 	}
-	$GLOBALS['AutoLoader']->init(); // De AutoLoader initialiseren
+	Framework::$autoLoader->init(); // De AutoLoader initialiseren
 
 
 	$pearIncludePath = PATH.'pear/classes';
@@ -70,7 +70,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 		}
 		set_include_path(implode(PATH_SEPARATOR, $includePaths));
 		// Add classes to the AutoLoader
-		$GLOBALS['AutoLoader']->importFolder($pearIncludePath, array(
+		Framework::$autoLoader->importFolder($pearIncludePath, array(
 			'matching_filename' => false,
 			'mandatory_definition' => false,
 			'mandatory_superclass' => false,
@@ -88,7 +88,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	foreach($modules as $module) {
 		Framework::initModule($module['path']);
 	}
-	unset($email, $modules, $module, $overrideDebugOutput, $pearIncludePath, $includePaths);
+	unset($_email, $modules, $module, $overrideDebugOutput, $pearIncludePath, $includePaths);
 
 	define('SledgeHammer\MICROTIME_INIT', microtime(true));
 }

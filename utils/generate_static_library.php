@@ -11,13 +11,12 @@ if (file_put_contents($library_db_folder.'/autoloader.db.php', '<?php $classes =
 	trigger_error('Unable to write to "autoloader.db.php"', E_USER_ERROR);
 }
 require_once(dirname(__FILE__).'/../init.php');
-//$ErrorHandler->cli = true; // Forceer foutmeldingen
 
 echo "Resolving required modules...\n";
 $modules = Framework::getModules();
 $max_length_module = 0;
 foreach ($modules as $module) {
-	if (strlen($module['name']) > $max_length_module) {	
+	if (strlen($module['name']) > $max_length_module) {
 		$max_length_module = strlen($module['name']);
 	}
 }

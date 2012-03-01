@@ -24,12 +24,8 @@ require_once($coreDir.'classes/Framework.php'); // Helper class for extracting a
 require($coreDir.'classes/ErrorHandler.php');
 require($coreDir.'classes/AutoLoader.php');
 
-// Register UTF-8 as default charset
-if (empty($GLOBALS['charset'])) {
-	$GLOBALS['charset'] = 'UTF-8';
-}
 if (function_exists('mb_internal_encoding')) {
-	mb_internal_encoding($GLOBALS['charset']);
+	mb_internal_encoding(Framework::$charset);
 }
 
 // Detect a writable tmp folder
@@ -50,11 +46,11 @@ if (defined('SledgeHammer\TMP_DIR') === false) {
 mkdirs(TMP_DIR);
 
 // Register the ErrorHandler & AutoLoader (But leave the the configuration &initialisation to init_framework.php)
-$GLOBALS['ErrorHandler'] = new ErrorHandler;
-$GLOBALS['ErrorHandler']->init();
+Framework::$errorHandler = new ErrorHandler;
+Framework::$errorHandler->init();
 
-$GLOBALS['AutoLoader'] = new AutoLoader(PATH);
-spl_autoload_register(array($GLOBALS['AutoLoader'], 'define'));
+Framework::$autoLoader = new AutoLoader(PATH);
+spl_autoload_register(array(Framework::$autoLoader, 'define'));
 
 unset($coreDir, $tmpDir);
 ?>

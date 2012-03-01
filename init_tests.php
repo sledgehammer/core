@@ -11,7 +11,7 @@ require(dirname(__FILE__).'/init_framework.php');
 $modules = Framework::getModules();
 foreach ($modules as $module) {
 	if (is_dir($module['path'].'tests')) {
-		$GLOBALS['AutoLoader']->importFolder($module['path'].'tests', array(
+		Framework::$autoLoader->importFolder($module['path'].'tests', array(
 			'mandatory_definition' => false,
 		));
 	}

@@ -43,7 +43,7 @@ class cURL extends Observable {
 	/**
 	 * @var array All the given CURLOPT_* options
 	 */
-	private $request = array();
+	private $options = array();
 
 	/**
 	 * @var string  RUNNING | COMPLETED | ABORTED | ERROR
@@ -56,9 +56,15 @@ class cURL extends Observable {
 	private $handle;
 
 	/**
+	 * @var array|cURL Global queue of active cURL requests
+	 */
+	static $requests = array();
+
+	/**
 	 * @var resource cURL multi handle
 	 */
 	static private $pool;
+
 
 	/**
 	 * @var int  Number of tranfers in the pool
@@ -182,7 +188,7 @@ class cURL extends Observable {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
 			$wait = false;
-			foreach ($GLOBALS['SledgeHammer']['cURL'] as $curl) {
+			foreach (cURL::$requests as $curl) {
 				if ($curl->isComplete() == false) {
 					$wait = true;
 				}
@@ -199,7 +205,7 @@ class cURL extends Observable {
 	function getInfo($option = null) {
 		$this->waitForCompletion();
 		if ($this->state !== 'COMPLETED') {
-			throw new InfoException('No information available for a '.$this->state.' request', $this->request);
+			throw new InfoException('No information available for a '.$this->state.' request', $this->options);
 		}
 		if ($option === null) {
 			return curl_getinfo($this->handle);
@@ -216,7 +222,7 @@ class cURL extends Observable {
 	function getContent() {
 		$this->waitForCompletion();
 		if ($this->state !== 'COMPLETED') {
-			throw new InfoException('No content available for a '.$this->state.' request', $this->request);
+			throw new InfoException('No content available for a '.$this->state.' request', $this->options);
 		}
 		return curl_multi_getcontent($this->handle);
 	}
@@ -274,14 +280,14 @@ class cURL extends Observable {
 			$message = curl_multi_info_read(self::$pool, $queued);
 			if ($message !== false) {
 				// Scan the (global) curl pool for curl handle specified in the handle
-				foreach ($GLOBALS['SledgeHammer']['cURL'] as $index => $curl) {
+				foreach (cURL::$requests as $index => $curl) {
 					if ($curl->handle === $message['handle']) {
-						unset($GLOBALS['SledgeHammer']['cURL'][$index]); // Cleanup global curl pool
+						unset(cURL::$requests[$index]); // Cleanup global curl pool
 						$curl->state = 'COMPLETED';
 						$error = $message['result'];
 						if ($error !== CURLE_OK) {
 							$curl->state = 'ERROR';
-							throw new InfoException('['.self::errorName($error).'] '.curl_error($curl->handle), $curl->request);
+							throw new InfoException('['.self::errorName($error).'] '.curl_error($curl->handle), $curl->options);
 						}
 						$tranferCount = self::$tranferCount;
 						$curl->trigger('load', $curl);
@@ -306,9 +312,9 @@ class cURL extends Observable {
 		if ($this->state !== 'ABORTED') {
 			$this->abort();
 		}
-		$index = array_search($this, $GLOBALS['SledgeHammer']['cURL'], true);
+		$index = array_search($this, cURL::$requests, true);
 		if ($index !== false) {
-			unset($GLOBALS['SledgeHammer']['cURL'][$index]);
+			unset(cURL::$requests[$index]);
 		}
 		$this->start($options);
 	}
@@ -338,7 +344,7 @@ class cURL extends Observable {
 	 */
 	private function start($options) {
 		$this->state = 'ERROR';
-		$GLOBALS['SledgeHammer']['cURL'][] = $this; // Watch changes
+		cURL::$requests[] = $this; // Watch changes
 		// Setting options
 		foreach ($options as $option => $value) {
 			if (curl_setopt($this->handle, $option, $value) === false) {
@@ -347,7 +353,7 @@ class cURL extends Observable {
 			if (ENVIRONMENT === 'development') {
 				$option = self::optionName($option);
 			}
-			$this->request[$option] = $value;
+			$this->options[$option] = $value;
 		}
 
 		// multi curl init

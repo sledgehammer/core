@@ -11,6 +11,20 @@ namespace SledgeHammer;
 
 class Framework {
 
+	/**
+	 * @var string Register UTF-8 as default charset
+	 */
+	static $charset = 'UTF-8';
+	/**
+	 * @var AutoLoader
+	 */
+	static $autoLoader;
+
+	/**
+	 * @var ErrorHandler
+	 */
+	static $errorHandler;
+
 	private static $cachedRequiredModules = array();
 
 	/**

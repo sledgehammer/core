@@ -68,10 +68,10 @@ class CodeAnalysisTest extends TestCase {
 	 * Analize all known classes and validate if all classes are available
 	 */
 	function test_known_classes() {
-		$definitions = $GLOBALS['AutoLoader']->getDefinitions();
+		$definitions = Framework::$autoLoader->getDefinitions();
 		$files = array();
 		foreach ($definitions as $definition) {
-			$files[] = $GLOBALS['AutoLoader']->getFilename($definition);
+			$files[] = Framework::$autoLoader->getFilename($definition);
 		}
 		$files = array_unique($files);
 
