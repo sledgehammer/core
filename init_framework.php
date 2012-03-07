@@ -58,17 +58,8 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	}
 	Framework::$autoLoader->init(); // De AutoLoader initialiseren
 
-
-	$pearIncludePath = PATH.'pear/classes';
-	if (file_exists($pearIncludePath)) { // Does the application have PEAR packages installed?
-		// Configure pear include path
-		$includePaths = array('.', $pearIncludePath);
-		foreach (explode(PATH_SEPARATOR, get_include_path()) as $path) {
-			if ($path != '.') {
-				$includePaths[] = $path;
-			}
-		}
-		set_include_path(implode(PATH_SEPARATOR, $includePaths));
+	if (file_exists(PATH.'pear/classes')) { // Does the application have PEAR packages installed?
+		extend_include_path(PATH.'pear/classes');
 		// Add classes to the AutoLoader
 		Framework::$autoLoader->importFolder($pearIncludePath, array(
 			'matching_filename' => false,
@@ -88,7 +79,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	foreach($modules as $module) {
 		Framework::initModule($module['path']);
 	}
-	unset($_email, $modules, $module, $overrideDebugOutput, $pearIncludePath, $includePaths);
+	unset($_email, $modules, $module, $overrideDebugOutput);
 
 	define('SledgeHammer\MICROTIME_INIT', microtime(true));
 }

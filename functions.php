@@ -990,6 +990,24 @@ namespace SledgeHammer {
 	}
 
 	/**
+	 * Prepends the $path to the include path
+	 *
+	 * @param string $path
+	 */
+	function extend_include_path($path) {
+		if (in_array(substr($path, -1), array('/', '\\'))) {
+			$path = substr($path, 0, -1);
+		}
+		$paths = array('.', $path);
+		foreach (explode(PATH_SEPARATOR, get_include_path()) as $dir) {
+			if ($dir != '.' && $dir != $path) {
+				$paths[] = $path;
+			}
+		}
+		set_include_path(implode(PATH_SEPARATOR, $paths));
+	}
+
+	/**
 	 * Deze functie geeft de extentie van de bestandnaam terug.
 	 *
 	 * Voorbeelden:
