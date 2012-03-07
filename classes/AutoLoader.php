@@ -150,6 +150,9 @@ class AutoLoader extends Object {
 		} else {
 			$extends .= '\\'.$class;
 		}
+		if (isset($this->definitions[$class])) {
+			$this->define($class);
+		}
 		$php = 'namespace '.$targetNamespace." {\n\t";
 		if (class_exists($extends, false)) {
 			$php .= 'class '.$class;
