@@ -338,7 +338,7 @@ class ErrorHandler {
 			} else {
 				ob_end_clean(); // buffer niet weergeven
 			}
-		} else {
+		} elseif (ob_get_level() === 0){
 			flush();
 		}
 		$this->isProcessing = false;
