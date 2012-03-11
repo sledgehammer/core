@@ -61,7 +61,7 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	if (file_exists(PATH.'pear/classes')) { // Does the application have PEAR packages installed?
 		extend_include_path(PATH.'pear/classes');
 		// Add classes to the AutoLoader
-		Framework::$autoLoader->importFolder($pearIncludePath, array(
+		Framework::$autoLoader->importFolder(PATH.'pear/classes', array(
 			'matching_filename' => false,
 			'mandatory_definition' => false,
 			'mandatory_superclass' => false,
