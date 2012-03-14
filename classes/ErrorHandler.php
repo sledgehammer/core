@@ -97,7 +97,7 @@ class ErrorHandler {
 			function ErrorHandler_trigger_error_callback($type, $message, $filename = NULL, $line = NULL, $context = NULL) {
 				ErrorHandler::handle($type, $message);
 				if ($type == E_USER_ERROR || $type == 4096) { // 4096 == E_RECOVERABLE_ERROR
-					exit();
+					exit(1);
 				}
 			}
 
@@ -124,12 +124,8 @@ class ErrorHandler {
 		}
 		if ($check_for_alternate_error_handler) {
 			$callback = set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
+			restore_error_handler();
 			if ($callback !== 'SledgeHammer\ErrorHandler_trigger_error_callback') {
-				if ($callback === NULL) {
-					restore_error_handler();
-				} else {
-					set_error_handler($callback);
-				}
 				$conversion_table = array(E_ERROR => E_USER_ERROR, E_WARNING => E_USER_WARNING, E_NOTICE => E_USER_NOTICE);
 				if (array_key_exists($type, $conversion_table)) {
 					$type = $conversion_table[$type]; // Voorkom "Invalid error type specified" bij trigger_error

@@ -81,6 +81,7 @@ abstract class DatabaseTestCase extends TestCase {
 		if ($this->dbName && $db->getAttribute(\PDO::ATTR_DRIVER_NAME) == 'mysql') {
 			$db->query('DROP DATABASE '.$this->dbName);
 		}
+		$this->assertTrue(true, 'cleaned up');
 	}
 
 	/**

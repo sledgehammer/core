@@ -6,9 +6,8 @@ namespace SledgeHammer;
 
 class HTMLTokenizerTest extends TestCase {
 
-	function setUp() {
-		ini_set('display_errors', true);
-		//restore_error_handler();
+	function test_skipped() {
+		$this->markTestSkipped('Not really unittests (No assertions on the output)');
 	}
 
 	function dont_test_cdata() {

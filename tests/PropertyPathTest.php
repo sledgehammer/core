@@ -3,7 +3,6 @@
  * PropertyPathTests
  */
 namespace SledgeHammer;
-
 class PropertyPathTest extends TestCase {
 
 	function test_compile() {
@@ -25,7 +24,7 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::compile('any[element]->property'), array(array($any, 'any'), array($element, 'element'), array($property, 'property')));
 		$this->assertEquals(PropertyPath::compile('[element]->property.any'), array(array($element, 'element'), array($property, 'property'), array($any, 'any')));
 		$this->assertEquals(PropertyPath::compile('->property[element]'), array(array($property, 'property'), array($element, 'element')));
-		$this->assertEquals(PropertyPath::compile('any->property[element]'), array(array($any, 'any'),  array($property, 'property'), array($element, 'element')));
+		$this->assertEquals(PropertyPath::compile('any->property[element]'), array(array($any, 'any'), array($property, 'property'), array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('->property[element].any'), array(array($property, 'property'), array($element, 'element'), array($any, 'any')));
 	}
 
@@ -38,20 +37,29 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::assemble(PropertyPath::compile($path)), $path);
 	}
 
-	function test_compile_warnings() {
-		$any = PropertyPath::TYPE_ANY;
-		$element = PropertyPath::TYPE_ELEMENT;
-		$property = PropertyPath::TYPE_PROPERTY;
-		$this->expectError('Path is empty');
+	function test_compile_warning_empty_path() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Path is empty');
 		$this->assertEquals(PropertyPath::compile(''), array());
-		$this->expectError('Invalid start: "." for path: ".any"');
-		$this->assertEquals(PropertyPath::compile('.any'), array(array($any, 'any')));
-		$this->expectError('Invalid chain, expecting a ".", "->" or "[" before "any"');
-		$this->assertEquals(PropertyPath::compile('[element]any'), array(array($element, 'element'), array($any, 'any')));
-		$this->expectError('Invalid "->" in in the chain');
-		$this->assertEquals(PropertyPath::compile('->->property'), array(array($property, 'property')));
-		$this->expectError('Unmatched brackets, missing a "]" in path: "[element"');
-		$this->assertEquals(PropertyPath::compile('[element'), array(array($any, '[element')));
+	}
+
+	function test_compile_warning_invalid_start() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid start: "." for path: ".any"');
+		$this->assertEquals(PropertyPath::compile('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
+	}
+
+	function test_compile_warning_invalid_chain() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
+		$this->assertEquals(PropertyPath::compile('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
+	}
+
+	function test_compile_warning_invalid_arrow() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in in the chain');
+		$this->assertEquals(PropertyPath::compile('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
+	}
+
+	function test_compile_warning_unmatched_brackets() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path: "[element"');
+		$this->assertEquals(PropertyPath::compile('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
 	}
 
 	function test_PropertyPath_get() {
@@ -62,10 +70,10 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::get($object, 'id'), '2', 'Path "id" should also work on objects');
 		// force array element
 		$this->assertEquals(PropertyPath::get($array, '[id]'), '1', 'Path "[id]" should work on arrays');
-		$this->expectError('Unexpected type: object, expecting an array');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: object, expecting an array');
 		$this->assertEquals(PropertyPath::get($object, '[id]'), null, 'Path "[id]" should NOT work on objects');
 		// force object property
-		$this->expectError('Unexpected type: array, expecting an object');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: array, expecting an object');
 		$this->assertEquals(PropertyPath::get($array, '->id'), null, 'Path "->id" should NOT work on arrays');
 		$this->assertEquals(PropertyPath::get($object, '->id'), '2', 'Path "->id" should work on objects');
 		$object->property = array('id' => '3');
@@ -79,7 +87,7 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::get($object, 'property[element]->id'), '5');
 //		$this->assertEquals(PropertyPath::get($object, '->property[element]id'), '5'); // @todo idem
 		$this->assertEquals(PropertyPath::get($object, '->property[element]->id'), '5');
-		$this->expectError('Unexpected type: array, expecting an object');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: array, expecting an object');
 		$this->assertEquals(PropertyPath::get($object, '->property->element'), null);
 		$array['object'] = (object) array('id' => 6);
 		$this->assertEquals(PropertyPath::get($array, 'object->id'), 6);
@@ -107,12 +115,7 @@ class PropertyPathTest extends TestCase {
 		$array['element'] = array('id' => 1);
 		PropertyPath::set($array, 'element[id]', 10);
 		$this->assertEquals($array['element']['id'], 10);
-
-
-
 	}
-
-
 
 }
 

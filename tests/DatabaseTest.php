@@ -17,18 +17,25 @@ class DatabaseTest extends DatabaseTestCase {
 	function test_connect() {
 		$dbDsn = new Database('mysql:host=localhost', 'root');
 		$dbUrl = new Database('mysql://root@localhost');
+		$this->assertTrue(true, 'No exceptions were thrown');
 	}
 
-	function test_notice() {
+	/**
+	 * An invalid query should generate an error
+	 */
+	function test_invalid_query() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice');
 		$db = $this->getDatabase();
-		$this->expectError(true, 'An invalid query should generate an error');
 		$result = $db->exec('this is not even a query');
-		$this->assertEquals($result, false);
-		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql') {
-			// MySQL reports truncated warnings
-			$this->expectError();
-			$result = $db->exec('INSERT INTO ducks (name) VALUES ("0123456789ABCDEF")');
+	}
+
+	function test_notice_on_truncated_data() {
+		$db = $this->getDatabase();
+		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+			$this->markTestSkipped('Only available for MySQL');
 		}
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice');
+		$db->exec('INSERT INTO ducks (name) VALUES ("0123456789ABCDEF")');
 	}
 
 	function test_fetch() {
@@ -56,14 +63,14 @@ class DatabaseTest extends DatabaseTestCase {
 		// Fetch value
 		$this->assertEquals($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
-		$this->expectError('Resultset has no columns, expecting 1 or more columns');
-		$fail = $db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
+		$this->setExpectedException('PHPUnit_Framework_Error_Warning', 'Resultset has no columns, expecting 1 or more columns');
+		$db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
 	}
 
 	function test_count() {
 		$db = $this->getDatabase();
 		$result = $db->query('SELECT * FROM ducks');
-		$this->assertIsA($result, 'SledgeHammer\PDOStatement');
+		$this->assertInstanceOf('SledgeHammer\PDOStatement', $result);
 		$this->assertEquals(count($result), 3); //, 'count() should return the number of rows found');
 	}
 

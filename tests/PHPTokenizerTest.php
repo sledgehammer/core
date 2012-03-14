@@ -7,6 +7,10 @@ namespace SledgeHammer;
 
 class PHPTokenizerTest extends TestCase {
 
+	function test_skipped() {
+		$this->markTestSkipped('Not really unittests (No assertions on the output)');
+	}
+
 	function donttest_tokenizer() {
 		$filename = Framework::$autoLoader->getFilename('SledgeHammer\FFVideo');
 		$this->assertEqualTokenizer($filename);

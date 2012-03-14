@@ -12,15 +12,16 @@ class CodeAnalysisTest extends TestCase {
 		foreach ($modules as $module) {
 			$loader->importModule($module);
 		}
-
+		$this->assertTrue(true, 'Importing all modules should not generate any errors');
 		if (file_exists(PATH.'AutoLoader.db.php')) {
 			$php_code = file_get_contents(PATH.'AutoLoader.db.php');
 			$php_code = substr($php_code, 5, -3); // <?php eraf halen
 			$this->assertNull(eval($php_code), 'AutoLoader.db.php zou geen php fouten mogen bevatten');
 			$this->assertTrue(isset($definitions), '$definitions zou gedefineerd moeten zijn');
-
-			// @todo: Controleren of de inhoud van de autoloader.db.php niet verouderd is.
+		} else {
+			$this->markTestSkipped('Skipping static AutoLoader tests (File AutoLoader.db.php not found)');
 		}
+		// @todo: Controleren of de inhoud van de autoloader.db.php niet verouderd is.
 	}
 
 	function donttest_single_file() {
@@ -28,6 +29,7 @@ class CodeAnalysisTest extends TestCase {
 		$info = $phpAnalyzer->getInfo('CssMin');
 		dump($info);
 	}
+
 	/**
 	 * Crawl the codebase and validate if all used classes are available
 	 */
@@ -79,38 +81,38 @@ class CodeAnalysisTest extends TestCase {
 		foreach ($files as $filename) {
 			try {
 				$analyzer->open($filename);
-			}  catch (\Exception $e) {
+			} catch (\Exception $e) {
 //				ErrorHandler::handle_exception($e);
 				$this->fail($e->getMessage());
 			}
 		}
 		/* checking parents wordt ook gedaan door de used check
-		foreach ($analyzer->classes as $class => $info) {
-			// check parent class
-			if (isset($info['extends'])) {
-				if (!isset($analyzer->classes[$info['extends']]) && !class_exists($info['extends'], false)) {
-					notice('Parent class "'.$info['extends'].'" not found for class "'.$class.'" in '.$info['filename']);
-				}
-			}
+		  foreach ($analyzer->classes as $class => $info) {
+		  // check parent class
+		  if (isset($info['extends'])) {
+		  if (!isset($analyzer->classes[$info['extends']]) && !class_exists($info['extends'], false)) {
+		  notice('Parent class "'.$info['extends'].'" not found for class "'.$class.'" in '.$info['filename']);
+		  }
+		  }
 
-			if (isset($info['implements'])) {
-				foreach ($info['implements'] as $interface) {
-					if (!isset($analyzer->interfaces[$interface]) && !interface_exists($interface, false)) {
-						notice('Interface "'.$interface.'" not found for class "'.$class.'" in '.$info['filename']);
-					}
-				}
-			}
-		}
-		foreach ($analyzer->interfaces as $interface => $info) {
-			// check parent interface(s)
-			if (isset($info['extends'])) {
-				foreach ($info['extends'] as $parentInterface) {
-					if (!isset($analyzer->interfaces[$parentInterface]) && !interface_exists($parentInterface, false)) {
-						notice('Parent interface "'.$parentInterface.'" not found for interface "'.$interface.'" in '.$info['filename']);
-					}
-				}
-			}
-		}*/
+		  if (isset($info['implements'])) {
+		  foreach ($info['implements'] as $interface) {
+		  if (!isset($analyzer->interfaces[$interface]) && !interface_exists($interface, false)) {
+		  notice('Interface "'.$interface.'" not found for class "'.$class.'" in '.$info['filename']);
+		  }
+		  }
+		  }
+		  }
+		  foreach ($analyzer->interfaces as $interface => $info) {
+		  // check parent interface(s)
+		  if (isset($info['extends'])) {
+		  foreach ($info['extends'] as $parentInterface) {
+		  if (!isset($analyzer->interfaces[$parentInterface]) && !interface_exists($parentInterface, false)) {
+		  notice('Parent interface "'.$parentInterface.'" not found for interface "'.$interface.'" in '.$info['filename']);
+		  }
+		  }
+		  }
+		  } */
 		// Check all used definitions
 		$failed = false;
 		foreach (array_keys($analyzer->usedDefinitions) as $definition) {
@@ -161,7 +163,7 @@ class CodeAnalysisTest extends TestCase {
 			if (in_array($ext, array('php'))) {
 				try {
 					$analyzer->open($entry->getPathname());
-				}  catch (\Exception $e) {
+				} catch (\Exception $e) {
 //					ErrorHandler::handle_exception($e);
 					$this->fail($e->getMessage());
 				}
@@ -175,13 +177,13 @@ class CodeAnalysisTest extends TestCase {
 	 * @return bool  Success
 	 */
 	private function tryGetInfo(PHPAnalyzer $analyzer, $definition) {
-		if (in_array($definition,array('AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase'))) {
+		if (in_array($definition, array('AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase'))) {
 			return true;
 		}
 		try {
 			$analyzer->getInfo($definition);
 			return true;
-		}  catch (\Exception $e) {
+		} catch (\Exception $e) {
 			$suffix = ' (used in';
 			foreach ($analyzer->usedDefinitions[$definition] as $filename => $lines) {
 				$suffix .= ' "'.$filename.'" on line';
@@ -196,5 +198,7 @@ class CodeAnalysisTest extends TestCase {
 			return false;
 		}
 	}
+
 }
+
 ?>

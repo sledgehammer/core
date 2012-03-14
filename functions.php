@@ -842,20 +842,20 @@ namespace SledgeHammer {
 		static $settings = null;
 		if ($settings === null) {
 			$all_settings = parse_ini_file(APPLICATION_DIR.'settings/database.ini', true);
+			if (array_key_exists(ENVIRONMENT, $all_settings) == false) {
+				throw new \Exception('No databases are configured for environment: "'.ENVIRONMENT.'"');
+			}
 			$settings = $all_settings[ENVIRONMENT];
-		}
-		if (empty($settings)) {
-			throw new \Exception('No databases are configured for '.ENVIRONMENT);
 		}
 		if (isset($settings[$link])) {
 			Database::$instances[$link] = new Database($settings[$link]);
 			return Database::$instances[$link];
 		}
-		if ($link == 'default' && count($settings) == 1) {
+		if ($link === 'default' && count($settings) == 1) {
 			Database::$instances['default'] = current($settings);
 			return getDatabase(current($settings));
 		}
-		throw new InfoException('Database connection: \''.$link.'\' is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($settings)));
+		throw new InfoException('Database connection: "'.$link.'" is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($settings)));
 		return false;
 	}
 

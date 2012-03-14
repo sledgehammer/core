@@ -17,12 +17,12 @@ if (ini_get('date.timezone') == '' && DIRECTORY_SEPARATOR === '/') { // No timez
 	error_log('"date.timezone" is not defined in your php.ini');
 	date_default_timezone_set(trim(`date +%Z`)); // Use the system's timezone
 }
-$coreDir = dirname(__FILE__).'/';
-require_once($coreDir.'functions.php');
-require_once($coreDir.'classes/Object.php'); // The generic superclass
-require_once($coreDir.'classes/Framework.php'); // Helper class for extracting and loading SledgeHammer modules
-require($coreDir.'classes/ErrorHandler.php');
-require($coreDir.'classes/AutoLoader.php');
+define('SledgeHammer\CORE_DIR', dirname(__FILE__).'/');
+require_once(CORE_DIR.'functions.php');
+require_once(CORE_DIR.'classes/Object.php'); // The generic superclass
+require_once(CORE_DIR.'classes/Framework.php'); // Helper class for extracting and loading SledgeHammer modules
+require(CORE_DIR.'classes/ErrorHandler.php');
+require(CORE_DIR.'classes/AutoLoader.php');
 
 if (function_exists('mb_internal_encoding')) {
 	mb_internal_encoding(Framework::$charset);
@@ -42,6 +42,7 @@ if (defined('SledgeHammer\TMP_DIR') === false) {
 		}
 	}
 	define('SledgeHammer\TMP_DIR', $tmpDir);
+	unset($tmpDir);
 }
 mkdirs(TMP_DIR);
 
@@ -52,5 +53,4 @@ Framework::$errorHandler->init();
 Framework::$autoLoader = new AutoLoader(PATH);
 spl_autoload_register(array(Framework::$autoLoader, 'define'));
 
-unset($coreDir, $tmpDir);
 ?>

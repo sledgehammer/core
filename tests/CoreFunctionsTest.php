@@ -1,8 +1,8 @@
 <?php
+namespace SledgeHammer;
 /**
  * Controleer diverse globale SledgeHammer functies
  */
-namespace SledgeHammer;
 class CoreFunctionsTest extends TestCase {
 
 	function test_value_function() {
@@ -14,4 +14,5 @@ class CoreFunctionsTest extends TestCase {
 	}
 
 }
+
 ?>

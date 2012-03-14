@@ -193,13 +193,9 @@ EOD;
 		foreach ($output as $token) {
 			$reconstructedHtml .= (is_array($token) ? $token['html'] : $token);
 		}
-		if (!$this->assertEquals($html, $reconstructedHtml, 'reconstructed HTML should match the original HTML')) {
-			dump($html);
-			dump($reconstructedHtml);
-		}
-		if ($expectedOutput != '__SKIP_OUTPUT_CHECK__' && !$this->assertEquals($expectedOutput, $output)) {
-			dump($expectedOutput);
-			dump($output);
+		$this->assertEquals($html, $reconstructedHtml, 'reconstructed HTML should match the original HTML');
+		if ($expectedOutput != '__SKIP_OUTPUT_CHECK__') {
+			$this->assertEquals($expectedOutput, $output);
 		}
 		//$this->assertWarnings($tags, $warnings);
 	}
