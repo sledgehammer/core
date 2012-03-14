@@ -1,23 +1,28 @@
 <?php
 /**
- * De algemene superclasse van sledgehammer objecten
+ * A generic php superclass.
  *
- * Verzorgt verbeterde foutafhandeling van objecten zoals:
- *   Bij het opvragen van een eigenschap dit niet bestaat krijg je een lijst met eigenschappen die wel bestaan, dit geld ook voor de methodes.
- *   Een foutmelding zodra je eigenschap wilt aanpassen die niet in het object zit (is namelijk toegestaan in php)
- *   
+ * Improved error reporting:
+ *   When accessing non-existing properties show a list show a list of available properties.
+ *   When calling a non-existing method show a list show a list of available methods.
+ *
+ * Changes compared to PHP's stdClass behaviour:
+ *   Generates a warning when setting a non-yet-existing property (instead of silently adding the property)
+ *   Throws an Exception when calling a non-existing method (instead of a fatal error)
+ *   Generates a notice when the object is used as a string (instead of throwing an exception)
+ *
  * @package Core
  */
 namespace SledgeHammer;
 abstract class Object {
 
 	/**
-	 * Er wordt een eigenschap opgevraagd die niet bestaat
+	 * Report that $property doesn't exist.
 	 *
-	 * @param string $property naam van de eigenschap
+	 * @param string $property
 	 * @return void
 	 */
-	function __get($property) {		
+	function __get($property) {
 		$rObject = new \ReflectionObject($this);
 		$properties = array();
 		foreach ($rObject->getProperties() as $rProperty) {
@@ -39,23 +44,22 @@ abstract class Object {
 	}
 
 	/**
-	 * Eigenschap instellen die (nog) niet bestaat. 
-	 * Geeft een foutmeldinging, maar voegt vervolgens de waarde toe aan het object.
+	 * Report that $property doesn't exist and set the property to the given $value.
 	 *
-	 * @param string $property naam van de eigenschap
-	 * @param mixed $value     Waarde van de property
+	 * @param string $property
+	 * @param mixed $value
 	 * @return void
 	 */
 	function __set($property, $value) {
-		Object::__get($property); // Via __get de foutmelding genereren
-		$this->$property = $value; // De eigenschap toevoegen. PHP's default gedrag,
+		Object::__get($property); // Report error
+		$this->$property = $value; // Add the property to the object. (PHP's default behaviour)
 	}
 
 	/**
-	 * Er wordt een methode aangeroepen die niet bestaat
+	 * Report that the $method doesn't exist.
 	 *
-	 * @param $method naam van de methode die wordt aangeroepen
-	 * @param $arguments Argumenten van de aangeroepen methode
+	 * @param string $method
+	 * @param array $arguments
 	 * @return void
 	 */
 	function __call($method, $arguments) {
@@ -64,7 +68,7 @@ abstract class Object {
 		foreach ($rObject->getMethods() as $rMethod) {
 			if (in_array($rMethod->name, array('__get', '__set', '__call', '__toString'))) {
 				continue;
-           	}
+			}
 			if ($rMethod->isPublic()) {
 				$scope = 'public';
 			} elseif ($rMethod->isProtected()) {
@@ -77,7 +81,7 @@ abstract class Object {
 				$param = '$'.$rParam->name;
 				if ($rParam->isDefaultValueAvailable()) {
 					$param .= ' = '.syntax_highlight($rParam->getDefaultValue());
-               	}
+				}
 				$parameters[] = $param;
 			}
 			$methods[$scope][] = syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
@@ -87,11 +91,11 @@ abstract class Object {
 		foreach ($methods as $scope => $mds) {
 			$methodsText .= '<b>'.$scope.' methods</b>'.$glue.implode($glue, $mds).'<br /><br />';
 		}
-		error('Method: "'.$method.'" doesn\'t exist in a "'.get_class($this).'" object.', $methodsText);
+		throw new InfoException('Method: "'.$method.'" doesn\'t exist in a "'.get_class($this).'" object.', $methodsText);
 	}
 
 	/**
-	 * Het object wordt als string gebruikt.
+	 * The object is used as an string
 	 *
 	 * @return string
 	 */
@@ -99,5 +103,7 @@ abstract class Object {
 		notice('Object: "'.get_class($this).'" is used as string');
 		return "Object(".get_class($this).")";
 	}
+
 }
+
 ?>

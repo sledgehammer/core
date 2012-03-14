@@ -1,18 +1,19 @@
 <?php
-/**
- * Breidt de UnitTestCase class uit met assert functies voor het controleren van queries en tabellen.
- */
 namespace SledgeHammer;
-
+/**
+ * Add database specific assertions to the TestCase class
+ *
+ * @package Core
+ */
 abstract class DatabaseTestCase extends TestCase {
 
 	protected
-		$skipRebuildDatabase = false,
-		$dbLink = '__NOT_CONNECTED__',
-		$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
+			$skipRebuildDatabase = false,
+			$dbLink = '__NOT_CONNECTED__',
+			$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
 	private
-		$dbName,
-		$queryCount;
+			$dbName,
+			$queryCount;
 
 	function __construct($pdoDriver = 'sqlite') {
 		parent::__construct();
@@ -180,14 +181,7 @@ abstract class DatabaseTestCase extends TestCase {
 		if ($message === NULL) {
 			$message = 'Table "'.$table.' should match contents. %s';
 		}
-		if ($this->assertEquals($expected_contents, $table_contents, $message)) {
-			return true;
-		}
-		if ($this->debug) {
-			dump($expected_contents);
-			dump($table_contents);
-		}
-		return false;
+		$this->assertEquals($expected_contents, $table_contents, $message);
 	}
 
 	function setUp() {
