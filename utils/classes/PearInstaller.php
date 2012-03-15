@@ -1,7 +1,10 @@
 <?php
 namespace SledgeHammer;
 /**
- * PearInstaller
+ * PearInstaller, installs PEAR packages into your project folder.
+ *
+ * @link http://pear.php.net/manual/en/core.rest.php
+ * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
  *
  * @package Core
  */
@@ -38,6 +41,7 @@ class PearInstaller extends Observable {
 	}
 
 	/**
+	 * Discovers all packages inside the given domain/channel
 	 *
 	 * @param string $domain  Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
 	 */
@@ -67,6 +71,13 @@ class PearInstaller extends Observable {
 		$this->trigger('channelAdded', $this, $domain, $this->channels[$domain]);
 	}
 
+	/**
+	 * Registers the packages from the associated channel & category
+	 *
+	 * @param string $channel
+	 * @param string $category
+	 * @param \SimpleXMLElement $packages
+	 */
 	function registerCategory($channel, $category, $packages) {
 		foreach ($packages as $package) {
 			$url = $package->attributes('http://www.w3.org/1999/xlink');
@@ -80,6 +91,11 @@ class PearInstaller extends Observable {
 		}
 	}
 
+	/**
+	 * Get a list of names for all detected packages.
+	 *
+	 * @return array
+	 */
 	function getPackages() {
 		return array_keys($this->packages);
 	}
@@ -144,12 +160,17 @@ class PearInstaller extends Observable {
 		if ($exit !== 0) {
 			throw new \Exception('Unable to untar "'.$tarFile.'"');
 		}
-		$info = simplexml_load_file(dirname($tarFile).'/package.xml');
+		if (file_exists(dirname($tarFile).'/package2.xml')) {
+			$info = simplexml_load_file(dirname($tarFile).'/package2.xml');
+		} else {
+			$info = simplexml_load_file(dirname($tarFile).'/package.xml');
+		}
 		// Install dependencies first
 		foreach ($info->dependencies->required->package as $dependancy) {
-//			if (empty($this->packages[(string) $dependancy->name])) {
-//				throw new InfoException('Dependancy "'.$dependancy->name.'" not found (Requires channel: "'.$dependancy->channel.'")', 'Current channels: '.quoted_human_implode(' and ', array_keys($this->channels)));
-//			}
+			if ($dependancy->conflicts) {
+//				notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
+				continue;
+			}
 			$this->install((string) $dependancy->name, array(
 				'channel' => (string) $dependancy->channel,
 			));
@@ -220,6 +241,15 @@ class PearInstaller extends Observable {
 		$this->trigger('installed', $this, $package, $version);
 	}
 
+	/**
+	 * Fetch the release info (download link) of a package
+	 * If the version is "stable", "beta" or "latest" the $version will be set the versionnumber
+	 *
+	 * @param array $package
+	 * @param string $version
+	 * @return \SimpleXMLElement
+	 * @throws \Exception
+	 */
 	function findRelease($package, &$version) {
 		$info = simplexml_load_file('http://'.$package['channel'].$package['path'].'/info.xml')->r->attributes('http://www.w3.org/1999/xlink');
 		$url = 'http://'.$package['channel'].$info['href'].'/';
@@ -233,8 +263,9 @@ class PearInstaller extends Observable {
 	}
 
 	/**
-	 * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
-	 * @param type $contents
+	 * Extract files from the <dir> in the package(2).xml
+	 *
+	 * @return array
 	 */
 	private function extractFiles($dir, $from = '', $to ='', $renames = array()) {
 		$from .= (string) $dir['name'];
