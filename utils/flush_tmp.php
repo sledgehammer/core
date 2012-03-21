@@ -1,7 +1,7 @@
 <?php
 /**
  * Delete the contents of the $project/tmp/ or /tmp/sledgehammer-$hash/$user/ folder.
- * 
+ *
  * @package Core
  */
 namespace SledgeHammer;

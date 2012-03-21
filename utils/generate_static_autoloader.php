@@ -7,8 +7,8 @@ $library_db_folder = realpath(dirname(__FILE__).'/../../../');
 if ($library_db_folder == '') {
 	trigger_error('Invalid directory structure, expection "$folder/modules/core/"', E_USER_ERROR);
 }
-if (file_put_contents($library_db_folder.'/autoloader.db.php', '<?php $classes = array(); $interfaces = array(); ?>') === false) { // Een "leeg" library.db.php bestand wegschrijven, zodat de core/init.php zonder problemen ingeladen kan worden.
-	trigger_error('Unable to write to "autoloader.db.php"', E_USER_ERROR);
+if (file_put_contents($library_db_folder.'/AutoLoader.db.php', '<?php $classes = array(); $interfaces = array(); ?>') === false) { // Een "leeg" library.db.php bestand wegschrijven, zodat de core/init.php zonder problemen ingeladen kan worden.
+	trigger_error('Unable to write to "AutoLoader.db.php"', E_USER_ERROR);
 }
 require_once(dirname(__FILE__).'/../init.php');
 
