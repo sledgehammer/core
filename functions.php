@@ -7,7 +7,6 @@
  * @package Core
  */
 // Functions that are available outside everywhere (global namespace)
-
 namespace {
 
 	/**
@@ -32,13 +31,13 @@ namespace {
 
 	/**
 	 * Report a fatal error (and end execution).
-     *
-     * It's preferred to throw Exceptions, which allows the calling code to react to the error.
-     *
-     *
-     * @param string $message  The error
-     * @param mixed $information  [optional] Additional information
-     */
+	 *
+	 * It's preferred to throw Exceptions, which allows the calling code to react to the error.
+	 *
+	 *
+	 * @param string $message  The error
+	 * @param mixed $information  [optional] Additional information
+	 */
 	function error($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_ERROR, $message, $information, true);
 		exit(1); // Het script direct stoppen.
@@ -46,20 +45,20 @@ namespace {
 
 	/**
 	 * Report a warning
-     *
-     * @param string $message  The warning
-     * @param mixed $information  [optional] Additional information
-     */
+	 *
+	 * @param string $message  The warning
+	 * @param mixed $information  [optional] Additional information
+	 */
 	function warning($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_WARNING, $message, $information, true);
 	}
 
 	/**
 	 * Report a notice
-     *
-     * @param string $message  The notice
-     * @param mixed $information  [optional] Additional information
-     */
+	 *
+	 * @param string $message  The notice
+	 * @param mixed $information  [optional] Additional information
+	 */
 	function notice($message, $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_NOTICE, $message, $information, true);
 	}
@@ -67,9 +66,9 @@ namespace {
 	/**
 	 * Report deprecated functionality.
 	 *
-     * @param string $message  The message
-     * @param mixed $information  [optional] Additional information
-     */
+	 * @param string $message  The message
+	 * @param mixed $information  [optional] Additional information
+	 */
 	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = NULL) {
 		SledgeHammer\ErrorHandler::handle(E_USER_DEPRECATED, $message, $information, true); // Kan pas sinds php 5.3.0
 	}
@@ -119,7 +118,6 @@ namespace {
 }
 
 // Global functions inside the SledgeHammer namespace
-
 namespace SledgeHammer {
 
 	/**
@@ -280,11 +278,11 @@ namespace SledgeHammer {
 		return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
 	}
 
-    /**
+	/**
 	 * implode(), but with quotes (") around the values.
 	 *
 	 * @param string $glue
-     * @param string $array
+	 * @param string $array
 	 * @param string $quote
 	 * @return string
 	 */
@@ -372,7 +370,7 @@ namespace SledgeHammer {
 	function compare($value, $operator, $expectation) {
 		switch ($operator) {
 			case '==': return equals($value, $expectation);
-			case '!=': return!equals($value, $expectation);
+			case '!=': return !equals($value, $expectation);
 			case '<': return $value < $expectation;
 			case '>': return $value > $expectation;
 			case '<=': return $value <= $expectation;
@@ -1197,10 +1195,10 @@ namespace SledgeHammer {
 		}
 		$headers = array();
 		/*
-		$resume_support = false; // @todo Bestanden in tmp/ geen resume_support geven.
-		if ($resume_support) {
-			$headers[] = 'Accept-Ranges: bytes';
-		}*/
+		  $resume_support = false; // @todo Bestanden in tmp/ geen resume_support geven.
+		  if ($resume_support) {
+		  $headers[] = 'Accept-Ranges: bytes';
+		  } */
 		if (is_dir($filename)) {
 			throw new \Exception('Unable to render_file(). "'.$filename.'" is a folder');
 		}
@@ -1322,6 +1320,81 @@ namespace SledgeHammer {
 			}
 		}
 		return file_put_contents($filename, $ini);
+	}
+
+	/**
+	 * Return the output of a shell command that is run as another user.
+	 *
+	 * @param string $username
+	 * @param string $password
+	 * @param string $command  The command that will be executed.
+	 * @param int    $return_var If the parameter is set, the return status of the Unix command will be placed here.
+	 * @return string The output of the command
+	 */
+	function su_exec($username, $password, $command, &$return_var = null) {
+		ob_start();
+		$return_var = sudo($username, $password, $command);
+		return rtrim(ob_get_clean(), "\n\r");
+	}
+
+	/**
+	 * Execute a shell command as another user.
+	 * @see su_exec
+	 *
+	 * @param string $username
+	 * @param string $password
+	 * @param string $command  The command that will be executed.
+	 * @return int  The return status of the Unix command will be placed here.
+	 */
+	function sudo($username, $password, $command) {
+		$descriptorspec = array(
+			0 => array('pipe', 'r'), // stdin
+			1 => array('pipe', 'w'), // stdout
+			2 => array('pipe', 'w')  // stderr
+		);
+
+		/* @var $process resource */
+		$process = proc_open('expect', $descriptorspec, $pipes, NULL, NULL);
+
+		if ($process === false) {
+			warning('Failed to run expect');
+			return;
+		}
+		/* @var $stdin resource The input stream of the php process (write) */
+		$stdin = $pipes[0];
+		/* @var $stdout resource The output stream of the php process (read) */
+		$stdout = $pipes[1];
+		/* @var $stderr resource The error stream of the php process (read) */
+		$stderr = $pipes[2];
+
+		// Generate expect script
+		fwrite($stdin, '
+set env(PS1) "# "
+spawn su '.addslashes($username).' -c "'.addslashes($command).'"
+expect "Password:" { send "'.addslashes($password).'\r" }
+expect eof
+catch wait result
+exit [lindex $result 3]');
+		fclose($stdin);
+		$showOutput = false;
+		while (!feof($stdout) && !feof($stderr)) {
+			$read = array($stdout, $stderr);
+			if (stream_select($read, $write, $except, 30)) {
+				foreach ($read as $stream) {
+					$output = fgets($stream);
+					if ($showOutput) {
+						echo $output;
+					}
+					if ($output === "Password:\r\n") {
+						$showOutput = true;
+					}
+
+				}
+			}
+		}
+		fclose($stdout);
+		fclose($stderr);
+		return proc_close($process);
 	}
 
 	/**
