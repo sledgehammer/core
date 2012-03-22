@@ -82,7 +82,7 @@ class URL extends Object {
 			if (empty($this->user) == false) {
 				$url .= rawurlencode($this->user);
 				if (empty($this->pass) == false) {
-					$url .= ':'.rawurlencode($this->pass);
+					$url .= ':'.$this->pass;
 				}
 				$url .= '@';
 			}
