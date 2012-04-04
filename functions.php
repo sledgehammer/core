@@ -872,7 +872,8 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * Toont een reeks debug en profiling gegevens zoals parsetijd en geheugenverbruik.
+	 * Show debug and profiling information.
+	 * Contains parsetime, memory usage and (sql)querylogs.
 	 */
 	function statusbar() {
 		if (defined('SledgeHammer\MICROTIME_START')) {
@@ -895,7 +896,7 @@ namespace SledgeHammer {
 			}
 			echo 'MiB.'."\n";
 		}
-		if (isset(Database::$instances)) {
+		if (class_exists('SledegeHammer\Database', false) && count(Database::$instances) > 0) {
 			echo 'Databases: ';
 			foreach (Database::$instances as $name => $database) {
 				if (is_object($database)) {
