@@ -1,6 +1,6 @@
 <?php
 /**
- * Script om het deployen naar een acceptation/production omgeving te vereenvoudingen
+ * Generic deploy script for deploying sledgehammer websites to different environments
  */
 namespace SledgeHammer;
 if ($argc < 2) {
@@ -10,11 +10,12 @@ if ($argc < 2) {
 define('ENVIRONMENT', 'development');
 require_once(dirname(dirname(__FILE__)).'/init.php');
 
-if (strlen(PATH) <= 4) { // De PATH constante controleren. strlen("PATH") == 4 
+if (strlen(PATH) <= 4) { // De PATH constante controleren. strlen("PATH") == 4
 	error("Invalid PATH");
 }
 /**
- * Als het $command foutcode geeft wordt er een error() gegeven.
+ * Run the cli command
+ * Adds additional error reporting for non-zero exit values
  */
 function shell_execute($command, $hideOutput = false) {
 	echo '  '.$command."\n";
@@ -43,12 +44,12 @@ if ($environment == 'development') {
 	return;
 }
 
-// Wis de cli parameters zodat deze niet gebruikt worden voor de onderstaande scripts  
+// Wis de cli parameters zodat deze niet gebruikt worden voor de onderstaande scripts
 $argc = 1;
 unset($argv[1]);
 
-// De AutoLoader optimalizeren
-require (dirname(__FILE__).'/generate_static_library.php');
+// Optimize the AutoLoader
+require (dirname(__FILE__).'/generate_static_autoloader.php');
 
 // Bestanden & mappen verwijderen die niet in productie nodig zijn.
 //require (dirname(__FILE__).'/cleanup_svn_export.php');
@@ -114,7 +115,7 @@ echo '  Group : '.$group."\n";
 // Rechten instellen van alle bestanden
 echo "Modifing file-rights...\n";
 
-shell_execute('chown -R '.$owner.':'.$group.' "'.PATH.'"'); // De eigenaar van alle bestanden op dit van de webgebruiker zetten 
+shell_execute('chown -R '.$owner.':'.$group.' "'.PATH.'"'); // De eigenaar van alle bestanden op dit van de webgebruiker zetten
 shell_execute('chmod -R u=rwX,g=rX,o-rwx "'.PATH.'"');  // User mag alles, group mag niet schrijven, other mag helemaal niks
 shell_execute('chmod -R g+w "'.PATH.'tmp/"');  // De webgebruiker mag via zijn group wel "schrijven" in de tmp map
 */
