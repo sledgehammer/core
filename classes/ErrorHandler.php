@@ -252,7 +252,7 @@ class ErrorHandler {
 				case E_WARNING:
 				case E_USER_ERROR:
 				case E_USER_WARNING:
-					if (!empty(Database::$instances)) {
+					if (class_exists('SledgeHammer\Database', false) && !empty(Database::$instances)) {
 						echo '<b>Databases</b><br />';
 						$popup = $this->email ? false : true;
 						foreach (Database::$instances as $link => $Database) {

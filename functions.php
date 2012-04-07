@@ -839,6 +839,10 @@ namespace SledgeHammer {
 		}
 		static $settings = null;
 		if ($settings === null) {
+			$settings = array();
+			if (file_exists(APPLICATION_DIR.'settings/database.ini') === false) {
+				throw new InfoException('Database connection: "'.$link.'" is not configured', 'No database configuration file found at "'.APPLICATION_DIR.'settings/database.ini"');
+			}
 			$all_settings = parse_ini_file(APPLICATION_DIR.'settings/database.ini', true);
 			if (array_key_exists(ENVIRONMENT, $all_settings) == false) {
 				throw new \Exception('No databases are configured for environment: "'.ENVIRONMENT.'"');
@@ -896,7 +900,7 @@ namespace SledgeHammer {
 			}
 			echo 'MiB.'."\n";
 		}
-		if (class_exists('SledegeHammer\Database', false) && count(Database::$instances) > 0) {
+		if (class_exists('SledgeHammer\Database', false) && count(Database::$instances) > 0) {
 			echo 'Databases: ';
 			foreach (Database::$instances as $name => $database) {
 				if (is_object($database)) {
