@@ -882,9 +882,9 @@ namespace SledgeHammer {
 	function statusbar() {
 		if (defined('SledgeHammer\MICROTIME_START')) {
 			$now = microtime(true);
-			echo '<span id="statusbar_parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START).'</b>sec. ';
+			echo '<span class="statusbar-parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START).'</b>sec. ';
 			if (defined('SledgeHammer\MICROTIME_INIT')) {
-				echo '<span id="statusbar_parsetimes">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START).'</b>sec.';
+				echo '<span class="statusbar-popout">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START).'</b>sec.';
 				if (defined('SledgeHammer\MICROTIME_EXECUTE')) {
 					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT).'</b>sec. ';
 					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE).'</b>sec.';

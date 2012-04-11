@@ -40,15 +40,15 @@
 	text-align: right;
 	margin-right: 4px;
 }
-.sledegehammer_querylog_close {
-	color: #909090;
-	font-size: 16px;
+.sledegehammer_querylog .sledegehammer_querylog_close {
+	color: #888;
+	font: 18px/12px sans-serif;
 	text-decoration: none;
-	right: 32px;
+	right: 26px;
 	position: fixed;
  }
  .sledegehammer_querylog_close:hover {
-	color: #808080;
+	color: #555;
 	text-decoration: none;
  }
  .sledegehammer_querylog .execution_time {
@@ -57,16 +57,9 @@
  }
 
 /* Statusbar styling */
-.statusbar_hide {
-	float:right;
-	margin-right: 4px;
-	font: 14px sans-serif;
-	text-decoration: none;
-}
-/* Debug blok in de voet */
 .statusbar, .statusbarcache {
-	color: #999;
-	font: normal 10px Monaco,sans-serif;
+	color: #888;
+	font: normal 10px/18px Monaco,sans-serif;
 	text-shadow: none;
 	padding: .2em 0 0 0;
 	margin: 5px 0 0 0;
@@ -74,8 +67,6 @@
 	background: #F5F5F5;
 	text-align: center;
 	clear: both;
-	min-height: 18px;
-/*	opacity: 0.97;*/
 	position: fixed;
 	left: 0;
 	bottom: 0;
@@ -83,25 +74,44 @@
 	z-index: 5000;
 }
 .statusbar a {
-	color: #909090;
+	color: #888;
 	text-shadow: none;
+	text-decoration: underline;
+}
+.statusbar a:hover {
+	color: #555;
+}
+.statusbar .statusbar_hide {
+	color: #888;
+	float:right;
+	margin-right: 6px;
+	font: 18px/12px sans-serif;
+	text-decoration: none;
+}
+.statusbar .statusbar_hide:hover {
+	color: #555;
+	text-decoration: none;
 }
 .statusbarcache {
 	border-bottom: 0;
 	background: #f0f0f0;
 }
-.statusbar #statusbar_parsetimes {
-	position: absolute;
-	top: -18px;
-	bottom: 18px;
-	left: 0;
-	right: 0;
-	z-index: 10;
-	border-top: 1px solid #CCCCCC;
-	background: #F5F5F5;
+.statusbar .statusbar-parsetime {
+	position: relative;
+}
+.statusbar .statusbar-popout {
 	display: none;
+	position: absolute;
+	bottom: 17px;
+	left: -8px;
+	background: #F5F5F5;
+	border: 1px solid #CCCCCC;
+	border-bottom: 0;
+	border-radius: 8px 8px 0 0;
+	white-space: nowrap;
+	line-height: 18px;
 }
 
-#statusbar_parsetime:hover > span#statusbar_parsetimes {
+.statusbar .statusbar-parsetime:hover > .statusbar-popout {
 	display: block;
 }

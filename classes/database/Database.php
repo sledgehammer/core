@@ -315,7 +315,7 @@ class Database extends \PDO {
 		if ($query_log_count != 0) { // zijn er queries onthouden?
 			if ($popup) {
 				echo '<div id="'.$id.'" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
-				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&#10062;</a>';
+				echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&times;</a>';
 			}
 			for ($i = 0; $i < $query_log_count; $i++) {
 				$log = $this->log[$i];
