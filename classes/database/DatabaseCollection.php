@@ -105,6 +105,10 @@ class DatabaseCollection extends Collection {
 	}
 
 	function count() {
+		if ($this->data === null && $this->sql instanceof SQL) {
+			$sql = $this->sql->select('COUNT(*)');
+			return intval(getDatabase($this->dbLink)->fetchValue($sql));
+		}
 		$this->dataToArray();
 		return count($this->data);
 	}

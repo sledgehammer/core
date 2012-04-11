@@ -825,10 +825,11 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * Het database object van een link opvragen.
-	 * @param string $link De naam van de link die opgevraagd moet worden
-	 * @todo betere locatie vinden dan de functions.php
-	 * @return Database
+	 * Get the database instance.
+	 * Will autoconnect to the database configured in "/application/settings/database.ini"
+	 *
+	 * @param string $link The link/connection identifier
+	 * @return \SledgeHammer\Database
 	 */
 	function getDatabase($link = 'default') {
 		if (isset(Database::$instances[$link])) {
@@ -1407,9 +1408,14 @@ exit [lindex $result 3]');
 	 * Allows direct method-chaining:
 	 *   select('*')->from('table')->where('column = "value"');
 	 *
+	 * @param array|string $columns
+	 * @param string ...
 	 * @return SQL
 	 */
 	function select($columns) {
+		if (func_num_args() > 1) {
+			$columns = func_get_args();
+		}
 		$sql = new SQL();
 		return $sql->select($columns);
 	}

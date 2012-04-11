@@ -123,7 +123,6 @@ class CollectionTest extends TestCase {
 		$apple = $fruits->where(array('name' => 'apple'));
 		$this->assertEquals($apple->count(), 1);
 		$this->assertFalse(property_exists($apple, 'sql'), 'Filtering after the initial query is done in php (in the Collection class)');
-				restore_error_handler();
 
 		$apple = $this->getDatabaseCollection()->where(array('name' => 'apple'));
 		$this->assertEquals($apple->count(), 1);

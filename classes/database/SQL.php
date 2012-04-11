@@ -37,6 +37,39 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Adds columns to the existing $this->columns
+	 *
+	 * @param array $columns
+	 * @param string ...
+	 */
+	function addColumns($columns) {
+		if (func_num_args() > 1) {
+			$columns = func_get_args();
+		} elseif (is_string($columns)) {
+			$columns = array($columns);
+		}
+		foreach ($columns as $alias => $column) {
+			$alias = $this->extractAlias($column, $alias, true); // Zit er een alias in de $column string?
+			if ($alias === null) {
+				$this->columns[] = $column;
+			} else {
+				if (isset($sql->columns[$alias])) {
+					notice('Overruling column(alias) "'.$alias.'"');
+				}
+				$this->columns[$alias] = $column;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param string $alias
+	 */
+	function removeColumn($alias) {
+		unset($sql->columns[$alias]);
+	}
+
+	/**
 	 * Set the $tables
 	 *
 	 * @param mixed $table
@@ -81,66 +114,52 @@ class SQL extends Object {
 	}
 
 	/**
-	 * Een array met kolommen toevoegen
+	 * Returns a new SQL with $sql->columns replaced by the given $columns
 	 *
 	 * @param array|string $columns ('AS value' => 'column name')
+	 * @param $...
 	 * @return SQL
 	 */
 	function select($columns) {
-		if (count($this->columns) != 0) {
-			notice('Overruling columns');
-		}
-		if (is_array($columns)) {
-			return $this->addColumns($columns);
-		} else {
-			return $this->addColumn($columns);
-		}
-	}
-
-	/**
-	 *
-	 * @param string $column
-	 * @param string $alias
-	 * @return SQL
-	 */
-	function addColumn($column, $alias = null) {
-		if ($alias === null) {
-			$columns = array($column);
-		} else {
-			$columns = array($alias => $column);
-		}
-		return $this->addColumns($columns);
-	}
-
-	/**
-	 *
-	 * @param array $columns
-	 * @return SQL
-	 */
-	function addColumns($columns) {
 		$sql = clone $this;
-		foreach ($columns as $alias => $column) {
-			$alias = $this->extractAlias($column, $alias, true); // Zit er een alias in de $column string?
-			if ($alias === null) {
-				$sql->columns[] = $column;
-			} else {
-				if (isset($sql->columns[$alias])) {
-					notice('Overruling column(alias) "'.$alias.'"');
-				}
-				$sql->columns[$alias] = $column;
-			}
+		$sql->columns = array();
+		if (is_array($columns)) {
+			$sql->addColumns($columns);
+		} else {
+			$sql->addColumns(func_get_args());
 		}
 		return $sql;
 	}
 
 	/**
+	 * Returns a new SQL with the given $column added to the $sql->columns
 	 *
+	 * @param string $column
 	 * @param string $alias
 	 * @return SQL
 	 */
-	function removeColumn($alias) {
+	function column($column, $alias = null) {
+		if ($alias === null) {
+			$columns = array($column);
+		} else {
+			$columns = array($alias => $column);
+		}
+		return $this->columns($columns);
+	}
+
+	/**
+	 * Returns a new SQL with the given $columns added to the $sql->columns
+	 *
+	 * @param array|string $columns
+	 * @param srting ...
+	 * @return SQL
+	 */
+	function columns($columns) {
 		$sql = clone $this;
-		unset($sql->columns[$alias]);
+		if (func_num_args() > 1) {
+			$columns = func_get_args();
+		}
+		$sql->addColumns($columns);
 		return $sql;
 	}
 
