@@ -161,24 +161,27 @@ class ErrorHandler {
 		$style = array(
 			'margin-top: 8px',
 			'margin-bottom: 16px',
-			'padding: 6px',
-			'background-color: #ffffe1',
-			'color: #000000;',
-			'font-family: Tahoma, sans-serif',
-			'font-size: 12px',
-			'line-height: 14px',
+			'padding: 13px 15px',
+			'background-color: #fcf8e3',
+			'color: #333;',
+			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
+			// reset styling
 			'text-align: left',
 			'text-shadow: none',
 			'overflow-x: auto',
 			'white-space: normal',
 		);
 		if (!$this->email) {
-			$style[] = 'border: 1px dashed #cfcfcf';
+			$style[] = 'border: 1px solid #eeb; border-radius: 4px';
 		}
 		if (strtolower($this->error_types[$type]) == 'notice') {
-			$message_color = '#0000cc';
+			// blue
+			$label_color = '#3a77cd';
+			$message_color =  '#02c';
 		} else {
-			$message_color = '#cc0000';
+			// red
+			$label_color = '#c94a48';
+			$message_color =  '#c00';
 		}
 		// Determine if a full report should be rendered
 		$showDetails = true;
@@ -195,9 +198,9 @@ class ErrorHandler {
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
-			echo '<img style="margin-right: 8px;margin-bottom: 4px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" />';
+			echo '<img style="margin-right:8px;margin-bottom:6px;min-width:32px;min-height:17px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" />';
 		}
-		echo '<span style="color:', $message_color, "\">\n";
+		echo '<span style="color:', $message_color, "\">";
 		if (is_array($message)) {
 			$message = 'Array';
 		}
@@ -217,7 +220,22 @@ class ErrorHandler {
 		if (strpos($message, '<span style="color:') === false) { // Alleen html van de syntax_hightlight functie toestaan, alle overige htmlkarakers escapen
 			$message_plain = htmlspecialchars($message_plain); // Vertaal alle html karakters
 		}
-		echo '<b>';
+		if ($showDetails) {
+			$label_style = '';
+		} else {
+			$label_style = ' style="'.implode(';', array(
+				'padding: 1px 3px 2px',
+				'font-size: 10px',
+				'line-height: 15px',
+				'text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25)',
+				'color: #fff',
+				'vertical-align: middle',
+				'white-space: nowrap',
+				'background-color: '.$label_color,
+				'border-radius: 3px',
+			)).'"';
+		}
+		echo "<b".$label_style.">";
 		if ($exception) {
 			if ($type == E_USER_ERROR) {
 				echo 'Uncaught ';
@@ -226,10 +244,10 @@ class ErrorHandler {
 		} else {
 			echo $this->error_types[$type];
 		}
-		echo ':</b> ', $message_plain, '</span>';
+		echo "</b>&nbsp;\n\n\t", $message_plain, "\n\n</span>";
 
 		if ($showDetails || $this->email) {
-			echo '<br clear="all" />', "\n";
+			echo '<br clear="all" />';
 			if ($information !== NULL && !empty($information)) {
 				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 				if (is_array($information)) {
