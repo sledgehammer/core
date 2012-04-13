@@ -159,8 +159,6 @@ class ErrorHandler {
 	 */
 	function render($type, $message = NULL, $information = NULL) {
 		$style = array(
-			'margin-top: 8px',
-			'margin-bottom: 16px',
 			'padding: 13px 15px',
 			'background-color: #fcf8e3',
 			'color: #333',
@@ -171,8 +169,9 @@ class ErrorHandler {
 			'overflow-x: auto',
 			'white-space: normal',
 		);
+
 		if (!$this->email) {
-			$style[] = 'border: 1px solid #eeb; border-radius: 4px';
+			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 2px 18px 2px';
 		}
 		if (strtolower($this->error_types[$type]) == 'notice') {
 			// blue
