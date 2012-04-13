@@ -163,11 +163,11 @@ class ErrorHandler {
 			'margin-bottom: 16px',
 			'padding: 13px 15px',
 			'background-color: #fcf8e3',
-			'color: #333;',
+			'color: #333',
 			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
+			'text-shadow: 0 1px 0 #fff',
 			// reset styling
 			'text-align: left',
-			'text-shadow: none',
 			'overflow-x: auto',
 			'white-space: normal',
 		);

@@ -740,10 +740,10 @@ namespace SledgeHammer {
 		}
 		$colorCodes = array(
 			'string' => '#808080',
-			'number' => '#ff0000',
+			'number' => '#f00',
 			'constant' => '#ff8000',
 			'resource' => '#408040',
-			'method' => '#0000ff',
+			'method' => '#00f',
 			'class' => '#800080',
 			'attribute' => '#804040',
 			'operator' => '#008000',

@@ -30,31 +30,34 @@ class Dump extends Object {
 	 * De een gekleurde var_dump van de variabele weergeven
 	 */
 	static function render_dump($variable, $trace = false) {
-		$dump_style = array(
-			'font: 12px Courier, monospace',
-			'color: #008000', /* kleur van een operator*/
-			'border: 1px dashed #CFCFCF',
-			'border-top: 0',
-			'margin: 0',
-			'margin-bottom: 16px',
-			'padding: 8px',
-			'line-height: 14px',
-			'background-color: #FBFBFB',
-			'text-align: left',
-			'text-shadow: none',
-			'overflow-x: auto',
-			);
 		$dumptrace_style = array(
-			'font: 12px Tahoma, sans-serif',
-			'border: 1px dashed #CFCFCF',
-			'background-color: #EEEEEE',
-			'margin-top: 8px',
-			'border-bottom: 0',
+			'font: 12px/22px Menlo, Monaco, \'Courier New\', monospace',
+			'border: 1px solid #E1E1E8',
+			'border-bottom: 1px solid #ECECF0',
+			'border-radius: 4px 4px 0 0',
+			'background-color: #F7F7F9',
+			'margin: 15px 2px 0 2px',
 			'padding:3px',
 			'padding-left: 9px',
-			'color: #777777',
-			'text-shadow: none',
+			'color: #777',
+			'text-shadow: 0 1px 0 #fff',
 		);
+		$dump_style = array(
+			'border: 1px solid #E1E1E8',
+			'border-top: 0',
+			'margin: 0 2px 18px 2px',
+			'padding: 8px 15px 15px 15px',
+			'line-height: 14px',
+			'background-color: #FBFBFC',
+			'border-radius: 0 0 4px 4px',
+			'font: 11px/1.3 Menlo, Monaco, \'Courier New\', monospace',
+			'color: #639191', /* kleur van een operator*/
+			'text-shadow: 0 1px 0 #fff',
+			// reset
+			'text-align: left',
+			'overflow-x: auto',
+		);
+
 		echo '<div style="'.implode(';', $dumptrace_style).'">';
 		if ($trace) {
 			echo $trace;
