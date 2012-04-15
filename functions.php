@@ -675,7 +675,6 @@ namespace SledgeHammer {
 		if ($datatype === NULL) {
 			$datatype = gettype($variable);
 		}
-		$elements = false;
 		switch ($datatype) {
 
 			case 'string':
@@ -739,15 +738,15 @@ namespace SledgeHammer {
 			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
 		}
 		$colorCodes = array(
-			'string' => '#808080',
-			'number' => '#f00',
-			'constant' => '#ff8000',
-			'resource' => '#408040',
-			'method' => '#00f',
-			'class' => '#800080',
-			'attribute' => '#804040',
-			'operator' => '#008000',
-			'comment' => '#008080',
+			'string' => '#777',
+			'number' => '#d14',
+			'constant' => '#f83',
+			'resource' => '#484',
+			'method' => '#41d',
+			'class' => '#808',
+			'attribute' => '#844',
+			'operator' => 'teal',
+			'comment' => '#088',
 		);
 		return $html.' style="color:'.$colorCodes[$color].'">'.$label.'</span>';
 	}

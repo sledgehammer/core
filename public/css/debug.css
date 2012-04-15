@@ -57,21 +57,23 @@
  }
 
 /* Statusbar styling */
-.statusbar, .statusbarcache {
+.statusbar, .statusbar-cache {
 	color: #888;
-	font: normal 10px/18px Monaco,sans-serif;
-	text-shadow: none;
-	padding: .2em 0 0 0;
+	font: normal 10px/22px Monaco,sans-serif;
+	font-smooting: none;
+	text-shadow: 0 1px 0 white;
+	padding: 0 0 0;
 	margin: 5px 0 0 0;
-	border-top: 1px solid #CCCCCC;
-	background: #F5F5F5;
+	background: #fbfbfc;
 	text-align: center;
 	clear: both;
 	position: fixed;
-	left: 0;
 	bottom: 0;
-	right: 0;
+	left: 0px;
+	right: 0px;
 	z-index: 5000;
+	border: 1px solid #e1e1e8;
+	box-shadow: 0 2px 10px rgba(0,0,0, 0.3);
 }
 .statusbar a {
 	color: #888;
@@ -81,18 +83,25 @@
 .statusbar a:hover {
 	color: #555;
 }
-.statusbar .statusbar_hide {
-	color: #888;
-	float:right;
-	margin-right: 6px;
-	font: 18px/12px sans-serif;
+.statusbar .statusbar-close {
+	position: absolute;
+	right: 10px;
+	bottom: 4px;
+	width: 14px;
+	height: 14px;
+	font: 14px/12px sans-serif;
+	color: #fff;
+	background: #ddd;
+	text-decoration: none;
+	text-align: center;
+	border-radius: 7px;
+}
+.statusbar .statusbar-close:hover {
+	color: #fff;
+	background: #bbb;
 	text-decoration: none;
 }
-.statusbar .statusbar_hide:hover {
-	color: #555;
-	text-decoration: none;
-}
-.statusbarcache {
+.statusbar-cache {
 	border-bottom: 0;
 	background: #f0f0f0;
 }
@@ -104,8 +113,8 @@
 	position: absolute;
 	bottom: 17px;
 	left: -8px;
-	background: #F5F5F5;
-	border: 1px solid #CCCCCC;
+	background: #fbfbfc;
+	border: 1px solid #e1e1e8;
 	border-bottom: 0;
 	border-radius: 8px 8px 0 0;
 	white-space: nowrap;

@@ -9,17 +9,19 @@
 namespace SledgeHammer;
 class Dump extends Object {
 
-	private
-		$variable,
-		$trace;
+	private $variable;
+	private $trace;
 
 	function __construct($variable = NULL) {
 		$this->variable = $variable;
 		$trace = debug_backtrace();
 		$file = $trace[0]['file'];
 		$line = $trace[0]['line'];
-		$file_short = str_replace(PATH, '', $file);
-		$this->trace = 'new '.__CLASS__.'(<strong>'.self::get_variable_name($file, $line).'</strong>) in <strong>'.$file_short.'</strong> on line <strong>'.$line.'</strong>';
+		$this->trace = array(
+			'invocation' => 'new '.__CLASS__,
+			'file' => $file,
+			'line' => $line,
+		);
 	}
 
 	function render() {
@@ -29,43 +31,27 @@ class Dump extends Object {
 	/**
 	 * De een gekleurde var_dump van de variabele weergeven
 	 */
-	static function render_dump($variable, $trace = false) {
-		$dumptrace_style = array(
-			'font: 12px/22px Menlo, Monaco, \'Courier New\', monospace',
-			'border: 1px solid #E1E1E8',
-			'border-bottom: 1px solid #ECECF0',
-			'border-radius: 4px 4px 0 0',
-			'background-color: #F7F7F9',
-			'margin: 15px 2px 0 2px',
-			'padding:3px',
-			'padding-left: 9px',
-			'color: #777',
-			'text-shadow: 0 1px 0 #fff',
-		);
-		$dump_style = array(
-			'border: 1px solid #E1E1E8',
+	static function render_dump($variable, $trace = null) {
+		self::render_trace($trace);
+
+		$style = array(
+			'border: 1px solid #e1e1e8',
 			'border-top: 0',
-			'margin: 0 2px 18px 2px',
-			'padding: 8px 15px 15px 15px',
+			'margin: 0 5px 18px 5px',
+			'padding: 12px 15px 15px 15px',
 			'line-height: 14px',
-			'background-color: #FBFBFC',
+			'background-color: #fbfbfc',
 			'border-radius: 0 0 4px 4px',
-			'font: 11px/1.3 Menlo, Monaco, \'Courier New\', monospace',
-			'color: #639191', /* kleur van een operator*/
-			'text-shadow: 0 1px 0 #fff',
+			'font: 10px/13px Monaco, monospace',
+			'color: teal', /* kleur van een operator*/
+			'font-smooting: none',
 			// reset
+			'text-shadow: none',
 			'text-align: left',
 			'overflow-x: auto',
 		);
 
-		echo '<div style="'.implode(';', $dumptrace_style).'">';
-		if ($trace) {
-			echo $trace;
-		} else {
-			self::trace();
-		}
-		echo "</div>\n";
-		echo "\n<pre style=\"".implode(';', $dump_style) ."\">\n";
+		echo "<pre style=\"".implode(';', $style) ."\">\n";
 		$old_value = ini_get('html_errors');
 		ini_set('html_errors', false); // Hierdoor is Dump compatible met de xdebug module
 		ob_start();
@@ -236,31 +222,63 @@ class Dump extends Object {
 	/**
 	 * Achterhaald het bestand en regelnummer waarvan de dump functie is aangeroepen
 	 */
-	private static function trace() {
-		$trace = debug_backtrace();
-		for($i = count($trace) - 1; $i >= 0 ; $i--) {
-			if (isset($trace[$i]['function']) && strtolower($trace[$i]['function']) == 'dump') {
-				if (isset($trace[$i]['file'])) {
-					// Parameter achterhalen
-					$file = $trace[$i]['file'];
-					$line = $trace[$i]['line'];
-					$file_short = str_replace(PATH, '', $file);
-					echo 'dump(<strong>', htmlentities(self::get_variable_name($file, $line)), '</strong>) in <strong>/', str_replace('\\', '/', $file_short), '</strong> on line <strong>', $trace[$i]['line'], '</strong>.';
-					return;
+	private static function render_trace($trace = null) {
+		if ($trace === null) {
+			$trace = array(
+				'invocation' => 'dump'
+			);
+			$backtrace = debug_backtrace();
+			for($i = count($backtrace) - 1; $i >= 0 ; $i--) {
+				if (isset($backtrace[$i]['function']) && strtolower($backtrace[$i]['function']) == 'dump') {
+					if (isset($backtrace[$i]['file'])) {
+						// Parameter achterhalen
+						$trace['file'] = $backtrace[$i]['file'];
+						$trace['line'] = $backtrace[$i]['line'];
+						break;
+					}
 				}
 			}
 		}
+		$style = array(
+			'font: 13px/22px \'Helvetica Neue\', Helvetica, sans-serif',
+			'border: 1px solid #e1e1e8',
+			'border-bottom: 1px solid #ececf0',
+			'border-radius: 4px 4px 0 0',
+			'background-color: #f7f7f9',
+			'margin: 15px 5px 0 5px',
+			'padding: 3px',
+			'padding-left: 9px',
+			'color: #777',
+			'text-shadow: 0 1px 0 #fff',
+		);
+		echo '<div style="'.implode(';', $style).'">';
+		echo $trace['invocation'], '(<span style="margin: 0 3px;">';
+
+		$file = file($trace['file']);
+		$line = $file[($trace['line'] - 1)];
+		$line = preg_replace('/.*dump\(/i', '', $line); // Alles voor de dump aanroep weghalen
+		$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
+		$argument = trim($argument);
+		if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
+			echo syntax_highlight($argument, 'attribute');
+		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
+			echo syntax_highlight($matches['function'], 'method'),'<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)$/i', $argument, $matches)) { // $object->attribute?
+			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['attribute'], 'attribute');
+		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
+			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['method'], 'method'),'<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+		} else {
+			echo '<span style="color:#333">', htmlentities($argument, ENT_COMPAT, Framework::$charset), '</span>';
+		}
+		echo '</span>)&nbsp; in /', str_replace('\\', '/', str_replace(PATH, '', $trace['file'])), ' on line ', $trace['line'];
+		echo "</div>\n";
 	}
 
 	/**
 	 * De naam van de variabele die aan de dump functie of constructor is meegegeven
 	 */
-	static private function get_variable_name($file, $line) {
-		$file = file($file);
-		$line = $file[$line -1];
-		$line = preg_replace('/.*dump\(/i', '', $line); // Alles voor de dump aanroep weghalen
-		$parameter_name = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
-		$parameter_name = trim($parameter_name);
+	static private function render_variable_name($file, $line) {
+
 		return $parameter_name;
 	}
 
@@ -281,14 +299,14 @@ class Dump extends Object {
 			case 2:
 				if (substr($parts[1], -1) == '"') { // Sinds php 5.3 is wordt ':protected' en ':private' NA de '"' gezet ipv ervoor
 					// php < 5.3
-					echo syntax_highlight(substr($parts[0], 1), 'attribute'), '<span style="font-size:10px">:',  substr($parts[1], 0, -1), '</span>';
+					echo syntax_highlight(substr($parts[0], 1), 'attribute'), '<span style="font-size:9px">:',  substr($parts[1], 0, -1), '</span>';
 				} else { // php >= 5.3
-					echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:10px">:',  $parts[1], '</span>';
+					echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px">:',  $parts[1], '</span>';
 				}
 				break;
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private
-				echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:10px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:',  $parts[2], '</span>';
+				echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:',  $parts[2], '</span>';
 				break;
 
 			default:

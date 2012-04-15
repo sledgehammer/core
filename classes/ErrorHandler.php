@@ -159,19 +159,19 @@ class ErrorHandler {
 	 */
 	function render($type, $message = NULL, $information = NULL) {
 		$style = array(
-			'padding: 13px 15px',
+			'padding: 13px 15px 15px 15px',
 			'background-color: #fcf8e3',
 			'color: #333',
 			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
-			'text-shadow: 0 1px 0 #fff',
 			// reset styling
+			'text-shadow: none',
 			'text-align: left',
 			'overflow-x: auto',
 			'white-space: normal',
 		);
 
 		if (!$this->email) {
-			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 2px 18px 2px';
+			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 5px 18px 5px';
 		}
 		if (strtolower($this->error_types[$type]) == 'notice') {
 			// blue
@@ -199,7 +199,7 @@ class ErrorHandler {
 		if ($showDetails) {
 			echo '<img style="margin-right:8px;margin-bottom:6px;min-width:32px;min-height:17px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" />';
 		}
-		echo '<span style="color:', $message_color, "\">";
+		echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, "\">";
 		if (is_array($message)) {
 			$message = 'Array';
 		}
