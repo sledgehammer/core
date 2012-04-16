@@ -20,6 +20,8 @@
 	margin: 0;
 	padding: 2px 7px;
 	font: 10px Monaco, monospace;
+	-webkit-font-smoothing: none;
+	font-smoothing: none;
 	white-space: pre-wrap;
 }
 .sledegehammer_querylog_sql:nth-child(odd) {
@@ -54,17 +56,17 @@
  .sledegehammer_querylog .execution_time {
 	margin-left: 10px;
 	font: italic 11px sans-serif;
+	-webkit-font-smoothing: auto;
+	font-smoothing: auto;
  }
 
 /* Statusbar styling */
 .statusbar, .statusbar-cache {
-	color: #888;
-	font: normal 10px/22px Monaco,sans-serif;
-	font-smooting: none;
-	text-shadow: 0 1px 0 white;
+	color: #141414;
+	font: normal 11px/26px Menlo, Monaco, monospace;
+	text-shadow: 0 1px 0 #eee;
 	padding: 0 0 0;
 	margin: 5px 0 0 0;
-	background: #fbfbfc;
 	text-align: center;
 	clear: both;
 	position: fixed;
@@ -72,33 +74,38 @@
 	left: 0px;
 	right: 0px;
 	z-index: 5000;
-	border: 1px solid #e1e1e8;
-	box-shadow: 0 2px 10px rgba(0,0,0, 0.3);
+	border-top: 1px solid #646464;
+	background: #b5b5b5;
+	background-image: -webkit-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
+	background-image:    -moz-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
+	background-image:     -ms-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
+	background-image:      -o-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
+	background-image:         linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
 }
 .statusbar a {
-	color: #888;
-	text-shadow: none;
+	color: #141414;
+	text-shadow: 0 1px 0 #eee;
 	text-decoration: underline;
 }
 .statusbar a:hover {
-	color: #555;
+	color: #000;
 }
 .statusbar .statusbar-close {
 	position: absolute;
-	right: 10px;
-	bottom: 4px;
+	left: 6px;
+	bottom: 6px;
 	width: 14px;
 	height: 14px;
-	font: 14px/12px sans-serif;
+	font: 13px/10px sans-serif;
 	color: #fff;
-	background: #ddd;
+	background: #808080;
 	text-decoration: none;
 	text-align: center;
 	border-radius: 7px;
 }
 .statusbar .statusbar-close:hover {
-	color: #fff;
-	background: #bbb;
+	color: #cdcdcd;
+	background: #5d5d5d;
 	text-decoration: none;
 }
 .statusbar-cache {
@@ -111,14 +118,14 @@
 .statusbar .statusbar-popout {
 	display: none;
 	position: absolute;
-	bottom: 17px;
-	left: -8px;
-	background: #fbfbfc;
-	border: 1px solid #e1e1e8;
+	bottom: 18px;
+	left: -2px;
+	background: #bfbfbf;
+	border: 1px solid #646464;
 	border-bottom: 0;
 	border-radius: 8px 8px 0 0;
 	white-space: nowrap;
-	line-height: 18px;
+	line-height: 22px;
 }
 
 .statusbar .statusbar-parsetime:hover > .statusbar-popout {

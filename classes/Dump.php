@@ -44,7 +44,8 @@ class Dump extends Object {
 			'border-radius: 0 0 4px 4px',
 			'font: 10px/13px Monaco, monospace',
 			'color: teal', /* kleur van een operator*/
-			'font-smooting: none',
+			'-webkit-font-smoothing: none',
+			'font-smoothing: none',
 			// reset
 			'text-shadow: none',
 			'text-align: left',
