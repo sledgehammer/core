@@ -33,9 +33,12 @@ class Framework {
 	 */
 	static function getModules($modulesPath = NULL) {
 		if ($modulesPath === NULL) {
-			$modulesPath = self::getPath();
+			$modulesPath = MODULES_DIR;
+			$applicationPath = APPLICATION_DIR;
+		} else {
+			$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
 		}
-		$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
+
 		if (isset(self::$cachedRequiredModules[$modulesPath])) {
 			return self::$cachedRequiredModules[$modulesPath];
 		}
@@ -222,16 +225,6 @@ class Framework {
 		}
 		return $modules;
 	}
-
-	/**
-	 * Het pad waar de sledgehammer modules in staan.
-	 *
-	 * @return string
-	 */
-	private static function getPath() {
-		return dirname(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR;
-	}
-
 }
 
 ?>

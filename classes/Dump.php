@@ -38,18 +38,19 @@ class Dump extends Object {
 			'border: 1px solid #e1e1e8',
 			'border-top: 0',
 			'margin: 0 5px 18px 5px',
-			'padding: 12px 15px 15px 15px',
+			'padding: 10px 15px 15px 15px',
 			'line-height: 14px',
-			'background-color: #fbfbfc',
+			'background: #fbfbfc',
 			'border-radius: 0 0 4px 4px',
 			'font: 10px/13px Monaco, monospace',
 			'color: teal', /* kleur van een operator*/
 			'-webkit-font-smoothing: none',
 			'font-smoothing: none',
+			'overflow-x: auto',
 			// reset
 			'text-shadow: none',
 			'text-align: left',
-			'overflow-x: auto',
+			'box-shadow: none',
 		);
 
 		echo "<pre style=\"".implode(';', $style) ."\">\n";
