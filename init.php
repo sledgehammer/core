@@ -17,7 +17,7 @@ define('SledgeHammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing lev
 error_reporting(E_MAX); // Activate the maximum error_level
 if (ini_get('date.timezone') == '' && DIRECTORY_SEPARATOR === '/') { // No timezone configured in php.ini?
 	error_log('"date.timezone" is not defined in your php.ini');
-	date_default_timezone_set(trim(`date +%Z`)); // Use the system's timezone
+	date_default_timezone_set(trim(`date +%z`)); // Use the system's timezone
 }
 define('SledgeHammer\CORE_DIR', dirname(__FILE__).'/');
 require_once(CORE_DIR.'functions.php');

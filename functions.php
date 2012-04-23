@@ -290,7 +290,7 @@ namespace SledgeHammer {
 		if (count($array) == 0) {
 			return '';
 		}
-		return $quote.mplode($quote.$glue.$quote, $array).$quote;
+		return $quote.implode($quote.$glue.$quote, $array).$quote;
 	}
 
 	/**
