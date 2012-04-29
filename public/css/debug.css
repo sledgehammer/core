@@ -76,11 +76,11 @@
 	z-index: 5000;
 	border-top: 1px solid #646464;
 	background: #b5b5b5;
-	background-image: -webkit-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
-	background-image:    -moz-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
-	background-image:     -ms-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
-	background-image:      -o-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
-	background-image:         linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
+	background-image:    -moz-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
+	background-image:     -ms-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
+	background-image:      -o-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
+	background-image:         linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
 }
 .statusbar a {
 	color: #141414;
@@ -118,7 +118,7 @@
 .statusbar .statusbar-popout {
 	display: none;
 	position: absolute;
-	bottom: 18px;
+	bottom: 19px;
 	left: -2px;
 	background: #bfbfbf;
 	border: 1px solid #646464;

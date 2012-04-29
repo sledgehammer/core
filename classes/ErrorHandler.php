@@ -6,7 +6,6 @@
  * @package Core
  */
 namespace SledgeHammer;
-
 class ErrorHandler {
 
 	/**
@@ -173,14 +172,34 @@ class ErrorHandler {
 		if (!$this->email) {
 			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 5px 18px 5px';
 		}
-		if (strtolower($this->error_types[$type]) == 'notice') {
-			// blue
-			$label_color = '#3a77cd';
-			$message_color =  '#02c';
-		} else {
-			// red
-			$label_color = '#c94a48';
-			$message_color =  '#c00';
+		switch ($type) {
+			case E_NOTICE:
+			case E_USER_NOTICE:
+				$offset = ' -52px';
+				$label_color = '#3a77cd'; // blue
+				$message_color = '#02c';
+				break;
+			case E_WARNING:
+			case E_USER_WARNING:
+				$offset = ' -26px';
+				$label_color = '#f89406'; // orange
+				$message_color = '#d46d11';
+				break;
+			case E_DEPRECATED:
+			case E_USER_DEPRECATED:
+				$offset = ' -78px';
+				$label_color = '#999'; // gray
+				$message_color = '#333';
+				break;
+			case E_STRICT:
+				$offset = ' -104px';
+				$label_color = '#777bb4'; // purple
+				$message_color = '#50537f';
+				break;
+			default:
+				$offset = '';
+				$label_color = '#c94a48'; // red
+				$message_color = '#c00';
 		}
 		// Determine if a full report should be rendered
 		$showDetails = true;
@@ -197,7 +216,7 @@ class ErrorHandler {
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
-			echo '<img style="margin-right:8px;margin-bottom:6px;min-width:32px;min-height:17px" src="http://bfanger.nl/core/ErrorHandler/', strtolower($this->error_types[$type]), '.gif" alt="" align="left" />';
+			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align:top; margin: 0 6px 3px 0; background: url(\'http://bfanger.nl/core/ErrorHandler.png\')'.$offset.'"></span>';
 		}
 		echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, "\">";
 		if (is_array($message)) {
@@ -223,16 +242,16 @@ class ErrorHandler {
 			$label_style = '';
 		} else {
 			$label_style = ' style="'.implode(';', array(
-				'padding: 1px 3px 2px',
-				'font-size: 10px',
-				'line-height: 15px',
-				'text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25)',
-				'color: #fff',
-				'vertical-align: middle',
-				'white-space: nowrap',
-				'background-color: '.$label_color,
-				'border-radius: 3px',
-			)).'"';
+						'padding: 1px 3px 2px',
+						'font-size: 10px',
+						'line-height: 15px',
+						'text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25)',
+						'color: #fff',
+						'vertical-align: middle',
+						'white-space: nowrap',
+						'background-color: '.$label_color,
+						'border-radius: 3px',
+					)).'"';
 		}
 		echo "<b".$label_style.">";
 		if ($exception) {
@@ -285,7 +304,7 @@ class ErrorHandler {
 		} else {
 			$location = $this->location();
 			if ($location !== false) {
-				echo '&nbsp;&nbsp; in <b>', $location['file'], '</b> on line <b>',$location['line'],'</b>';
+				echo '&nbsp;&nbsp; in <b>', $location['file'], '</b> on line <b>', $location['line'], '</b>';
 			}
 		}
 		echo '</div>';
@@ -351,7 +370,7 @@ class ErrorHandler {
 			} else {
 				ob_end_clean(); // buffer niet weergeven
 			}
-		} elseif (ob_get_level() === 0){
+		} elseif (ob_get_level() === 0) {
 			flush();
 		}
 		$this->isProcessing = false;
@@ -562,7 +581,8 @@ class ErrorHandler {
 						echo '&nbsp;&nbsp;'.syntax_highlight($key2).' => ', syntax_highlight($value2, null, 2048), "<br />\n";
 					}
 				}
-				echo ")<br />\n";;
+				echo ")<br />\n";
+				;
 			} else {
 				echo '<b>'.$key.':</b> ', syntax_highlight($value, null, 2048), "<br />\n";
 			}
