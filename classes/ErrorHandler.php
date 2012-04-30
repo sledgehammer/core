@@ -177,7 +177,7 @@ class ErrorHandler {
 			case E_USER_NOTICE:
 				$offset = ' -52px';
 				$label_color = '#3a77cd'; // blue
-				$message_color = '#02c';
+				$message_color = '#3a77cd';
 				break;
 			case E_WARNING:
 			case E_USER_WARNING:
@@ -216,7 +216,7 @@ class ErrorHandler {
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
-			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align:top; margin: 0 6px 3px 0; background: url(\'http://bfanger.nl/core/ErrorHandler.png\')'.$offset.'"></span>';
+			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'http://bfanger.nl/core/ErrorHandler.png\')'.$offset.'"></span>';
 		}
 		echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, "\">";
 		if (is_array($message)) {
@@ -265,7 +265,7 @@ class ErrorHandler {
 		echo "</b>&nbsp;\n\n\t", $message_plain, "\n\n</span>";
 
 		if ($showDetails || $this->email) {
-			echo '<br clear="all" />';
+			echo '<hr style="height: 1px; background: #eeb; border: 0;margin: 6px -2px 12px -2px;" />';
 			if ($information !== NULL && !empty($information)) {
 				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 				if (is_array($information)) {
@@ -362,7 +362,7 @@ class ErrorHandler {
 			$headers .= "Content-type: text/html; charset=iso-8859-1\n";
 			$headers .= 'From: '.$this->from_email()."\n";
 
-			if (function_exists('mail') && !mail($this->email, $this->error_types[$type].': '.$message, '<html><body style="background-color: #ffffe1">'.ob_get_contents()."</body></html>\n", $headers)) {
+			if (function_exists('mail') && !mail($this->email, $this->error_types[$type].': '.$message, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
 				error_log('Het foutrapport kon niet per mail verstuurd worden.');
 			}
 			if ($this->html) {
