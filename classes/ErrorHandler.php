@@ -158,7 +158,7 @@ class ErrorHandler {
 	 */
 	function render($type, $message = NULL, $information = NULL) {
 		$style = array(
-			'padding: 13px 15px 15px 15px',
+			'padding: 10px 15px 15px 15px',
 			'background-color: #fcf8e3',
 			'color: #333',
 			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
@@ -265,7 +265,7 @@ class ErrorHandler {
 		echo "</b>&nbsp;\n\n\t", $message_plain, "\n\n</span>";
 
 		if ($showDetails || $this->email) {
-			echo '<hr style="height: 1px; background: #eeb; border: 0;margin: 6px -2px 12px -2px;" />';
+			echo '<hr style="height: 1px; background: #eeb; border: 0;margin: 7px 0px 12px -1px;" />';
 			if ($information !== NULL && !empty($information)) {
 				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 				if (is_array($information)) {
