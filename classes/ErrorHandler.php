@@ -157,21 +157,7 @@ class ErrorHandler {
 	 * @param mixed $information
 	 */
 	function render($type, $message = NULL, $information = NULL) {
-		$style = array(
-			'padding: 10px 15px 15px 15px',
-			'background-color: #fcf8e3',
-			'color: #333',
-			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
-			// reset styling
-			'text-shadow: none',
-			'text-align: left',
-			'overflow-x: auto',
-			'white-space: normal',
-		);
-
-		if (!$this->email) {
-			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 5px 18px 5px';
-		}
+		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
 		switch ($type) {
 			case E_NOTICE:
 			case E_USER_NOTICE:
@@ -201,6 +187,19 @@ class ErrorHandler {
 				$label_color = '#c94a48'; // red
 				$message_color = '#c00';
 		}
+		$backtrace = debug_backtrace(); // @todo Implement a more effient way to detect exceptions
+		$exception = false;
+		if (isset($backtrace[3]['function']) && $backtrace[3]['function'] == 'handle_exception' && $backtrace[3]['args'][0] instanceof \Exception) {
+			$type = 'EXCEPTION';
+			$exception = $backtrace[3]['args'][0];
+			$message = $exception->getMessage();
+			$offset = '';
+			$label_color = '#c94a48'; // red
+			$message_color = '#c00';
+			if ($exception instanceof InfoException) {
+				$information = $exception->getInformation();
+			}
+		}
 		// Determine if a full report should be rendered
 		$showDetails = true;
 		if ($this->detail_limit !== 'NO_LIMIT') {
@@ -213,7 +212,23 @@ class ErrorHandler {
 				$this->limits['backtrace'][$type]--;
 			}
 		}
-		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
+		$style = array(
+			'padding: 10px 15px 15px 15px',
+			'background-color: #fcf8e3',
+			'color: #333',
+			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
+			// reset styling
+			'text-shadow: none',
+			'text-align: left',
+			'overflow-x: auto',
+			'white-space: normal',
+		);
+		if ($showDetails === false) {
+			$style[] = 'padding-top: 14px';
+		}
+		if (!$this->email) {
+			$style[] = 'border: 1px solid #eeb; border-radius: 4px; margin: 15px 5px 18px 5px';
+		}
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
 			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'http://bfanger.nl/core/ErrorHandler.png\')'.$offset.'"></span>';
@@ -222,15 +237,7 @@ class ErrorHandler {
 		if (is_array($message)) {
 			$message = 'Array';
 		}
-		$backtrace = debug_backtrace(); // @todo Implement a more effient way to detect exceptions
-		$exception = false;
-		if (isset($backtrace[3]['function']) && $backtrace[3]['function'] == 'handle_exception' && $backtrace[3]['args'][0] instanceof \Exception) {
-			$exception = $backtrace[3]['args'][0];
-			$message = $exception->getMessage();
-			if ($exception instanceof InfoException) {
-				$information = $exception->getInformation();
-			}
-		}
+
 		if ($information === NULL && strpos($message, 'Missing argument ') === 0) {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
 		}
