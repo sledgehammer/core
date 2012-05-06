@@ -1,4 +1,6 @@
 <?php
+namespace SledgeHammer;
+const SORT_NATURAL = -1;
 /**
  * Collection: Array on Steriods
  * Provides a filtering, sorting, events and other utility functions for collections.
@@ -7,10 +9,6 @@
  *
  * @package Core
  */
-
-namespace SledgeHammer;
-
-const SORT_NATURAL = -1;
 class Collection extends Observable implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
@@ -217,23 +215,31 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->orderBy($path, $method)->reverse();
 	}
 
+	/**
+	 * Return a new Collection without the first x items.
+	 *
+	 * @param int $offset
+	 * @return Collection
+	 */
 	function skip($offset) {
 		$this->dataToArray();
 		return new Collection(array_slice($this->data, $offset));
 	}
 
-	function take($lenght) {
+	/**
+	 * Return a new Collection with only the first x items.
+	 *
+	 * @param int $length
+	 * @return Collection
+	 */
+	function take($length) {
 		$this->dataToArray();
-		return new Collection(array_slice($this->data, 0, $lenght));
-	}
-
-	function limit($offset, $length) {
-		$this->dataToArray();
-		return new Collection(array_slice($this->data, $offset, $lenght));
+		return new Collection(array_slice($this->data, 0, $length));
 	}
 
 	/**
-	 * Return a new collection in the reverse order
+	 * Return a new collection in the reverse order.
+	 *
 	 * @return Collection
 	 */
 	function reverse() {
@@ -297,10 +303,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	function __clone() {
-		if (is_array($this->data) == false) {
-			// $this->data = clone $this->data; // doesn't clone the data (in case of the ArrayIterator)
-			$this->data = iterator_to_array($this->data); // Still doesn't work with Traversables like DirectoryIterator
-		}
+		$this->dataToArray();
 	}
 
 	// Iterator functions
@@ -381,7 +384,8 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
-	 * Convert this->data to an array
+	 * Convert this->data to an array.
+	 *
 	 * @return void
 	 */
 	protected function dataToArray() {

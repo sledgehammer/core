@@ -1,12 +1,11 @@
 <?php
+namespace SledgeHammer;
 /**
  * DatabaseCollection a Collection interface to a database result.
  * Inspired by "Linq to SQL"
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class DatabaseCollection extends Collection {
 
 	/**
@@ -22,6 +21,16 @@ class DatabaseCollection extends Collection {
 	function __construct($sql, $dbLink = 'default') {
 		$this->sql = $sql;
 		$this->dbLink = $dbLink;
+	}
+
+	function __clone() {
+		if ($this->data !== null) {
+			parent::__clone();
+			return;
+		}
+		if (is_object($this->sql)) {
+			$this->sql = clone $this->sql;
+		}
 	}
 
 	/**
@@ -88,6 +97,32 @@ class DatabaseCollection extends Collection {
 			}
 		}
 		return new DatabaseCollection($sql, $this->dbLink);
+	}
+
+	function skip($offset) {
+		if ($this->data === null && is_string($this->sql) === false) {
+			$sql = clone $this->sql;
+			$sql->offset += $offset; // Add to the current offset.
+			if ($sql->limit === false) {
+				return new DatabaseCollection($sql, $this->dbLink);
+			} else {
+				$sql->limit -= $offset;
+				if ($sql->limit <= 0) { // Will all entries be skipped?
+					return new Collection(array()); // return an empty collection
+				}
+				return new DatabaseCollection($sql, $this->dbLink);
+			}
+		}
+		return parent::skip($offset);
+	}
+
+	function take($length) {
+		if ($this->data === null && is_string($this->sql) === false) {
+			if ($this->sql->limit === false || $this->sql->limit >= $length) {
+				return new DatabaseCollection($this->sql->limit($length), $this->dbLink);
+			}
+		}
+		return parent::take($length);
 	}
 
 	/**
