@@ -16,7 +16,7 @@ class DatabaseTest extends DatabaseTestCase {
 
 	function test_connect() {
 		$dbDsn = new Database('mysql:host=localhost', 'root');
-		$dbUrl = new Database('mysql://root@localhost');
+		$dbUrl = new Database('mysql://root:root@localhost');
 		$this->assertTrue(true, 'No exceptions were thrown');
 	}
 

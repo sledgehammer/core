@@ -56,8 +56,8 @@
  .sledegehammer_querylog .execution_time {
 	margin-left: 10px;
 	font: italic 11px sans-serif;
-	-webkit-font-smoothing: auto;
-	font-smoothing: auto;
+	-webkit-font-smoothing: antialiased;
+	font-smoothing: antialiased;
  }
 
 /* Statusbar styling */
