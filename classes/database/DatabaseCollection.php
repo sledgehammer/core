@@ -99,6 +99,24 @@ class DatabaseCollection extends Collection {
 		return new DatabaseCollection($sql, $this->dbLink);
 	}
 
+	function orderBy($path, $method = SORT_REGULAR) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
+			$sql = clone $this->sql;
+			array_key_unshift($sql->order_by, $path, 'ASC');
+			return new DatabaseCollection($sql, $this->dbLink);
+		}
+		return parent::orderBy($path, $method);
+	}
+
+	function orderByDescending($path, $method = SORT_REGULAR) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
+			$sql = clone $this->sql;
+			array_key_unshift($sql->order_by, $path, 'DESC');
+			return new DatabaseCollection($sql, $this->dbLink);
+		}
+		return parent::orderBy($path, $method);
+	}
+
 	function skip($offset) {
 		if ($this->data === null && is_string($this->sql) === false) {
 			$sql = clone $this->sql;

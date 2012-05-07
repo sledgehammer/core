@@ -157,6 +157,21 @@ namespace SledgeHammer {
 	}
 
 	/**
+	 * Prepend/moves the value to the beginning of the array using the specified $key.
+	 *
+	 * @param array $array
+	 * @param string $key
+	 * @param mixed $value
+	 * @return void
+	 */
+	function array_key_unshift(&$array, $key, $value = null) {
+		unset($array[$key]);
+		$reversed = array_reverse($array, true);
+		$reversed[$key] = $value;
+		$array = array_reverse($reversed , true);
+	}
+
+	/**
 	 * Detect mimetype based on file-extention
 	 * @see core/settings/mime_types.ini for "extention to mimetype" translations
 
@@ -1393,7 +1408,6 @@ exit [lindex $result 3]');
 					if ($output === "Password:\r\n") {
 						$showOutput = true;
 					}
-
 				}
 			}
 		}
