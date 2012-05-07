@@ -82,6 +82,10 @@
 	background-image:      -o-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
 	background-image:         linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
 }
+.statusbar-placeholder {
+	display: block;
+	height: 27px;
+}
 .statusbar a {
 	color: #141414;
 	text-shadow: 0 1px 0 #eee;
