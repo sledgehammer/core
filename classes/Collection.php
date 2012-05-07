@@ -1,6 +1,9 @@
 <?php
 namespace SledgeHammer;
-const SORT_NATURAL = -1;
+if (defined('SORT_NATURAL') === false) {
+	define('SORT_NATURAL', -1);
+}
+define('SORT_NATURAL_CI', -2); // Case insensitive nartural sort
 /**
  * Collection: Array on Steriods
  * Provides a filtering, sorting, events and other utility functions for collections.
@@ -19,7 +22,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * @var array Events
 	 */
-
 	protected $events = array(
 		'changing' => array(),
 		'changed' => array(),
@@ -187,12 +189,13 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			$counter++;
 		}
 		// Sort the values
-		if ($method == SORT_NATURAL) {
+		if ($method === SORT_NATURAL) {
 			natsort($sortOrder);
+		} elseif ($method === SORT_NATURAL_CI) {
+			natcasesort($sortOrder);
 		} else {
 			asort($sortOrder, $method);
 		}
-		//
 		$sorted = array();
 		foreach (array_keys($sortOrder) as $key) {
 			if ($indexed) {
