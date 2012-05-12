@@ -1,21 +1,67 @@
 <?php
 /**
- * Verantwoordelijk voor het on-the-fly inladen en declareren van classes en interfaces.
- * Dit verbeterd parsetijd/geheugenverbruik aanzienlijk, alleen de bestanden die je nodig hebt worden ge-include.
+ * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
  *
  * @package Core
  */
 namespace SledgeHammer;
 class PHPAnalyzer extends Object {
 
+	/**
+	 * @var array Deflared classes.
+	 * array(
+	 *   $fullclassname => array(
+	 *     'namespace' => $namespace,
+	 *     'class' => $classname,
+	 *     'extends' => $fullsuperclass,
+	 *     'implements' => array($interface, ...),
+	 *     'methods' => array(
+	 *       $methodname => array(
+	 *         $parameter => $defaultvalue,
+	 *         ...
+	 *       ),
+	 *       ...
+	 *     ),
+	 *     'filename' => $fullpath,
+	 *   ),
+	 *   ...
+	 * )
+	 */
 	public $classes = array();
 
+	/**
+	 * @var array Deflared classes.
+	 * array(
+	 *   $fullinterfacename => array(
+	 *     'namespace' => $namespace,
+	 *     'interface' => $interfacename,
+	 *     'extends' => array($interface, ...),
+	 *     'methods' => array(
+	 *       $methodname => array(
+	 *         $parameter => $defaultvalue,
+	 *         ...
+	 *       ),
+	 *       ...
+	 *     ),
+	 *     'filename' => $fullpath,
+	 *   ),
+	 *   ...
+	 * )
+	 */
 	public $interfaces = array();
 
+	/**
+	 * @var array
+	 * array(
+	 *   $fulldefinitionname => array(
+	 *     $fullpath => array($linenr, ...),
+	 *     ...
+	 *   )
+	 * )
+	 */
 	public $usedDefinitions = array();
 
 	/**
-	 *
 	 * @var AutoLoader
 	 */
 	private $autoLoader;
@@ -34,7 +80,7 @@ class PHPAnalyzer extends Object {
 		$definition = array(
 			'level' => -1
 		);
-		$globalFunctions =array();
+		$globalFunctions = array();
 		$functions = &$globalFunctions;
 		$level = 0;
 		foreach ($tokens as $token) {
@@ -58,7 +104,7 @@ class PHPAnalyzer extends Object {
 					$uses[$namespaceAlias] = $value;
 					break;
 
-				case 'T_USE_AS':
+				case 'T_USE_ALIAS':
 					$uses[$value] = $uses[$namespaceAlias];
 					unset($uses[$namespaceAlias]);
 					break;
@@ -87,7 +133,6 @@ class PHPAnalyzer extends Object {
 						'implements' => array(),
 						'methods' => array(),
 						'level' => $level
-
 					);
 					$definition = &$definitions[count($definitions) - 1];
 					break;
@@ -165,16 +210,15 @@ class PHPAnalyzer extends Object {
 			$identifier = $definition['identifier'];
 			unset($definition['identifier'], $definition['level']);
 			$definition['filename'] = $filename;
-			/*
-			$duplicate = false;
-			if (isset($this->classes[$identifier])) {
-				$duplicate = $this->classes[$identifier];
-			} elseif (isset($this->interfaces[$identifier])) {
-				$duplicate = $this->interfaces[$identifier];
-			}
-			if ($duplicate) {
-				$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
-			}*/
+//			$duplicate = false;
+//			if (isset($this->classes[$identifier])) {
+//				$duplicate = $this->classes[$identifier];
+//			} elseif (isset($this->interfaces[$identifier])) {
+//				$duplicate = $this->interfaces[$identifier];
+//			}
+//			if ($duplicate) {
+//				$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
+//			}
 			switch ($definition['type']) {
 
 				case 'CLASS':
@@ -204,6 +248,12 @@ class PHPAnalyzer extends Object {
 		}
 	}
 
+	/**
+	 * Extract definition information.
+	 *
+	 * @param string $definition
+	 * @return array
+	 */
 	function getInfo($definition) {
 		// Check analyzed definitions
 		if (isset($this->classes[$definition])) {
@@ -225,8 +275,14 @@ class PHPAnalyzer extends Object {
 			return $this->interfaces[$definition];
 		}
 		throw new \Exception('Definition "'.$definition.'" is not found');
-
 	}
+
+	/**
+	 * Use PHP's Reflection classes to extract definition information.
+	 *
+	 * @param string $definition Class or Interace name
+	 * @return array
+	 */
 	function getInfoWithReflection($definition) {
 		if (class_exists($definition) == false && interface_exists($definition) == false) {
 			//throw new \Exception('Definition "'.$definition.'" is unknown');
@@ -260,7 +316,7 @@ class PHPAnalyzer extends Object {
 				$parameter = $reflectionParameter->name;
 				$info['methods'][$method][$parameter] = null;
 				if ($reflectionParameter->isDefaultValueAvailable()) {
-					$value =  $reflectionParameter->getDefaultValue();
+					$value = $reflectionParameter->getDefaultValue();
 					$info['methods'][$method][$parameter] = $value;
 				}
 			}
@@ -274,7 +330,6 @@ class PHPAnalyzer extends Object {
 	}
 
 	/**
-	 *
 	 * @param AutoLoader $autoLoader
 	 */
 	function setAutoLoader(AutoLoader $autoLoader) {
@@ -287,9 +342,9 @@ class PHPAnalyzer extends Object {
 	 */
 	private function getAutoLoader() {
 		if ($this->autoLoader === null) {
-			return 	Framework::$autoLoader;
-
+			return Framework::$autoLoader;
 		}
+		return $this->autoLoader;
 	}
 
 	/**
@@ -331,5 +386,7 @@ class PHPAnalyzer extends Object {
 	private function addUsedIn($class, $filename, $line) {
 		@$this->usedDefinitions[$class][$filename][] = $line;
 	}
+
 }
+
 ?>
