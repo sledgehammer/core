@@ -10,7 +10,7 @@ namespace SledgeHammer;
  *     'click' => array()
  *   );
  *   // optional method that gets executed when the 'click' event is fired.
- *	 protected function onClick($sender) {}
+ * 	 protected function onClick($sender) {}
  * }
  *
  * $button = new Button();
@@ -35,6 +35,7 @@ abstract class Observable extends Object {
 	 * @var array Storage array for the properties with KVO (Key Value Observer) listeners
 	 */
 	private $_properties = array();
+
 	/**
 	 * @abstract
 	 * @var array  The events/listeners. array($event1 => array($listener1, ...), ...)
@@ -63,8 +64,6 @@ abstract class Observable extends Object {
 			notice('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
 		}
 	}
-
-
 
 	/**
 	 * Add a callback for an event

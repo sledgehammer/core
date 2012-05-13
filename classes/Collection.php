@@ -72,7 +72,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Returns a new collection where the key is based on a property
 	 *
-	 * @param string|Closure $selector  The path that will be used as key.
+	 * @param string|null|Closure $selector  The path that will be used as key.
 	 * @return Collection
 	 */
 	function selectKey($selector) {
@@ -80,6 +80,14 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		if (is_object($selector) && is_callable($selector)) {
 			foreach ($this as $key => $item) {
 				$items[$selector($item, $key)] = $item;
+			}
+		} elseif ($selector === null) {
+			if (is_array($this->data)) {
+				$items = array_values($this->data);
+			} else {
+				foreach ($this as $item) {
+					$items[] = $item;
+				}
 			}
 		} else {
 			foreach ($this as $item) {
