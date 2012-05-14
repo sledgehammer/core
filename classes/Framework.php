@@ -133,8 +133,12 @@ class Framework {
 				} elseif (file_exists($module_path.'module.ini') == false) {
 					notice('Missing module.ini for module: "'.$module.'" required by "'.$required_by.'"');
 					$module_info[$module] = array('name' => $module);
-				} elseif (!($module_info[$module] = parse_ini_file($module_path.'module.ini'))) {
-					throw new \Exception('module.ini from mModule: "'.$module.'" is corrupt');
+				} else {
+					$module_info[$module] = parse_ini_file($module_path.'module.ini');
+					if ($module_info[$module] === false) {
+						warning('"'.$module.'/module.ini" is corrupted');
+						$module_info[$module] = array('name' => $module);
+					}
 				}
 				$module_info[$module]['path'] = $module_path;
 			}
