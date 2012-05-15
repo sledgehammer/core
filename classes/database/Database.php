@@ -19,9 +19,9 @@ class Database extends \PDO {
 	public $logLimit = 1000;
 
 	/**
-	 * @var bool  Add filename and linenumber traces to the log.
+	 * @var int  Add N filename and linenumber traces to the log.
 	 */
-	public $logBacktrace = false;
+	public $logBacktrace = 0;
 
 	/**
 	 * @var float  Total time it took to execute all queries (in seconds);
@@ -504,11 +504,19 @@ class Database extends \PDO {
 			$sql .= '<b style="color:#ffa500">...'.$kib.' KiB truncated</b>';
 		}
 		if ($backtrace) {
-			$backtrace = ' in <b style="color:black">'.$backtrace['file'].'</b> on line <b style="color:black">'.$backtrace['line'].'</b>';
-		} elseif ($backtrace === false) {
-			$backtrace = ' backtrace failed';
+			$call = array_shift($backtrace);
+			$trace = ' in '.$call['file'].' on line <b">'.$call['line'].'</b>';
+			$tooltip = '';
+			foreach ($backtrace as $call) {
+				$tooltip .= ' '.$call['file'].' on line '.$call['line']."\n";
+			}
+			$trace = ' <span class="sql_backtrace" title="'.HTML::escape($tooltip).'">'.$trace.'</span>';
+		} elseif ($backtrace !== null) {
+			$trace = ' backtrace failed';
+		} else {
+			$trace = '';
 		}
-		return $sql.' <em class="execution_time" style="color:'.$color.'">('.number_format($time, 3).' sec)</em>'.$backtrace;
+		return $sql.' <em class="execution_time" style="color:'.$color.'">('.number_format($time, 3).' sec)</em>'.$trace;
 	}
 
 	/**
@@ -579,31 +587,42 @@ class Database extends \PDO {
 			$sql = substr($sql, 0, $this->logCharacterLimit);
 			$truncated = ($sql_length - $this->logCharacterLimit);
 		}
-		$this->log[] = array('sql' => $sql, 'time' => $executedIn, 'truncated' => $truncated, 'backtrace' => $this->backtrace());
+		$this->log[] = array('sql' => $sql, 'time' => $executedIn, 'truncated' => $truncated, 'backtrace' => $this->logBacktrace());
 		$this->logLimit--;
 	}
 
 	/**
 	 * Trace the location where the query was executed from.
 	 *
-	 * @return NULL|false|array
+	 * @return null|array
 	 */
-	private function backtrace() {
-		if ($this->logBacktrace == false) {
+	private function logBacktrace() {
+		if ($this->logBacktrace == 0) {
 			return null;
 		}
-		foreach (debug_backtrace() as $trace) {
-			if ($trace['file'] != __FILE__ && isset($trace['function']) && $trace['function'] != 'logStatement') {
+		$backtrace = debug_backtrace();
+		$index = 0;
+		foreach ($backtrace as $index => $call) {
+			if ($call['file'] != __FILE__ && isset($call['function']) && $call['function'] != 'logStatement') { // Skip calls inside this class (and the logStatement call from PreparedStatement)
 				break;
 			}
 		}
-		if (isset($trace['file']) && isset($trace['line'])) {
-			return array(
-				'file' => str_replace(PATH, '', $trace['file']),
-				'line' => $trace['line']
-			);
+		$backtrace = array_slice($backtrace, $index);
+		$depth = (int) $this->logBacktrace;
+		$trace = array();
+		foreach ($backtrace as $call) {
+			if ($depth === 0) {
+				break;
+			}
+			$depth--;
+			if (isset($call['file']) && isset($call['line'])) {
+				$trace[] = array(
+					'file' => str_replace(PATH, '', $call['file']),
+					'line' => $call['line']
+				);
+			}
 		}
-		return false;
+		return $trace;
 	}
 
 }
