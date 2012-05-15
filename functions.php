@@ -696,10 +696,12 @@ namespace SledgeHammer {
 				$color = 'string';
 				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
 				break;
+
 			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
 				$color = 'string';
 				$label = '&#39;'.htmlspecialchars($variable).'&#39;';
 				break;
+
 			case 'integer':
 			case 'double':
 				$color = 'number';
@@ -728,6 +730,11 @@ namespace SledgeHammer {
 
 			case 'resource':
 				$color = 'constant';
+				$label = $variable;
+				break;
+
+			case 'unknown type':
+				$color = 'operator';
 				$label = $variable;
 				break;
 
