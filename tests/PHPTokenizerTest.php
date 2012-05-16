@@ -29,7 +29,7 @@ class PHPTokenizerTest extends TestCase {
 //			dump($tokenizer);
 //			dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 		}
 	}
 
@@ -52,7 +52,7 @@ class PHPTokenizerTest extends TestCase {
 			}
 			$this->assertEquals($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 			$this->fail($e->getMessage());
 		}
 	}

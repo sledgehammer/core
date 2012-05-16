@@ -50,7 +50,7 @@ class DatabaseSessionHandler extends Object{
 		try {
 			$gegevens = $db->fetch_value('SELECT session_data FROM '.$this->table.' WHERE id = '.$db->quote($id), true);
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 			$gegevens = false;
 		}
 		if ($gegevens == false) {
@@ -70,7 +70,7 @@ class DatabaseSessionHandler extends Object{
 				return true;
 			}
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 		}
 		return false;
 	}

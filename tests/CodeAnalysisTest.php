@@ -82,7 +82,7 @@ class CodeAnalysisTest extends TestCase {
 			try {
 				$analyzer->open($filename);
 			} catch (\Exception $e) {
-//				ErrorHandler::handle_exception($e);
+//				report_exception($e);
 				$this->fail($e->getMessage());
 			}
 		}
@@ -164,7 +164,7 @@ class CodeAnalysisTest extends TestCase {
 				try {
 					$analyzer->open($entry->getPathname());
 				} catch (\Exception $e) {
-//					ErrorHandler::handle_exception($e);
+//					report_exception($e);
 					$this->fail($e->getMessage());
 				}
 			}

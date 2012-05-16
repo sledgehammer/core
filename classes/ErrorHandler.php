@@ -28,7 +28,7 @@ class ErrorHandler {
 	 */
 	public $email = false;
 	// Limiet aan het aantal email dat de ErrorHandler verstuurd.
-	// Bij waardes zoals false ("", 0, NULL) is er GEEN limiet
+	// Bij waardes zoals false ("", 0, null) is er GEEN limiet
 	/**
 	 * @var Het aantal fouten dat gemaild gedurende 1 php script.
 	 */
@@ -67,9 +67,9 @@ class ErrorHandler {
 		E_USER_WARNING => 'Warning',
 		E_USER_NOTICE => 'Notice',
 		E_STRICT => 'PHP5_Strict',
-		E_RECOVERABLE_ERROR => 'RecoverableError', // E_RECOVERABLE_ERROR (4096) available since php 5.2.0
-		E_DEPRECATED => 'Deprecated', // E_DEPRECATED (8192) available since php 5.3.0
-		E_USER_DEPRECATED => 'Deprecated', // E_USER_DEPRECATED (16384) available since php 5.3.0
+		E_RECOVERABLE_ERROR => 'RecoverableError',
+		E_DEPRECATED => 'Deprecated',
+		E_USER_DEPRECATED => 'Deprecated',
 		'EXCEPTION' => 'Exception',
 	);
 
@@ -87,45 +87,62 @@ class ErrorHandler {
 	 * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
 	 */
 	function init() {
-		set_exception_handler(array($this, 'handle_exception'));
-		// Vanwege een bug in php5.3.x is de ErrorHandler::trigger_error_callback() vervangen door deze een globale functie
-		// Zie http://bugs.php.net/bug.php?id=50519 voor meer informatie
-		if (function_exists('ErrorHandler_trigger_error_callback') == false) {
+		set_error_handler(array($this, 'trigger_error_callback'));
+		set_exception_handler(array($this, 'exception_callback'));
+		register_shutdown_function(array($this, 'shutdown_callback'));
+	}
 
-			// Defineer een globale nieuwe functie
-			function ErrorHandler_trigger_error_callback($type, $message, $filename = NULL, $line = NULL, $context = NULL) {
-				ErrorHandler::handle($type, $message);
-				if ($type == E_USER_ERROR || $type == 4096) { // 4096 == E_RECOVERABLE_ERROR
-					exit(1);
-				}
-			}
-
-			function ErrorHandler_shutdown_callback() {
-				$error = error_get_last();
-				if ($error !== NULL && $error['type'] === E_ERROR) {
-					ErrorHandler::handle($error['type'], $error['message']);
-				}
-			}
-
+	/**
+	 * Callback for handling PHP and trigger_error() errors.
+	 *
+	 * @param int $type
+	 * @param string $message
+	 * @param string|null $filename
+	 * @param int|null $line
+	 * @param array|null $context
+	 */
+	function trigger_error_callback($type, $message, $filename = null, $line = null, $context = null) {
+		$errorLevel = error_reporting();
+		if ($errorLevel === ($errorLevel | $type)) { // Report this error?
+			$this->report($type, $message);
 		}
-		register_shutdown_function('SledgeHammer\ErrorHandler_shutdown_callback');
-		set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
+		if ($type == E_USER_ERROR || $type == E_RECOVERABLE_ERROR) {
+			exit(1);
+		}
+	}
+
+	/**
+	 * Use the shutdown to handle fatal errors. E_ERROR
+	 */
+	function shutdown_callback() {
+		$error = error_get_last();
+		if ($error !== null && $error['type'] === E_ERROR) {
+			$this->report($error['type'], $error['message']);
+		}
 	}
 
 	/**
 	 * Functie die wordt aangeroepen door de functies notice() / warning() / error() en de error handler functie
 	 *
-	 * @param $check_for_alternate_error_handler Controleert of de error door een andere error_handler moet worden afgehandeld (Bv: SimpleTestErrorHandler)
+	 * @param int|\Exception $type
+	 * @param string $message
+	 * @param mixed $information
+	 * @param bool $check_for_alternate_error_handler Controleert of de error door een andere error_handler moet worden afgehandeld (Bv: SimpleTestErrorHandler)
+	 * @return void
 	 */
-	static function handle($type, $message, $information = NULL, $check_for_alternate_error_handler = false) {
-		if (error_reporting() != (error_reporting() | $type)) { // Dit type fout niet afhandelen?
-			return;
-		}
-		if ($check_for_alternate_error_handler) {
-			$callback = set_error_handler('SledgeHammer\ErrorHandler_trigger_error_callback');
+	function report($type, $message = '__EMPTY_ERROR_MESSAGE__', $information = null, $check_for_alternate_error_handler = false) {
+		if ($type instanceof \Exception) {
+			// @todo check the exception handler is this instance.
+		} elseif ($check_for_alternate_error_handler) {
+			$callback = set_error_handler(array($this, 'trigger_error_callback'));
 			restore_error_handler();
-			if ($callback !== 'SledgeHammer\ErrorHandler_trigger_error_callback') {
-				$conversion_table = array(E_ERROR => E_USER_ERROR, E_WARNING => E_USER_WARNING, E_NOTICE => E_USER_NOTICE);
+			if (is_array($callback) == false || $callback[0] !== $this) {
+				$conversion_table = array(
+					E_ERROR => E_USER_ERROR,
+					E_WARNING => E_USER_WARNING,
+					E_NOTICE => E_USER_NOTICE,
+					E_DEPRECATED => E_USER_DEPRECATED,
+				);
 				if (array_key_exists($type, $conversion_table)) {
 					$type = $conversion_table[$type]; // Voorkom "Invalid error type specified" bij trigger_error
 				}
@@ -133,20 +150,7 @@ class ErrorHandler {
 				return;
 			}
 		}
-		if (get_class(@ Framework::$errorHandler) == 'SledgeHammer\ErrorHandler') {
-			Framework::$errorHandler->process($type, $message, $information);
-			return;
-		} else {
-			if ($type == E_STRICT) {
-				$type = E_USER_NOTICE;
-			}
-			echo '<span style="color:red">The ErrorHandler is not configured.</span><br />'."\n";
-			$location = self::location();
-			if ($location) {
-				$message .= ' in <b>'.$location['file'].'</b> on line <b>'.$location['line'].'</b><br />';
-			}
-		}
-		trigger_error($message, $type); // De fout doorgeven aan een andere error handler
+		$this->process($type, $message, $information);
 	}
 
 	/**
@@ -156,8 +160,18 @@ class ErrorHandler {
 	 * @param string $message
 	 * @param mixed $information
 	 */
-	function render($type, $message = NULL, $information = NULL) {
+	private function render($type, $message = null, $information = null) {
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
+		if ($type instanceof \Exception) {
+			$exception = $type;
+			$type = ($message === '__UNCAUGHT_EXCEPTION__' ? E_ERROR : E_WARNING);
+			if ($exception instanceof InfoException) {
+				$information = $exception->getInformation();
+			}
+			$message = $exception->getMessage();
+		} else {
+			$exception = false;
+		}
 		switch ($type) {
 			case E_NOTICE:
 			case E_USER_NOTICE:
@@ -187,19 +201,7 @@ class ErrorHandler {
 				$label_color = '#c94a48'; // red
 				$message_color = '#c00';
 		}
-		$backtrace = debug_backtrace(); // @todo Implement a more effient way to detect exceptions
-		$exception = false;
-		if (isset($backtrace[3]['function']) && $backtrace[3]['function'] == 'handle_exception' && $backtrace[3]['args'][0] instanceof \Exception) {
-			$type = 'EXCEPTION';
-			$exception = $backtrace[3]['args'][0];
-			$message = $exception->getMessage();
-			$offset = '';
-			$label_color = '#c94a48'; // red
-			$message_color = '#c00';
-			if ($exception instanceof InfoException) {
-				$information = $exception->getInformation();
-			}
-		}
+
 		// Determine if a full report should be rendered
 		$showDetails = true;
 		if ($this->detail_limit !== 'NO_LIMIT') {
@@ -238,7 +240,7 @@ class ErrorHandler {
 			$message = 'Array';
 		}
 
-		if ($information === NULL && strpos($message, 'Missing argument ') === 0) {
+		if ($information === null && strpos($message, 'Missing argument ') === 0) {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
 		}
 		$message_plain = $message;
@@ -248,21 +250,22 @@ class ErrorHandler {
 		if ($showDetails) {
 			$label_style = '';
 		} else {
-			$label_style = ' style="'.implode(';', array(
-						'padding: 1px 3px 2px',
-						'font-size: 10px',
-						'line-height: 15px',
-						'text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25)',
-						'color: #fff',
-						'vertical-align: middle',
-						'white-space: nowrap',
-						'background-color: '.$label_color,
-						'border-radius: 3px',
-					)).'"';
+			$label_style = array(
+				'padding: 1px 3px 2px',
+				'font-size: 10px',
+				'line-height: 15px',
+				'text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25)',
+				'color: #fff',
+				'vertical-align: middle',
+				'white-space: nowrap',
+				'background-color: '.$label_color,
+				'border-radius: 3px',
+			);
+			$label_style = ' style="'.implode(';', $label_style).'"';
 		}
 		echo "<b".$label_style.">";
 		if ($exception) {
-			if ($type == E_USER_ERROR) {
+			if ($type == E_ERROR) {
 				echo 'Uncaught ';
 			}
 			echo get_class($exception);
@@ -273,7 +276,7 @@ class ErrorHandler {
 
 		if ($showDetails || $this->email) {
 			echo '<hr style="height: 1px; background: #eeb; border: 0;margin: 7px 0px 12px -1px;" />';
-			if ($information !== NULL && !empty($information)) {
+			if ($information !== null && !empty($information)) {
 				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 				if (is_array($information)) {
 					$this->export_array($information);
@@ -289,7 +292,7 @@ class ErrorHandler {
 				$this->client_info();
 				$this->server_info();
 			}
-			$this->backtrace($backtrace);
+			$this->backtrace();
 			switch ($type) {
 
 				case E_WARNING:
@@ -324,9 +327,9 @@ class ErrorHandler {
 	 * @param string $message De foutmelding
 	 * @param mixed $information Extra informatie voor de fout. bv array('Tip' => 'Controleer ...')
 	 */
-	private function process($type, $message, $information = NULL) {
+	private function process($type, $message, $information = null) {
 		if ($this->isProcessing) {
-			echo '<span style="color:red">ErrorHandler failure';
+			echo '<span style="color:red">[ErrorHandler failure]';
 			if ($this->html && is_string($message)) { // show error?
 				echo ' ', htmlentities($message);
 			}
@@ -336,8 +339,12 @@ class ErrorHandler {
 		}
 		$this->isProcessing = true;
 		if ($this->log || $this->cli) {
-			$error_message = $this->error_types[$type].': '.$message;
-			$location = self::location();
+			if ($type instanceof \Exception) {
+				$error_message = get_class($type).': '.$type->getMessage();
+			} else {
+				$error_message = $this->error_types[$type].': '.$message;
+			}
+			$location = $this->location();
 			if ($location) {
 				$error_message .= ' in '.$location['file'].' on line '.$location['line'];
 			}
@@ -370,7 +377,7 @@ class ErrorHandler {
 			$headers .= 'From: '.$this->from_email()."\n";
 
 			if (function_exists('mail') && !mail($this->email, $this->error_types[$type].': '.$message, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
-				error_log('Het foutrapport kon niet per mail verstuurd worden.');
+				error_log('The SledgeHammer\ErrorHandler was unable to email the report.');
 			}
 			if ($this->html) {
 				ob_end_flush(); // buffer weergeven
@@ -388,10 +395,9 @@ class ErrorHandler {
 	 *
 	 * @return array|false  array('file' => $filename, 'line' => $linenumber)
 	 */
-	static function location() {
+	private function location() {
 		$backtrace = debug_backtrace();
 		foreach ($backtrace as $call) {
-			;
 			if (isset($call['file']) && $call['file'] !== __FILE__ && $call['function'] !== 'handle') {
 				return array(
 					'file' => ((strpos($call['file'], PATH) === 0) ? substr($call['file'], strlen(PATH)) : $call['file']),
@@ -405,15 +411,16 @@ class ErrorHandler {
 	/**
 	 * De bestanden, regelnummers, functie en objectnamen waar de fout optrad weergeven.
 	 */
-	private function backtrace($backtrace) {
+	private function backtrace() {
+		$backtrace = debug_backtrace();
 		echo "<b>Backtrace</b><div>\n";
 		// Pass 1:
 		//   Backtrace binnen de errorhandler niet tonen
 		//   Bij een Exception de $Exception->getTrace() tonen.
 		//   De plaats van de errror extra benadrukken (door een extra witregel)
 		while ($call = next($backtrace)) {
-			if (@$call['class'] != __CLASS__) {
-				if ($call['function'] == 'SledgeHammer\ErrorHandler_trigger_error_callback') { // Is de fout getriggerd door php
+			if (isset($call['object']) && $call['object'] === $this) {
+				if ($call['function'] == 'trigger_error_callback') { // Is de fout getriggerd door php
 					if (isset($call['file'])) { // Zit de fout niet in een functie?
 						$this->backtrace_highlight($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler_trigger_error_callback parameters
 						next($backtrace);
@@ -424,30 +431,59 @@ class ErrorHandler {
 						next($backtrace);
 						break;
 					}
-				} elseif ($call['function'] == 'SledgeHammer\ErrorHandler_shutdown_callback') {
+				} elseif ($call['function'] == 'shutdown_callback') {
 					$error = error_get_last();
 					$this->backtrace_highlight($error);
 					next($backtrace);
 					break;
+				} elseif ($call['function'] == 'report' && $call['args'][0] instanceof \Exception) { // Gaat het om een Exception
+					$exception = $call['args'][0];
+					$reported = false;
+					$viaExceptionCallback = next($backtrace);
+					if (isset($viaExceptionCallback['function']) && $viaExceptionCallback['function'] === 'exception_callback') {
+						$caught = next($backtrace);
+						if ($caught !== false) { // backtrace after the callback?
+							$reported = true; // someone called exception_callback() directly
+						}
+					} else {
+						$reported = true;
+						if (isset($viaExceptionCallback['function']) && $viaExceptionCallback['function'] === 'report_exception' && empty($viaExceptionCallback['class'])) {
+							$call = $viaExceptionCallback; // skip the report_exception() call
+						}
+					}
+					echo 'Exception thrown ';
+					$trace = array(
+						'file' => $exception->getFile(),
+						'line' => $exception->getLine()
+					);
+					$this->backtrace_highlight($trace, true);
+
+					$previous = $exception->getPrevious();
+					if ($reported || $previous !== null) {
+						echo '<span style="color:#aaa;margin-left:20px"'; //d5ac68
+						if ($previous !== null) {
+							echo "title=", htmlentities($previous->getTraceAsString(), ENT_COMPAT, 'UTF-8').'">Previous ';
+							echo get_class($previous), '("'.$previous->getMessage(), '") was thrown';
+							$trace = array(
+								'file' => $previous->getFile(),
+								'line' => $previous->getLine()
+							);
+							$this->backtrace_highlight($trace, true);
+						} else {
+							echo '>';
+						}
+						if ($reported) {
+							echo 'Reported ';
+							$this->backtrace_highlight($call, true);
+						}
+						echo '</span>';
+					}
+					$backtrace = $exception->getTrace(); // Show the trace of the exception
+					break;
 				}
+			} else {
 				$this->backtrace_highlight($call);
 				next($backtrace);
-				break;
-			} elseif ($call['function'] == 'handle_exception' || ($call['function'] == 'render' && $call['args'][0] instanceof \Exception)) { // Gaat het om een Exception
-				$Exception = $call['args'][0];
-				$thrown = array(
-					'file' => $Exception->getFile(),
-					'line' => $Exception->getLine()
-				);
-				echo 'Exception thrown ';
-				$this->backtrace_highlight($thrown, true);
-				$uncaught = next($backtrace);
-				if ($uncaught !== false) { // Not an uncaught exception?
-					echo '<span style="color:gray">&nbsp;&nbsp;Caught ';
-					$this->backtrace_highlight($call, true);
-					echo '</span>';
-				}
-				$backtrace = $Exception->getTrace();
 				break;
 			}
 		}
@@ -684,9 +720,9 @@ class ErrorHandler {
 	 * @param mixed $limit wordt omgezet naar een int of "NO_LIMIT"
 	 * @param int|string $configured_limit ingestelde limiet
 	 */
-	private function cast_to_limit($limit, $configured_limit = NULL) {
+	private function cast_to_limit($limit, $configured_limit = null) {
 		$limit = ($limit === 'NO_LIMIT') ? 'NO_LIMIT' : (int) $limit;
-		if ($configured_limit !== NULL) {
+		if ($configured_limit !== null) {
 			if ($limit === 'NO_LIMIT' && $configured_limit !== 'NO_LIMIT') { // Als er in het error_handler_email_limit.txt "NO_LIMIT" staat, maar in de config 100, return dan 100
 				return $configured_limit;
 			}
@@ -709,12 +745,13 @@ class ErrorHandler {
 	 *
 	 * @param Exception $exception
 	 */
-	static function handle_exception($exception) {
+	function exception_callback($exception) {
 		if ($exception instanceof \Exception) {
 			if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
-				self::handle(E_USER_ERROR, 'Uncaught '.get_class($exception).': '.$exception->getMessage());
+				Framework::$errorHandler->report($exception, '__UNCAUGHT_EXCEPTION__');
 			} else {
-				self::handle(E_USER_WARNING, get_class($exception).': '.$exception->getMessage());
+				notice('Only the set_exception_handler() should call ErrorHandler->exception_callback. use report_exception()', "Use the <b>report_exception</b>(\$exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report(\$exception) to target a specific instance.");
+				Framework::$errorHandler->report($exception);
 			}
 		} else {
 			self::handle(E_USER_ERROR, 'Parameter $exception must be an Exception, instead of a '.gettype($exception));
@@ -737,6 +774,17 @@ class ErrorHandler {
 			$domain = 'localhost';
 		}
 		return '"ErrorHandler ('.$hostname.')" <errorhandler@'.$domain.'>';
+	}
+
+	// Deprecated
+	static function handle($type, $message, $information = null, $check_for_alternate_error_handler = false) {
+		deprecated('use ErrorHandler->report(...)');
+		Framework::$errorHandler->report($type, $message, $information, $check_for_alternate_error_handler);
+	}
+
+	static function handle_exception($exception) {
+		deprecated('Use the report_exception($exception) for reporting to the default ErrorHandler or call the ErrorHander->report($exception) to target a specific ErrorHander instance.');
+		Framework::$errorHandler->report($exception);
 	}
 
 }

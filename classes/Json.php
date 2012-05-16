@@ -72,7 +72,7 @@ class Json extends Object {
 			$this->render();
 			return ob_get_contents();
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 			return '';
 		}
 	}
@@ -143,7 +143,7 @@ class Json extends Object {
 	 */
 	static function error($error) {
 		if ($error instanceof \Exception) {
-			ErrorHandler::handle_exception($error);
+			report_exception($error);
 			$error = $error->getMessage();
 		} else {
 			warning($error);

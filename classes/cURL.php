@@ -252,7 +252,7 @@ class cURL extends Observable {
 		try {
 			return $this->getContent();
 		} catch (\Exception $e) {
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 			return '';
 		}
 	}

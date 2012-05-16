@@ -30,17 +30,19 @@ namespace {
 	}
 
 	/**
-	 * Report a fatal error (and end execution).
+	 * Report a fatal error (and stop executing).
 	 *
 	 * It's preferred to throw Exceptions, which allows the calling code to react to the error.
-	 *
 	 *
 	 * @param string $message  The error
 	 * @param mixed $information  [optional] Additional information
 	 */
-	function error($message, $information = NULL) {
-		SledgeHammer\ErrorHandler::handle(E_USER_ERROR, $message, $information, true);
-		exit(1); // Het script direct stoppen.
+	function error($message, $information = null) {
+		$errorLevel = error_reporting();
+		if ($errorLevel === ($errorLevel | E_USER_ERROR)) { // Report errors?
+			SledgeHammer\Framework::$errorHandler->report(E_USER_ERROR, $message, $information, true);
+		}
+		exit(1); // Stop script execution with error 1
 	}
 
 	/**
@@ -49,8 +51,11 @@ namespace {
 	 * @param string $message  The warning
 	 * @param mixed $information  [optional] Additional information
 	 */
-	function warning($message, $information = NULL) {
-		SledgeHammer\ErrorHandler::handle(E_USER_WARNING, $message, $information, true);
+	function warning($message, $information = null) {
+		$errorLevel = error_reporting();
+		if ($errorLevel === ($errorLevel | E_USER_WARNING)) { // Report warning?
+			SledgeHammer\Framework::$errorHandler->report(E_USER_WARNING, $message, $information, true);
+		}
 	}
 
 	/**
@@ -59,8 +64,24 @@ namespace {
 	 * @param string $message  The notice
 	 * @param mixed $information  [optional] Additional information
 	 */
-	function notice($message, $information = NULL) {
-		SledgeHammer\ErrorHandler::handle(E_USER_NOTICE, $message, $information, true);
+	function notice($message, $information = null) {
+		$errorLevel = error_reporting();
+		if ($errorLevel === ($errorLevel | E_USER_NOTICE)) { // Report notices?
+			SledgeHammer\Framework::$errorHandler->report(E_USER_NOTICE, $message, $information, true);
+		}
+	}
+
+	/**
+	 * Report an exception
+	 *
+	 * @param Exception $exception
+	 */
+	function report_exception($exception) {
+		if ($exception instanceof Exception) {
+			SledgeHammer\Framework::$errorHandler->report($exception);
+		} else {
+			notice('Parameter $exception should be an Exception');
+		}
 	}
 
 	/**
@@ -69,8 +90,8 @@ namespace {
 	 * @param string $message  The message
 	 * @param mixed $information  [optional] Additional information
 	 */
-	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = NULL) {
-		SledgeHammer\ErrorHandler::handle(E_USER_DEPRECATED, $message, $information, true); // Kan pas sinds php 5.3.0
+	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = null) {
+		SledgeHammer\Framework::$errorHandler->report(E_USER_DEPRECATED, $message, $information, true);
 	}
 
 	/**
@@ -248,7 +269,7 @@ namespace SledgeHammer {
 			);
 			$mimetype = value($mimetypes[strtolower($extension)]);
 		}
-		if ($mimetype === NULL) {
+		if ($mimetype === null) {
 			if (!$allow_unknown_types) {
 				trigger_error('Unknown mime type for :"'.$extension.'", E_USER_WARNING');
 			}
@@ -512,7 +533,7 @@ namespace SledgeHammer {
 		}
 		$parent = dirname($path);
 		if ($parent == $path) { // Is er geen niveau hoger?
-			warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv NULL of ""
+			warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv null of ""
 		} elseif (mkdirs($parent)) { // Maak (waneer nodig) de boverliggende deze map aan.
 			return mkdir($path); //  Maakt de map aan.
 		}
@@ -687,7 +708,7 @@ namespace SledgeHammer {
 	 * @return string
 	 */
 	function syntax_highlight($variable, $datatype = null, $maxLenghtTitle = 256) {
-		if ($datatype === NULL) {
+		if ($datatype === null) {
 			$datatype = gettype($variable);
 		}
 		switch ($datatype) {
@@ -715,7 +736,7 @@ namespace SledgeHammer {
 
 			case 'NULL':
 				$color = 'constant';
-				$label = 'NULL';
+				$label = 'null';
 				break;
 
 			case 'array':
@@ -1057,14 +1078,14 @@ namespace SledgeHammer {
 	/**
 	 * Retrieve browser and OS info
 	 *
-	 * @param NULL|string $part Het deel van de info welke gevraagd wordt("name", "version" of "os"), bij NULL krijg je een array met alle gegevens
+	 * @param null|string $part Het deel van de info welke gevraagd wordt("name", "version" of "os"), bij null krijg je een array met alle gegevens
 	 * @return string|array array (
 	 *   'name'=> $browser,
 	 *   'version'=> $version,
 	 *   'os'=> $os,
 	 * );
 	 */
-	function browser($part = NULL) {
+	function browser($part = null) {
 		// browser
 		$version = '';
 		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
@@ -1116,7 +1137,7 @@ namespace SledgeHammer {
 			'version' => $version,
 			'os' => $os,
 		);
-		if ($part === NULL) { // Return all info?
+		if ($part === null) { // Return all info?
 			return $info;
 		}
 		if (isset($info[$part])) {
@@ -1381,7 +1402,7 @@ namespace SledgeHammer {
 		);
 
 		/* @var $process resource */
-		$process = proc_open('expect', $descriptorspec, $pipes, NULL, NULL);
+		$process = proc_open('expect', $descriptorspec, $pipes, null, null);
 
 		if ($process === false) {
 			warning('Failed to run expect');

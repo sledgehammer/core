@@ -31,7 +31,7 @@ class SQL extends Object {
 			return $this->compose();
 		} catch (\Exception $e) {
 			// __toString must not throw an exception
-			ErrorHandler::handle_exception($e);
+			report_exception($e);
 			return '';
 		}
 	}
