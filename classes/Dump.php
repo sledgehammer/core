@@ -12,7 +12,12 @@ class Dump extends Object {
 	private $variable;
 	private $trace;
 
-	function __construct($variable = NULL) {
+	/**
+	 * @var bool detect xdebug 2.2.0 var_dump() output.
+	 */
+	private static $xdebug = null;
+
+	function __construct($variable = null) {
 		$this->variable = $variable;
 		$trace = debug_backtrace();
 		$file = $trace[0]['file'];
@@ -43,7 +48,7 @@ class Dump extends Object {
 			'background: #fbfbfc',
 			'border-radius: 0 0 4px 4px',
 			'font: 10px/13px Monaco, monospace',
-			'color: teal', /* kleur van een operator*/
+			'color: teal', /* kleur van een operator */
 			'-webkit-font-smoothing: none',
 			'font-smoothing: none',
 			'overflow-x: auto',
@@ -53,10 +58,16 @@ class Dump extends Object {
 			'box-shadow: none',
 		);
 
-		echo "<pre style=\"".implode(';', $style) ."\">\n";
+		echo "<pre style=\"".implode(';', $style)."\">\n";
 		$old_value = ini_get('html_errors');
-		ini_set('html_errors', false); // Hierdoor is Dump compatible met de xdebug module
+		ini_set('html_errors', false); // Hierdoor is Dump compatible met de xdebug module < 2.2.0
 		ob_start();
+		if (self::$xdebug === null) {
+			// Detect xdebug 2.2 output
+			var_dump(array('' => null));
+			self::$xdebug = strpos(ob_get_clean(), "'' =>") !== false;
+			ob_start();
+		}
 		var_dump($variable);
 		$data = rtrim(ob_get_clean());
 		self::render_vardump($data);
@@ -78,7 +89,7 @@ class Dump extends Object {
 			$positie = 0;
 		}
 		if (substr($gegevens, 0, 4) == 'NULL') {
-			echo syntax_highlight('NULL', 'constant');
+			echo syntax_highlight('null', 'constant');
 			return $positie + 4;
 		}
 		if (substr($gegevens, 0, 11) == '*RECURSION*') {
@@ -87,15 +98,19 @@ class Dump extends Object {
 		}
 		$positie_haak_begin = strpos($gegevens, '(');
 		if ($positie_haak_begin === false) {
-			error('Onbekend datatype "'.$gegevens.'"');
+			error('Unknown datatype "'.$gegevens.'"');
 		}
 		$positie_haak_eind = strpos($gegevens, ')', $positie_haak_begin);
 		$type = substr($gegevens, 0, $positie_haak_begin);
 		$lengte = substr($gegevens, $positie_haak_begin + 1, $positie_haak_eind - $positie_haak_begin - 1);
 		$positie += $positie_haak_eind + 1;
 
+		if (self::$xdebug && substr($type, 0, 5) === 'class') {
+			$type = 'object';
+		}
+
 		// primitieve typen afhandelen
-		switch($type) {
+		switch ($type) {
 
 			// boolean (true en false)
 			case 'bool':
@@ -136,54 +151,74 @@ class Dump extends Object {
 					echo syntax_highlight('array()', 'method');
 					return $positie + $spaties + 4;
 				}
-				$gegevens = substr($gegevens, $positie_haak_eind + 4);// ') {\n' eraf halen
+				$gegevens = substr($gegevens, $positie_haak_eind + 4); // ') {\n' eraf halen
 				echo syntax_highlight('array(', 'method');
 				echo "\n";
-
+				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $gegevens, $matches)) {
+					echo str_repeat(' ', $spaties + 4), "...\n";
+					echo str_repeat(' ', $spaties), syntax_highlight(')', 'method');
+					return $positie + $spaties - 2 + strpos($gegevens, '}');
+				}
 				$spaties += 2;
-				for($i = 0; $i < $lengte; $i++) {// De elementen
-					for ($j = 0; $j < $spaties; $j++) {
-						echo " ";
-					}
-
-					$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
-					$positie_blokhaak = strpos($gegevens, ']=>');
-					$index = substr($gegevens, 0, $positie_blokhaak);
-
-					if ($index[0] == '"') { // assoc array?
-						echo syntax_highlight(substr($index, 1, -1), 'string');
+				for ($i = 0; $i < $lengte; $i++) {// De elementen
+					echo str_repeat(' ', $spaties);
+					if (self::$xdebug) {
+						$gegevens = substr($gegevens, $spaties); // strip spaces
+						$pos_arrow = strpos($gegevens, " =>\n");
+						$index = substr($gegevens, 0, $pos_arrow);
+						if ($index[0] === '[') { // numeric index?
+							echo syntax_highlight(substr($index, 1, -1), 'number');
+						} elseif ($index[0] == "'") {
+							// @todo detect " =>\n" in the index
+							echo syntax_highlight(substr($index, 1, -1), 'string');
+						} else {
+							error('Invalid index', array('index' => $index));
+						}
+						echo ' => ';
+						$positie += strlen($index) + 5;
+						$gegevens = substr($gegevens, $pos_arrow + 4 + $spaties);
 					} else {
-						echo syntax_highlight($index, 'number');
-					}
-					echo ' => ';
+						$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
+						$positie_blokhaak = strpos($gegevens, ']=>');
+						$index = substr($gegevens, 0, $positie_blokhaak);
 
-					$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
+						if ($index[0] == '"') { // assoc array?
+							echo syntax_highlight(substr($index, 1, -1), 'string');
+						} else {
+							echo syntax_highlight($index, 'number');
+						}
+						echo ' => ';
+						$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
+						$positie += strlen($index) + 6;
+					}
 					$lengte_elemement = self::render_vardump($gegevens, $spaties);
 					$gegevens = substr($gegevens, $lengte_elemement + 1);
-					$positie += $lengte_elemement + strlen($index) + ($spaties * 2) + 6;
-
+					$positie += $lengte_elemement + ($spaties * 2);
 					echo ",\n";
 				}
 				$spaties -= 2;
 				$positie += 4 + $spaties;
-				for ($j = 0; $j < $spaties; $j++) {
-					echo " ";
-				}
+				echo str_repeat(' ', $spaties);
 
 				echo syntax_highlight(')', 'method');
 				return $positie;
 
 			// Een object
 			case 'object':
-				$gegevens = substr($gegevens, $positie_haak_eind + 1);
-				$object = $lengte;
-				$positie_haak_begin = strpos($gegevens, '(');
-				if ($positie_haak_begin === false) {
-					error('Raar object "'.$object.'"');
+				if (self::$xdebug) {
+					preg_match('/^class (.+)#/', $gegevens, $matches);
+					$object = $matches[1];
+				} else {
+					$gegevens = substr($gegevens, $positie_haak_eind + 1);
+					$object = $lengte;
+					$positie_haak_begin = strpos($gegevens, '(');
+					if ($positie_haak_begin === false) {
+						error('Weird object "'.$object.'"');
+					}
+					$positie_haak_eind = strpos($gegevens, ')', $positie_haak_begin);
+					$type = substr($gegevens, 0, $positie_haak_begin);
+					$lengte = substr($gegevens, $positie_haak_begin + 1, $positie_haak_eind - $positie_haak_begin - 1);
 				}
-				$positie_haak_eind = strpos($gegevens, ')', $positie_haak_begin);
-				$type = substr($gegevens, 0, $positie_haak_begin);
-				$lengte = substr($gegevens, $positie_haak_begin + 1, $positie_haak_eind - $positie_haak_begin - 1);
 				$gegevens = substr($gegevens, $positie_haak_eind + 4); // ' {\n' eraf halen
 				echo syntax_highlight($object, 'class');
 				if ($lengte == 0) { // Geen attributen?
@@ -191,33 +226,48 @@ class Dump extends Object {
 				}
 				echo syntax_highlight(' {', 'class');
 				echo "\n";
+				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $gegevens, $matches)) {
+					echo str_repeat(' ', $spaties + 4), "...\n";
+					echo str_repeat(' ', $spaties), syntax_highlight('}', 'class');
+					return $positie + strpos($gegevens, '}') + 2;
+				}
 				$spaties += 2;
-				for($i = 0; $i < $lengte; $i++) { // De attributen
-					for ($j = 0; $j < $spaties; $j++) {
-						echo " ";
+				for ($i = 0; $i < $lengte; $i++) { // De attributen
+					echo str_repeat(' ', $spaties);
+					if (self::$xdebug) {
+						$gegevens = substr($gegevens, $spaties); // strip spaces
+						$pos_arrow = strpos($gegevens, " =>\n");
+						$attribuut = substr($gegevens, 0, $pos_arrow);
+						$gegevens = substr($gegevens, $pos_arrow + 4 + $spaties);
+						$positie += strlen($attribuut) + 4;
+					} else {
+						$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
+						$positie_blokhaak = strpos($gegevens, ']=>');
+						$attribuut = substr($gegevens, 0, $positie_blokhaak);
+						$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
+						$positie += strlen($attribuut) + 6;
 					}
-					$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
-					$positie_blokhaak = strpos($gegevens, ']=>');
-					$attribuut = substr($gegevens, 0, $positie_blokhaak);
 					self::render_attribute($attribuut);
 					echo ' -> ';
-					$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
+					if (self::$xdebug && preg_match('/^\s+\.\.\.\n\n/', $gegevens, $matches)) {
+						echo "\n", str_repeat(' ', $spaties + 4), "...\n\n";
+						echo str_repeat(' ', $spaties - 2), syntax_highlight('}', 'class');
+						return $positie + strlen($matches[0]);
+					}
 					$lengte_elemement = self::render_vardump($gegevens, $spaties);
 					$gegevens = substr($gegevens, $lengte_elemement + 1);
 					echo ",\n";
-					$positie += $lengte_elemement + strlen($attribuut) + ($spaties * 2) + 6;
+					$positie += $lengte_elemement + ($spaties * 2);
 				}
 				$spaties -= 2;
 				$positie += $positie_haak_eind + 5 + $spaties;
-				for ($j = 0; $j < $spaties; $j++) {
-					echo " ";
-				}
+				echo str_repeat(' ', $spaties);
 				echo syntax_highlight('}', 'class');
 				return $positie;
 				break;
 
 			default:
-				error('Onbekend datatype "'.$type.'"');
+				error('Unknown datatype "'.$type.'"');
 		}
 	}
 
@@ -230,7 +280,7 @@ class Dump extends Object {
 				'invocation' => 'dump'
 			);
 			$backtrace = debug_backtrace();
-			for($i = count($backtrace) - 1; $i >= 0 ; $i--) {
+			for ($i = count($backtrace) - 1; $i >= 0; $i--) {
 				if (isset($backtrace[$i]['function']) && strtolower($backtrace[$i]['function']) == 'dump') {
 					if (isset($backtrace[$i]['file'])) {
 						// Parameter achterhalen
@@ -264,14 +314,14 @@ class Dump extends Object {
 		if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
 			echo syntax_highlight($argument, 'attribute');
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
-			echo syntax_highlight($matches['function'], 'method'),'<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+			echo syntax_highlight($matches['function'], 'method'), '<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)(?P<element>\[.+\])$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
 			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['attribute'], 'attribute');
 			if ($matches['element']) {
 				echo syntax_highlight('[', 'operator'), '<span style="color:#333">', substr($matches['element'], 1, -1), '</span>', syntax_highlight(']', 'operator');
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['method'], 'method'),'<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['method'], 'method'), '<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
 		} else {
 			echo '<span style="color:#333">', htmlentities($argument, ENT_COMPAT, Framework::$charset), '</span>';
 		}
@@ -280,19 +330,22 @@ class Dump extends Object {
 	}
 
 	/**
-	 * De naam van de variabele die aan de dump functie of constructor is meegegeven
-	 */
-	static private function render_variable_name($file, $line) {
-
-		return $parameter_name;
-	}
-
-	/**
 	 * Haal de scope uit de attribute string en
 	 *
 	 * @param string $attribute Bv '"log", '"error_types:private" of '"error_types":"ErrorHandler":private'
 	 */
 	static private function render_attribute($attribute) {
+		if (self::$xdebug) {
+			if (preg_match('/(public|protected|private) \$(.+)$/', $attribute, $matches)) {
+				echo syntax_highlight($matches[2], 'attribute');
+				if ($matches[1] !== 'public') {
+					echo '<span style="font-size:9px">:', $matches[1], '</span>';
+				}
+				return;
+			} else {
+				error('Invalid attribute', array('attribute' => $attribute));
+			}
+		}
 		$parts = explode(':', $attribute);
 		$partsCount = count($parts);
 		switch ($partsCount) {
@@ -304,19 +357,21 @@ class Dump extends Object {
 			case 2:
 				if (substr($parts[1], -1) == '"') { // Sinds php 5.3 is wordt ':protected' en ':private' NA de '"' gezet ipv ervoor
 					// php < 5.3
-					echo syntax_highlight(substr($parts[0], 1), 'attribute'), '<span style="font-size:9px">:',  substr($parts[1], 0, -1), '</span>';
+					echo syntax_highlight(substr($parts[0], 1), 'attribute'), '<span style="font-size:9px">:', substr($parts[1], 0, -1), '</span>';
 				} else { // php >= 5.3
-					echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px">:',  $parts[1], '</span>';
+					echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px">:', $parts[1], '</span>';
 				}
 				break;
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private
-				echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:',  $parts[2], '</span>';
+				echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:', $parts[2], '</span>';
 				break;
 
 			default:
 				notice('Unexpected number of parts: '.$partsCount, $parts);
 		}
 	}
+
 }
+
 ?>

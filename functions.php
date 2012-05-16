@@ -698,9 +698,8 @@ namespace SledgeHammer {
 	}
 
 	/**
-	 * Een variabele aan de hand van zijn datatype een kleur geven en omzetten naar html-formaat.
-	 * Wordt o.a. gebruikt door Dump & ErrorHandler
-	 * De een kleuren worden bepaald in /css/datatypes.css uit webcore
+	 * Returns a html snippet with the variable in a predefined color per type.
+	 * Used in Dump & ErrorHandler
 	 *
 	 * @param mixed $variable
 	 * @param string $datatype  Skip autodetection/force a type
@@ -713,14 +712,9 @@ namespace SledgeHammer {
 		}
 		switch ($datatype) {
 
-			case 'string':
-				$color = 'string';
-				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
-				break;
-
-			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
-				$color = 'string';
-				$label = '&#39;'.htmlspecialchars($variable).'&#39;';
+			case 'boolean':
+				$color = 'constant';
+				$label = $variable ? 'true' : 'false';
 				break;
 
 			case 'integer':
@@ -729,14 +723,14 @@ namespace SledgeHammer {
 				$label = $variable;
 				break;
 
-			case 'boolean':
-				$color = 'constant';
-				$label = $variable ? 'true' : 'false';
+			case 'string':
+				$color = 'string';
+				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
 				break;
 
-			case 'NULL':
-				$color = 'constant';
-				$label = 'null';
+			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
+				$color = 'string';
+				$label = '&#39;'.htmlspecialchars($variable).'&#39;';
 				break;
 
 			case 'array':
@@ -752,6 +746,11 @@ namespace SledgeHammer {
 			case 'resource':
 				$color = 'constant';
 				$label = $variable;
+				break;
+
+			case 'NULL':
+				$color = 'constant';
+				$label = 'null';
 				break;
 
 			case 'unknown type':

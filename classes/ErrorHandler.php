@@ -87,7 +87,7 @@ class ErrorHandler {
 	 * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
 	 */
 	function init() {
-		set_error_handler(array($this, 'trigger_error_callback'));
+		set_error_handler(array($this, 'error_callback'));
 		set_exception_handler(array($this, 'exception_callback'));
 		register_shutdown_function(array($this, 'shutdown_callback'));
 	}
@@ -101,7 +101,7 @@ class ErrorHandler {
 	 * @param int|null $line
 	 * @param array|null $context
 	 */
-	function trigger_error_callback($type, $message, $filename = null, $line = null, $context = null) {
+	function error_callback($type, $message, $filename = null, $line = null, $context = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | $type)) { // Report this error?
 			$this->report($type, $message);
@@ -134,7 +134,7 @@ class ErrorHandler {
 		if ($type instanceof \Exception) {
 			// @todo check the exception handler is this instance.
 		} elseif ($check_for_alternate_error_handler) {
-			$callback = set_error_handler(array($this, 'trigger_error_callback'));
+			$callback = set_error_handler(array($this, 'error_callback'));
 			restore_error_handler();
 			if (is_array($callback) == false || $callback[0] !== $this) {
 				$conversion_table = array(
@@ -221,6 +221,8 @@ class ErrorHandler {
 			'font: 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
 			// reset styling
 			'text-shadow: none',
+			'-webkit-font-smoothing: antialiased',
+			'font-smoothing: antialiased',
 			'text-align: left',
 			'overflow-x: auto',
 			'white-space: normal',
@@ -244,7 +246,7 @@ class ErrorHandler {
 			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
 		}
 		$message_plain = $message;
-		if (strpos($message, '<span style="color:') === false) { // Alleen html van de syntax_hightlight functie toestaan, alle overige htmlkarakers escapen
+		if (strpos($message, '<span style="color:') === false) { // Alleen html van de syntax_highlight functie toestaan, alle overige htmlkarakers escapen
 			$message_plain = htmlspecialchars($message_plain); // Vertaal alle html karakters
 		}
 		if ($showDetails) {
@@ -420,13 +422,13 @@ class ErrorHandler {
 		//   De plaats van de errror extra benadrukken (door een extra witregel)
 		while ($call = next($backtrace)) {
 			if (isset($call['object']) && $call['object'] === $this) {
-				if ($call['function'] == 'trigger_error_callback') { // Is de fout getriggerd door php
+				if ($call['function'] == 'error_callback') { // Is de fout getriggerd door php
 					if (isset($call['file'])) { // Zit de fout niet in een functie?
-						$this->backtrace_highlight($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler_trigger_error_callback parameters
+						$this->backtrace_highlight($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler_error_callback parameters
 						next($backtrace);
 						break;
 					} else { // De fout komt uit een functie (bijvoorbeeld een Permission denied uit een fopen())
-						$call = next($backtrace); // Sla deze $call over deze bevat alleen de ErrorHandler_trigger_error_callback() aanroep
+						$call = next($backtrace); // Sla deze $call over deze bevat alleen de ErrorHandler_error_callback() aanroep
 						$this->backtrace_highlight($call);
 						next($backtrace);
 						break;
@@ -507,7 +509,7 @@ class ErrorHandler {
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
-				$errorHandlerInvocations = array('trigger_error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
+				$errorHandlerInvocations = array('error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
 				$databaseClasses = array('Database', 'mysqli', 'MySQLiDatabase', 'SledgeHammer\MySQLiDatabase'); // prevent showing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
 				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
