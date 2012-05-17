@@ -13,7 +13,7 @@ class Dump extends Object {
 	private $trace;
 
 	/**
-	 * @var bool detect xdebug 2.2.0 var_dump() output.
+	 * @var bool detected xdebug 2.2.0 var_dump() output.
 	 */
 	private static $xdebug = null;
 
@@ -60,17 +60,21 @@ class Dump extends Object {
 
 		echo "<pre style=\"".implode(';', $style)."\">\n";
 		$old_value = ini_get('html_errors');
-		ini_set('html_errors', false); // Hierdoor is Dump compatible met de xdebug module < 2.2.0
+		ini_set('html_errors', false); // Forces xdebug < 2.2.0 to use render with the internal var_dump()
 		ob_start();
 		if (self::$xdebug === null) {
 			// Detect xdebug 2.2 output
 			var_dump(array('' => null));
-			self::$xdebug = strpos(ob_get_clean(), "'' =>") !== false;
+			self::$xdebug = (strpos(ob_get_clean(), "'' =>") !== false);
 			ob_start();
 		}
 		var_dump($variable);
-		$data = rtrim(ob_get_clean());
-		self::render_vardump($data);
+		$output = rtrim(ob_get_clean());
+		try {
+			self::render_vardump($output);
+		} catch (\Exception $e) {
+			report_exception($e);
+		}
 		echo "\n</pre>\n";
 		ini_set('html_errors', $old_value);
 	}
@@ -78,109 +82,112 @@ class Dump extends Object {
 	/**
 	 * De vardump van kleuren voorzien.
 	 * Retourneert de positie tot waar de gegevens geparsed zijn
-	 * @return int
+	 *
+	 * @param string $data the var_dump() output.
+	 * @param int $indenting The the number of leading spaces
+	 * @return int the number of characters the variable/array/object occupied in the var_dump() output
 	 */
-	private static function render_vardump($gegevens, $spaties = 0) {
-		if ($gegevens[0] == '&') {
-			$gegevens = substr($gegevens, 1);
-			$positie = 1;
+	private static function render_vardump($data, $indenting = 0) {
+		if ($data[0] == '&') {
+			$data = substr($data, 1);
+			$pos = 1;
 			echo '&amp;';
 		} else {
-			$positie = 0;
+			$pos = 0;
 		}
-		if (substr($gegevens, 0, 4) == 'NULL') {
+		if (substr($data, 0, 4) == 'NULL') {
 			echo syntax_highlight('null', 'constant');
-			return $positie + 4;
+			return $pos + 4;
 		}
-		if (substr($gegevens, 0, 11) == '*RECURSION*') {
+		if (substr($data, 0, 11) == '*RECURSION*') {
 			echo '*RECURSION* ', syntax_highlight('// This variable is already shown', 'comment');
-			return $positie + 11;
+			return $pos + 11;
 		}
-		$positie_haak_begin = strpos($gegevens, '(');
-		if ($positie_haak_begin === false) {
-			error('Unknown datatype "'.$gegevens.'"');
+		$bracketStart = strpos($data, '(');
+		if ($bracketStart === false) {
+			throw new \Exception('Unknown datatype "'.$data.'"');
 		}
-		$positie_haak_eind = strpos($gegevens, ')', $positie_haak_begin);
-		$type = substr($gegevens, 0, $positie_haak_begin);
-		$lengte = substr($gegevens, $positie_haak_begin + 1, $positie_haak_eind - $positie_haak_begin - 1);
-		$positie += $positie_haak_eind + 1;
+		$bracketEnd = strpos($data, ')', $bracketStart);
+		$type = substr($data, 0, $bracketStart);
+		$length = substr($data, $bracketStart + 1, $bracketEnd - $bracketStart - 1);
+		$pos += $bracketEnd + 1;
 
 		if (self::$xdebug && substr($type, 0, 5) === 'class') {
 			$type = 'object';
 		}
 
-		// primitieve typen afhandelen
+		// primitive types
 		switch ($type) {
 
 			// boolean (true en false)
 			case 'bool':
-				echo syntax_highlight($lengte, 'constant');
-				return $positie;
+				echo syntax_highlight($length, 'constant');
+				return $pos;
 
-			// getallen (int, float)
+			// numbers (int, float)
 			case 'int':
 			case 'float':
-				echo syntax_highlight($lengte, 'number');
-				return $positie;
+				echo syntax_highlight($length, 'number');
+				return $pos;
 
-			// tekst (string)
+			// text (string)
 			case 'string':
-				$tekst = substr($gegevens, $positie_haak_eind + 3, $lengte);
-				echo syntax_highlight($tekst, 'string_pre');
-				return $positie + $lengte + 3;
+				$text = substr($data, $bracketEnd + 3, $length);
+				echo syntax_highlight($text, 'string_pre');
+				return $pos + $length + 3;
 
-			// Resource (bestand, database)
+			// Resources (file, gd, curl)
 			case 'resource':
-				$resource = 'Resource#'.$lengte;
-				$positie = strpos($gegevens, "\n");
+				$resource = 'Resource#'.$length;
+				$pos = strpos($data, "\n");
 
-				if ($positie === false) {
-					$positie = strlen($gegevens);
+				if ($pos === false) {
+					$pos = strlen($data);
 				} else {
-					$gegevens = substr($gegevens, 0, $positie);
+					$data = substr($data, 0, $pos);
 				}
 
-				$resource.= preg_replace('/.*\(/', ' (', $gegevens);
+				$resource.= preg_replace('/.*\(/', ' (', $data);
 				$resource = substr($resource, 0);
 				echo syntax_highlight($resource, 'constant');
-				return $positie;
+				return $pos;
 
-			// Een array
+			// Arrays
 			case 'array':
-				if ($lengte == 0) {// Een lege array?
+				if ($length == 0) {// Empty array?
 					echo syntax_highlight('array()', 'method');
-					return $positie + $spaties + 4;
+					return $pos + $indenting + 4;
 				}
-				$gegevens = substr($gegevens, $positie_haak_eind + 4); // ') {\n' eraf halen
+				$data = substr($data, $bracketEnd + 4); // ') {\n' eraf halen
 				echo syntax_highlight('array(', 'method');
 				echo "\n";
-				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $gegevens, $matches)) {
-					echo str_repeat(' ', $spaties + 4), "...\n";
-					echo str_repeat(' ', $spaties), syntax_highlight(')', 'method');
-					return $positie + $spaties - 2 + strpos($gegevens, '}');
+				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) {// xdebug limit reached?
+					echo str_repeat(' ', $indenting + 4), "...\n";
+					echo str_repeat(' ', $indenting), syntax_highlight(')', 'method');
+					return $pos + $indenting - 2 + strpos($data, '}');
 				}
-				$spaties += 2;
-				for ($i = 0; $i < $lengte; $i++) {// De elementen
-					echo str_repeat(' ', $spaties);
+				$indenting += 2;
+				for ($i = 0; $i < $length; $i++) {// De elementen
+					echo str_repeat(' ', $indenting);
 					if (self::$xdebug) {
-						$gegevens = substr($gegevens, $spaties); // strip spaces
-						$pos_arrow = strpos($gegevens, " =>\n");
-						$index = substr($gegevens, 0, $pos_arrow);
+						$data = substr($data, $indenting); // strip spaces
+						$arrowPos = strpos($data, " =>\n");
+						$index = substr($data, 0, $arrowPos);
 						if ($index[0] === '[') { // numeric index?
 							echo syntax_highlight(substr($index, 1, -1), 'number');
 						} elseif ($index[0] == "'") {
 							// @todo detect " =>\n" in the index
 							echo syntax_highlight(substr($index, 1, -1), 'string');
 						} else {
-							error('Invalid index', array('index' => $index));
+							throw new InfoException('Invalid index', array('index' => $index));
 						}
 						echo ' => ';
-						$positie += strlen($index) + 5;
-						$gegevens = substr($gegevens, $pos_arrow + 4 + $spaties);
+						$pos += strlen($index) + 5;
+						$data = substr($data, $arrowPos + 4 + $indenting);
 					} else {
-						$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
-						$positie_blokhaak = strpos($gegevens, ']=>');
-						$index = substr($gegevens, 0, $positie_blokhaak);
+						$data = substr($data, $indenting + 1); // spaties en [ eraf halen
+						$arrowPos = strpos($data, ']=>');
+						$index = substr($data, 0, $arrowPos);
 
 						if ($index[0] == '"') { // assoc array?
 							echo syntax_highlight(substr($index, 1, -1), 'string');
@@ -188,86 +195,86 @@ class Dump extends Object {
 							echo syntax_highlight($index, 'number');
 						}
 						echo ' => ';
-						$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
-						$positie += strlen($index) + 6;
+						$data = substr($data, $arrowPos + 4 + $indenting);
+						$pos += strlen($index) + 6;
 					}
-					$lengte_elemement = self::render_vardump($gegevens, $spaties);
-					$gegevens = substr($gegevens, $lengte_elemement + 1);
-					$positie += $lengte_elemement + ($spaties * 2);
+					$elementLength = self::render_vardump($data, $indenting);
+					$data = substr($data, $elementLength + 1);
+					$pos += $elementLength + ($indenting * 2);
 					echo ",\n";
 				}
-				$spaties -= 2;
-				$positie += 4 + $spaties;
-				echo str_repeat(' ', $spaties);
+				$indenting -= 2;
+				$pos += 4 + $indenting;
+				echo str_repeat(' ', $indenting);
 
 				echo syntax_highlight(')', 'method');
-				return $positie;
+				return $pos;
 
-			// Een object
+			// Objects
 			case 'object':
 				if (self::$xdebug) {
-					preg_match('/^class (.+)#/', $gegevens, $matches);
+					preg_match('/^class (.+)#/', $data, $matches);
 					$object = $matches[1];
 				} else {
-					$gegevens = substr($gegevens, $positie_haak_eind + 1);
-					$object = $lengte;
-					$positie_haak_begin = strpos($gegevens, '(');
-					if ($positie_haak_begin === false) {
-						error('Weird object "'.$object.'"');
+					$data = substr($data, $bracketEnd + 1);
+					$object = $length;
+					$bracketStart = strpos($data, '(');
+					if ($bracketStart === false) {
+						throw new Exception('Unexpected object notation "'.$object.'"');
 					}
-					$positie_haak_eind = strpos($gegevens, ')', $positie_haak_begin);
-					$type = substr($gegevens, 0, $positie_haak_begin);
-					$lengte = substr($gegevens, $positie_haak_begin + 1, $positie_haak_eind - $positie_haak_begin - 1);
+					$bracketEnd = strpos($data, ')', $bracketStart);
+					$type = substr($data, 0, $bracketStart);
+					$length = substr($data, $bracketStart + 1, $bracketEnd - $bracketStart - 1);
 				}
-				$gegevens = substr($gegevens, $positie_haak_eind + 4); // ' {\n' eraf halen
+				$data = substr($data, $bracketEnd + 4); // ' {\n' eraf halen
 				echo syntax_highlight($object, 'class');
-				if ($lengte == 0) { // Geen attributen?
-					return $positie + $positie_haak_eind + strpos($gegevens, '}') + 5; // tot '}\n' eraf halen.
+				if ($length == 0) { // Geen attributen?
+					return $pos + $bracketEnd + strpos($data, '}') + 5; // tot '}\n' eraf halen.
 				}
 				echo syntax_highlight(' {', 'class');
 				echo "\n";
-				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $gegevens, $matches)) {
-					echo str_repeat(' ', $spaties + 4), "...\n";
-					echo str_repeat(' ', $spaties), syntax_highlight('}', 'class');
-					return $positie + strpos($gegevens, '}') + 2;
+				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) { // xdebug limit reached?
+					echo str_repeat(' ', $indenting + 4), "...\n";
+					echo str_repeat(' ', $indenting), syntax_highlight('}', 'class');
+					return $pos + strpos($data, '}') + 2;
 				}
-				$spaties += 2;
-				for ($i = 0; $i < $lengte; $i++) { // De attributen
-					echo str_repeat(' ', $spaties);
+				$indenting += 2;
+				for ($i = 0; $i < $length; $i++) { // attributes
+					echo str_repeat(' ', $indenting);
 					if (self::$xdebug) {
-						$gegevens = substr($gegevens, $spaties); // strip spaces
-						$pos_arrow = strpos($gegevens, " =>\n");
-						$attribuut = substr($gegevens, 0, $pos_arrow);
-						$gegevens = substr($gegevens, $pos_arrow + 4 + $spaties);
-						$positie += strlen($attribuut) + 4;
+						$data = substr($data, $indenting); // strip spaces
+						$arrowPos = strpos($data, " =>\n");
+						$attribute = substr($data, 0, $arrowPos);
+						$data = substr($data, $arrowPos + 4 + $indenting);
+						$pos += strlen($attribute) + 4;
 					} else {
-						$gegevens = substr($gegevens, $spaties + 1); // spaties en [ eraf halen
-						$positie_blokhaak = strpos($gegevens, ']=>');
-						$attribuut = substr($gegevens, 0, $positie_blokhaak);
-						$gegevens = substr($gegevens, $positie_blokhaak + 4 + $spaties);
-						$positie += strlen($attribuut) + 6;
+						$data = substr($data, $indenting + 1); // strip spaces and [
+						$arrowPos = strpos($data, ']=>');
+						$attribute = substr($data, 0, $arrowPos);
+						$data = substr($data, $arrowPos + 4 + $indenting);
+						$pos += strlen($attribute) + 6;
 					}
-					self::render_attribute($attribuut);
+					self::render_attribute($attribute);
 					echo ' -> ';
-					if (self::$xdebug && preg_match('/^\s+\.\.\.\n\n/', $gegevens, $matches)) {
-						echo "\n", str_repeat(' ', $spaties + 4), "...\n\n";
-						echo str_repeat(' ', $spaties - 2), syntax_highlight('}', 'class');
-						return $positie + strlen($matches[0]);
+					if (self::$xdebug && preg_match('/^\s+\.\.\.\n\n/', $data, $matches)) { // xdebug limit reached?
+						echo "\n", str_repeat(' ', $indenting + 4), "...\n\n";
+						echo str_repeat(' ', $indenting - 2), syntax_highlight('}', 'class');
+						return $pos + strlen($matches[0]);
 					}
-					$lengte_elemement = self::render_vardump($gegevens, $spaties);
-					$gegevens = substr($gegevens, $lengte_elemement + 1);
+					$elementLength = self::render_vardump($data, $indenting);
+					$data = substr($data, $elementLength + 1);
 					echo ",\n";
-					$positie += $lengte_elemement + ($spaties * 2);
+					$pos += $elementLength + ($indenting * 2);
 				}
-				$spaties -= 2;
-				$positie += $positie_haak_eind + 5 + $spaties;
-				echo str_repeat(' ', $spaties);
+				$indenting -= 2;
+				$pos += $bracketEnd + 5 + $indenting;
+				echo str_repeat(' ', $indenting);
 				echo syntax_highlight('}', 'class');
-				return $positie;
+				return $pos;
 				break;
 
 			default:
-				error('Unknown datatype "'.$type.'"');
+				throw new \Exception('Unknown datatype "'.$type.'"');
 		}
 	}
 
@@ -343,7 +350,7 @@ class Dump extends Object {
 				}
 				return;
 			} else {
-				error('Invalid attribute', array('attribute' => $attribute));
+				throw new InfoException('Invalid attribute', array('attribute' => $attribute));
 			}
 		}
 		$parts = explode(':', $attribute);
@@ -368,7 +375,7 @@ class Dump extends Object {
 				break;
 
 			default:
-				notice('Unexpected number of parts: '.$partsCount, $parts);
+				throw new InfoException('Unexpected number of parts: '.$partsCount, $parts);
 		}
 	}
 
