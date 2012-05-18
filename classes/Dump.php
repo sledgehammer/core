@@ -220,7 +220,7 @@ class Dump extends Object {
 					$object = $length;
 					$bracketStart = strpos($data, '(');
 					if ($bracketStart === false) {
-						throw new Exception('Unexpected object notation "'.$object.'"');
+						throw new \Exception('Unexpected object notation "'.$object.'"');
 					}
 					$bracketEnd = strpos($data, ')', $bracketStart);
 					$type = substr($data, 0, $bracketStart);
