@@ -378,7 +378,16 @@ class ErrorHandler {
 			$headers .= "Content-type: text/html; charset=iso-8859-1\n";
 			$headers .= 'From: '.$this->from_email()."\n";
 
-			if (function_exists('mail') && !mail($this->email, $this->error_types[$type].': '.$message, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
+			if ($type instanceof \Exception) {
+				$subject = get_class($type).': '.$type->getMessage();
+				if ($message === '__UNCAUGHT_EXCEPTION__') {
+					$subject = ' Uncaught '.$subject;
+				}
+			} else {
+				$subject = $this->error_types[$type].': '.$message;
+			}
+
+			if (function_exists('mail') && !mail($this->email, $subject, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
 				error_log('The SledgeHammer\ErrorHandler was unable to email the report.');
 			}
 			if ($this->html) {
