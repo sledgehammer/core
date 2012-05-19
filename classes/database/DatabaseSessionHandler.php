@@ -1,11 +1,11 @@
 <?php
+namespace SledgeHammer;
 /**
  * Sessie gegevens 'centraal' opslaan in een database
  * Hierdoor kan een Loadbalancer in 'round robin' mode draaien.
  *
  * @package Core
  */
-namespace SledgeHammer;
 class DatabaseSessionHandler extends Object{
 
 	/**

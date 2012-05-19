@@ -1,58 +1,73 @@
 <?php
+namespace SledgeHammer;
 /**
  * Verzorgt de afhandeling van php fouten.
- * Deze kan een uitgebreide foutmeling in html-formaat tonen en/of emailen
+ * Deze kan een uitgebreide foutmelding in html-formaat tonen en/of emailen
  *
  * @package Core
  */
-namespace SledgeHammer;
 class ErrorHandler {
 
 	/**
-	 * @var Schrijf de fout ook weg naar het php errorlog (/var/log/httpd/error.log?)
+	 * Schrijf de fout ook weg naar het php errorlog (/var/log/httpd/error.log?)
+	 * @var bool
 	 */
 	public $log = true;
 
 	/**
-	 * @var echo de foutmelding zonder extras' met een timestamp, (php cli.php > error.log)
+	 * echo de foutmelding zonder extras' met een timestamp, (php cli.php > error.log)
+	 * @var bool
 	 */
 	public $cli = false;
 
 	/**
-	 * @var echo de foutmelding en extra informatie met html opmaak.
+	 * echo de foutmelding en extra informatie met html opmaak.
+	 * @var bool
 	 */
 	public $html = false;
 
 	/**
-	 * @var string Email de foutmelding naar dit emailadres.
+	 * Email de foutmelding naar dit emailadres.
+	 * @var string
 	 */
 	public $email = false;
+
 	// Limiet aan het aantal email dat de ErrorHandler verstuurd.
 	// Bij waardes zoals false ("", 0, null) is er GEEN limiet
+
 	/**
-	 * @var Het aantal fouten dat gemaild gedurende 1 php script.
+	 * Het aantal fouten dat gemaild gedurende 1 php script.
+	 * @var int|"NO_LIMIT"
 	 */
 	public $emails_per_request = 'NO_LIMIT';
 
 	/**
-	 * @var Het aantal fouten dat gemaild mag worden per minuut.
+	 * Het aantal fouten dat gemaild mag worden per minuut.
+	 * @var int|"NO_LIMIT"
 	 */
 	public $emails_per_minute = 'NO_LIMIT';
 
 	/**
-	 * @var Het aantal fouten dat gemaild mag worden per dag.
+	 * Het aantal fouten dat gemaild mag worden per dag.
+	 * @var int|"NO_LIMIT"
 	 */
 	public $emails_per_day = 'NO_LIMIT';
 
 	/**
-	 * @var int  Limit the amount of errors with a full backtrace. Setting this value too high may cause browser crashes. (The limit is measured per error-type)
+	 * Limit the amount of errors with a full backtrace. Setting this value too high may cause browser crashes. (The limit is measured per error-type)
+	 * @var int
 	 */
 	public $detail_limit = 50;
+	/**
+	 * Keep track of the $detail_limit's
+	 * @var array
+	 */
 	private $limits = array();
 
 	/**
 	 * Some error levels can't be caught or triggered directly, but could be retrieved with error_get_last()
-	 * @var error-type to title/color/icon mapping.
+	 * error-type to title/color/icon mapping.
+	 * @var array
 	 */
 	private $error_types = array(
 		E_ERROR => 'Error',
@@ -74,12 +89,14 @@ class ErrorHandler {
 	);
 
 	/**
-	 * @var Maximaal 50 KiB per argument in de backtrace weergeven.
+	 * Maximaal 50 KiB per argument in de backtrace weergeven.
+	 * @var int
 	 */
 	private $max_string_length_backtrace = 51200;
 
 	/**
-	 * @var Wordt gebruikt voor het bepalen van fouten tijdens de error reporting
+	 * Wordt gebruikt voor het bepalen van fouten tijdens de error reporting
+	 * @var bool
 	 */
 	private $isProcessing = false;
 

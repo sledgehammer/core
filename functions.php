@@ -371,7 +371,6 @@ namespace SledgeHammer {
 	 * equals((float) 1.000, (int) 1) == true
 	 * equals("1.1", 1.1) == true
 	 * equals("abc", "ABC") == f
-
 	 *
 	 * @return bool
 	 */
@@ -385,6 +384,9 @@ namespace SledgeHammer {
 		return false;
 	}
 
+	/**
+	 * @var string Regex for supported operators for the compare() function
+	 */
 	const COMPARE_OPERATORS = '==|!=|<|<=|>|>=';
 
 	/**

@@ -1,7 +1,5 @@
 <?php
-
 namespace SledgeHammer;
-
 /**
  * cURL, an HTTP/FTP response object
  * Simplifies asynchronous requests & paralell downloads.
@@ -41,33 +39,38 @@ class cURL extends Observable {
 	);
 
 	/**
-	 * @var array All the given CURLOPT_* options
+	 * All the given CURLOPT_* options
+	 * @var array
 	 */
 	private $options = array();
 
 	/**
-	 * @var string  RUNNING | COMPLETED | ABORTED | ERROR
+	 * RUNNING | COMPLETED | ABORTED | ERROR
+	 * @var string
 	 */
 	private $state;
 
 	/**
-	 * @var resource cURL handle
+	 * cURL handle
+	 * @var resource
 	 */
 	private $handle;
 
 	/**
-	 * @var array|cURL Global queue of active cURL requests
+	 * Global queue of active cURL requests
+	 * @var array|cURL
 	 */
 	static $requests = array();
 
 	/**
-	 * @var resource cURL multi handle
+	 * cURL multi handle
+	 * @var resource
 	 */
 	static private $pool;
 
-
 	/**
-	 * @var int  Number of tranfers in the pool
+	 * Number of tranfers in the pool
+	 * @var int
 	 */
 	static private $tranferCount = 0;
 
@@ -152,7 +155,7 @@ class cURL extends Observable {
 	 * @param bool $async
 	 * @throws \Exception
 	 */
-	static function download($url, $filename, $options = array (), $async = false) {
+	static function download($url, $filename, $options = array(), $async = false) {
 		$fp = fopen($filename, 'w');
 		if ($fp === false) {
 			throw new \Exception('Unable to write to "'.$filename.'"');
@@ -165,8 +168,8 @@ class cURL extends Observable {
 		$response = new cURL($options + $defaults);
 		if ($async) {
 			$response->addListener('load', function () use ($fp) {
-				fclose($fp);
-			});
+						fclose($fp);
+					});
 		} else {
 			$response->waitForCompletion();
 			fclose($fp);

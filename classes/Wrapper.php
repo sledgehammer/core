@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Wrap the object/array into container object
  * Allow filters and accesscontrol to any object or array.
@@ -7,14 +8,13 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 
 	protected $_data;
 
 	/**
-	 * @var bool  Wrap elements that are object or arrays
+	 * Wrap elements that are object or arrays
+	 * @var bool
 	 */
 	private $_recursive = true;
 

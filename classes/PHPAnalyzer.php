@@ -1,14 +1,14 @@
 <?php
+namespace SledgeHammer;
 /**
  * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
  *
  * @package Core
  */
-namespace SledgeHammer;
 class PHPAnalyzer extends Object {
 
 	/**
-	 * @var array Deflared classes.
+	 * Deflared classes.
 	 * array(
 	 *   $fullclassname => array(
 	 *     'namespace' => $namespace,
@@ -26,11 +26,12 @@ class PHPAnalyzer extends Object {
 	 *   ),
 	 *   ...
 	 * )
+	 * @var array
 	 */
 	public $classes = array();
 
 	/**
-	 * @var array Deflared classes.
+	 * Deflared classes.
 	 * array(
 	 *   $fullinterfacename => array(
 	 *     'namespace' => $namespace,
@@ -47,17 +48,18 @@ class PHPAnalyzer extends Object {
 	 *   ),
 	 *   ...
 	 * )
+	 * @var array
 	 */
 	public $interfaces = array();
 
 	/**
-	 * @var array
 	 * array(
 	 *   $fulldefinitionname => array(
 	 *     $fullpath => array($linenr, ...),
 	 *     ...
 	 *   )
 	 * )
+	 * @var array
 	 */
 	public $usedDefinitions = array();
 

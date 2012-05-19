@@ -1,50 +1,57 @@
 <?php
+namespace SledgeHammer;
 /**
  * URL class for generating and manipulating urls.
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class URL extends Object {
 
 	/**
-	 * @var string The protocol schema
+	 * The protocol schema
+	 * @var string
 	 */
 	public $scheme;
 
 	/**
-	 * @var string The hostname/ip
+	 * The hostname/ip
+	 * @var string
 	 */
 	public $host;
 
 	/**
-	 * @var int Portnumber
+	 * Portnumber
+	 * @var int
 	 */
 	public $port;
 
 	/**
-	 * @var string The (unescaped) path
+	 * The (unescaped) path
+	 * @var string
 	 */
 	public $path;
 
 	/**
-	 * @var array The parameters in the querystring
+	 * The parameters in the querystring
+	 * @var array
 	 */
 	public $query = array();
 
 	/**
-	 * @var string  The #hash
+	 * The #hash
+	 * @var string
 	 */
 	public $fragment;
 
 	/**
-	 * @var string The username
+	 * The username
+	 * @var string
 	 */
 	public $user;
 
 	/**
-	 * @var string  The password
+	 * The password
+	 * @var string
 	 */
 	public $pass;
 
@@ -54,7 +61,7 @@ class URL extends Object {
 	private static $current;
 
 	/**
-	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
+	 * @param null|string $url  De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
 	function __construct($url) {
 		$info = parse_url($url);

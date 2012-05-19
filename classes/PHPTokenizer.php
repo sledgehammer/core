@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * a PHPTokenizer that helps to identify the class and interface names.
  *
@@ -23,36 +24,39 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
 class PHPTokenizer extends Object implements \Iterator {
 
 	/**
 	 * @var string
 	 */
 	private $state = 'INIT';
+
 	/**
 	 * @var int
 	 */
 	private $key;
+
 	/**
 	 * @var array
 	 */
 	private $current;
+
 	/**
 	 * @var bool|'LAST'
 	 */
 	private $valid = false;
+
 	/**
 	 * @var int
 	 */
 	private $tokenIndex;
+
 	/**
 	 * @var array
 	 */
 	private $tokens;
 	private $lineNumber;
 	private $arrayDepth;
-
 
 	/**
 	 *
@@ -91,11 +95,10 @@ class PHPTokenizer extends Object implements \Iterator {
 
 	function current() {
 		return $this->current;
-
 	}
 
 	function next() {
-		if ($this->valid ===  'LAST') {
+		if ($this->valid === 'LAST') {
 			$this->valid = false;
 			$this->current = null;
 			return;
@@ -103,7 +106,7 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->key++;
 		$count = count($this->tokens);
 		$value = '';
-		$line =  $this->lineNumber;
+		$line = $this->lineNumber;
 
 		for (; $this->tokenIndex < $count; $this->tokenIndex++) {
 			$token = $this->tokens[$this->tokenIndex];
@@ -255,7 +258,7 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 		if (in_array($token[0], array(T_OPEN_TAG, T_OPEN_TAG_WITH_ECHO))) { // Dit is geen HTML token
 			return array(
-				'action' =>'SWITCH',
+				'action' => 'SWITCH',
 				'token' => 'T_HTML',
 				'state' => 'PHP',
 			);
@@ -292,22 +295,22 @@ class PHPTokenizer extends Object implements \Iterator {
 //		}
 
 		switch ($token[0]) {
-			case T_NAMESPACE:  return array('action'=> 'OPERATOR', 'token' => 'T_PHP', 'state' => 'NAMESPACE');
-			case T_USE:        return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'USE');
-			case T_INTERFACE:  return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'INTERFACE');
-			case T_CLASS:      return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'CLASS');
-			case T_EXTENDS:    return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'EXTENDS');
-			case T_IMPLEMENTS: return array('action'=> 'KEYWORD', 'token' => 'T_PHP', 'state' => 'IMPLEMENTS');
-			case T_FUNCTION:   return array('action'=> 'CONTINUE_AS', 'state' => 'FUNCTION');
-			case T_NEW:        return array('action'=> 'KEYWORD', 'state' => 'TYPE');
-			case T_INSTANCEOF: return array('action'=> 'KEYWORD', 'state' => 'TYPE');
-			case T_CATCH:      return array('action' => 'CONTINUE_AS', 'state' => 'PARAMETERS');
+			case T_NAMESPACE: return array('action' => 'OPERATOR', 'token' => 'T_PHP', 'state' => 'NAMESPACE');
+			case T_USE: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'USE');
+			case T_INTERFACE: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'INTERFACE');
+			case T_CLASS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'CLASS');
+			case T_EXTENDS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'EXTENDS');
+			case T_IMPLEMENTS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'IMPLEMENTS');
+			case T_FUNCTION: return array('action' => 'CONTINUE_AS', 'state' => 'FUNCTION');
+			case T_NEW: return array('action' => 'KEYWORD', 'state' => 'TYPE');
+			case T_INSTANCEOF: return array('action' => 'KEYWORD', 'state' => 'TYPE');
+			case T_CATCH: return array('action' => 'CONTINUE_AS', 'state' => 'PARAMETERS');
 			case T_CURLY_OPEN: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
 			case T_DOLLAR_OPEN_CURLY_BRACES: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
 			case T_STRING:
 				if ($nextToken == '(') {
 					$previousToken = $this->tokens[$this->tokenIndex - 1];
-					$type = ($previousToken[0] == T_OBJECT_OPERATOR) ? 'T_METHOD_CALL': 'T_CALL';
+					$type = ($previousToken[0] == T_OBJECT_OPERATOR) ? 'T_METHOD_CALL' : 'T_CALL';
 					return array('action' => 'SINGLE_TOKEN', 'token' => $type, 'tokenBefore' => 'T_PHP');
 				}
 				break;
@@ -350,13 +353,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		return array('action' => 'CONTINUE');
 	}
+
 	private function parse_USE_AS($token, $nextToken) {
 		if (in_array($token, array(';', '{'))) {
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
 		}
 		if ($token[0] == T_AS) {
 			return array('action' => 'KEYWORD', 'state' => 'USE_ALIAS', 'token' => 'T_PHP');
-
 		}
 		$this->expectToken($token, T_WHITESPACE);
 		return array('action' => 'CONTINUE');
@@ -373,45 +376,49 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->expectToken($token, T_STRING);
 		return array(
 			'action' => 'LAST_TOKEN',
-			'token'=>'T_CLASS',
+			'token' => 'T_CLASS',
 			'state' => 'PHP'
 		);
 	}
+
 	private function parse_INTERFACE($token, $nextToken) {
 		$this->expectToken($token, T_STRING);
 		return array(
 			'action' => 'LAST_TOKEN',
-			'token'=>'T_INTERFACE',
+			'token' => 'T_INTERFACE',
 			'state' => 'PHP'
 		);
 	}
+
 	private function parse_EXTENDS($token, $nextToken) {
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
 			return array(
 				'action' => 'LAST_TOKEN',
-				'token'=>'T_EXTENDS',
+				'token' => 'T_EXTENDS',
 				'state' => 'PHP'
 			);
 		}
 		return array('action' => 'CONTINUE');
 	}
+
 	private function parse_IMPLEMENTS($token, $nextToken) {
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
 			return array(
 				'action' => 'LAST_TOKEN',
-				'token'=>'T_IMPLEMENTS',
+				'token' => 'T_IMPLEMENTS',
 				'state' => 'IMPLEMENTS_MORE'
 			);
 		}
 		return array('action' => 'CONTINUE');
 	}
+
 	private function parse_IMPLEMENTS_MORE($token, $nextToken) {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
 			return array(
 				'action' => 'LAST_TOKEN',
-				'token'=>'T_PHP',
+				'token' => 'T_PHP',
 				'state' => 'IMPLEMENTS'
 			);
 		}
@@ -423,12 +430,11 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 		$this->expectTokens($token, array(T_WHITESPACE, ','));
 		return array('action' => 'CONTINUE');
-
 	}
 
 	private function parse_FUNCTION($token, $nextToken) {
 		if ($token[0] == T_STRING) {
-			return array('action' => 'SINGLE_TOKEN', 'token'=> 'T_FUNCTION', 'tokenBefore' => 'T_PHP');
+			return array('action' => 'SINGLE_TOKEN', 'token' => 'T_FUNCTION', 'tokenBefore' => 'T_PHP');
 		}
 		if ($token == '(') {
 			return array('action' => 'RESCAN', 'state' => 'PARAMETERS');
@@ -465,7 +471,7 @@ class PHPTokenizer extends Object implements \Iterator {
 	private function parse_PARAMETER_VALUE($token, $nextToken) {
 		$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
 		if (in_array($token[0], $valueTokens)) {
-			return array('action' => 'LAST_TOKEN', 'token'=>'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
 		}
 		if ($token[0] == T_ARRAY) { // default parameter is a array literal?
 			$this->arrayDepth = 0;
@@ -484,7 +490,7 @@ class PHPTokenizer extends Object implements \Iterator {
 		} elseif ($token == ')') {
 			$this->arrayDepth--;
 			if ($this->arrayDepth == 0) { // end of array literal?
-				return array('action' => 'LAST_TOKEN', 'token'=>'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
+				return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
 			}
 		}
 		if ($this->arrayDepth == 0) {
@@ -492,7 +498,6 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 		return array('action' => 'CONTINUE');
 	}
-
 
 	// new X or instanceof Y
 	private function parse_TYPE($token, $nextToken) {
@@ -594,5 +599,7 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 		throw new \Exception('Invalid value for parameter: $expectedToken');
 	}
+
 }
+
 ?>

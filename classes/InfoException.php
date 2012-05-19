@@ -1,13 +1,13 @@
 <?php
+namespace SledgeHammer;
 /**
  * SledgeHammerException, an exception with additonal information for the ErrorHander
- * 
+ *
  * Named "InfoException" instead of "\SledgeHammer\Exception" to prevent catch issues.
  *  @see: http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha for details
- * 
+ *
  * @package Core
  */
-namespace SledgeHammer;
 class InfoException extends \Exception {
 
 	private $information;
@@ -22,7 +22,7 @@ class InfoException extends \Exception {
 		parent::__construct($message, $code, $previous);
 		$this->information = $information;
 	}
-	
+
 	function getInformation() {
 		return $this->information;
 	}

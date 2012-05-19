@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * PropertyPath, a helper class that resolves properties inside arrays and objects based on a path.
  * Inspired by XPath
@@ -19,14 +20,12 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class PropertyPath extends Object {
+
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
 	const TYPE_ANY = 'ANY'; // object-property or array-element
 	const TYPE_METHOD = 'METHOD';
-
 	const CHAIN = 'CHAIN';
 
 	/**
@@ -265,7 +264,6 @@ class PropertyPath extends Object {
 
 				default:
 					warning('Unsupported token', $token);
-
 			}
 		}
 		return $path;

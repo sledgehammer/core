@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
  * Has a fluent interface where the methods won't modify the object but will return a new object.
@@ -10,9 +11,9 @@
  *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
  *
  * For SELECT options @see http://dev.mysql.com/doc/refman/5.1/en/select.html
+ *
  * @package Core
  */
-namespace SledgeHammer;
 class SQL extends Object {
 
 	public

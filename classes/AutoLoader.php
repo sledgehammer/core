@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Load class and interface definitions on demand.
  * Improves performance (parsetime & memory usage), only classes that are used are loaded.
@@ -8,26 +9,28 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class AutoLoader extends Object {
 
 	/**
-	 * @var bool  Bij true zal define() een fout genereren als de class niet bekend is.
+	 * Bij true zal define() een fout genereren als de class niet bekend is.
+	 * @var bool
 	 */
 	public $standalone = true;
 
 	/**
-	 * @var bool  If a class or interface doesn't exist in a namespace use the class from a higher namespace
+	 * If a class or interface doesn't exist in a namespace use the class from a higher namespace
+	 * @var bool
 	 */
 	public $resolveNamespaces = true;
 
 	/**
-	 * @var bool  Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
+	 * Bij true worden de resultaten (per module) gecached, de cache zal opnieuw opgebouwt worden als er bestanden gewijzigd of toegevoegd zijn.
+	 * @var bool
 	 */
 	public $enableCache = true;
 
 	/**
+	 * The project basepath
 	 * @var string
 	 */
 	private $path;
@@ -50,7 +53,8 @@ class AutoLoader extends Object {
 	);
 
 	/**
-	 * @var array  Array containing the filename per class or interface.
+	 * Array containing the filename per class or interface.
+	 * @var array
 	 */
 	private $definitions = array();
 

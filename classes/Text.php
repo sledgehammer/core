@@ -1,21 +1,19 @@
 <?php
+namespace SledgeHammer;
 /**
  * Text, a string class for handeling (multibyte) strings with OOP syntax
  * Modelled after the C# String class.
  * @link http://msdn.microsoft.com/en-us/library/system.string.aspx
  *
  * @package Core
+ *
+ * @property-read int $length  The number of characters
  */
-namespace SledgeHammer;
 class Text extends Object implements \ArrayAccess {
 
 	/**
-	 * @var int  The number of characters
-	 */
-	public $length;
-
-	/**
-	 * @var string  The string in UTF-8
+	 * The string in UTF-8
+	 * @var string
 	 */
 	private $text;
 
@@ -25,7 +23,6 @@ class Text extends Object implements \ArrayAccess {
 	 * @param string $charset  The charset of $text, null will auto-detect
 	 */
 	function __construct($text, $charset = null) {
-		unset($this->length);
 		if ($text instanceof Text) {
 			$this->text = $text;
 			if ($charset !== null && $charset !== 'UTF-8') {
@@ -69,6 +66,7 @@ class Text extends Object implements \ArrayAccess {
 	function toUpper() {
 		return new Text(mb_strtoupper($this->text, 'UTF-8'), 'UTF-8');
 	}
+
 	/**
 	 * Returns a copy of this text converted to lowercase.
 	 *
@@ -77,6 +75,7 @@ class Text extends Object implements \ArrayAccess {
 	function toLower() {
 		return new Text(mb_strtolower($this->text, 'UTF-8'), 'UTF-8');
 	}
+
 	/**
 	 * Removes all leading and trailing white-space characters from the current text.
 	 * @link http://php.net/manual/en/function.trim.php
@@ -98,6 +97,7 @@ class Text extends Object implements \ArrayAccess {
 	function trimStart($charlist = null) {
 		return new Text(ltrim($this->text, $charlist), 'UTF-8');
 	}
+
 	/**
 	 * Removes all trailing occurrences white-space characters from the current text.
 	 * @link http://php.net/manual/en/function.rtrim.php
@@ -159,7 +159,7 @@ class Text extends Object implements \ArrayAccess {
 	 */
 	function reverse() {
 		$result = '';
-		for($i = $this->length - 1; $i >= 0; $i--) {
+		for ($i = $this->length - 1; $i >= 0; $i--) {
 			$result .= mb_substr($this->text, $i, 1, 'UTF-8');
 		}
 		return new Text($result, 'UTF-8');
@@ -196,6 +196,7 @@ class Text extends Object implements \ArrayAccess {
 	function ucfirst() {
 		return new Text($this[0]->toUpper().$this->substring(1), 'UTF-8');
 	}
+
 	function capitalize() {
 		return new Text($this[0]->toUpper().$this->substring(1)->toLower(), 'UTF-8');
 	}
@@ -262,20 +263,24 @@ class Text extends Object implements \ArrayAccess {
 		}
 	}
 
-
 	// ArrayAccess
 
 	public function offsetExists($offset) {
 		return ($offset < mb_strlen($this->text, 'UTF-8'));
 	}
+
 	public function offsetGet($offset) {
 		return $this->substring($offset, 1);
 	}
+
 	public function offsetSet($offset, $value) {
 		throw new \Exception('Not implemented');
 	}
+
 	public function offsetUnset($offset) {
 		throw new \Exception('Not implemented');
 	}
+
 }
+
 ?>

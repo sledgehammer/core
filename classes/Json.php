@@ -9,7 +9,8 @@ namespace SledgeHammer;
 class Json extends Object {
 
 	/**
-	 * @var mixed $data  UTF-8 encoded data.
+	 * UTF-8 encoded data.
+	 * @var mixed $data
 	 */
 	private $data;
 

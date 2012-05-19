@@ -32,13 +32,14 @@ namespace SledgeHammer;
 abstract class Observable extends Object {
 
 	/**
-	 * @var array Storage array for the properties with KVO (Key Value Observer) listeners
+	 * Storage array for the properties with KVO (Key Value Observer) listeners
+	 * @var array
 	 */
-	private $_properties = array();
+	private $__kvo = array();
 
 	/**
-	 * @abstract
-	 * @var array  The events/listeners. array($event1 => array($listener1, ...), ...)
+	 * The events/listeners. array($event1 => array($listener1, ...), ...)
+	 * @abstract @var array
 	 */
 	protected $events = array();
 
@@ -91,7 +92,7 @@ abstract class Observable extends Object {
 			$this->events[$event][$identifier] = $callback;
 		}
 		if ($event === 'change') {
-			$properties = array_merge(array_keys(get_public_vars($this)), array_keys($this->_properties));
+			$properties = array_merge(array_keys(get_public_vars($this)), array_keys($this->__kvo));
 			$self = $this;
 			foreach ($properties as $property) {
 				$this->addListener('change:'.$property, function ($sender, $new, $old) use ($self, $property) {
@@ -112,13 +113,13 @@ abstract class Observable extends Object {
 		$found = array_key_exists($event, $this->events);
 		if ($found === false) {
 			if ($event === 'change') {
-				return ((count(get_public_vars($this)) + count($this->_properties)) !== 0); // A class without public properties doenst have a change event.
+				return ((count(get_public_vars($this)) + count($this->__kvo)) !== 0); // A class without public properties doenst have a change event.
 			}
 			if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
 				$property = $matches[1];
 				if (property_exists($this, $property)) {
 					$found = true;
-					$this->_properties[$property] = $this->$property;
+					$this->__kvo[$property] = $this->$property;
 					unset($this->$property);
 				}
 			}
@@ -152,8 +153,8 @@ abstract class Observable extends Object {
 	 * @return mixed
 	 */
 	function __get($property) {
-		if (array_key_exists($property, $this->_properties)) {
-			return $this->_properties[$property];
+		if (array_key_exists($property, $this->__kvo)) {
+			return $this->__kvo[$property];
 		}
 		return parent::__get($property);
 	}
@@ -175,10 +176,10 @@ abstract class Observable extends Object {
 				return;
 			}
 		}
-		if (array_key_exists($property, $this->_properties)) { // A property with a change listener?
-			$this->_properties[$property];
-			$this->trigger('change:'.$property, $this, $value, $this->_properties[$property]);
-			$this->_properties[$property] = $value;
+		if (array_key_exists($property, $this->__kvo)) { // A property with a change listener?
+			$this->__kvo[$property];
+			$this->trigger('change:'.$property, $this, $value, $this->__kvo[$property]);
+			$this->__kvo[$property] = $value;
 			return;
 		}
 		parent::__set($property, $value);

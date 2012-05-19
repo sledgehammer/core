@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Een iterator die de tags uit htmlcode haalt.
  * Met name geschikt voor html met fouten.
@@ -6,10 +7,9 @@
  *
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
  * Gebruik in die gevallen niet deze iterator.
-
+ *
  * @package Core
  */
-namespace SledgeHammer;
 class TagIterator extends Object implements \Iterator {
 
 	public

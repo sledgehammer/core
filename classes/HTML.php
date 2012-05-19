@@ -1,15 +1,15 @@
 <?php
+namespace SledgeHammer;
 /**
  * HTML, an view compatible class for rendering raw html.
  * Contains static helper functions for generating tags, etc
  *
  * @package Core
  */
-namespace SledgeHammer;
 class HTML extends Object {
 
 	/**
-	 * @var string $html
+	 * @var string
 	 */
 	private $html;
 

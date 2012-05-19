@@ -1,12 +1,11 @@
 <?php
+namespace SledgeHammer;
 /**
  * A PDOStatment subclass that logs prepared statements.
  * Logs the execution time and executed query to the connected Database.
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class PreparedStatement extends PDOStatement {
 
 	/**

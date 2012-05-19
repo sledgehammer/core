@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Container voor SledgeHammer Framework functions
  * - Module detection and initialisation
@@ -7,14 +8,14 @@
  * @todo Beter locatie vinden voor de database functies
  * @package Core
  */
-namespace SledgeHammer;
-
 class Framework {
 
 	/**
-	 * @var string Register UTF-8 as default charset
+	 * Register UTF-8 as default charset
+	 * @var string
 	 */
 	static $charset = 'UTF-8';
+
 	/**
 	 * @var AutoLoader
 	 */
@@ -24,7 +25,6 @@ class Framework {
 	 * @var ErrorHandler
 	 */
 	static $errorHandler;
-
 	private static $cachedRequiredModules = array();
 
 	/**
@@ -229,6 +229,7 @@ class Framework {
 		}
 		return $modules;
 	}
+
 }
 
 ?>

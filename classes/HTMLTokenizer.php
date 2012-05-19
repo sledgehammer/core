@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Een tokenizer voor htmlcode.
  * Met name geschikt voor html met fouten.
@@ -42,7 +43,6 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
 class HTMLTokenizer extends Object implements \Iterator{
 
 	// Genereer parser warnings (Makes UnitTests easier)

@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Een generieke snelle manier om een csv bestand in te lezen.
  * Kan ook csv bestanden genereren met CSV::write()
@@ -7,22 +8,61 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class CSV extends Object implements \Iterator {
 
-	private
-		$filename, // path van het csv bestand
-		$columns, // Bepaald welke kolommen er ingelezen worden, en hoe deze genoemt worden.
-		$delimiter, // Het karakter dat gebruik wordt om de velden te scheiden
-		$enclosure, // Het karakter dat gebruikt wordt om tekst-velden te omsluiten (default: ")
+	/**
+	 * path van het csv bestand
+	 * @var string
+	 */
+	private $filename;
 
-		$fp, // [resource] file pointer/handler
-		$keys, // Veranderd een $row van een indexed array naar assoc array
-		$values, // [array] huidige rij
-		$index,
+	/**
+	 * Bepaald welke kolommen er ingelezen worden, en hoe deze genoemt worden.
+	 * @var array
+	 */
+	private $columns;
 
-		$eol = "\r\n"; // De linebreak die gebruikt wordt bij een write()
+	/**
+	 * Het karakter dat gebruik wordt om de velden te scheiden.
+	 * @var string|char
+	 */
+	private $delimiter;
+
+	/**
+	 * Het karakter dat gebruikt wordt om tekst-velden te omsluiten (default: ")
+	 * @var string|char
+	 */
+	private $enclosure;
+
+	/**
+	 * File handle for fgetcsv()
+	 * @var resource
+	 */
+	private $fp;
+
+	/**
+	 * Veranderd een $row van een indexed array naar assoc array
+	 * @var array
+	 */
+	private $keys;
+
+	/**
+	 * Current row
+	 * @var array
+	 */
+	private $values;
+
+	/**
+	 * Current key/index
+	 * @var int|null
+	 */
+	private $index;
+
+	/**
+	 * De linebreak die gebruikt wordt bij een write()
+	 * @var string
+	 */
+	private $eol = "\r\n";
 
 	/**
 	 * @param string $filename  Het path waar het csv bestand zich bevind
@@ -30,7 +70,6 @@ class CSV extends Object implements \Iterator {
 	 * @param char $delimiter  Scheidingsteken, ';' als default omdat dit nederlandse excel standaard is.
 	 * @param char $enclosure  Karakter dat gebruikt word om tekst waarbinnen het scheidingsteken kan voorkomen te omsluiten
 	 */
-
 	function __construct($filename = null, $columns = null, $delimiter = ';', $enclosure = '"') {
 		$this->columns = $columns;
 		$this->filename = $filename;
@@ -48,7 +87,7 @@ class CSV extends Object implements \Iterator {
 	 * Schrijf de waarden in de $iterator weg naar $filename die in de constuctor is meegegeven.
 	 * D.m.v "php://output" kan het csv bestand direct naar de browser verstuurd worden.
 	 *
-	 * @param Iterator $iterator  Brongegevens voor de csv. Elementen worden bepaald d.m.v. de $keys in de $this->columns array.
+	 * @param \Iterator $iterator  Brongegevens voor de csv. Elementen worden bepaald d.m.v. de $keys in de $this->columns array.
 	 * @return void
 	 */
 	static function write($filename = null, $iterator, $columns = null, $delimiter = ';', $enclosure = '"') {
@@ -153,7 +192,7 @@ class CSV extends Object implements \Iterator {
 	 * @return bool
 	 */
 	function valid() {
-		return!feof($this->fp); // Is het einde van het bestand NIET bereikt?
+		return !feof($this->fp); // Is het einde van het bestand NIET bereikt?
 	}
 
 	/**

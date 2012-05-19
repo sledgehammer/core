@@ -1,9 +1,5 @@
 <?php
 namespace SledgeHammer;
-if (defined('SORT_NATURAL') === false) {
-	define('SORT_NATURAL', -1);
-}
-define('SORT_NATURAL_CI', -2); // Case insensitive nartural sort
 /**
  * Collection: Array on Steriods
  * Provides a filtering, sorting, events and other utility functions for collections.
@@ -20,7 +16,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	protected $data;
 
 	/**
-	 * @var array Events
+	 * @var array
 	 */
 	protected $events = array(
 		'changing' => array(),

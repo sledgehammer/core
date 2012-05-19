@@ -1,11 +1,10 @@
 <?php
+namespace SledgeHammer;
 /**
  * Readonly, a wrapper that prevents changes to an object or array.
  *
  * @package Core
  */
-namespace SledgeHammer;
-
 class Readonly extends Wrapper {
 
 	protected function in($value, $element, $context) {

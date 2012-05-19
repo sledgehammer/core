@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * A generic php superclass.
  *
@@ -13,7 +14,6 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
 abstract class Object {
 
 	/**

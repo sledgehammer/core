@@ -9,47 +9,56 @@ namespace SledgeHammer;
 class Database extends \PDO {
 
 	/**
-	 * @var bool  Report MySQL warnings
+	 * Report MySQL warnings
+	 * @var bool
 	 */
 	public $reportWarnings;
 
 	/**
-	 * @var int  The remaining amount of queries that will be logged in full (when logLimit reaches 0, only the queryCount and executionTime will be logged).
+	 * The remaining amount of queries that will be logged in full (when logLimit reaches 0, only the queryCount and executionTime will be logged).
+	 * @var int
 	 */
 	public $logLimit = 1000;
 
 	/**
-	 * @var int  Add N filename and linenumber traces to the log.
+	 * Add N filename and linenumber traces to the log.
+	 * @var int
 	 */
 	public $logBacktrace = 0;
 
 	/**
-	 * @var float  Total time it took to execute all queries (in seconds);
+	 * Total time it took to execute all queries (in seconds);
+	 * @var float
 	 */
 	public $executionTime = 0;
 
 	/**
-	 * @var array  Structure containing all logged executed queries
+	 * Structure containing all logged executed queries
+	 * @var array
 	 */
 	public $log = array();
 
 	/**
-	 * @var int  Number of executed queries.
+	 * Number of executed queries.
+	 * @var int
 	 */
 	public $queryCount;
 
 	/**
-	 * @var int  Only log the first 50KiB of a long query.
+	 * Only log the first 50KiB of a long query.
+	 * @var int
 	 */
 	public $logCharacterLimit = 51200;
 
 	/**
-	 * @var int  Remember the previous insertId when using warnings. (Because "SHOW WARNINGS" query resets the value of lastInsertId() to "0")
+	 * Remember the previous insertId when using warnings. (Because "SHOW WARNINGS" query resets the value of lastInsertId() to "0")
+	 * @var int
 	 */
 	private $previousInsertId;
 
 	/**
-	 * @var string  The \PDO::ATTR_DRIVER_NAME
+	 * The \PDO::ATTR_DRIVER_NAME
+	 * @var string
 	 */
 	private $driver;
 
@@ -58,11 +67,12 @@ class Database extends \PDO {
 	 */
 	static $instances = array();
 
-
 	/**
-	 * @var array Cached quoted identifiers(column and table names) per database driver
+	 * Cached quoted identifiers(column and table names) per database driver.
+	 * @var array
 	 */
 	private static $quotedIdentifiers = array();
+
 	/**
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
@@ -487,7 +497,7 @@ class Database extends \PDO {
 		static $regex = null;
 		if ($regex === null) {
 			$startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
-			$inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET','NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
+			$inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
 			$regex = '/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/';
 		}
 		$sql = preg_replace($regex, '<span class="sql_keyword">\\0</span>', $sql);

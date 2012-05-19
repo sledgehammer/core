@@ -1,4 +1,5 @@
 <?php
+namespace SledgeHammer;
 /**
  * Basic HTTP autentication
  *
@@ -12,7 +13,6 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
 class HttpAuthentication extends Object {
 
 	private $realm;

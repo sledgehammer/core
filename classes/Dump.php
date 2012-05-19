@@ -1,12 +1,13 @@
 <?php
+namespace SledgeHammer;
 /**
  * A collection of static functions that implement the global dump() function.
  * Parses an var_dump() and renders a syntax highlighted var_export();
  *
- * (Is compatible with the View interface from MVC)
+ * (Compatible with the View interface from MVC)
+ *
  * @package Core
  */
-namespace SledgeHammer;
 class Dump extends Object {
 
 	private $variable;

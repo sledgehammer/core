@@ -1,11 +1,11 @@
 <?php
+namespace SledgeHammer;
 /**
  * Stopwatch
  *
  * @package Core
  */
-namespace SledgeHammer;
-class Stopwatch extends Object{
+class Stopwatch extends Object {
 
 	private $start;
 	private $lap;
@@ -40,9 +40,10 @@ class Stopwatch extends Object{
 	function getLapTime() {
 		$now = microtime(true);
 		$elapsed = $now - $this->lap;
-		$this->lap  = $now;
+		$this->lap = $now;
 		return format_parsetime($elapsed).' sec';
 	}
+
 }
 
 ?>
