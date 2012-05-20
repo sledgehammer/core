@@ -1,46 +1,51 @@
 <?php
+/**
+ * Framework
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Container voor SledgeHammer Framework functions
  * - Module detection and initialisation
- * - Database initialisation
- *
- * @todo Beter locatie vinden voor de database functies
- * @package Core
+ * - Language & locale initialisation
  */
 class Framework {
 
 	/**
-	 * Register UTF-8 as default charset
+	 * Register UTF-8 as default charset.
 	 * @var string
 	 */
 	static $charset = 'UTF-8';
 
 	/**
+	 * The AutoLoader instance.
 	 * @var AutoLoader
 	 */
 	static $autoLoader;
 
 	/**
+	 * The ErrorHandler instance.
 	 * @var ErrorHandler
 	 */
 	static $errorHandler;
-	private static $cachedRequiredModules = array();
 
 	/**
 	 * List required sledgehammer modules and sort on depedency.
 	 * (The module without depedency comes first.)
+	 *
+	 * @param string $modulesPath
+	 * @return array
 	 */
-	static function getModules($modulesPath = NULL) {
-		if ($modulesPath === NULL) {
+	static function getModules($modulesPath = null) {
+		if ($modulesPath === null) {
 			$modulesPath = MODULES_DIR;
 			$applicationPath = APPLICATION_DIR;
 		} else {
 			$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
 		}
-
-		if (isset(self::$cachedRequiredModules[$modulesPath])) {
-			return self::$cachedRequiredModules[$modulesPath];
+		static $cache = array();
+		if (isset($cache[$modulesPath])) {
+			return $cache[$modulesPath];
 		}
 		$required_modules = array();
 		$module_info = array(
@@ -84,7 +89,7 @@ class Framework {
 		foreach ($sorted_modules as $module) {
 			$modules[$module] = $module_info[$module];
 		}
-		self::$cachedRequiredModules[$modulesPath] = $modules;
+		$cache[$modulesPath] = $modules;
 		return $modules;
 	}
 
@@ -112,7 +117,7 @@ class Framework {
 	/**
 	 * Retreiving module info and find all dependend (required) modules
 	 *
-	 * @param string $modulePath  De map waar de "modules" in staan
+	 * @param string $modulesPath  De map waar de "modules" in staan
 	 * @param array $required_modules  Dit is een array met reeds toegevoegde modules. Zodat er elke modules maximaal 1x wordt ingeladen.
 	 * @param array $module_info  In dit array worden gegevens uit de ini bestanden gezet, zodat deze maar 1x ingeladen worden.
 	 * @param string $module  Dit is de naam van de module die toegevoegd zal worden aan de $required_modules (inclusief modules waar deze van afhandelijk is)
@@ -172,7 +177,7 @@ class Framework {
 	/**
 	 * Stel de Locale in zodat getallen en datums op de juiste manier worden weergegeven
 	 *
-	 * @param NULL|string $language engelse benaming van de taal die moet worden ingesteld.
+	 * @param null|string $language engelse benaming van de taal die moet worden ingesteld.
 	 * @return void
 	 */
 	static function initLanguage($language) {
@@ -214,9 +219,9 @@ class Framework {
 	}
 
 	/**
-	 * Detecteer alle modules in de modules map
+	 * Detecteer alle modules in de modules map.
 	 *
-	 * @param string $modulePath
+	 * @param string $modulesPath
 	 * @return array
 	 */
 	private static function detectModules($modulesPath) {

@@ -1,10 +1,12 @@
 <?php
+/**
+ * Database
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * A PDO Database class with additional debugging functions.
  * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behaviour to FECTH_ASSOC
- *
- * @package Core
  */
 class Database extends \PDO {
 
@@ -63,6 +65,8 @@ class Database extends \PDO {
 	private $driver;
 
 	/**
+	 * The database instances that are accesable by getDatabase() and the statusbar() functions.
+	 * array('link' => Database)
 	 * @var array|Database
 	 */
 	static $instances = array();
@@ -74,6 +78,7 @@ class Database extends \PDO {
 	private static $quotedIdentifiers = array();
 
 	/**
+	 * Connect to a database.
 	 *
 	 * @param string $dsn  The pdo-dsn "mysql:host=localhost" or url: "mysql://root@localhost/my_database?charset=utf-8"
 	 * @param string $username
@@ -268,7 +273,7 @@ class Database extends \PDO {
 	 * @param int $parameterType [optional] Provides a data type hint for drivers that have alternate quoting styles.
 	 * @return string  A quoted string that is safe to pass into an SQL statement.
 	 */
-	public function quote($value, $parameterType = null) {
+	function quote($value, $parameterType = null) {
 		if ($parameterType === null && $value === null) {
 			return 'NULL';
 		}
@@ -288,10 +293,20 @@ class Database extends \PDO {
 		return parent::quote($value, $parameterType);
 	}
 
+	/**
+	 * Generate warnings for accessing non-existing properties.
+	 *
+	 * @param string $property
+	 */
 	function __get($property) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
 	}
-
+	/**
+	 * Generate warnings for setting non-existing properties.
+	 *
+	 * @param string $property
+	 * @param mixed $value
+	 */
 	function __set($property, $value) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
 		$this->$property = $value;
@@ -481,7 +496,7 @@ class Database extends \PDO {
 	 * @param string $name [optional]
 	 * @return string
 	 */
-	public function lastInsertId($name = null) {
+	function lastInsertId($name = null) {
 		if ($name === null && isset($this->reportWarnings) && $this->reportWarnings === true) {
 			return $this->previousInsertId;
 		}
@@ -491,6 +506,12 @@ class Database extends \PDO {
 	/**
 	 * De sql query in het debug_blok overzichtelijk weergeven
 	 * De keywords van een sql query dik(<b>) maken en de querytijd een kleur geven (rood voor trage queries, orange voor middelmatige en grijs voor snelle queries)
+	 *
+	 * @param string $sql
+	 * @param int $truncated Number of bytes that where truncated
+	 * @param float $time
+	 * @param array $backtrace
+	 * @return string
 	 */
 	private function highlight($sql, $truncated, $time, $backtrace) {
 		$sql = htmlspecialchars($sql, ENT_COMPAT, Framework::$charset);
@@ -548,9 +569,9 @@ class Database extends \PDO {
 	}
 
 	/**
-	 * Report MySQL warnings and notes if any
+	 * Report MySQL warnings and notes if any.
 	 *
-	 * @param string $result
+	 * @param SQL|string $statement
 	 */
 	function checkWarnings($statement) {
 		if (isset($this->reportWarnings) && $this->reportWarnings === true) {

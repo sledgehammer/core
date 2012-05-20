@@ -1,20 +1,48 @@
 <?php
+/**
+ * DatabaseTestCase
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Add database specific assertions to the TestCase class
- *
- * @package Core
  */
 abstract class DatabaseTestCase extends TestCase {
 
-	protected
-			$skipRebuildDatabase = false,
-			$dbLink = '__NOT_CONNECTED__',
-			$debug = true; // Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
-	private
-			$dbName,
-			$queryCount;
+	/**
+	 * Disable the rebuilding of the database per test_*() method.
+	 * @var bool
+	 */
+	protected $skipRebuildDatabase = false;
 
+	/**
+	 * Name of the database connection
+	 * @var string
+	 */
+	protected $dbLink = '__NOT_CONNECTED__';
+
+	/**
+	 * Als $debug op "true" staat worden er na een FAIL extra informatie gedumpt.
+	 * @var bool
+	 */
+	protected $debug = true;
+
+	/**
+	 * Name of the database "CREATE DATABASE $dbName"
+	 * @var bool
+	 */
+	private $dbName;
+
+	/**
+	 * Number of queries at the start of the test_*()
+	 * @var int
+	 */
+	private $queryCount;
+
+	/**
+	 * Constructor
+	 * @param string $pdoDriver Choose between a sqlite of mysql database.
+	 */
 	function __construct($pdoDriver = 'sqlite') {
 		parent::__construct();
 		// Voorkom dat de default connectie gebruikt wordt.
@@ -60,6 +88,12 @@ abstract class DatabaseTestCase extends TestCase {
 		}
 	}
 
+	/**
+	 * Only run database tests in development.
+	 * (CREATE/DROP DATABASE rights on a production server is a bad idea)
+	 *
+	 * @return array
+	 */
 	function getTests() {
 		if (ENVIRONMENT != 'development') {
 			$this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
@@ -87,10 +121,12 @@ abstract class DatabaseTestCase extends TestCase {
 
 	/**
 	 * Shoud be used to fill the testdatabase with content (CREATEs and INSERTs)
+	 * @param Database $database
 	 */
 	abstract function fillDatabase($database);
 
 	/**
+	 * Get the test database instance.
 	 * @return Database
 	 */
 	function getDatabase() {
@@ -184,6 +220,9 @@ abstract class DatabaseTestCase extends TestCase {
 		$this->assertEquals($expected_contents, $table_contents, $message);
 	}
 
+	/**
+	 * Setup the database environment.
+	 */
 	function setUp() {
 		$db = $this->getDatabase();
 		//dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));

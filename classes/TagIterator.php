@@ -1,4 +1,8 @@
 <?php
+/**
+ * TagIterator
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Een iterator die de tags uit htmlcode haalt.
@@ -7,8 +11,6 @@ namespace SledgeHammer;
  *
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
  * Gebruik in die gevallen niet deze iterator.
- *
- * @package Core
  */
 class TagIterator extends Object implements \Iterator {
 

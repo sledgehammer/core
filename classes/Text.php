@@ -1,11 +1,13 @@
 <?php
+/**
+ * Text
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Text, a string class for handeling (multibyte) strings with OOP syntax
  * Modelled after the C# String class.
  * @link http://msdn.microsoft.com/en-us/library/system.string.aspx
- *
- * @package Core
  *
  * @property-read int $length  The number of characters
  */
@@ -18,7 +20,8 @@ class Text extends Object implements \ArrayAccess {
 	private $text;
 
 	/**
-	 * Construct the Text object and convert $text to UTF-8
+	 * Construct the Text object and convert $text to UTF-8.
+	 *
 	 * @param string $text  The text
 	 * @param string $charset  The charset of $text, null will auto-detect
 	 */
@@ -40,12 +43,17 @@ class Text extends Object implements \ArrayAccess {
 		$this->text = mb_convert_encoding($text, 'UTF-8', $charset);
 	}
 
+	/**
+	 * Allow Text objects to be used as php strings.
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		return $this->text;
 	}
 
 	/**
-	 * Virtual propeties like "length"
+	 * Virtual properties like "length"
 	 * @param string $property
 	 * @return mixed
 	 */
@@ -193,10 +201,20 @@ class Text extends Object implements \ArrayAccess {
 		return $texts;
 	}
 
+	/**
+	 * Convert the first character to uppercase.
+	 *
+	 * @return \SledgeHammer\Text
+	 */
 	function ucfirst() {
 		return new Text($this[0]->toUpper().$this->substring(1), 'UTF-8');
 	}
 
+	/**
+	 * Convert the first character to uppercase and the rest to lowercase.
+	 *
+	 * @return \SledgeHammer\Text
+	 */
 	function capitalize() {
 		return new Text($this[0]->toUpper().$this->substring(1)->toLower(), 'UTF-8');
 	}
@@ -204,11 +222,12 @@ class Text extends Object implements \ArrayAccess {
 	// Info
 
 	/**
-	 * Returns the index of the first occurrence of the specified $text
-	 * Similar to strpos()
+	 * Returns the index of the first occurrence of the specified $text.
+	 * @link http://nl.php.net/manual/en/function.strpos.php
 	 *
-	 * @param string $search
-	 * @param int $offset
+	 * @param string $text  Needle/Search
+	 * @param int $offset Skip the first X characters
+	 * @param bool $ignoreCase Use true for a case-insensitive search.
 	 * @return int|false
 	 */
 	function indexOf($text, $offset = 0, $ignoreCase = false) {
@@ -263,22 +282,45 @@ class Text extends Object implements \ArrayAccess {
 		}
 	}
 
-	// ArrayAccess
-
-	public function offsetExists($offset) {
+	/**
+	 * Whether a offset exists.
+	 * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+	 * @param int|string $offset
+	 * @return bool
+	 */
+	function offsetExists($offset) {
 		return ($offset < mb_strlen($this->text, 'UTF-8'));
 	}
 
-	public function offsetGet($offset) {
+	/**
+	 * Offset to retrieve.
+	 * @link http://php.net/manual/en/arrayaccess.offsetget.php
+	 * @param int|string $offset
+	 * @return mixed
+	 */
+	function offsetGet($offset) {
 		return $this->substring($offset, 1);
 	}
 
-	public function offsetSet($offset, $value) {
-		throw new \Exception('Not implemented');
+	/**
+	 * Offset to set.
+	 * @link http://php.net/manual/en/arrayaccess.offsetset.php
+	 * @param int|string $offset
+	 * @param mixed $value
+	 * @return void
+	 */
+	function offsetSet($offset, $value) {
+		throw new \Exception('Not (yet) implemented');
 	}
 
-	public function offsetUnset($offset) {
-		throw new \Exception('Not implemented');
+	/**
+	 * Offset to unset
+	 * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+	 * @param int string $offset
+	 * @return void
+	 */
+	function offsetUnset($offset) {
+		throw new \Exception('Not (yet) implemented');
 	}
 
 }

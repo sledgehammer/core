@@ -1,4 +1,8 @@
 <?php
+/**
+ * HTMLTokenizer
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Een tokenizer voor htmlcode.
@@ -38,10 +42,7 @@ namespace SledgeHammer;
  *
  * Niet alle tokens hebben een type. Deze tokens bestaan dan uit de data-string i.p.v. een array(token-type, data-string)
  *
- *
  * @link http://en.wikipedia.org/wiki/HTML_element#Syntax
- *
- * @package Core
  */
 class HTMLTokenizer extends Object implements \Iterator{
 

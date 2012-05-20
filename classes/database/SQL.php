@@ -1,4 +1,8 @@
 <?php
+/**
+ * SQL
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
@@ -9,24 +13,60 @@ namespace SledgeHammer;
  *   $sql2 = $sql->where('id = 1');
  *   echo $sql; // "SELECT * FROM customers"
  *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
- *
- * For SELECT options @see http://dev.mysql.com/doc/refman/5.1/en/select.html
- *
- * @package Core
  */
 class SQL extends Object {
 
-	public
-		$select = 'SELECT', // Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
-		$columns = array(), // array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
-		$tables = array(), // array('alias1'=> 'table1', 't2' => array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
-		$where = '', // string|array met voorwaarden, wordt verbonden via operator (recursief)
-		$group_by = array(), // array met group by info, wordt verbonden met ', '
-		$having = '', // zie where
-		$order_by = array(), // index is naam, waarde is DESC of ASC
-		$limit = false, // false|int
-		$offset = false; // false|int
+	/**
+	 * Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
+	 * @link http://dev.mysql.com/doc/refman/5.6/en/select.html
+	 * @var string
+	 */
+	public	$select = 'SELECT';
+	/**
+	 * Array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
+	 * @var array|string
+	 */
+	public	$columns = array();
+	/**
+	 * array('alias1'=> 'table1', 't2' => array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
+	 * @var array
+	 */
+	public	$tables = array();
+	/**
+	 * Tree-structure with conditions. array('operator' => 'AND', 'col1 = 23', array('operator' => 'OR', 'col2 = 1', 'col2 = 56'))
+	 * @var string|array
+	 */
+	public	$where = '';
+	/**
+	 * array met group by info, wordt verbonden met ', '
+	 * @var type
+	 */
+	public	$group_by = array(); //
+	/**
+	 * Similar to $where, but for the HAVING clause.
+	 * @var string|array
+	 */
+	public	$having = '';
+	/**
+	 * index is naam, waarde is DESC of ASC
+	 * @var type
+	 */
+	public	$order_by = array();
+	/**
+	 * Limit the number of results
+	 * @var false|int
+	 */
+	public	$limit = false;
+	/**
+	 * Skip the first x results.
+	 * @var false|int
+	 */
+	public	$offset = false;
 
+	/**
+	 * Allow the SQL object to be used as string.
+	 * @return string
+	 */
 	function __toString() {
 		try {
 			return $this->compose();
@@ -63,6 +103,7 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Remove a column via its alias.
 	 *
 	 * @param string $alias
 	 */
@@ -71,13 +112,12 @@ class SQL extends Object {
 	}
 
 	/**
-	 * Set the $tables
+	 * Set the FROM clause to one or more tables.
 	 *
-	 * @param mixed $table
+	 * @param string|array $table
 	 */
 	function setFrom($table) {
 		if (count($this->tables) != 0) {
-			notice('Overruling from');
 			$this->tables = array();
 		}
 		if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
@@ -97,8 +137,9 @@ class SQL extends Object {
 	/**
 	 * Set/Append a join to the FROM
 	 *
-	 * @param string $type 'INNER JOIN', ',', 'LEFT JOIN'
+	 *
 	 * @param string $table
+	 * @param string $type 'INNER JOIN', ',', 'LEFT JOIN'
 	 * @param string $on
 	 */
 	function setJoin($table, $type = ',', $on = null) {
@@ -152,7 +193,7 @@ class SQL extends Object {
 	 * Returns a new SQL with the given $columns added to the $sql->columns
 	 *
 	 * @param array|string $columns
-	 * @param srting ...
+	 * @param string ...
 	 * @return SQL
 	 */
 	function columns($columns) {
@@ -169,6 +210,7 @@ class SQL extends Object {
 	 * Multiple tables: from('table1', 'table2') of from(array('table1', 'table2'))
 	 *   from('table1 AS t1', 'table2 t2') of from(array('t1' => 'table1', 'table2 AS t2'))
 	 *
+	 * @param string|array $table
 	 * @return SQL
 	 */
 	function from($table) {
@@ -178,6 +220,8 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with the given join appended.
+	 *
 	 * @param string $table
 	 * @param string $on
 	 * @return SQL
@@ -187,6 +231,8 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with the given join appended.
+	 *
 	 * @param string $table
 	 * @param string $on
 	 * @return SQL
@@ -196,6 +242,8 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with the given join appended.
+	 *
 	 * @param string $table
 	 * @param string $on
 	 * @return SQL
@@ -206,6 +254,8 @@ class SQL extends Object {
 
 
 	/**
+	 * Returns a new SQL with the $sql->where set to the given $where.
+	 *
 	 * @param string|array $where
 	 * @return SQL
 	 */

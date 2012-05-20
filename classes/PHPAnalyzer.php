@@ -1,9 +1,11 @@
 <?php
+/**
+ * PHPAnalyzer
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
- *
- * @package Core
  */
 class PHPAnalyzer extends Object {
 
@@ -64,6 +66,8 @@ class PHPAnalyzer extends Object {
 	public $usedDefinitions = array();
 
 	/**
+	 * The AutoLoader used to lookup the corresponding filename for the definitions.
+	 * Uses the Framework::$autoLoader by default.
 	 * @var AutoLoader
 	 */
 	private $autoLoader;
@@ -332,6 +336,8 @@ class PHPAnalyzer extends Object {
 	}
 
 	/**
+	 * Use the given $autoloader for resolving filenames.
+	 *
 	 * @param AutoLoader $autoLoader
 	 */
 	function setAutoLoader(AutoLoader $autoLoader) {
@@ -339,6 +345,7 @@ class PHPAnalyzer extends Object {
 	}
 
 	/**
+	 * Get the configured autoloader instance.
 	 *
 	 * @return AutoLoader
 	 */
@@ -380,13 +387,14 @@ class PHPAnalyzer extends Object {
 	}
 
 	/**
+	 * Register that a definition is used on a $line in $file.
 	 *
-	 * @param string $class  The class that is used
+	 * @param string $definition  The class/interface that is used
 	 * @param string $filename  The filename it is use in
 	 * @param int $line  The line number it is used on
 	 */
-	private function addUsedIn($class, $filename, $line) {
-		@$this->usedDefinitions[$class][$filename][] = $line;
+	private function addUsedIn($definition, $filename, $line) {
+		@$this->usedDefinitions[$definition][$filename][] = $line;
 	}
 
 }

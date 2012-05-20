@@ -1,11 +1,13 @@
 <?php
+/**
+ * cUrl
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * cURL, an HTTP/FTP response object
  * Simplifies asynchronous requests & paralell downloads.
  * Uses the curl functions and throws exceptions on errors.
- *
- * @package Core
  *
  * @property string $effective_url  Last effective URL
  * @property string $http_code      Last received HTTP code
@@ -33,6 +35,10 @@ namespace SledgeHammer;
  */
 class cURL extends Observable {
 
+	/**
+	 * Allow listening to the events: 'load' and 'abort'
+	 * @var array
+	 */
 	protected $events = array(
 		'load' => array(),
 		'abort' => array(),
@@ -88,6 +94,11 @@ class cURL extends Observable {
 		$this->start($options);
 	}
 
+	/**
+	 * Complete the transfer and remove the curl handle from the pool.
+	 *
+	 * @return void
+	 */
 	function __destruct() {
 		if (is_resource($this->handle)) {
 			if ($this->state === 'RUNNING') {

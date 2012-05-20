@@ -1,4 +1,8 @@
 <?php
+/**
+ * Observable
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Observable, an Event/Listener
@@ -26,8 +30,6 @@ namespace SledgeHammer;
  *
  * // reset all listeners.
  * $this->onClick = null;
- *
- * @package Core
  */
 abstract class Observable extends Object {
 

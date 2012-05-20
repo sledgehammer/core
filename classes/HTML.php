@@ -1,25 +1,29 @@
 <?php
+/**
+ * HTML
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * HTML, an view compatible class for rendering raw html.
  * Contains static helper functions for generating tags, etc
- *
- * @package Core
  */
 class HTML extends Object {
 
 	/**
+	 * The output string.
 	 * @var string
 	 */
 	private $html;
 
 	/**
+	 * The View headers.
 	 * @var array
 	 */
 	private $headers;
 
 	/**
-	 *
+	 * Constructor
 	 * @param string $html
 	 * @param array $headers
 	 */
@@ -28,14 +32,27 @@ class HTML extends Object {
 		$this->headers = $headers;
 	}
 
+	/**
+	 * Output the html.
+	 */
 	function render() {
 		echo $this->html;
 	}
 
+	/**
+	 * Returns the html.
+	 * Allows `echo $html;`
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		return $this->html;
 	}
 
+	/**
+	 * Return View headers.
+	 * @return array
+	 */
 	function getHeaders() {
 		return $this->headers;
 	}

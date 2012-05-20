@@ -1,12 +1,14 @@
 <?php
+/**
+ * Wrapper
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Wrap the object/array into container object
  * Allow filters and accesscontrol to any object or array.
  *
  * @see \SledgeHammer\Readonly for an example implementation.
- *
- * @package Core
  */
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 
@@ -37,9 +39,9 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	/**
 	 * Process the value that is going out (is being retrieved from the wrapped object)
 	 *
-	 * @param type $value
-	 * @param type $element
-	 * @param type $context
+	 * @param mixed $value
+	 * @param string $element
+	 * @param "object"|"array" $context
 	 */
 	protected function out($value, $element, $context) {
 		if ($this->_recursive && (is_array($value) || is_object($value))) {
@@ -54,9 +56,9 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	/**
 	 * Process the value before it's going in (is being set into the wrapped object)
 	 *
-	 * @param type $value
-	 * @param type $element
-	 * @param type $context
+	 * @param mixed $value
+	 * @param string $element
+	 * @param "object"|"array" $context
 	 */
 	protected function in($value, $element, $context) {
 		return $value;

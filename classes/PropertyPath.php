@@ -1,4 +1,8 @@
 <?php
+/**
+ * PropertyPath
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * PropertyPath, a helper class that resolves properties inside arrays and objects based on a path.
@@ -17,8 +21,6 @@ namespace SledgeHammer;
  *   'abc.efg'  maps to  $data['abc']['efg], $data['abc']->efg, $data->abc['efg] or $data->abc->efg
  *   '->abc->efg' maps to property $data->abc->efg
  *   '->abc[efg]' maps to property $data->abc[efg]
- *
- * @package Core
  */
 class PropertyPath extends Object {
 

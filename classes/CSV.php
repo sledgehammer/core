@@ -1,17 +1,19 @@
 <?php
+/**
+ * CSV
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Een generieke snelle manier om een csv bestand in te lezen.
  * Kan ook csv bestanden genereren met CSV::write()
  *
  * De eerste regel van het csv bestand kan gebruikt worden om de kolomnamen te defineren.
- *
- * @package Core
  */
 class CSV extends Object implements \Iterator {
 
 	/**
-	 * path van het csv bestand
+	 * Path van het csv bestand
 	 * @var string
 	 */
 	private $filename;
@@ -41,19 +43,19 @@ class CSV extends Object implements \Iterator {
 	private $fp;
 
 	/**
-	 * Veranderd een $row van een indexed array naar assoc array
+	 * Veranderd een $row van een indexed array naar assoc array.
 	 * @var array
 	 */
 	private $keys;
 
 	/**
-	 * Current row
+	 * Current row.
 	 * @var array
 	 */
 	private $values;
 
 	/**
-	 * Current key/index
+	 * Current key/index.
 	 * @var int|null
 	 */
 	private $index;
@@ -65,6 +67,8 @@ class CSV extends Object implements \Iterator {
 	private $eol = "\r\n";
 
 	/**
+	 * Constructor
+	 *
 	 * @param string $filename  Het path waar het csv bestand zich bevind
 	 * @param array $columns  Hiermee geef je aan welke kolommen ingelezen moeten worden. $value = kolomnaam, $key = array_key
 	 * @param char $delimiter  Scheidingsteken, ';' als default omdat dit nederlandse excel standaard is.
@@ -77,6 +81,9 @@ class CSV extends Object implements \Iterator {
 		$this->enclosure = $enclosure;
 	}
 
+	/**
+	 * Autoclose the file handle
+	 */
 	function __destruct() {
 		if ($this->fp) {
 			fclose($this->fp); // Als het object niet meer nodig is, kan de file-pointer gesloten worden.
@@ -87,7 +94,11 @@ class CSV extends Object implements \Iterator {
 	 * Schrijf de waarden in de $iterator weg naar $filename die in de constuctor is meegegeven.
 	 * D.m.v "php://output" kan het csv bestand direct naar de browser verstuurd worden.
 	 *
-	 * @param \Iterator $iterator  Brongegevens voor de csv. Elementen worden bepaald d.m.v. de $keys in de $this->columns array.
+	 * @param string $filename
+	 * @param iterator $iterator Brongegevens voor de csv. Elementen worden bepaald d.m.v. de $keys in de $this->columns array.
+	 * @param array|null $columns
+	 * @param string|char $delimiter
+	 * @param string|char $enclosure
 	 * @return void
 	 */
 	static function write($filename = null, $iterator, $columns = null, $delimiter = ';', $enclosure = '"') {
@@ -165,7 +176,7 @@ class CSV extends Object implements \Iterator {
 
 	/**
 	 * De rij inlezen en naar de volgende regel gaan.
-	 *
+	 * @link http://php.net/manual/en/iterator.next.php
 	 * @return void
 	 */
 	function next() {
@@ -188,7 +199,7 @@ class CSV extends Object implements \Iterator {
 
 	/**
 	 * Geeft aan of er nog records in het bestand zitten
-	 *
+	 * @link http://php.net/manual/en/iterator.valid.php
 	 * @return bool
 	 */
 	function valid() {
@@ -197,7 +208,7 @@ class CSV extends Object implements \Iterator {
 
 	/**
 	 * Huidige rij teruggeven.
-	 *
+	 * @link http://php.net/manual/en/iterator.current.php
 	 * @return array
 	 */
 	function current() {
@@ -205,8 +216,8 @@ class CSV extends Object implements \Iterator {
 	}
 
 	/**
-	 * Regelnummer teruggeven.
-	 *
+	 * Returns current linenumber. (starts at 1)
+	 * @link http://php.net/manual/en/iterator.key.php
 	 * @return int
 	 */
 	function key() {

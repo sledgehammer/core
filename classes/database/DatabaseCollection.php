@@ -1,28 +1,40 @@
 <?php
+/**
+ * DatabaseCollection
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * DatabaseCollection a Collection interface to a database result.
+ * It will lazyily generate & mutate the SQL query based on the filter & sorting operations.
  * Inspired by "Linq to SQL"
- *
- * @package Core
  */
 class DatabaseCollection extends Collection {
 
 	/**
-	 * @var SQL
+	 * The SQL object  or string fetches the items in this collection.
+	 * @var SQL|string
 	 */
 	public $sql;
+	/**
+	 * The database identifier. (default: "default")
+	 * @var string
+	 */
 	protected $dbLink;
 
 	/**
-	 * @param SQL|string $sql  The SELECT query
-	 * @param string $dbLink  The database identifier
+	 * Constructor
+	 * @param SQL|string $sql  The SELECT query.
+	 * @param string $dbLink  The database identifier.
 	 */
 	function __construct($sql, $dbLink = 'default') {
 		$this->sql = $sql;
 		$this->dbLink = $dbLink;
 	}
 
+	/**
+	 * Clone a database collection.
+	 */
 	function __clone() {
 		if ($this->data !== null) {
 			parent::__clone();
@@ -99,6 +111,13 @@ class DatabaseCollection extends Collection {
 		return new DatabaseCollection($sql, $this->dbLink);
 	}
 
+	/**
+	 * Return a new collection sorted by the given field in ascending order.
+	 *
+	 * @param string $path
+	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @return Collection
+	 */
 	function orderBy($path, $method = SORT_REGULAR) {
 		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
@@ -108,6 +127,13 @@ class DatabaseCollection extends Collection {
 		return parent::orderBy($path, $method);
 	}
 
+	/**
+	 * Return a new collection sorted by the given field in descending order.
+	 *
+	 * @param string $path
+	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @return Collection
+	 */
 	function orderByDescending($path, $method = SORT_REGULAR) {
 		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
@@ -117,6 +143,12 @@ class DatabaseCollection extends Collection {
 		return parent::orderBy($path, $method);
 	}
 
+	/**
+	 * Return a new Collection without the first x items.
+	 *
+	 * @param int $offset
+	 * @return Collection
+	 */
 	function skip($offset) {
 		if ($this->data === null && is_string($this->sql) === false) {
 			$sql = clone $this->sql;
@@ -134,6 +166,12 @@ class DatabaseCollection extends Collection {
 		return parent::skip($offset);
 	}
 
+	/**
+	 * Return a new Collection with only the first x items.
+	 *
+	 * @param int $length
+	 * @return Collection
+	 */
 	function take($length) {
 		if ($this->data === null && is_string($this->sql) === false) {
 			if ($this->sql->limit === false || $this->sql->limit >= $length) {
@@ -144,7 +182,7 @@ class DatabaseCollection extends Collection {
 	}
 
 	/**
-	 *
+	 * Override the SQL query.
 	 * @param string|SQL $sql
 	 */
 	function setQuery($sql) {
@@ -152,11 +190,22 @@ class DatabaseCollection extends Collection {
 		$this->data = null;
 	}
 
+	/**
+	 * Rewind the Iterator to the first element.
+	 * @link http://php.net/manual/en/iterator.rewind.php
+	 * @return void
+	 */
 	function rewind() {
-		$this->validateIterator();
+		$this->dataToIterator();
 		parent::rewind();
 	}
 
+	/**
+	 * Returns the number of elements in the collection.
+	 * @link http://php.net/manual/en/class.countable.php
+	 *
+	 * @return int
+	 */
 	function count() {
 		if ($this->data === null && $this->sql instanceof SQL) {
 			$sql = $this->sql->select('COUNT(*)');
@@ -166,6 +215,11 @@ class DatabaseCollection extends Collection {
 		return count($this->data);
 	}
 
+	/**
+	 * Converts $this->data to an array.
+	 *
+	 * @return void
+	 */
 	protected function dataToArray() {
 		if (is_array($this->data)) {
 			return;
@@ -185,7 +239,13 @@ class DatabaseCollection extends Collection {
 		return parent::dataToArray();
 	}
 
-	private function validateIterator() {
+	/**
+	 * Converts $this->data to an iterator.
+	 * Executes the SQL query if needed.
+	 *
+	 * @return void
+	 */
+	private function dataToIterator() {
 		if ($this->data === null) {
 			$db = getDatabase($this->dbLink);
 			$this->data = $db->query($this->sql);

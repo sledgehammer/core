@@ -1,4 +1,8 @@
 <?php
+/**
+ * AutoLoader
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Load class and interface definitions on demand.
@@ -6,8 +10,6 @@ namespace SledgeHammer;
  *
  * Validates definiton files according to $this->settings.
  * Detects and corrects namespace issues.
- *
- * @package Core
  */
 class AutoLoader extends Object {
 
@@ -59,13 +61,18 @@ class AutoLoader extends Object {
 	private $definitions = array();
 
 	/**
-	 *
-	 * @param string $path
+	 * Constructor
+	 * @param string $path Project path
 	 */
 	function __construct($path) {
 		$this->path = $path;
 	}
 
+	/**
+	 * Load definitions from a static file or detect definition for all modules.
+	 *
+	 * @return void
+	 */
 	function init() {
 		if (file_exists($this->path.'AutoLoader.db.php')) {
 			include($this->path.'AutoLoader.db.php');
@@ -73,7 +80,7 @@ class AutoLoader extends Object {
 			return;
 		}
 		$modules = Framework::getModules();
-		foreach ($modules as $folder => $module) {
+		foreach ($modules as $module) {
 			$this->importModule($module);
 		}
 	}
@@ -131,11 +138,17 @@ class AutoLoader extends Object {
 		}
 	}
 
+	/**
+	 * Returns all definitions the AutoLoaders has detected.
+	 *
+	 * @return array
+	 */
 	function getDefinitions() {
 		return array_keys($this->definitions);
 	}
 
 	/**
+	 * Import a class into the required namespace.
 	 *
 	 * @param string $definition Fully qualified class/interface name
 	 * @return bool
@@ -179,7 +192,6 @@ class AutoLoader extends Object {
 	 * Uses strict validation rules when the module contains a classes folder.
 	 *
 	 * @param array $module
-	 * @param array $settings
 	 * @return void
 	 */
 	function importModule($module) {
@@ -205,7 +217,7 @@ class AutoLoader extends Object {
 	 * Import definitions inside a folder.
 	 * Checks "autoloader.ini" for additional settings.
 	 *
-	 * @param array $module
+	 * @param string $path
 	 * @param array $settings
 	 * @return void
 	 */
@@ -266,6 +278,7 @@ class AutoLoader extends Object {
 	}
 
 	/**
+	 * Import the definition in a file
 	 *
 	 * @param string $filename
 	 * @param array $settings
@@ -402,6 +415,7 @@ class AutoLoader extends Object {
 	 * Deze functie NIET gebruiken in productie-code
 	 *
 	 * @throws Exception Als de class al gedefineerd is. (De eval() zou anders fatale "Cannot redeclare class" veroorzaken).
+	 * @param string $class Classname
 	 * @return void
 	 */
 	function exposePrivates($class) {
@@ -445,6 +459,7 @@ class AutoLoader extends Object {
 	}
 
 	/**
+	 * Generate a static AutoLoader.db.php file
 	 *
 	 * @param string $cacheFile
 	 * @param null|string $definitionPath
@@ -470,6 +485,13 @@ class AutoLoader extends Object {
 		file_put_contents($cacheFile, $php);
 	}
 
+	/**
+	 * Merge settings
+	 *
+	 * @param array $settings
+	 * @param array $overrides
+	 * @return array
+	 */
 	private function mergeSettings($settings, $overrides = array()) {
 		$availableSettings = array_keys($this->settings);
 		foreach ($overrides as $key => $value) {
@@ -492,6 +514,13 @@ class AutoLoader extends Object {
 		return $settings;
 	}
 
+	/**
+	 * Load settings from a ini file which overrides settings for that folder & subfolders.
+	 *
+	 * @param string $path
+	 * @param array $settings
+	 * @return array
+	 */
 	private function loadSettings($path, $settings = array()) {
 		if (substr($path, -1) == '/') {
 			$path = substr($path, 0, -1);
@@ -521,6 +550,11 @@ class AutoLoader extends Object {
 		return $this->mergeSettings($settings, $overrides);
 	}
 
+	/**
+	 * Report the offending token
+	 *
+	 * @param string|array $token
+	 */
 	private function unexpectedToken($token) {
 		if (is_string($token)) {
 			notice('Unexpected token: '.syntax_highlight($token));

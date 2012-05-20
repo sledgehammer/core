@@ -1,23 +1,44 @@
 <?php
+/**
+ * PreparedStatement
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * A PDOStatment subclass that logs prepared statements.
  * Logs the execution time and executed query to the connected Database.
- *
- * @package Core
  */
 class PreparedStatement extends PDOStatement {
 
 	/**
+	 * Direct link to the Database object that created the prepared statement.
 	 * @var Database
 	 */
 	private $database;
+
+	/**
+	 * The bound parameters via bindParam/bindValue
+	 * @var array
+	 */
 	private $params = array();
 
+	/**
+	 * Constructor (called from within PDO->prepare() via \PDO::ATTR_STATEMENT_CLASS)
+	 * @link http://www.php.net/manual/pdo.constants.php
+	 *
+	 * @param Database $database
+	 */
 	private function __construct($database) {
 		$this->database = $database;
 	}
 
+	/**
+	 * Executes a prepared statement.
+	 * @link http://php.net/manual/en/pdostatement.execute.php
+	 *
+	 * @param array $input_parameters
+	 * @return bool
+	 */
 	function execute($input_parameters = array()) {
 		$start = microtime(true);
 		$result = parent::execute($input_parameters);
@@ -36,12 +57,32 @@ class PreparedStatement extends PDOStatement {
 		return $result;
 	}
 
+	/**
+	 * Binds a parameter to the specified variable name.
+	 * @link http://php.net/manual/en/pdostatement.bindparam.php
+	 *
+	 * @param mixed $parameter
+	 * @param mixed $variable
+	 * @param int $data_type
+	 * @param int $length
+	 * @param mixed $driver_options
+	 * @return bool
+	 */
 	function bindParam($parameter, &$variable, $data_type = null, $length = null, $driver_options = null) {
 		$this->params[$parameter] = &$variable;
 		return parent::bindParam($parameter, $variable, $data_type, $length, $driver_options);
 	}
 
-	public function bindValue($parameter, $value, $data_type = null) {
+	/**
+	 * Bind a column to a PHP variable
+	 * @link http://php.net/manual/en/pdostatement.bindcolumn.php
+	 *
+	 * @param mixed $parameter
+	 * @param mixed $value
+	 * @param mixed $data_type
+	 * @return bool
+	 */
+	function bindValue($parameter, $value, $data_type = null) {
 		$this->params[$parameter] = $value;
 		return parent::bindValue($parameter, $value, $data_type);
 	}
@@ -58,16 +99,16 @@ class PreparedStatement extends PDOStatement {
 	private function interpolate($query, $params) {
 		$keys = array();
 
-		# build a regular expression for each parameter
+		// build a regular expression for each parameter
 		foreach ($params as $key => $value) {
 			if (is_string($key)) {
-				$keys[] = '/:'.$key.'/';
+				$keys[] = '/:'.preg_quote($key).'/';
 			} else {
 				$keys[] = '/[?]/';
 			}
 			$params[$key] = $this->database->quote($value, \PDO::PARAM_STR);
 		}
-		return preg_replace($keys, $params, $query, 1, $count);
+		return preg_replace($keys, $params, $query, 1);
 	}
 
 }

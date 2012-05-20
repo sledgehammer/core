@@ -1,14 +1,16 @@
 <?php
+/**
+ * URL
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
- * URL class for generating and manipulating urls.
- *
- * @package Core
+ * Utility class for generating and manipulating urls.
  */
 class URL extends Object {
 
 	/**
-	 * The protocol schema
+	 * The protocol schema.
 	 * @var string
 	 */
 	public $scheme;
@@ -20,19 +22,19 @@ class URL extends Object {
 	public $host;
 
 	/**
-	 * Portnumber
+	 * Portnumber.
 	 * @var int
 	 */
 	public $port;
 
 	/**
-	 * The (unescaped) path
+	 * The (unescaped) path.
 	 * @var string
 	 */
 	public $path;
 
 	/**
-	 * The parameters in the querystring
+	 * The parameters in the querystring.
 	 * @var array
 	 */
 	public $query = array();
@@ -44,23 +46,25 @@ class URL extends Object {
 	public $fragment;
 
 	/**
-	 * The username
+	 * The username.
 	 * @var string
 	 */
 	public $user;
 
 	/**
-	 * The password
+	 * The password.
 	 * @var string
 	 */
 	public $pass;
 
 	/**
-	 * @var URL  The url of the current page
+	 * The url of the current page.
+	 * @var URL
 	 */
 	private static $current;
 
 	/**
+	 * Constructor
 	 * @param null|string $url  De url om te parsen, bij NULL wordt de huidige url gebruikt
 	 */
 	function __construct($url) {
@@ -79,6 +83,7 @@ class URL extends Object {
 
 	/**
 	 * Generate the url as a string.
+	 * Allows URL object to be used as php strings.
 	 *
 	 * @return string
 	 */
@@ -170,45 +175,14 @@ class URL extends Object {
 	}
 
 	/**
-	 * Vraag een specifiek deel van url op of de lijst met onderdelen
-	 *
-	 * @param NULL|string $part Het deel van de url welke gevraagd wordt, bij NULL krijg je een array met alle gegevens
-	 * @param NULL|string $url De url om te parsen, bij NULL wordt de huidige url gebruikt
-	 * @return mixed
-	 */
-	static function info($part, $url = null) {
-		deprecated('Use the OOP "new URL()" syntax');
-		if ($part === null) {
-			error('No longer supported');
-		}
-		$url = new URL($url);
-		return $url->$part;
-	}
-
-	static function uri() {
-		deprecated('Use the OOP "new URL()" syntax');
-		$url = new URL();
-		return $url->__toString();
-	}
-
-	static function extract_path() {
-		deprecated('Use the OOP "new URL()" syntax');
-		$url = URL::getCurrentURL();
-		return array(
-			'filename' => $url->getFilename(),
-			'folders' => $url->getFolders(),
-		);
-	}
-
-	/**
 	 * Multi-functionele functie om parameters op te vragen en toe te voegen
 	 *
 	 * URL:parameters(); vraagt de huidige parameters op. ($_GET)
 	 * URL:parameters("naam['test']=1234"); of URL::parameters(array('naam'=>array('test'=>1234))); voegt deze parameter toe aan de huidige parameter array.
 	 * URL:parameter("bla=true", 'x=y'); voegt 2 parameter 'arrays' samen
 	 *
-	 * @param array $append De parameter die toegevoegd moet worden
-	 * @param mixed $stack: De url of array waarde parameters waaraan toegevoegd moet worden, bij NULL worden de huidige $_GET parameters gebruikt
+	 * @param array $append  De parameter die toegevoegd moet worden
+	 * @param mixed $stack   De url of array waarde parameters waaraan toegevoegd moet worden, bij NULL worden de huidige $_GET parameters gebruikt
 	 * @return array
 	 */
 	static function parameters($append = array(), $stack = NULL) {
@@ -248,6 +222,11 @@ class URL extends Object {
 		return ($subdomain === NULL) ? '' : $subdomain;
 	}
 
+	/**
+	 * Returns the domain without subdomains.
+	 *
+	 * @return string
+	 */
 	static function domain() {
 		deprecated('Maar nog geen alternatief beschikbaar');
 

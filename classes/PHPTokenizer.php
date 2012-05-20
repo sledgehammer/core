@@ -1,7 +1,11 @@
 <?php
+/**
+ * PHPTokenizer
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
- * a PHPTokenizer that helps to identify the class and interface names.
+ * A tokenizer that helps to identify the class and interface names.
  *
  * Tokens:
  *   T_HTML        Inline html output
@@ -21,8 +25,6 @@ namespace SledgeHammer;
  *   T_OBJECT       An class that is used in the code
  *   T_CALL         An global function that is called in the code
  *   T_METHOD_CALL  An method that is called in the code
- *
- * @package Core
  */
 class PHPTokenizer extends Object implements \Iterator {
 

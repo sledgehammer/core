@@ -1,10 +1,10 @@
 <?php
-namespace SledgeHammer;
 /**
  * Initialize SledgeHammer Core.
  *
  * @package Core
  */
+namespace SledgeHammer;
 
 // Define constants
 if (!defined('SledgeHammer\MICROTIME_START')) {

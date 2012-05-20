@@ -1,10 +1,12 @@
 <?php
+/**
+ * PDOStatement
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * PDOStatement override
  * Adds Countable to the Database results.
- *
- * @package Core
  */
 class PDOStatement extends \PDOStatement implements \Countable {
 
@@ -13,7 +15,7 @@ class PDOStatement extends \PDOStatement implements \Countable {
 	 * (Slow on SQlite databases)
 	 * @return int
 	 */
-	public function count() {
+	function count() {
 		$count = $this->rowCount();
 		if ($count !== 0) {
 			return $count; // Return the rowCount (num_rows in MySQL)

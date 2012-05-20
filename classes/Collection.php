@@ -1,21 +1,25 @@
 <?php
+/**
+ * Collection
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Collection: Array on Steriods
  * Provides a filtering, sorting, events and other utility functions for collections.
  *
  * Inspired by LinQ and Underscore.php
- *
- * @package Core
  */
 class Collection extends Observable implements \Iterator, \Countable, \ArrayAccess {
 
 	/**
-	 * @var \Traversable
+	 * The traversable the Collection class operates on.
+	 * @var \Traversable Iterator / array
 	 */
 	protected $data;
 
 	/**
+	 * Allow listening to the events: 'changing' and 'changed'
 	 * @var array
 	 */
 	protected $events = array(
@@ -24,6 +28,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	);
 
 	/**
+	 * Contructor
 	 * @param \Traversable|array $data
 	 */
 	function __construct($data) {
@@ -33,7 +38,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Return a new collection where each element is a subselection of the original element.
 	 *
-	 * @param string|array $query  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
+	 * @param string|array $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
 	 * @param string|null|false $selectKey  (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
 	 * @return Collection
 	 */
@@ -124,8 +129,8 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				$operator = '==';
 			}
 			$conditions = function ($value) use ($expectation, $operator) {
-				return compare($value, $operator, $expectation);
-			};
+						return compare($value, $operator, $expectation);
+					};
 			$isClosure = true;
 		} else {
 			$isClosure = false;
@@ -175,7 +180,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * Return a new collection sorted by the given field in ascending order.
 	 *
 	 * @param string $path
-	 * @param int $flag  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
 	function orderBy($path, $method = SORT_REGULAR) {
@@ -215,7 +220,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * Return a new collection sorted by the given field in descending order.
 	 *
 	 * @param string $path
-	 * @param int $flag  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
+	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
 	function orderByDescending($path, $method = SORT_REGULAR) {
@@ -284,8 +289,8 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
-	 * Return the number of elements in the collection.
-	 * count($collection)
+	 * Returns the number of elements in the collection.
+	 * @link http://php.net/manual/en/class.countable.php
 	 *
 	 * @return int
 	 */
@@ -309,12 +314,18 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		throw new \Exception('The setQuery() method is not supported by '.get_class($this));
 	}
 
+	/**
+	 * Clone a collection.
+	 */
 	function __clone() {
 		$this->dataToArray();
 	}
 
-	// Iterator functions
-
+	/**
+	 * Return the current element
+	 * @link http://php.net/manual/en/iterator.current.php
+	 * @return mixed
+	 */
 	function current() {
 		if (is_array($this->data)) {
 			return current($this->data);
@@ -322,6 +333,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->data->current();
 	}
 
+	/**
+	 * Return the current key/index.
+	 * @link http://php.net/manual/en/iterator.key.php
+	 * @return int|string
+	 */
 	function key() {
 		if (is_array($this->data)) {
 			return key($this->data);
@@ -329,6 +345,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->data->key();
 	}
 
+	/**
+	 * Move forward to next element.
+	 * @link http://php.net/manual/en/iterator.next.php
+	 * @return void
+	 */
 	function next() {
 		if (is_array($this->data)) {
 			return next($this->data);
@@ -336,6 +357,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->data->next();
 	}
 
+	/**
+	 * Rewind the Iterator to the first element.
+	 * @link http://php.net/manual/en/iterator.rewind.php
+	 * @return void
+	 */
 	function rewind() {
 		if (is_array($this->data)) {
 			reset($this->data);
@@ -353,6 +379,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		throw new \Exception(''.$type.' is not an Traversable');
 	}
 
+	/**
+	 * Checks if current position is valid.
+	 * @link http://php.net/manual/en/iterator.valid.php
+	 * @return bool
+	 */
 	function valid() {
 		if (is_array($this->data)) {
 			return (key($this->data) !== null);
@@ -360,18 +391,36 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->data->valid();
 	}
 
-	// ArrayAccess functions
 
+	/**
+	 * Whether a offset exists.
+	 * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+	 * @param int|string $offset
+	 * @return bool
+	 */
 	function offsetExists($offset) {
 		$this->dataToArray();
 		return array_key_exists($offset, $this->data);
 	}
 
+	/**
+	 * Offset to retrieve
+	 * @link http://php.net/manual/en/arrayaccess.offsetget.php
+	 * @param int|string $offset
+	 * @return mixed
+	 */
 	function offsetGet($offset) {
 		$this->dataToArray();
 		return $this->data[$offset];
 	}
 
+	/**
+	 * Offset to set
+	 * @link http://php.net/manual/en/arrayaccess.offsetset.php
+	 * @param int|string $offset
+	 * @param mixed $value
+	 * @return void
+	 */
 	function offsetSet($offset, $value) {
 		$this->dataToArray();
 		$this->trigger('changing', $this);
@@ -383,6 +432,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		$this->trigger('changed', $this);
 	}
 
+	/**
+	 * Offset to unset
+	 * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+	 * @param int string $offset
+	 * @return void
+	 */
 	function offsetUnset($offset) {
 		$this->dataToArray();
 		$this->trigger('changing', $this);
@@ -391,7 +446,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
-	 * Convert this->data to an array.
+	 * Convert $this->data to an array.
 	 *
 	 * @return void
 	 */

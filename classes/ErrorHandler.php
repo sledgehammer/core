@@ -1,10 +1,12 @@
 <?php
+/**
+ * ErrorHandler
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Verzorgt de afhandeling van php fouten.
  * Deze kan een uitgebreide foutmelding in html-formaat tonen en/of emailen
- *
- * @package Core
  */
 class ErrorHandler {
 
@@ -104,8 +106,8 @@ class ErrorHandler {
 	 * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
 	 */
 	function init() {
-		set_error_handler(array($this, 'error_callback'));
-		set_exception_handler(array($this, 'exception_callback'));
+		set_error_handler(array($this, 'errorCallback'));
+		set_exception_handler(array($this, 'exceptionCallback'));
 		register_shutdown_function(array($this, 'shutdown_callback'));
 	}
 
@@ -118,13 +120,31 @@ class ErrorHandler {
 	 * @param int|null $line
 	 * @param array|null $context
 	 */
-	function error_callback($type, $message, $filename = null, $line = null, $context = null) {
+	function errorCallback($type, $message, $filename = null, $line = null, $context = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | $type)) { // Report this error?
 			$this->report($type, $message);
 		}
 		if ($type == E_USER_ERROR || $type == E_RECOVERABLE_ERROR) {
 			exit(1);
+		}
+	}
+
+	/**
+	 * Callback voor exceptions die buiten een try/catch block ge-throw-t worden.
+	 *
+	 * @param Exception $exception
+	 */
+	function exceptionCallback($exception) {
+		if ($exception instanceof \Exception) {
+			if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
+				Framework::$errorHandler->report($exception, '__UNCAUGHT_EXCEPTION__');
+			} else {
+				notice('Only the set_exception_handler() should call ErrorHandler->exceptionCallback. use report_exception()', "Use the <b>report_exception</b>(\$exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report(\$exception) to target a specific instance.");
+				Framework::$errorHandler->report($exception);
+			}
+		} else {
+			self::handle(E_USER_ERROR, 'Parameter $exception must be an Exception, instead of a '.gettype($exception));
 		}
 	}
 
@@ -151,7 +171,7 @@ class ErrorHandler {
 		if ($type instanceof \Exception) {
 			// @todo check the exception handler is this instance.
 		} elseif ($check_for_alternate_error_handler) {
-			$callback = set_error_handler(array($this, 'error_callback'));
+			$callback = set_error_handler(array($this, 'errorCallback'));
 			restore_error_handler();
 			if (is_array($callback) == false || $callback[0] !== $this) {
 				$conversion_table = array(
@@ -260,7 +280,7 @@ class ErrorHandler {
 		}
 
 		if ($information === null && strpos($message, 'Missing argument ') === 0) {
-			$information = $this->search_function($message); // informatie tonen over welke parameters er verwacht worden.
+			$information = $this->resolveFunction($message); // informatie tonen over welke parameters er verwacht worden.
 		}
 		$message_plain = $message;
 		if (strpos($message, '<span style="color:') === false) { // Alleen html van de syntax_highlight functie toestaan, alle overige htmlkarakers escapen
@@ -298,20 +318,20 @@ class ErrorHandler {
 			if ($information !== null && !empty($information)) {
 				echo "<b>Extra information</b><br />\n<span style='color:#007700'>";
 				if (is_array($information)) {
-					$this->export_array($information);
+					$this->renderArray($information);
 				} elseif (is_object($information)) {
 					echo syntax_highlight($information), ":<br />\n";
-					$this->export_array($information);
+					$this->renderArray($information);
 				} else {
 					echo $information, "<br />\n";
 				}
 				echo '</span>';
 			}
 			if ($this->email) { // email specifieke informatie blokken genereren?
-				$this->client_info();
-				$this->server_info();
+				$this->renderBrowserInfo();
+				$this->renderServerInfo();
 			}
-			$this->backtrace();
+			$this->renderBacktrace();
 			switch ($type) {
 
 				case E_WARNING:
@@ -331,7 +351,7 @@ class ErrorHandler {
 					break;
 			}
 		} else {
-			$location = $this->location();
+			$location = $this->resolveLocation();
 			if ($location !== false) {
 				echo '&nbsp;&nbsp; in <b>', $location['file'], '</b> on line <b>', $location['line'], '</b>';
 			}
@@ -363,7 +383,7 @@ class ErrorHandler {
 			} else {
 				$error_message = $this->error_types[$type].': '.$message;
 			}
-			$location = $this->location();
+			$location = $this->resolveLocation();
 			if ($location) {
 				$error_message .= ' in '.$location['file'].' on line '.$location['line'];
 			}
@@ -393,7 +413,7 @@ class ErrorHandler {
 			// Headers voor de email met HTML indeling
 			$headers = "MIME-Version: 1.0\n";
 			$headers .= "Content-type: text/html; charset=iso-8859-1\n";
-			$headers .= 'From: '.$this->from_email()."\n";
+			$headers .= 'From: '.$this->fromEmail()."\n";
 
 			if ($type instanceof \Exception) {
 				$subject = get_class($type).': '.$type->getMessage();
@@ -423,7 +443,7 @@ class ErrorHandler {
 	 *
 	 * @return array|false  array('file' => $filename, 'line' => $linenumber)
 	 */
-	private function location() {
+	private function resolveLocation() {
 		$backtrace = debug_backtrace();
 		foreach ($backtrace as $call) {
 			if (isset($call['file']) && $call['file'] !== __FILE__ && $call['function'] !== 'handle') {
@@ -439,7 +459,7 @@ class ErrorHandler {
 	/**
 	 * De bestanden, regelnummers, functie en objectnamen waar de fout optrad weergeven.
 	 */
-	private function backtrace() {
+	private function renderBacktrace() {
 		$backtrace = debug_backtrace();
 		echo "<b>Backtrace</b><div>\n";
 		// Pass 1:
@@ -448,30 +468,30 @@ class ErrorHandler {
 		//   De plaats van de errror extra benadrukken (door een extra witregel)
 		while ($call = next($backtrace)) {
 			if (isset($call['object']) && $call['object'] === $this) {
-				if ($call['function'] == 'error_callback') { // Is de fout getriggerd door php
+				if ($call['function'] == 'errorCallback') { // Is de fout getriggerd door php
 					if (isset($call['file'])) { // Zit de fout niet in een functie?
-						$this->backtrace_highlight($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler_error_callback parameters
+						$this->renderBacktraceCall($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler->errorCallback parameters
 						next($backtrace);
 						break;
 					} else { // De fout komt uit een functie (bijvoorbeeld een Permission denied uit een fopen())
-						$call = next($backtrace); // Sla deze $call over deze bevat alleen de ErrorHandler_error_callback() aanroep
-						$this->backtrace_highlight($call);
+						$call = next($backtrace); // Sla deze $call over deze bevat alleen de ErrorHandler->errorCallback() aanroep
+						$this->renderBacktraceCall($call);
 						next($backtrace);
 						break;
 					}
 				} elseif ($call['function'] == 'shutdown_callback') {
 					$error = error_get_last();
-					$this->backtrace_highlight($error);
+					$this->renderBacktraceCall($error);
 					next($backtrace);
 					break;
 				} elseif ($call['function'] == 'report' && $call['args'][0] instanceof \Exception) { // Gaat het om een Exception
 					$exception = $call['args'][0];
 					$reported = false;
 					$viaExceptionCallback = next($backtrace);
-					if (isset($viaExceptionCallback['function']) && $viaExceptionCallback['function'] === 'exception_callback') {
+					if (isset($viaExceptionCallback['function']) && $viaExceptionCallback['function'] === 'exceptionCallback') {
 						$caught = next($backtrace);
 						if ($caught !== false) { // backtrace after the callback?
-							$reported = true; // someone called exception_callback() directly
+							$reported = true; // someone called exceptionCallback() directly
 						}
 					} else {
 						$reported = true;
@@ -484,7 +504,7 @@ class ErrorHandler {
 						'file' => $exception->getFile(),
 						'line' => $exception->getLine()
 					);
-					$this->backtrace_highlight($trace, true);
+					$this->renderBacktraceCall($trace, true);
 
 					$previous = $exception->getPrevious();
 					if ($reported || $previous !== null) {
@@ -496,13 +516,13 @@ class ErrorHandler {
 								'file' => $previous->getFile(),
 								'line' => $previous->getLine()
 							);
-							$this->backtrace_highlight($trace, true);
+							$this->renderBacktraceCall($trace, true);
 						} else {
 							echo '>';
 						}
 						if ($reported) {
 							echo 'Reported ';
-							$this->backtrace_highlight($call, true);
+							$this->renderBacktraceCall($call, true);
 						}
 						echo '</span>';
 					}
@@ -510,7 +530,7 @@ class ErrorHandler {
 					break;
 				}
 			} else {
-				$this->backtrace_highlight($call);
+				$this->renderBacktraceCall($call);
 				next($backtrace);
 				break;
 			}
@@ -518,13 +538,19 @@ class ErrorHandler {
 		echo '<br />';
 		// Pass 2: Alle elementen weergeven uit de $backtrace die nog niet behandeld zijn
 		while ($call = current($backtrace)) {
-			$this->backtrace_highlight($call);
+			$this->renderBacktraceCall($call);
 			next($backtrace);
 		}
 		echo '</div>';
 	}
 
-	private function backtrace_highlight($call, $location_only = false) {
+	/**
+	 * Render a call from the backtrace with syntax highlighting.
+	 *
+	 * @param array $call
+	 * @param bool $location_only
+	 */
+	private function renderBacktraceCall($call, $location_only = false) {
 		if (!$location_only) {
 			if (isset($call['object'])) {
 				echo syntax_highlight($call['object'], null, 512);
@@ -535,7 +561,7 @@ class ErrorHandler {
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
-				$errorHandlerInvocations = array('error_callback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
+				$errorHandlerInvocations = array('errorCallback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
 				$databaseClasses = array('Database', 'mysqli', 'MySQLiDatabase', 'SledgeHammer\MySQLiDatabase'); // prevent showing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
 				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
@@ -577,9 +603,11 @@ class ErrorHandler {
 	}
 
 	/**
-	 * Een functie die de juiste functie syntax laat zien. ipv de standaard 'argument x is missing' melding
+	 * Een functie die de juiste functie syntax laat zien. ipv de standaard 'argument x is missing' melding.
+	 *
+	 * @param string $message error message.
 	 */
-	private function search_function($message) {
+	private function resolveFunction($message) {
 		preg_match('/[0-9]+/', $message, $argument);
 		$argument = $argument[0] - 1;
 		$location = debug_backtrace();
@@ -597,7 +625,7 @@ class ErrorHandler {
 	/**
 	 * Gegevens over de omgeving van de client
 	 */
-	private function client_info() {
+	private function renderBrowserInfo() {
 		$browser = browser();
 		echo "<div>\n";
 		echo "<b>Client information</b><br />\n";
@@ -625,7 +653,7 @@ class ErrorHandler {
 	/**
 	 * Gegevens over de server
 	 */
-	private function server_info() {
+	private function renderServerInfo() {
 		echo "<div>\n";
 		echo "<b>Server information</b><br />\n";
 		echo '<b>Hostname:</b> ', php_uname('n'), "<br />\n";
@@ -638,8 +666,10 @@ class ErrorHandler {
 
 	/**
 	 * Een array printen met syntax highlighting.
+	 *
+	 * @param array $array
 	 */
-	private function export_array($array) {
+	private function renderArray($array) {
 		foreach ($array as $key => $value) {
 			if (is_array($value) && count($value) != 0) {
 				echo '<b>'.$key.':</b> array('."<br />\n";
@@ -667,9 +697,9 @@ class ErrorHandler {
 	 */
 	private function import_email_limit() {
 		// Waardes uit de configuratie corrigeren
-		$this->emails_per_day = $this->cast_to_limit($this->emails_per_day);
-		$this->emails_per_minute = $this->cast_to_limit($this->emails_per_minute);
-		$this->emails_per_request = $this->cast_to_limit($this->emails_per_request);
+		$this->emails_per_day = $this->mergeLimit($this->emails_per_day);
+		$this->emails_per_minute = $this->mergeLimit($this->emails_per_minute);
+		$this->emails_per_request = $this->mergeLimit($this->emails_per_request);
 		//
 		if ($this->emails_per_request !== 'NO_LIMIT') {
 			$limit = $this->emails_per_request;
@@ -693,9 +723,9 @@ class ErrorHandler {
 				return false; // Kon het bestand niet openen.
 			}
 			$datum = @rtrim(fgets($fp)); // datum inlezen.
-			$day_limit = $this->cast_to_limit(@rtrim(fgets($fp)), $this->emails_per_day);
+			$day_limit = $this->mergeLimit(@rtrim(fgets($fp)), $this->emails_per_day);
 			$tijdstip = @rtrim(fgets($fp)); // minuut inlezen
-			$minute_limit = $this->cast_to_limit(@rtrim(fgets($fp)), $this->emails_per_minute);
+			$minute_limit = $this->mergeLimit(@rtrim(fgets($fp)), $this->emails_per_minute);
 			@fclose($fp);
 
 			if ($datum != @date('j-n')) { // is het een andere datum?
@@ -722,8 +752,8 @@ class ErrorHandler {
 			$minute_limit--;
 		}
 		// Is de limiet van 0 naar -1 veranderd, zet deze weer op 0
-		$day_limit = $this->cast_to_limit($day_limit);
-		$minute_limit = $this->cast_to_limit($minute_limit);
+		$day_limit = $this->mergeLimit($day_limit);
+		$minute_limit = $this->mergeLimit($minute_limit);
 
 		// Wijzigingen opslaan
 		$fp = @fopen($filename, 'w');
@@ -746,19 +776,19 @@ class ErrorHandler {
 	 * En corrigeert de waarde als een van de waardes NO_LIMIT
 	 *
 	 * @param mixed $limit wordt omgezet naar een int of "NO_LIMIT"
-	 * @param int|string $configured_limit ingestelde limiet
+	 * @param int|string $configuredLimit ingestelde limiet
 	 */
-	private function cast_to_limit($limit, $configured_limit = null) {
+	private function mergeLimit($limit, $configuredLimit = null) {
 		$limit = ($limit === 'NO_LIMIT') ? 'NO_LIMIT' : (int) $limit;
-		if ($configured_limit !== null) {
-			if ($limit === 'NO_LIMIT' && $configured_limit !== 'NO_LIMIT') { // Als er in het error_handler_email_limit.txt "NO_LIMIT" staat, maar in de config 100, return dan 100
-				return $configured_limit;
+		if ($configuredLimit !== null) {
+			if ($limit === 'NO_LIMIT' && $configuredLimit !== 'NO_LIMIT') { // Als er in het error_handler_email_limit.txt "NO_LIMIT" staat, maar in de config 100, return dan 100
+				return $configuredLimit;
 			}
-			if ($configured_limit === 'NO_LIMIT') { // Als er NO_LIMIT in de config staat return dan NO_LIMIT ongeacht waarde uit error_handler_email_limit.txt
+			if ($configuredLimit === 'NO_LIMIT') { // Als er NO_LIMIT in de config staat return dan NO_LIMIT ongeacht waarde uit error_handler_email_limit.txt
 				return 'NO_LIMIT';
 			}
-			if ($limit > $configured_limit) { // Als er in het error_handler_email_limit een groter getal staan dan in de config?
-				return $configured_limit; // return de config
+			if ($limit > $configuredLimit) { // Als er in het error_handler_email_limit een groter getal staan dan in de config?
+				return $configuredLimit; // return de config
 			}
 		}
 		// Rond negative getallen af naar 0
@@ -769,29 +799,11 @@ class ErrorHandler {
 	}
 
 	/**
-	 * Callback voor exceptions die buiten een try/catch block ge-throw-t worden.
-	 *
-	 * @param Exception $exception
-	 */
-	function exception_callback($exception) {
-		if ($exception instanceof \Exception) {
-			if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
-				Framework::$errorHandler->report($exception, '__UNCAUGHT_EXCEPTION__');
-			} else {
-				notice('Only the set_exception_handler() should call ErrorHandler->exception_callback. use report_exception()', "Use the <b>report_exception</b>(\$exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report(\$exception) to target a specific instance.");
-				Framework::$errorHandler->report($exception);
-			}
-		} else {
-			self::handle(E_USER_ERROR, 'Parameter $exception must be an Exception, instead of a '.gettype($exception));
-		}
-	}
-
-	/**
 	 * Vraag het from gedeelte van de te versturen email op.
-	 *
-	 * return string Bv '"ErrorHandler (www.example.com)" <errorhandler@example.com>'
+	 * Bv '"ErrorHandler (www.example.com)" <errorhandler@example.com>'
+	 * return string
 	 */
-	private function from_email() {
+	private function fromEmail() {
 		$hostname = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : php_uname('n');
 		$regexDomain = '/[a-z0-9-]+(.[a-z]{2}){0,1}\.[a-z]{2,4}$/i';
 		if (preg_match($regexDomain, $hostname, $match)) { // Zit er een domeinnaam in de hostname?

@@ -1,15 +1,28 @@
 <?php
-namespace SledgeHammer;
 /**
  * Stopwatch
- *
  * @package Core
+ */
+namespace SledgeHammer;
+/**
+ * Helper class for manual performance profiling.
  */
 class Stopwatch extends Object {
 
+	/**
+	 * Timestamp
+	 * @var float
+	 */
 	private $start;
+	/**
+	 * Timestamp
+	 * @var float
+	 */
 	private $lap;
 
+	/**
+	 * Constructor
+	 */
 	function __construct() {
 		$this->reset();
 	}
@@ -23,8 +36,8 @@ class Stopwatch extends Object {
 	}
 
 	/**
+	 * Return the timeinterval since the stopwatch started.
 	 *
-	 * @param string $label
 	 * @return string
 	 */
 	function getElapsedTime() {
@@ -33,8 +46,8 @@ class Stopwatch extends Object {
 	}
 
 	/**
+	 * Return the timeinterval since the last getLapTime().
 	 *
-	 * @param string $label
 	 * @return string
 	 */
 	function getLapTime() {

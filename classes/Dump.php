@@ -1,23 +1,42 @@
 <?php
+/**
+ * Dump
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
- * A collection of static functions that implement the global dump() function.
- * Parses an var_dump() and renders a syntax highlighted var_export();
+ * Parses a var_dump() and renders a syntax highlighted version of var_export();
+ * Usage:
+ *   dump($var);
+ * or in a VirtualFolder:
+ *  return new Dump($var);
  *
  * (Compatible with the View interface from MVC)
- *
- * @package Core
  */
 class Dump extends Object {
 
+	/**
+	 * The variable to display.
+	 * @var mixed
+	 */
 	private $variable;
+
+	/**
+	 * The trace from where the `new Dump()` originated.
+	 * @var array|null
+	 */
 	private $trace;
 
 	/**
-	 * @var bool detected xdebug 2.2.0 var_dump() output.
+	 * Detected xdebug 2.2.0 var_dump() output.
+	 * @var bool
 	 */
 	private static $xdebug = null;
 
+	/**
+	 * Constructor
+	 * @param mixed $variable  The variable to display on render()
+	 */
 	function __construct($variable = null) {
 		$this->variable = $variable;
 		$trace = debug_backtrace();
@@ -30,12 +49,19 @@ class Dump extends Object {
 		);
 	}
 
+	/**
+	 * View::render() interface
+	 * @return void
+	 */
 	function render() {
 		$this->render_dump($this->variable, $this->trace);
 	}
 
 	/**
 	 * De een gekleurde var_dump van de variabele weergeven
+	 *
+	 * @param mixed $variable
+	 * @param array|null $trace
 	 */
 	static function render_dump($variable, $trace = null) {
 		self::render_trace($trace);
@@ -281,6 +307,7 @@ class Dump extends Object {
 
 	/**
 	 * Achterhaald het bestand en regelnummer waarvan de dump functie is aangeroepen
+	 * @param array $trace
 	 */
 	private static function render_trace($trace = null) {
 		if ($trace === null) {

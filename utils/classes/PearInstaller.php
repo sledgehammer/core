@@ -103,14 +103,14 @@ class PearInstaller extends Observable {
 	/**
 	 * Download and install a PEAR package.
 	 *
-	 * @param type $package
-	 * @param type $version
+	 * @throws Exceptions on failure
+	 * @param string $package
+	 * @param string $version
 	 * @param array $options array(
 	 *   'version' = Install a specific version
 	 *   'target' => alternative target directory
 	 *   'channel' => specifiy the channel
 	 * )
-	 * @throws Exceptions on failure
 	 */
 	function install($package, $options = array()) {
 		$version = array_value($options, 'version') ? : 'stable';

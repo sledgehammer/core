@@ -1,10 +1,12 @@
 <?php
+/**
+ * Json
+ * @package Core
+ */
 namespace SledgeHammer;
 /**
  * Renders the data as Json
  * Compatible with MVC's the Document/View inferface.
- *
- * @package Core
  */
 class Json extends Object {
 
@@ -15,8 +17,10 @@ class Json extends Object {
 	private $data;
 
 	/**
-	 * @param mixed  $data      The data to be sent as json
-	 * @param string $charset   The encoding used in $data, use null for autodetection. Assume UTF-8 by default
+	 * Constructor
+	 *
+	 * @param mixed  $data      The data to be sent as json.
+	 * @param string $charset   The encoding used in $data, use null for autodetection. Assume UTF-8 by default.
 	 */
 	function __construct($data, $charset = 'UTF-8') {
 		if (strtoupper($charset) !== 'UTF-8') {
@@ -65,6 +69,9 @@ class Json extends Object {
 	}
 
 	/**
+	 * Return the $this->data as json formatted string.
+	 * Allow `echo $json;`
+	 *
 	 * @return string
 	 */
 	function __toString() {
@@ -174,6 +181,7 @@ class Json extends Object {
 	}
 
 	/**
+	 * Return a data-structure where all string are UTF-8 encoded.
 	 *
 	 * @param mixed       $data     The non UTF-8 encoded data
 	 * @param string|null $charset  The from_encoding, Use null for autodetection
