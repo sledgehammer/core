@@ -74,9 +74,9 @@ class CSV extends Object implements \Iterator {
 	 * @param char $delimiter  Scheidingsteken, ';' als default omdat dit nederlandse excel standaard is.
 	 * @param char $enclosure  Karakter dat gebruikt word om tekst waarbinnen het scheidingsteken kan voorkomen te omsluiten
 	 */
-	function __construct($filename = null, $columns = null, $delimiter = ';', $enclosure = '"') {
-		$this->columns = $columns;
+	function __construct($filename, $columns = null, $delimiter = ';', $enclosure = '"') {
 		$this->filename = $filename;
+		$this->columns = $columns;
 		$this->delimiter = $delimiter;
 		$this->enclosure = $enclosure;
 	}
@@ -101,7 +101,7 @@ class CSV extends Object implements \Iterator {
 	 * @param string|char $enclosure
 	 * @return void
 	 */
-	static function write($filename = null, $iterator, $columns = null, $delimiter = ';', $enclosure = '"') {
+	static function write($filename, $iterator, $columns = null, $delimiter = ';', $enclosure = '"') {
 		$fp = fopen($filename, 'w');
 		if (!$fp) {
 			throw new \Exception('Failed to open "'.$filename.'" for writing');
