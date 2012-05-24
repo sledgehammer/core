@@ -154,31 +154,57 @@ class AutoLoader extends Object {
 	 * @return bool
 	 */
 	private function resolveNamespace($definition) {
-		if (strpos($definition, '\\') === false) {
-			return false;
-		}
-		$namespaces = explode('\\', $definition);
-		$class = array_pop($namespaces);
-		$targetNamespace = implode('\\', $namespaces);
-		array_pop($namespaces); // een namespace laag hoger
-		$extends = implode('\\', $namespaces);
-		if ($extends == '') {
-			$extends = $class;
+		if (strpos($definition, '\\') === false) { // Definition in the global namespace?
+			if ($this->standalone == false) {
+				return false; // Allow the other autoloaders to define the definition.
+			}
+			$extends = false;
+			$class = $definition;
+			foreach (array_keys($this->definitions) as $definition) {
+				$pos = strrpos($definition, '\\');
+				if ($pos !== false && substr($definition, $pos + 1) === $class) {
+					$extends = $definition;
+					$targetNamespace = '';
+					$this->define($definition);
+					break;
+				}
+			}
+			if ($extends === false) { // No matching classname found?
+				return false;
+			}
 		} else {
-			$extends .= '\\'.$class;
-		}
-		if (isset($this->definitions[$class])) {
-			$this->define($class);
+			$namespaces = explode('\\', $definition);
+			$class = array_pop($namespaces);
+			$targetNamespace = implode('\\', $namespaces);
+			array_pop($namespaces); // een namespace laag hoger
+			$extends = implode('\\', $namespaces);
+			if ($extends == '') {
+				$extends = $class;
+			} else {
+				$extends .= '\\'.$class;
+			}
+			if (isset($this->definitions[$extends])) {
+				$this->define($extends);
+			}
 		}
 		$php = 'namespace '.$targetNamespace." {\n\t";
 		if (class_exists($extends, false)) {
 			$php .= 'class '.$class;
+			$reflection = new \ReflectionClass($extends);
+			if (count($reflection->getMethods(\ReflectionMethod::IS_ABSTRACT)) !== 0) {
+				notice('Cant\' import "'.$class.'" into namespace "'.$targetNamespace.'" ("'.$extends.'" contains abstract methods)');
+				return false;
+			}
 		} elseif (interface_exists($class, false)) {
 			$php .= 'interface '.$class;
 		} else {
 			return false;
 		}
-		if (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode
+		if ($targetNamespace === '') {
+			$namespaces = explode('\\', $definition);
+			array_pop($namespaces);
+			warning('Definition "'.$class.'" not found, importing "'.$definition.'" into the the global namespace', 'Change the classname or add "namespace '.implode('\\', $namespaces).';" or "use \\'.$definition.';" to the beginning of the php file"');
+		} elseif (error_reporting() == (error_reporting() | E_STRICT)) { // Strict mode
 			notice('Importing "'.$class.'" into namespace "'.$targetNamespace.'"', 'Use "\\'.$extends.'"');
 		}
 		$php .= ' extends \\'.$extends." {}\n}";
