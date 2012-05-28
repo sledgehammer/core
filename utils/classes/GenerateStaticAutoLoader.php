@@ -1,5 +1,5 @@
 <?php
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Run the generate_static_library.php script from DevUtils.
  *

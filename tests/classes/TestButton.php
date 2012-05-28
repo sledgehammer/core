@@ -1,5 +1,5 @@
 <?php
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * TestButton, An class for testing an Observable
  *

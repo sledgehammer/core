@@ -3,7 +3,7 @@
  * Readonly
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A wrapper that prevents changes to an object or array.
  */

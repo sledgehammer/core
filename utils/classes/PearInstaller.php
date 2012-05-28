@@ -1,5 +1,5 @@
 <?php
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * PearInstaller, installs PEAR packages into your project folder.
  *

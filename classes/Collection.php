@@ -3,7 +3,7 @@
  * Collection
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Collection: Array on Steriods
  * Provides a filtering, sorting, events and other utility functions for collections.
@@ -110,7 +110,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 *
 	 * @see PropertyPath::get() & compare() for supported paths and operators
 	 *
-	 * NOTE: The Collection class uses SledgeHammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
+	 * NOTE: The Collection class uses Sledgehammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
 	 *       this may cause different behaviour. For example "ABC" == "abc" might evalute to in MySQL (depends on the chosen collation)
 	 *
 	 * @param mixed $conditions array|Closure|expression

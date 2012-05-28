@@ -1,8 +1,8 @@
 <?php
 /**
- * Controleer diverse SledgeHammer vereisten
+ * Controleer diverse Sledgehammer vereisten
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class HTMLTokenizerTest extends TestCase {
 

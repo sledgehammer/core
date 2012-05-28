@@ -3,7 +3,7 @@
  * TagIterator
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Een iterator die de tags uit htmlcode haalt.
  * Met name geschikt voor html met fouten.

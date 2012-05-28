@@ -3,7 +3,7 @@
  * TestCase
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A PHPUnit TestCase
  */

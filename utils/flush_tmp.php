@@ -4,7 +4,7 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 include(dirname(__FILE__).'/../init.php');
 

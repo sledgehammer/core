@@ -3,7 +3,7 @@
  * SQL
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
  * Has a fluent interface where the methods won't modify the object but will return a new object.

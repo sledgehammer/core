@@ -3,7 +3,7 @@
  * PHPTokenizerTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class PHPTokenizerTest extends TestCase {
 
@@ -12,7 +12,7 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	function donttest_tokenizer() {
-		$filename = Framework::$autoLoader->getFilename('SledgeHammer\FFVideo');
+		$filename = Framework::$autoLoader->getFilename('Sledgehammer\FFVideo');
 		$this->assertEqualTokenizer($filename);
 
 		try {
@@ -27,7 +27,7 @@ class PHPTokenizerTest extends TestCase {
 			}
 			dump($tokens);
 //			dump($tokenizer);
-//			dump($analyzer->getInfo('SledgeHammer\CSVIterator'));
+//			dump($analyzer->getInfo('Sledgehammer\CSVIterator'));
 		} catch (\Exception $e) {
 			report_exception($e);
 		}
@@ -41,7 +41,7 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	private function assertEqualTokenizer($filename) {
-		$content = file_get_contents($filename); //Framework::$autoLoader->getFilename('SledgeHammer\GoogleAnalytics');
+		$content = file_get_contents($filename); //Framework::$autoLoader->getFilename('Sledgehammer\GoogleAnalytics');
 		try {
 			$tokenIterator = new PHPTokenizer($content);
 			$mergedTokens = '';

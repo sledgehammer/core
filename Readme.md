@@ -1,8 +1,8 @@
 
-SledgeHammer Core
+Sledgehammer Core
 ------------------
 
-Core fasilitates the base and intialisation of the SledgeHammer Framework.
+Core fasilitates the base and intialisation of the Sledgehammer Framework.
 
 Scope
 ------

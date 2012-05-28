@@ -19,7 +19,7 @@ $AutoLoader->standalone = false; // Deze regel alleen toevoegen als je al gebrui
 Om te testen of alles werkt kun je de handige dump functie uitproberen: 
 dump($var);
 
-Daarnaast worden errors, warnings en notices nu door de SledgeHammer ErrorHandler afgehandeld. 
+Daarnaast worden errors, warnings en notices nu door de Sledgehammer ErrorHandler afgehandeld. 
 
 API Documentatie kan worden gegenereerd met de introspectie tool "DevUtils" zie: https://github.com/bfanger/devutils
 

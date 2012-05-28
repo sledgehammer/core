@@ -2,7 +2,7 @@
 /**
  * Generic deploy script for deploying sledgehammer websites to different environments
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 if ($argc < 2) {
 	echo "Usage: php core/utils/".basename(__FILE__)." [environment]\n\n  environment: \"development\", \"production\", etc\n";
 	exit(1);

@@ -3,11 +3,11 @@
  * InfoException
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * An exception with additonal information for the ErrorHander.
  *
- * Named "InfoException" instead of "\SledgeHammer\Exception" to prevent catch issues.
+ * Named "InfoException" instead of "\Sledgehammer\Exception" to prevent catch issues.
  * See http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha for details
  */
 class InfoException extends \Exception {

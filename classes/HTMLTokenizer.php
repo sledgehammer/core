@@ -3,7 +3,7 @@
  * HTMLTokenizer
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Een tokenizer voor htmlcode.
  * Met name geschikt voor html met fouten.

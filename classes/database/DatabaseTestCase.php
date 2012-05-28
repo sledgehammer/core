@@ -3,7 +3,7 @@
  * DatabaseTestCase
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Add database specific assertions to the TestCase class
  */

@@ -3,7 +3,7 @@
  * Object
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A generic php superclass.
  *

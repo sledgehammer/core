@@ -2,7 +2,7 @@
 /**
  * PropertyPathTests
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 class PropertyPathTest extends TestCase {
 
 	function test_compile() {

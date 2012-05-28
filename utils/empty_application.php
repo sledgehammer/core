@@ -3,7 +3,7 @@
  * Genereer de mappenstructuur voor een standaard sledgehammer application
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 include(dirname(__FILE__).'/../init.php');
 
 function file_not_exist_put_contents($filename, $data) {

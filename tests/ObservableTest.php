@@ -3,7 +3,7 @@
  * ObervableTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class ObservableTest extends TestCase {
 
@@ -18,7 +18,7 @@ class ObservableTest extends TestCase {
 
 		// Test onClick method
 		$button->trigger('click', $this);
-		$this->assertEquals($button->lastClickedBy, 'SledgeHammer\ObservableTest');
+		$this->assertEquals($button->lastClickedBy, 'Sledgehammer\ObservableTest');
 		// Test custom event via property
 		$tempvar = false;
 		$button->onClick = function ($sender) use (&$tempvar){
@@ -26,7 +26,7 @@ class ObservableTest extends TestCase {
 			};
 		$button->click();
 		$this->assertEquals($tempvar, 'custom event');
-		$this->assertEquals($button->lastClickedBy, 'SledgeHammer\TestButton');
+		$this->assertEquals($button->lastClickedBy, 'Sledgehammer\TestButton');
 
 		$tempvar = 'reset';
 		$tempvar2 = false;
@@ -81,7 +81,7 @@ class ObservableTest extends TestCase {
 				11,
 			),
 			'lastClickedBy' => array(
-				'SledgeHammer\TestButton',
+				'Sledgehammer\TestButton',
 			),
 		), $changeLog);
 	}

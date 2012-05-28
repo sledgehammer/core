@@ -3,7 +3,7 @@
  * Stopwatch
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Helper class for manual performance profiling.
  */

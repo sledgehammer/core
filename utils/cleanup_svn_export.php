@@ -3,7 +3,7 @@
  * De mappen die niet nodig zijn in productie omgeving verwijderen.
  * Denk aan de "docs" & "tests" mappen van de modules.
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 echo "Cleaning modules...\n";
 require_once(dirname(__FILE__).'/../../core/init.php');
 $modules = Framework::getModules();

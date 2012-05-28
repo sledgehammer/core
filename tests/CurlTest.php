@@ -4,7 +4,7 @@
  *
  */
 
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class CurlTest extends TestCase {
 

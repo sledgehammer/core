@@ -3,7 +3,7 @@
  * ErrorHandler
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Verzorgt de afhandeling van php fouten.
  * Deze kan een uitgebreide foutmelding in html-formaat tonen en/of emailen
@@ -337,7 +337,7 @@ class ErrorHandler {
 				case E_WARNING:
 				case E_USER_ERROR:
 				case E_USER_WARNING:
-					if (class_exists('SledgeHammer\Database', false) && !empty(Database::$instances)) {
+					if (class_exists('Sledgehammer\Database', false) && !empty(Database::$instances)) {
 						echo '<b>Databases</b><br />';
 						$popup = $this->email ? false : true;
 						foreach (Database::$instances as $link => $Database) {
@@ -425,7 +425,7 @@ class ErrorHandler {
 			}
 
 			if (function_exists('mail') && !mail($this->email, $subject, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
-				error_log('The SledgeHammer\ErrorHandler was unable to email the report.');
+				error_log('The Sledgehammer\ErrorHandler was unable to email the report.');
 			}
 			if ($this->html) {
 				ob_end_flush(); // buffer weergeven
@@ -562,9 +562,10 @@ class ErrorHandler {
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
 				$errorHandlerInvocations = array('errorCallback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
-				$databaseClasses = array('Database', 'mysqli', 'MySQLiDatabase', 'SledgeHammer\MySQLiDatabase'); // prevent showing passwords in the backtrace.
+				$databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli', ); // prevent showing/mailing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
-				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || ($call['function'] == 'connect' && in_array(@$call['class'], $databaseClasses)) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
+				if (
+						in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], array('connect', '__construct'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
 					echo '(...)';
 				} else {
 					echo '(';

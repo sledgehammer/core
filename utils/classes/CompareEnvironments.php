@@ -3,7 +3,7 @@
  * Vergelijkt 2 environments, en geeft aan constantes/database settings verschillen/ontbreken.
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 class CompareEnvironments extends Util {
 
 	function __construct() {
@@ -67,7 +67,7 @@ class CompareEnvironments extends Util {
 		}
 		$source = $values[0]['environments']['source'];
 		$target = $values[0]['environments']['target'];
-		$modules = SledgeHammer::getModules($this->paths['modules']);
+		$modules = Sledgehammer::getModules($this->paths['modules']);
 		$constants_diff = array();
 		/*
 		// Loop door alle modules en vergelijk de constantes

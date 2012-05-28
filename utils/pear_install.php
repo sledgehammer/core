@@ -4,7 +4,7 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 require (dirname(__FILE__).'/../init_framework.php');
 Framework::$errorHandler->html = false;
 Framework::$errorHandler->cli = true;

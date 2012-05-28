@@ -3,7 +3,7 @@
  * CSV
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Een generieke snelle manier om een csv bestand in te lezen.
  * Kan ook csv bestanden genereren met CSV::write()

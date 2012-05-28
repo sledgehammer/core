@@ -3,7 +3,7 @@
  * PropertyPath
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * PropertyPath, a helper class that resolves properties inside arrays and objects based on a path.
  * Inspired by XPath

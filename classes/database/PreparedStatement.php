@@ -3,7 +3,7 @@
  * PreparedStatement
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A PDOStatment subclass that logs prepared statements.
  * Logs the execution time and executed query to the connected Database.

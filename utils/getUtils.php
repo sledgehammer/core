@@ -2,7 +2,7 @@
 /**
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 return  array(
 	'flush_tmp.html' => new FlushTmpFolders(),
 	'generate_AutoLoader.db.php' => new GenerateStaticAutoLoader(),

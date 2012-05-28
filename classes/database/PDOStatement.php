@@ -3,7 +3,7 @@
  * PDOStatement
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * PDOStatement override
  * Adds Countable to the Database results.

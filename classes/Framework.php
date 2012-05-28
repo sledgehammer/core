@@ -3,9 +3,9 @@
  * Framework
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
- * Container voor SledgeHammer Framework functions
+ * Container voor Sledgehammer Framework functions
  * - Module detection and initialisation
  * - Language & locale initialisation
  */

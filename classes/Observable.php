@@ -3,7 +3,7 @@
  * Observable
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Observable, an Event/Listener
  *

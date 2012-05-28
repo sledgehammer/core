@@ -4,7 +4,7 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class URLTest extends TestCase {
 

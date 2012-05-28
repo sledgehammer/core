@@ -2,7 +2,7 @@
 /**
  * De echte public/ map (apache's documentroot) vullen met de bestanden uit de diverse public/ mappen
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 require_once(dirname(__FILE__).'/../../core/init.php');
 if ($argc > 1) {

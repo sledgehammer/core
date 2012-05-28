@@ -2,7 +2,7 @@
 /**
  * Controleer of alle benodige php extenties geinstalleerd zijn
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class RequiredPhpExtensions extends TestCase {
 

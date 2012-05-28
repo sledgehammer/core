@@ -3,7 +3,7 @@
  * PHPTokenizer
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A tokenizer that helps to identify the class and interface names.
  *

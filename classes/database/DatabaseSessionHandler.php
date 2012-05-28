@@ -3,7 +3,7 @@
  * DatabaseSessionHandler
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Sessie gegevens 'centraal' opslaan in een database
  * Hierdoor kan een Loadbalancer in 'round robin' mode draaien.

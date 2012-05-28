@@ -3,7 +3,7 @@
  * Database
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * A PDO Database class with additional debugging functions.
  * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behaviour to FECTH_ASSOC
@@ -113,7 +113,7 @@ class Database extends \PDO {
 			} elseif (strpos($dsn, ';charset=')) {
 				notice('TODO: Extract $charset from dsn'); // @todo implement
 			} else {
-				// Use SledgeHammer setting (default utf-8)
+				// Use Sledgehammer setting (default utf-8)
 				switch (strtolower(Framework::$charset)) {
 
 					case 'utf-8':
@@ -159,7 +159,7 @@ class Database extends \PDO {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}
 		if (empty($options[\PDO::ATTR_STATEMENT_CLASS])) {
-			$options[\PDO::ATTR_STATEMENT_CLASS] = array('SledgeHammer\PDOStatement');
+			$options[\PDO::ATTR_STATEMENT_CLASS] = array('Sledgehammer\PDOStatement');
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->driver = $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
@@ -219,9 +219,9 @@ class Database extends \PDO {
 	 */
 	function prepare($statement, $driver_options = array()) {
 		$start = microtime(true);
-		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PreparedStatement', array($this)));
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PreparedStatement', array($this)));
 		$result = parent::prepare($statement, $driver_options);
-		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('SledgeHammer\PDOStatement')); // Restore default class
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PDOStatement')); // Restore default class
 		$this->executionTime += (microtime(true) - $start);
 		if ($result === false) {
 			$this->reportError($statement);

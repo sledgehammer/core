@@ -1,7 +1,7 @@
 <?php
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
- * Controleer diverse globale SledgeHammer functies
+ * Controleer diverse globale Sledgehammer functies
  */
 class CoreFunctionsTest extends TestCase {
 

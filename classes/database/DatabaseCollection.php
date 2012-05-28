@@ -3,7 +3,7 @@
  * DatabaseCollection
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * DatabaseCollection a Collection interface to a database result.
  * It will lazyily generate & mutate the SQL query based on the filter & sorting operations.

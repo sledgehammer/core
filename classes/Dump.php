@@ -3,7 +3,7 @@
  * Dump
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Parses a var_dump() and renders a syntax highlighted version of var_export();
  * Usage:

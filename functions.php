@@ -1,6 +1,6 @@
 <?php
 /**
- * SledgeHammer functions
+ * Sledgehammer functions
  *
  * Also adds global functions that are missing in php.
  *
@@ -17,15 +17,15 @@ namespace {
 	 * @return string|void
 	 */
 	function dump($variable, $export = false) {
-		if (!class_exists('SledgeHammer\Dump', false)) {
+		if (!class_exists('Sledgehammer\Dump', false)) {
 			include(dirname(__FILE__).'/classes/Dump.php');
 		}
 		if ($export) {
 			ob_start();
-			SledgeHammer\Dump::render_dump($variable);
+			Sledgehammer\Dump::render_dump($variable);
 			return ob_get_clean();
 		} else {
-			SledgeHammer\Dump::render_dump($variable);
+			Sledgehammer\Dump::render_dump($variable);
 		}
 	}
 
@@ -40,7 +40,7 @@ namespace {
 	function error($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_ERROR)) { // Report errors?
-			SledgeHammer\Framework::$errorHandler->report(E_USER_ERROR, $message, $information, true);
+			Sledgehammer\Framework::$errorHandler->report(E_USER_ERROR, $message, $information, true);
 		}
 		exit(1); // Stop script execution with error 1
 	}
@@ -54,7 +54,7 @@ namespace {
 	function warning($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_WARNING)) { // Report warning?
-			SledgeHammer\Framework::$errorHandler->report(E_USER_WARNING, $message, $information, true);
+			Sledgehammer\Framework::$errorHandler->report(E_USER_WARNING, $message, $information, true);
 		}
 	}
 
@@ -67,7 +67,7 @@ namespace {
 	function notice($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_NOTICE)) { // Report notices?
-			SledgeHammer\Framework::$errorHandler->report(E_USER_NOTICE, $message, $information, true);
+			Sledgehammer\Framework::$errorHandler->report(E_USER_NOTICE, $message, $information, true);
 		}
 	}
 
@@ -78,7 +78,7 @@ namespace {
 	 */
 	function report_exception($exception) {
 		if ($exception instanceof Exception) {
-			SledgeHammer\Framework::$errorHandler->report($exception);
+			Sledgehammer\Framework::$errorHandler->report($exception);
 		} else {
 			notice('Parameter $exception should be an Exception');
 		}
@@ -91,7 +91,7 @@ namespace {
 	 * @param mixed $information  [optional] Additional information
 	 */
 	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = null) {
-		SledgeHammer\Framework::$errorHandler->report(E_USER_DEPRECATED, $message, $information, true);
+		Sledgehammer\Framework::$errorHandler->report(E_USER_DEPRECATED, $message, $information, true);
 	}
 
 	/**
@@ -138,8 +138,8 @@ namespace {
 
 }
 
-// Global functions inside the SledgeHammer namespace
-namespace SledgeHammer {
+// Global functions inside the Sledgehammer namespace
+namespace Sledgehammer {
 
 	/**
 	 * Test of een array een assoc array is. (Als een key NIET van het type integer zijn)
@@ -189,7 +189,7 @@ namespace SledgeHammer {
 		unset($array[$key]);
 		$reversed = array_reverse($array, true);
 		$reversed[$key] = $value;
-		$array = array_reverse($reversed , true);
+		$array = array_reverse($reversed, true);
 	}
 
 	/**
@@ -387,6 +387,7 @@ namespace SledgeHammer {
 	/**
 	 * @var string Regex for supported operators for the compare() function
 	 */
+
 	const COMPARE_OPERATORS = '==|!=|<|<=|>|>=';
 
 	/**
@@ -872,7 +873,7 @@ namespace SledgeHammer {
 	 * Will autoconnect to the database configured in "/application/settings/database.ini"
 	 *
 	 * @param string $link The link/connection identifier
-	 * @return \SledgeHammer\Database
+	 * @return \Sledgehammer\Database
 	 */
 	function getDatabase($link = 'default') {
 		if (isset(Database::$instances[$link])) {
@@ -924,12 +925,12 @@ namespace SledgeHammer {
 	 * Contains parsetime, memory usage and (sql)querylogs.
 	 */
 	function statusbar() {
-		if (defined('SledgeHammer\MICROTIME_START')) {
+		if (defined('Sledgehammer\MICROTIME_START')) {
 			$now = microtime(true);
 			echo '<span class="statusbar-parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START).'</b>sec. ';
-			if (defined('SledgeHammer\MICROTIME_INIT')) {
+			if (defined('Sledgehammer\MICROTIME_INIT')) {
 				echo '<span class="statusbar-popout">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START).'</b>sec.';
-				if (defined('SledgeHammer\MICROTIME_EXECUTE')) {
+				if (defined('Sledgehammer\MICROTIME_EXECUTE')) {
 					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT).'</b>sec. ';
 					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE).'</b>sec.';
 				}
@@ -944,7 +945,7 @@ namespace SledgeHammer {
 			}
 			echo 'MiB.'."\n";
 		}
-		if (class_exists('SledgeHammer\Database', false) && count(Database::$instances) > 0) {
+		if (class_exists('Sledgehammer\Database', false) && count(Database::$instances) > 0) {
 			echo 'Databases: ';
 			foreach (Database::$instances as $name => $database) {
 				if (is_object($database)) {
@@ -1200,7 +1201,7 @@ namespace SledgeHammer {
 			} else {
 				$location = ', output started in '.$file.' on line '.$line;
 			}
-			if (class_exists('SledgeHammer\ErrorHandler', false)) {
+			if (class_exists('Sledgehammer\ErrorHandler', false)) {
 				notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
 			} else {
 				trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);

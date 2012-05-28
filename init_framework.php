@@ -3,12 +3,12 @@
  * Het Framework initialiseren.
  * Initialiseerd de database(s) en alle sledgehammer-modules (constants, functions en init)
  */
-namespace SledgeHammer;
-if (!defined('SledgeHammer\INITIALIZED')) {
-	define('SledgeHammer\INITIALIZED', true);
+namespace Sledgehammer;
+if (!defined('Sledgehammer\INITIALIZED')) {
+	define('Sledgehammer\INITIALIZED', true);
 
-	if (!defined('ENVIRONMENT') && !defined('SledgeHammer\ENVIRONMENT')) {
-		define('SledgeHammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+	if (!defined('ENVIRONMENT') && !defined('Sledgehammer\ENVIRONMENT')) {
+		define('Sledgehammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
 	}
 	if (ENVIRONMENT === 'development') {
 		ini_set('display_errors', true);
@@ -31,8 +31,8 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 		}
 	}
 
-	if (!defined('DEBUG_VAR') && !defined('SledgeHammer\DEBUG_VAR')) {
-		define('SledgeHammer\DEBUG_VAR', 'debug'); // Use de default DEBUG_VAR "debug"
+	if (!defined('DEBUG_VAR') && !defined('Sledgehammer\DEBUG_VAR')) {
+		define('Sledgehammer\DEBUG_VAR', 'debug'); // Use de default DEBUG_VAR "debug"
 	}
 	if (DEBUG_VAR != false) { // Is the DEBUG_VAR enabled?
 		$overrideDebugOutput = null;
@@ -81,6 +81,6 @@ if (!defined('SledgeHammer\INITIALIZED')) {
 	}
 	unset($_email, $modules, $module, $overrideDebugOutput);
 
-	define('SledgeHammer\MICROTIME_INIT', microtime(true));
+	define('Sledgehammer\MICROTIME_INIT', microtime(true));
 }
 ?>

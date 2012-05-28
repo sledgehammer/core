@@ -1,10 +1,10 @@
 <?php
 /**
- * Bootstrap the SledgeHammer Framework for PHPUnit runner
+ * Bootstrap the Sledgehammer Framework for PHPUnit runner
  *
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 const ENVIRONMENT = 'development';
 require(dirname(__FILE__).'/init_framework.php');
 // Make all the classes inside the tests folders

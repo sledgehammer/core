@@ -3,7 +3,7 @@
  * CSVTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class CSVTest extends TestCase {
 

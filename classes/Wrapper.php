@@ -3,12 +3,12 @@
  * Wrapper
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Wrap the object/array into container object
  * Allow filters and accesscontrol to any object or array.
  *
- * @see \SledgeHammer\Readonly for an example implementation.
+ * @see \Sledgehammer\Readonly for an example implementation.
  */
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 

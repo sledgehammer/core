@@ -3,7 +3,7 @@
  * HttpAuthentication
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Basic HTTP autentication
  *

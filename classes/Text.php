@@ -3,7 +3,7 @@
  * Text
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Text, a string class for handeling (multibyte) strings with OOP syntax
  * Modelled after the C# String class.
@@ -204,7 +204,7 @@ class Text extends Object implements \ArrayAccess {
 	/**
 	 * Convert the first character to uppercase.
 	 *
-	 * @return \SledgeHammer\Text
+	 * @return \Sledgehammer\Text
 	 */
 	function ucfirst() {
 		return new Text($this[0]->toUpper().$this->substring(1), 'UTF-8');
@@ -213,7 +213,7 @@ class Text extends Object implements \ArrayAccess {
 	/**
 	 * Convert the first character to uppercase and the rest to lowercase.
 	 *
-	 * @return \SledgeHammer\Text
+	 * @return \Sledgehammer\Text
 	 */
 	function capitalize() {
 		return new Text($this[0]->toUpper().$this->substring(1)->toLower(), 'UTF-8');

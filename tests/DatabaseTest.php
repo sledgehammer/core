@@ -4,7 +4,7 @@
  *
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class DatabaseTest extends DatabaseTestCase {
 
@@ -70,7 +70,7 @@ class DatabaseTest extends DatabaseTestCase {
 	function test_count() {
 		$db = $this->getDatabase();
 		$result = $db->query('SELECT * FROM ducks');
-		$this->assertInstanceOf('SledgeHammer\PDOStatement', $result);
+		$this->assertInstanceOf('Sledgehammer\PDOStatement', $result);
 		$this->assertEquals(count($result), 3); //, 'count() should return the number of rows found');
 	}
 

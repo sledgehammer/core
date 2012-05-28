@@ -3,7 +3,7 @@
  * CollectionTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class CollectionTest extends TestCase {
 

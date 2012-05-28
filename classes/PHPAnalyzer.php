@@ -3,7 +3,7 @@
  * PHPAnalyzer
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
  */

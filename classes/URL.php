@@ -3,7 +3,7 @@
  * URL
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Utility class for generating and manipulating urls.
  */

@@ -3,7 +3,7 @@
  * Json
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Renders the data as Json
  * Compatible with MVC's the Document/View inferface.

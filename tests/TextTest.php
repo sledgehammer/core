@@ -3,7 +3,7 @@
  * TextTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class TextTest extends TestCase {
 
@@ -30,7 +30,7 @@ class TextTest extends TestCase {
 		$text = text($italie);
 		$uppercaseText = $text->toUpper();
 		$this->assertEquals((string)$text, $italie, 'toUpper doesn\'t modify the text instance');
-		$this->assertInstanceOf('SledgeHammer\Text', $uppercaseText, 'Returns a new Text instance');
+		$this->assertInstanceOf('Sledgehammer\Text', $uppercaseText, 'Returns a new Text instance');
 		$this->assertEquals($uppercaseText, $uppercaseItalie, 'toUpper convert the characters to uppercase');
 		$this->assertEquals($uppercaseText->toLower(), $italie, 'toLower convert the characters back to lowercase');
 	}

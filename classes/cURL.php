@@ -3,7 +3,7 @@
  * cUrl
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * cURL, an HTTP/FTP response object
  * Simplifies asynchronous requests & paralell downloads.
@@ -117,7 +117,7 @@ class cURL extends Observable {
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \SledgeHammer\cURL  cURL response
+	 * @return \Sledgehammer\cURL  cURL response
 	 */
 	static function get($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
@@ -140,7 +140,7 @@ class cURL extends Observable {
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \SledgeHammer\cURL  cURL response
+	 * @return \Sledgehammer\cURL  cURL response
 	 */
 	static function post($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;

@@ -3,7 +3,7 @@
  * HTML
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * HTML, an view compatible class for rendering raw html.
  * Contains static helper functions for generating tags, etc

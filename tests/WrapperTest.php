@@ -3,7 +3,7 @@
  * WrapperTests
  *
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
 class WrapperTest extends TestCase {
 
@@ -14,7 +14,7 @@ class WrapperTest extends TestCase {
 		);
 		$wrapped = new Readonly($data);
 		$this->assertEquals($wrapped['greeting'], 'Hello');
-		$this->assertInstanceOf('SledgeHammer\Readonly', $wrapped['subarray']);
+		$this->assertInstanceOf('Sledgehammer\Readonly', $wrapped['subarray']);
 
 		try {
 			$wrapped['greeting'] = 'new value';

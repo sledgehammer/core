@@ -1,10 +1,10 @@
 <?php
 /**
- * Controleer diverse SledgeHammer vereisten
+ * Controleer diverse Sledgehammer vereisten
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 
-class SledgeHammerEnvironmentChecks extends TestCase {
+class SledgehammerEnvironmentChecks extends TestCase {
 
 	/**
 	 * Controleer of de php.ini instellingen goed staan

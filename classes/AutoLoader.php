@@ -3,7 +3,7 @@
  * AutoLoader
  * @package Core
  */
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Load class and interface definitions on demand.
  * Improves performance (parsetime & memory usage), only classes that are used are loaded.
@@ -45,7 +45,7 @@ class AutoLoader extends Object {
 	private $settings = array(
 		'matching_filename' => true, // The classname should match the filename.
 		'mandatory_definition' => true, // A php-file should declare a class or interface
-		'mandatory_superclass' => true, // A class should extend another class (preferably \SledgeHammer\Object as base)
+		'mandatory_superclass' => true, // A class should extend another class (preferably \Sledgehammer\Object as base)
 		'one_definition_per_file' => true, // A php-file should only contain one class or inferface definition.
 		'ignore_folders' => array(), // Exclude these folders (relative from autoloader.ini) otherwise use absolute paths
 		'ignore_files' => array(), // Exclude these files (relative from autoloader.ini) otherwise use absolute paths
@@ -374,7 +374,7 @@ class AutoLoader extends Object {
 					if ($token[0] == T_EXTENDS) {
 						$state = 'DETECT';
 						break;
-					} elseif ($settings['mandatory_superclass'] && !in_array($definition, array('SledgeHammer\Object', 'SledgeHammer\Framework', 'SledgeHammer\ErrorHandler'))) {
+					} elseif ($settings['mandatory_superclass'] && !in_array($definition, array('Sledgehammer\Object', 'Sledgehammer\Framework', 'Sledgehammer\ErrorHandler'))) {
 						notice('Class: "'.$definition.'" has no superclass, expection "class X extends Y"');
 					}
 					if ($token == '{' || $token[0] == T_IMPLEMENTS) {
