@@ -1,11 +1,12 @@
 <?php
 /**
  * Stopwatch
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Helper class for manual performance profiling.
+ *
+ * @package Core
  */
 class Stopwatch extends Object {
 

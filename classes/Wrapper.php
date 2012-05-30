@@ -1,7 +1,6 @@
 <?php
 /**
  * Wrapper
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -9,9 +8,14 @@ namespace Sledgehammer;
  * Allow filters and accesscontrol to any object or array.
  *
  * @see \Sledgehammer\Readonly for an example implementation.
+ * @package Core
  */
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 
+	/**
+	 * The wrapped object or array.
+	 * @var object|array
+	 */
 	protected $_data;
 
 	/**
@@ -21,8 +25,9 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	private $_recursive = true;
 
 	/**
+	 * Constructor
 	 * @param object/iterator/array $data
-	 * @param array $option
+	 * @param array $options
 	 */
 	function __construct($data, $options = array()) {
 		$this->_data = $data;
@@ -67,15 +72,35 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	/**
 	 * Magic getter en setter functies zodat je dat de eigenschappen zowel als object->eigenschap kunt opvragen
 	 */
+
+	/**
+	 * Retrieve a property.
+	 *
+	 * @param string $property
+	 * @return mixed
+	 */
 	function __get($property) {
 		return $this->out($this->_data->$property, $property, 'object');
 	}
 
+	/**
+	 * Set a property.
+	 *
+	 * @param string $property
+	 * @param mixed $value
+	 */
 	function __set($property, $value) {
 		$value = $this->in($value, $property, 'object');
 		$this->_data->$property = $value;
 	}
 
+	/**
+	 * Call a method.
+	 *
+	 * @param string $method
+	 * @param array $arguments
+	 * @return mixed
+	 */
 	function __call($method, $arguments) {
 		$filtered = array();
 		foreach ($arguments as $key => $value) {
@@ -85,7 +110,10 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	}
 
 	/**
-	 * ArrayAccess wrapper functies die er voor zorgen dat de eigenschappen ook als array['element'] kunt opgevragen
+	 * ArrayAccess: Retrieve an element.
+	 *
+	 * @param string $key
+	 * @return mixed
 	 */
 	function offsetGet($key) {
 		if (is_array($this->_data)) {
@@ -93,6 +121,12 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
+	/**
+	 * ArrayAccess: Set an element.
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 */
 	function offsetSet($key, $value) {
 		if (is_array($this->_data)) {
 			$value = $this->in($value, $key, 'array');
@@ -100,17 +134,26 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
-	function offsetUnset($property) {
-		throw new \Exception('Not (yet) supported');
-	}
-
-	function offsetExists($property) {
+	/**
+	 * ArrayAccess: Remove an element.
+	 *
+	 * @param string $index
+	 */
+	function offsetUnset($index) {
 		throw new \Exception('Not (yet) supported');
 	}
 
 	/**
-	 * Iterator functions waardoor je de elementen via een iterator_to_array() kunt omzetten naar een array.
-	 * Hierdoor kun je via convert_iterators_to_arrays()
+	 * ArrayAccess: Check if an index exists.
+	 *
+	 * @param string $index
+	 */
+	function offsetExists($index) {
+		throw new \Exception('Not (yet) supported');
+	}
+
+	/**
+	 * Iterator: Rewind the iterator to the first element.
 	 */
 	function rewind() {
 		if ($this->_data instanceof \Iterator) {
@@ -120,6 +163,10 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator: Retrieve the current element.
+	 * @return mixed
+	 */
 	function current() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->out($this->_data->current(), 'current', 'iterator');
@@ -128,6 +175,9 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator: Move the next element.
+	 */
 	function next() {
 		if ($this->_data instanceof \Iterator) {
 			$this->_data->next();
@@ -136,6 +186,10 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator: Retrieve the current key.
+	 * @return string|int
+	 */
 	function key() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->out($this->_data->key(), 'key', 'iterator');
@@ -144,6 +198,10 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator: Returns false when theend of the iterator is reached.
+	 * @return bool
+	 */
 	function valid() {
 		if ($this->_data instanceof \Iterator) {
 			return $this->_data->valid();

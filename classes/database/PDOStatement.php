@@ -1,12 +1,12 @@
 <?php
 /**
  * PDOStatement
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * PDOStatement override
  * Adds Countable to the Database results.
+ * @package Core
  */
 class PDOStatement extends \PDOStatement implements \Countable {
 

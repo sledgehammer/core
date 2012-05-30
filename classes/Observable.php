@@ -1,7 +1,6 @@
 <?php
 /**
  * Observable
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -30,6 +29,8 @@ namespace Sledgehammer;
  *
  * // reset all listeners.
  * $this->onClick = null;
+ *
+ * @package Core
  */
 abstract class Observable extends Object {
 

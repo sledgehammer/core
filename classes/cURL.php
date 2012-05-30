@@ -1,7 +1,6 @@
 <?php
 /**
  * cUrl
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -32,6 +31,7 @@ namespace Sledgehammer;
  *
  * @property Closure $onLoad  Event fires when the request has successfully completed.
  * @property Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
+ * @package Core
  */
 class cURL extends Observable {
 

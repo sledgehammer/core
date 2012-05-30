@@ -1,7 +1,6 @@
 <?php
 /**
  * HttpAuthentication
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -14,6 +13,8 @@ namespace Sledgehammer;
  * Add a validation callback to resend authentication headers when invalid credentials are given.
  *   $auth = new HttpAuthentication('Realm', array('MyClass','login'));
  *   $credentials = $auth->authenticate();
+ *
+ * @package Core
  */
 class HttpAuthentication extends Object {
 

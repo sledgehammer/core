@@ -1,11 +1,12 @@
 <?php
 /**
  * Readonly
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * A wrapper that prevents changes to an object or array.
+ *
+ * @package Core
  */
 class Readonly extends Wrapper {
 

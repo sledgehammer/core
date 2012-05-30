@@ -1,7 +1,6 @@
 <?php
 /**
  * CSV
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -9,6 +8,8 @@ namespace Sledgehammer;
  * Kan ook csv bestanden genereren met CSV::write()
  *
  * De eerste regel van het csv bestand kan gebruikt worden om de kolomnamen te defineren.
+ *
+ * @package Core
  */
 class CSV extends Object implements \Iterator {
 

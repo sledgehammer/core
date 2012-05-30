@@ -1,7 +1,6 @@
 <?php
 /**
  * PropertyPath
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -21,6 +20,8 @@ namespace Sledgehammer;
  *   'abc.efg'  maps to  $data['abc']['efg], $data['abc']->efg, $data->abc['efg] or $data->abc->efg
  *   '->abc->efg' maps to property $data->abc->efg
  *   '->abc[efg]' maps to property $data->abc[efg]
+ *
+ * @package Core
  */
 class PropertyPath extends Object {
 
@@ -31,6 +32,7 @@ class PropertyPath extends Object {
 	const CHAIN = 'CHAIN';
 
 	/**
+	 * Retrieve a value.
 	 *
 	 * @param array|object $data
 	 * @param string $path
@@ -87,6 +89,7 @@ class PropertyPath extends Object {
 	}
 
 	/**
+	 * Retrieve a reference to a value.
 	 *
 	 * @param array|object $data
 	 * @param string $path
@@ -143,6 +146,7 @@ class PropertyPath extends Object {
 	}
 
 	/**
+	 * Set a value.
 	 *
 	 * @param array|object $data
 	 * @param string $path
@@ -212,7 +216,7 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Compile the path
+	 * Compile a path.
 	 *
 	 * @param string $path
 	 * @return array
@@ -272,6 +276,7 @@ class PropertyPath extends Object {
 	}
 
 	/**
+	 * Really compiles the path.
 	 *
 	 * @param string $path
 	 * @param TYPE $type start type
@@ -359,25 +364,56 @@ class PropertyPath extends Object {
 		return array_merge($tokens, self::compilePath(substr($path, $dotPos), self::CHAIN));
 	}
 
-	// @todo check escaped positions
+	/**
+	 * Return the position of the next "."
+	 *
+	 * @param string $path
+	 * @param int $offset
+	 * @return int
+	 */
 	private static function dotPosition($path, $offset = null) {
 		return strpos($path, '.', $offset);
 	}
 
+	/**
+	 * Return the position of the next "->"
+	 *
+	 * @param string $path
+	 * @param int $offset
+	 * @return int
+	 */
 	private static function arrowPosition($path, $offset = null) {
 		return strpos($path, '->', $offset);
 	}
 
+	/**
+	 * Return the position of the next "["
+	 *
+	 * @param string $path
+	 * @param int $offset
+	 * @return int
+	 */
 	private static function openBracketPosition($path, $offset = null) {
 		return strpos($path, '[', $offset);
 	}
 
+	/**
+	 * Return the position of the next "]"
+	 *
+	 * @param string $path
+	 * @param int $offset
+	 * @return int
+	 */
 	private static function closeBracketPosition($path, $offset = null) {
 		return strpos($path, ']', $offset);
 	}
 
 	/**
-	 * Postion of the next "("
+	 * Return the position of the next "("
+	 *
+	 * @param string $path
+	 * @param int $offset
+	 * @return int
 	 */
 	private static function parenthesesPosition($path, $offset = null) {
 		return strpos($path, '(', $offset);

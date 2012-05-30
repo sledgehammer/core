@@ -1,12 +1,12 @@
 <?php
 /**
  * ErrorHandler
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Verzorgt de afhandeling van php fouten.
  * Deze kan een uitgebreide foutmelding in html-formaat tonen en/of emailen
+ * @package Core
  */
 class ErrorHandler {
 
@@ -817,12 +817,24 @@ class ErrorHandler {
 		return '"ErrorHandler ('.$hostname.')" <errorhandler@'.$domain.'>';
 	}
 
-	// Deprecated
+	/**
+	 * Deprecated, use report()
+	 *
+	 * @param int $type
+	 * @param string $message
+	 * @param mixed $information
+	 * @param bool $check_for_alternate_error_handler
+	 */
 	static function handle($type, $message, $information = null, $check_for_alternate_error_handler = false) {
 		deprecated('use ErrorHandler->report(...)');
 		Framework::$errorHandler->report($type, $message, $information, $check_for_alternate_error_handler);
 	}
 
+	/**
+	 * Deprecated, use report_exception()
+	 *
+	 * @param Exception $exception
+	 */
 	static function handle_exception($exception) {
 		deprecated('Use the report_exception($exception) for reporting to the default ErrorHandler or call the ErrorHander->report($exception) to target a specific ErrorHander instance.');
 		Framework::$errorHandler->report($exception);

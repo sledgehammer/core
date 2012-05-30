@@ -1,12 +1,13 @@
 <?php
 /**
  * HTML
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * HTML, an view compatible class for rendering raw html.
- * Contains static helper functions for generating tags, etc
+ * Contains static helper functions for generating tags, etc.
+ *
+ * @package Core
  */
 class HTML extends Object {
 

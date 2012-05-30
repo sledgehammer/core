@@ -1,13 +1,14 @@
 <?php
 /**
  * Framework
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Container voor Sledgehammer Framework functions
  * - Module detection and initialisation
  * - Language & locale initialisation
+ *
+ * @package Core
  */
 class Framework {
 

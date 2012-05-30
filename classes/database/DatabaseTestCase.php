@@ -1,11 +1,11 @@
 <?php
 /**
  * DatabaseTestCase
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Add database specific assertions to the TestCase class
+ * @package Core
  */
 abstract class DatabaseTestCase extends TestCase {
 

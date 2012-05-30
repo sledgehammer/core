@@ -1,7 +1,6 @@
 <?php
 /**
  * TagIterator
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -11,6 +10,8 @@ namespace Sledgehammer;
  *
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
  * Gebruik in die gevallen niet deze iterator.
+ *
+ * @package Core
  */
 class TagIterator extends Object implements \Iterator {
 

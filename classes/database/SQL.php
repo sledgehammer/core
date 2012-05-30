@@ -1,7 +1,6 @@
 <?php
 /**
  * SQL
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -13,6 +12,8 @@ namespace Sledgehammer;
  *   $sql2 = $sql->where('id = 1');
  *   echo $sql; // "SELECT * FROM customers"
  *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
+ *
+ * @package Core
  */
 class SQL extends Object {
 
@@ -21,47 +22,54 @@ class SQL extends Object {
 	 * @link http://dev.mysql.com/doc/refman/5.6/en/select.html
 	 * @var string
 	 */
-	public	$select = 'SELECT';
+	public $select = 'SELECT';
+
 	/**
 	 * Array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
 	 * @var array|string
 	 */
-	public	$columns = array();
+	public $columns = array();
+
 	/**
 	 * array('alias1'=> 'table1', 't2' => array('type' => 'INNER JOIN', 'table' => 'table2 AS t2', 'on' => 't1.id = t2.t1_id'));
 	 * @var array
 	 */
-	public	$tables = array();
+	public $tables = array();
+
 	/**
 	 * Tree-structure with conditions. array('operator' => 'AND', 'col1 = 23', array('operator' => 'OR', 'col2 = 1', 'col2 = 56'))
 	 * @var string|array
 	 */
-	public	$where = '';
+	public $where = '';
+
 	/**
 	 * array met group by info, wordt verbonden met ', '
 	 * @var type
 	 */
-	public	$group_by = array(); //
+	public $groupBy = array(); //
 	/**
 	 * Similar to $where, but for the HAVING clause.
 	 * @var string|array
 	 */
-	public	$having = '';
+	public $having = '';
+
 	/**
 	 * index is naam, waarde is DESC of ASC
 	 * @var type
 	 */
-	public	$order_by = array();
+	public $orderBy = array();
+
 	/**
 	 * Limit the number of results
 	 * @var false|int
 	 */
-	public	$limit = false;
+	public $limit = false;
+
 	/**
 	 * Skip the first x results.
 	 * @var false|int
 	 */
-	public	$offset = false;
+	public $offset = false;
 
 	/**
 	 * Allow the SQL object to be used as string.
@@ -78,13 +86,13 @@ class SQL extends Object {
 	}
 
 	/**
-	 * Adds columns to the existing $this->columns
+	 * Adds columns to the existing $this->columns.
 	 *
 	 * @param array $columns
-	 * @param string ...
+	 * param string ...
 	 */
 	function addColumns($columns) {
-		if (func_num_args() > 1) {
+		if (func_num_args() > 1) { // Support for $this->addColumns('col1', 'col2') notation.
 			$columns = func_get_args();
 		} elseif (is_string($columns)) {
 			$columns = array($columns);
@@ -159,7 +167,7 @@ class SQL extends Object {
 	 * Returns a new SQL with $sql->columns replaced by the given $columns
 	 *
 	 * @param array|string $columns ('AS value' => 'column name')
-	 * @param $...
+	 * param string ...
 	 * @return SQL
 	 */
 	function select($columns) {
@@ -168,7 +176,7 @@ class SQL extends Object {
 		if (is_array($columns)) {
 			$sql->addColumns($columns);
 		} else {
-			$sql->addColumns(func_get_args());
+			$sql->addColumns(func_get_args()); // Add ALL parameters as columns.
 		}
 		return $sql;
 	}
@@ -190,10 +198,11 @@ class SQL extends Object {
 	}
 
 	/**
-	 * Returns a new SQL with the given $columns added to the $sql->columns
+	 * Returns a new SQL with the given $columns added to the $sql->columns.
+	 * To override current columns use $sql->select()
 	 *
 	 * @param array|string $columns
-	 * @param string ...
+	 * param string ...
 	 * @return SQL
 	 */
 	function columns($columns) {
@@ -252,7 +261,6 @@ class SQL extends Object {
 		return $this->join('RIGHT JOIN', $table, $on);
 	}
 
-
 	/**
 	 * Returns a new SQL with the $sql->where set to the given $where.
 	 *
@@ -269,6 +277,8 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with the where modified to include the "AND" restriction.
+	 *
 	 * @param mixed $restriction
 	 * @return SQL
 	 */
@@ -287,6 +297,8 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with the where modified to include the "OR" restriction.
+	 *
 	 * @param mixed $restriction
 	 * @return SQL
 	 */
@@ -305,32 +317,38 @@ class SQL extends Object {
 	}
 
 	/**
+	 * Returns a new SQL with $this->groupBy set to the given $columns.
+	 *
 	 * @param string|array $columns
 	 * @return SQL
 	 */
 	function groupBy($columns) {
 		$sql = clone $this;
-		$sql->group_by = $columns;
+		$sql->groupBy = $columns;
 		return $sql;
 	}
 
 	/**
+	 * Returns a new SQL with $this->orderBy set to the given $column => $direction
+	 *
 	 * @param string $column
 	 * @param string $direction "ASC" or "DESC"
 	 * @return SQL
 	 */
 	function orderBy($column, $direction = 'ASC') {
 		$sql = clone $this;
-		$sql->order_by = array(
+		$sql->orderBy = array(
 			$column => $direction
 		);
 		return $sql;
 	}
 
+	// @todo implement thenBy($column, $direction)
+
 	/**
-	 * limit(20) => LIMIT 20
+	 * Return a new SQL with $this->limit set to the given $limit.
 	 *
-	 * @param int $limit De limit of leeg
+	 * @param int $limit The maximum number of records
 	 * @return SQL
 	 */
 	function limit($limit) {
@@ -340,9 +358,9 @@ class SQL extends Object {
 	}
 
 	/**
-	 * offset(20) => OFFSET 20
+	 * Return a new SQL with $this->offset set to the given $limit.
 	 *
-	 * @param int $offset De limit of leeg
+	 * @param int $offset Skip x records.
 	 * @return SQL
 	 */
 	function offset($offset) {
@@ -352,7 +370,7 @@ class SQL extends Object {
 	}
 
 	/**
-	 * De SQL string samenstellen.
+	 * Build the SQL string.
 	 *
 	 * @return string
 	 */
@@ -404,19 +422,19 @@ class SQL extends Object {
 		if ($where != '') {
 			$sql .= ' WHERE '.$where;
 		}
-		if (!is_array($this->group_by)) {
-			$sql .= ' GROUP BY '.$this->group_by;
-		} elseif (count($this->group_by) > 0) {
-			$sql .= ' GROUP BY '.implode(', ', $this->group_by);
+		if (!is_array($this->groupBy)) {
+			$sql .= ' GROUP BY '.$this->groupBy;
+		} elseif (count($this->groupBy) > 0) {
+			$sql .= ' GROUP BY '.implode(', ', $this->groupBy);
 		}
 
 		$having = $this->composeRestrictions($this->having);
 		if ($having != '') {
 			$sql .= ' HAVING '.$having;
 		}
-		if (count($this->order_by) > 0) {
+		if (count($this->orderBy) > 0) {
 			$order_by = array();
-			foreach ($this->order_by as $column => $order) {
+			foreach ($this->orderBy as $column => $order) {
 				switch ($order) {
 
 					case 'NULL':
@@ -462,7 +480,7 @@ class SQL extends Object {
 			throw new \Exception('where[] statements require an operator, Example: array("operator" => "AND", "x = 1", "y = 2")');
 		}
 		$operator = strtoupper($restrictions['operator']);
-		switch($operator) {
+		switch ($operator) {
 
 			case 'AND':
 			case 'OR':
@@ -487,7 +505,7 @@ class SQL extends Object {
 		}
 		unset($restrictions['operator']); // De operator uit de array halen
 		$sql_statements = array();
-		foreach($restrictions as $sql) {
+		foreach ($restrictions as $sql) {
 			if (is_array($sql)) { // Is het geen sql maar nog een 'restriction'?
 				$haakjes_voor_node = ($sql['operator'] !== $operator); // Als de subnode dezelde verbinding heeft, dan geen haakjes. "x = 1 AND (y = 5 AND z = 8)" == "x = 1 AND y = 5 AND z = 8"
 				$sql = $sql->composeRestrictions($sql, $haakjes_voor_node); // recursief
@@ -507,8 +525,12 @@ class SQL extends Object {
 	}
 
 	/**
-	 * Helper voor de diverse *Join functies
-	 * @return SQL
+	 * Returns a new SQL with the join added to the sql.
+	 *
+	 * @param string $type "INNER JOIN", "LEFT JOIN", or "RIGHT JOIN"
+	 * @param string $table Name of the table.
+	 * @param string $on The ON conditions.
+	 * @return \Sledgehammer\SQL
 	 */
 	private function join($type, $table, $on) {
 		$sql = clone $this;
@@ -516,12 +538,13 @@ class SQL extends Object {
 		return $sql;
 	}
 
-
-
 	/**
 	 * De alias van een kolom of tabel uitzoeken.
 	 * Geeft anders de gehele string terug.
 	 *
+	 * @param string $string
+	 * @param string $alias
+	 * @param bool $stripAlias
 	 * @return string
 	 */
 	private function extractAlias(&$string, $alias = null, $stripAlias = false) {
@@ -543,5 +566,7 @@ class SQL extends Object {
 		}
 		return $string;
 	}
+
 }
+
 ?>

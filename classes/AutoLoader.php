@@ -1,7 +1,6 @@
 <?php
 /**
  * AutoLoader
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -10,6 +9,8 @@ namespace Sledgehammer;
  *
  * Validates definiton files according to $this->settings.
  * Detects and corrects namespace issues.
+ *
+ * @package Core
  */
 class AutoLoader extends Object {
 

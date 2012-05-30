@@ -1,17 +1,22 @@
 <?php
 /**
  * InfoException
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * An exception with additonal information for the ErrorHander.
  *
  * Named "InfoException" instead of "\Sledgehammer\Exception" to prevent catch issues.
- * See http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha for details
+ * See http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha for details.
+ *
+ * @package Core
  */
 class InfoException extends \Exception {
 
+	/**
+	 * The additional information for the ErrorHandler.
+	 * @var mixed
+	 */
 	private $information;
 
 	/**

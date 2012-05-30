@@ -1,12 +1,13 @@
 <?php
 /**
  * Json
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Renders the data as Json
  * Compatible with MVC's the Document/View inferface.
+ *
+ * @package Core
  */
 class Json extends Object {
 

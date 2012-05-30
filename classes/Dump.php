@@ -1,7 +1,6 @@
 <?php
 /**
  * Dump
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -12,6 +11,8 @@ namespace Sledgehammer;
  *  return new Dump($var);
  *
  * (Compatible with the View interface from MVC)
+ *
+ * @package Core
  */
 class Dump extends Object {
 

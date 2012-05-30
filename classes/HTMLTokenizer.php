@@ -1,7 +1,6 @@
 <?php
 /**
  * HTMLTokenizer
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -43,6 +42,7 @@ namespace Sledgehammer;
  * Niet alle tokens hebben een type. Deze tokens bestaan dan uit de data-string i.p.v. een array(token-type, data-string)
  *
  * @link http://en.wikipedia.org/wiki/HTML_element#Syntax
+ * @package Core
  */
 class HTMLTokenizer extends Object implements \Iterator{
 

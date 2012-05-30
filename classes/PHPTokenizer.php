@@ -1,7 +1,6 @@
 <?php
 /**
  * PHPTokenizer
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -25,43 +24,60 @@ namespace Sledgehammer;
  *   T_OBJECT       An class that is used in the code
  *   T_CALL         An global function that is called in the code
  *   T_METHOD_CALL  An method that is called in the code
+ *
+ * @package Core
  */
 class PHPTokenizer extends Object implements \Iterator {
 
 	/**
+	 * Current state "INIT", "HTML", "PHP", "USE", "NAMESPACE", etc
 	 * @var string
 	 */
 	private $state = 'INIT';
 
 	/**
+	 * Value for the Iterater::key()
 	 * @var int
 	 */
 	private $key;
 
 	/**
+	 * Value for the Iterater::current()
 	 * @var array
 	 */
 	private $current;
 
 	/**
+	 * Value for the Iterater::valid()
 	 * @var bool|'LAST'
 	 */
 	private $valid = false;
 
 	/**
+	 * Current index of the token_get_all() tokens.
 	 * @var int
 	 */
 	private $tokenIndex;
 
 	/**
+	 * The result of token_get_all()
 	 * @var array
 	 */
 	private $tokens;
+	/**
+	 * The linenumber of the current token.
+	 * @var int
+	 */
 	private $lineNumber;
+
+	/**
+	 * current depth of an array() declaration.
+	 * @var int
+	 */
 	private $arrayDepth;
 
 	/**
-	 *
+	 * Constructor
 	 * @param string $contents The contents of a php script/file
 	 */
 	function __construct($contents) {
@@ -73,6 +89,9 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator::rewind()
+	 */
 	function rewind() {
 		$this->tokenIndex = 0;
 		$this->state = 'HTML';
@@ -87,18 +106,34 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 	}
 
+	/**
+	 * Iterator::valid()
+	 * @return bool
+	 */
 	function valid() {
 		return (bool) $this->valid;
 	}
 
+	/**
+	 * Iterator:key()
+	 * @return int
+	 */
 	function key() {
 		return $this->key;
 	}
 
+	/**
+	 * Iterator::current()
+	 * @return array|string
+	 */
 	function current() {
 		return $this->current;
 	}
 
+	/**
+	 * Iterator::next()
+	 * @return void
+	 */
 	function next() {
 		if ($this->valid === 'LAST') {
 			$this->valid = false;
@@ -541,7 +576,7 @@ class PHPTokenizer extends Object implements \Iterator {
 	}
 
 	/**
-	 * translates the int to the token_name (371 => T_WHITESPACE)
+	 * Translates the int to the token_name (371 => T_WHITESPACE)
 	 * @param token $token
 	 */
 	private function dump($token) {

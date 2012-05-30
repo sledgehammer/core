@@ -1,11 +1,12 @@
 <?php
 /**
  * URL
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Utility class for generating and manipulating urls.
+ *
+ * @package Core
  */
 class URL extends Object {
 

@@ -1,13 +1,13 @@
 <?php
 /**
  * DatabaseCollection
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * DatabaseCollection a Collection interface to a database result.
  * It will lazyily generate & mutate the SQL query based on the filter & sorting operations.
  * Inspired by "Linq to SQL"
+ * @package Core
  */
 class DatabaseCollection extends Collection {
 
@@ -119,9 +119,9 @@ class DatabaseCollection extends Collection {
 	 * @return Collection
 	 */
 	function orderBy($path, $method = SORT_REGULAR) {
-		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
-			array_key_unshift($sql->order_by, $path, 'ASC');
+			array_key_unshift($sql->orderBy, $path, 'ASC');
 			return new DatabaseCollection($sql, $this->dbLink);
 		}
 		return parent::orderBy($path, $method);
@@ -135,9 +135,9 @@ class DatabaseCollection extends Collection {
 	 * @return Collection
 	 */
 	function orderByDescending($path, $method = SORT_REGULAR) {
-		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->order_by) && $this->sql->limit === false && $this->sql->offset == 0) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
-			array_key_unshift($sql->order_by, $path, 'DESC');
+			array_key_unshift($sql->orderBy, $path, 'DESC');
 			return new DatabaseCollection($sql, $this->dbLink);
 		}
 		return parent::orderBy($path, $method);
@@ -169,16 +169,16 @@ class DatabaseCollection extends Collection {
 	/**
 	 * Return a new Collection with only the first x items.
 	 *
-	 * @param int $length
+	 * @param int $limit
 	 * @return Collection
 	 */
-	function take($length) {
+	function take($limit) {
 		if ($this->data === null && is_string($this->sql) === false) {
-			if ($this->sql->limit === false || $this->sql->limit >= $length) {
-				return new DatabaseCollection($this->sql->limit($length), $this->dbLink);
+			if ($this->sql->limit === false || $this->sql->limit >= $limit) {
+				return new DatabaseCollection($this->sql->limit($limit), $this->dbLink);
 			}
 		}
-		return parent::take($length);
+		return parent::take($limit);
 	}
 
 	/**

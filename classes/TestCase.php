@@ -1,11 +1,12 @@
 <?php
 /**
  * TestCase
- * @package Core
  */
 namespace Sledgehammer;
 /**
- * A PHPUnit TestCase
+ * A PHPUnit TestCase.
+ *
+ * @package Core
  */
 abstract class TestCase extends \PHPUnit_Framework_TestCase {
 

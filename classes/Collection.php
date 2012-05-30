@@ -1,7 +1,6 @@
 <?php
 /**
  * Collection
- * @package Core
  */
 namespace Sledgehammer;
 /**
@@ -9,6 +8,8 @@ namespace Sledgehammer;
  * Provides a filtering, sorting, events and other utility functions for collections.
  *
  * Inspired by LinQ and Underscore.php
+ *
+ * @package Core
  */
 class Collection extends Observable implements \Iterator, \Countable, \ArrayAccess {
 
@@ -37,6 +38,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 
 	/**
 	 * Return a new collection where each element is a subselection of the original element.
+	 * (Known as "collect" in Ruby or "pluck" in underscore.js)
 	 *
 	 * @param string|array $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
 	 * @param string|null|false $selectKey  (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
@@ -241,12 +243,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Return a new Collection with only the first x items.
 	 *
-	 * @param int $length
+	 * @param int $limit
 	 * @return Collection
 	 */
-	function take($length) {
+	function take($limit) {
 		$this->dataToArray();
-		return new Collection(array_slice($this->data, 0, $length));
+		return new Collection(array_slice($this->data, 0, $limit));
 	}
 
 	/**
