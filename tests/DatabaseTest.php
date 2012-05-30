@@ -15,7 +15,7 @@ class DatabaseTest extends DatabaseTestCase {
 	}
 
 	function test_connect() {
-		$dbDsn = new Database('mysql:host=localhost', 'root');
+		$dbDsn = new Database('mysql:host=localhost', 'root', 'root');
 		$dbUrl = new Database('mysql://root:root@localhost');
 		$this->assertTrue(true, 'No exceptions were thrown');
 	}
@@ -32,7 +32,7 @@ class DatabaseTest extends DatabaseTestCase {
 	function test_notice_on_truncated_data() {
 		$db = $this->getDatabase();
 		if ($db->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'mysql') {
-			$this->markTestSkipped('Only available for MySQL');
+			$this->markTestSkipped('Only available in MySQL');
 		}
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice');
 		$db->exec('INSERT INTO ducks (name) VALUES ("0123456789ABCDEF")');

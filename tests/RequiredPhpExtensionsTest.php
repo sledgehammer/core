@@ -4,7 +4,7 @@
  */
 namespace Sledgehammer;
 
-class RequiredPhpExtensions extends TestCase {
+class RequiredPhpExtensionsTest extends TestCase {
 
 	private
 		$classes_folders_only = true, // switch off to scan all files in the PATH
@@ -62,7 +62,7 @@ class RequiredPhpExtensions extends TestCase {
 				$required_by = count($this->extention_to_files_map[$extention]).' files, file[0]="';
 				$required_by .= $this->extention_to_files_map[$extention][0].'"';
 				$this->fail('PHP extention "'.$extention.'" should be installed (required by '.$required_by.')');
-			} elseif (!in_array($extention, $extention_whitelist)) {
+			} else { //if (!in_array($extention, $extention_whitelist)) {
 				$this->assertTrue(true, 'PHP extention "'.$extention.'" is installed');
 			}
 		}
