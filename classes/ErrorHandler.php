@@ -60,6 +60,7 @@ class ErrorHandler {
 	 * @var int
 	 */
 	public $detail_limit = 50;
+
 	/**
 	 * Keep track of the $detail_limit's
 	 * @var array
@@ -272,7 +273,7 @@ class ErrorHandler {
 		}
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
-			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'http://bfanger.nl/core/ErrorHandler.png\')'.$offset.'"></span>';
+			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'http://bfanger.nl/core/img/ErrorHandler.png\')'.$offset.'"></span>';
 		}
 		echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, "\">";
 		if (is_array($message)) {
@@ -562,7 +563,7 @@ class ErrorHandler {
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
 				$errorHandlerInvocations = array('errorCallback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
-				$databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli', ); // prevent showing/mailing passwords in the backtrace.
+				$databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli'); // prevent showing/mailing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
 				if (
 						in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], array('connect', '__construct'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
