@@ -8,8 +8,11 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-if (!defined('Sledgehammer\MICROTIME_START')) {
-	define('Sledgehammer\MICROTIME_START', microtime(true));
+if (!defined('Sledgehammer\STARTED')) {
+	/**
+	 * Timestamp (in microseconds) of the when the script started.
+	 */
+	define('Sledgehammer\STARTED', microtime(true));
 }
 $webpath = dirname((isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME']));
 if ($webpath != '/') {
@@ -58,9 +61,14 @@ foreach($files as $filename) {
 		render_file($filename); // Render het gewone bestand.
 	}
 }
-
+/**
+ * URL path to the root folder. Example: "/" or "/site1/"
+ */
 define('Sledgehammer\WEBPATH', $webpath);
 $folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(WEBPATH)), $match);
+/**
+ * Relative URL path to the root folder. Example: "../"
+ */
 define('Sledgehammer\WEBROOT', str_repeat('../', $folderCount));
 //unset($urlPath, $publicFile, $fullpath, $folderCount, $math, $folders, $folder, $files, $filename);
 return true;

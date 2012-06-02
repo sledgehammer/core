@@ -392,10 +392,9 @@ namespace Sledgehammer {
 	}
 
 	/**
-	 * @var string Regex for supported operators for the compare() function
+	 * Regex for supported operators for the compare() function
 	 */
-
-	const COMPARE_OPERATORS = '==|!=|<|<=|>|>=';
+	define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=');
 
 	/**
 	 * Compare two values with the given operator.
@@ -946,14 +945,14 @@ namespace Sledgehammer {
 	 * Contains parsetime, memory usage and (sql)querylogs.
 	 */
 	function statusbar() {
-		if (defined('Sledgehammer\MICROTIME_START')) {
+		if (defined('Sledgehammer\STARTED')) {
 			$now = microtime(true);
-			echo '<span class="statusbar-parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - MICROTIME_START).'</b>sec. ';
-			if (defined('Sledgehammer\MICROTIME_INIT')) {
-				echo '<span class="statusbar-popout">(Init:&nbsp;<b>'.format_parsetime(MICROTIME_INIT - MICROTIME_START).'</b>sec.';
-				if (defined('Sledgehammer\MICROTIME_EXECUTE')) {
-					echo ' Execute:&nbsp;<b>'.format_parsetime(MICROTIME_EXECUTE - MICROTIME_INIT).'</b>sec. ';
-					echo 'Render:&nbsp;<b>'.format_parsetime($now - MICROTIME_EXECUTE).'</b>sec.';
+			echo '<span class="statusbar-parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - STARTED).'</b>sec. ';
+			if (defined('Sledgehammer\INITIALIZED')) {
+				echo '<span class="statusbar-popout">(Init:&nbsp;<b>'.format_parsetime(INITIALIZED - STARTED).'</b>sec.';
+				if (defined('Sledgehammer\GENERATED')) {
+					echo ' Execute:&nbsp;<b>'.format_parsetime(GENERATED - INITIALIZED).'</b>sec. ';
+					echo 'Render:&nbsp;<b>'.format_parsetime($now - GENERATED).'</b>sec.';
 				}
 				echo ')</span> ';
 			}

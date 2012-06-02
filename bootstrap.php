@@ -5,12 +5,13 @@
  * @package Core
  */
 namespace Sledgehammer;
-if (!defined('Sledgehammer\INITIALIZED')) {
+if (!defined('Sledgehammer\CORE_DIR')) {
 
 	// Define constants
-	define('Sledgehammer\INITIALIZED', microtime(true));
-
 	if (!defined('ENVIRONMENT') && !defined('Sledgehammer\ENVIRONMENT')) {
+		/**
+		 * The configured environment. Uses $_SERVER['APPLICATION_ENV'] or uses 'production' as fallback.
+		 */
 		define('Sledgehammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
 	}
 	if (ENVIRONMENT === 'development' || ENVIRONMENT === 'phpunit') {
@@ -19,21 +20,47 @@ if (!defined('Sledgehammer\INITIALIZED')) {
 		ini_set('display_errors', false);
 	}
 
-	if (!defined('Sledgehammer\MICROTIME_START')) {
-		define('Sledgehammer\MICROTIME_START', microtime(true));
+	if (!defined('Sledgehammer\STARTED')) {
+		/**
+		 * Timestamp (in microseconds) of the when the script started.
+		 */
+		define('Sledgehammer\STARTED', microtime(true));
 	}
+	/**
+	 * Directory of the Sledgehammer Core.
+	 */
 	define('Sledgehammer\CORE_DIR', dirname(__FILE__).'/');
-	define('Sledgehammer\MODULES_DIR', dirname(CORE_DIR).DIRECTORY_SEPARATOR); // Configure the constante for the modules directory. Usually the "sledgehammer/" folder.
-	define('Sledgehammer\PATH', dirname(MODULES_DIR).DIRECTORY_SEPARATOR); // Configure the constant for the project directory.
+	/**
+	 * Directory of the installed Sledgehammer modules. Usually the "sledgehammer/" folder
+	 */
+	define('Sledgehammer\MODULES_DIR', dirname(CORE_DIR).DIRECTORY_SEPARATOR);
+	/**
+	 * Directory of the project.
+	 */
+	define('Sledgehammer\PATH', dirname(MODULES_DIR).DIRECTORY_SEPARATOR);
 	if (!defined('Sledgehammer\APPLICATION_DIR')) {
+		/**
+		 * Directory of the application specific files.
+		 */
 		define('Sledgehammer\APPLICATION_DIR', PATH.'application'.DIRECTORY_SEPARATOR);
 	}
+	/**
+	 * Errorlevel for all errors messages. (E_ALL doesn't include E_STRICT messages)
+	 */
 	define('Sledgehammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing level that includes all message types (E_ALL doesn't include E_STRICT)
 	error_reporting(E_MAX); // Activate the maximum error_level
 	if (defined('SORT_NATURAL') === false) {
-		define('SORT_NATURAL', -1); // for Collection->orderBy()
+		/**
+		 * "natural order" sorting method for Collection->orderBy()
+		 * Uses natsort()
+		 */
+		define('Sledgehammer\SORT_NATURAL', -1);
 	}
-	define('SORT_NATURAL_CI', -2); // Case insensitive nartural sort for Collection->orderBy()
+	/**
+	 * Case insensitive "natural order" sorting method for Collection->orderBy()
+	 * Uses natcasesort()
+	*/
+	define('Sledgehammer\SORT_NATURAL_CI', -2);
 
 	// Include functions
 	require_once(CORE_DIR.'functions.php');
@@ -51,6 +78,9 @@ if (!defined('Sledgehammer\INITIALIZED')) {
 				$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
 			}
 		}
+		/**
+		 * Directory for temporary files.
+		 */
 		define('Sledgehammer\TMP_DIR', $tmpDir);
 		unset($tmpDir);
 	}
@@ -89,6 +119,9 @@ if (!defined('Sledgehammer\INITIALIZED')) {
 	}
 
 	if (!defined('DEBUG_VAR') && !defined('Sledgehammer\DEBUG_VAR')) {
+		/**
+		 * Configure the "?debug=1" to use another $_GET variable.
+		 */
 		define('Sledgehammer\DEBUG_VAR', 'debug'); // Use de default DEBUG_VAR "debug"
 	}
 	if (DEBUG_VAR != false) { // Is the DEBUG_VAR enabled?
@@ -141,6 +174,9 @@ if (!defined('Sledgehammer\INITIALIZED')) {
 	}
 	unset($_email, $modules, $module, $overrideDebugOutput);
 
-	define('Sledgehammer\MICROTIME_INIT', microtime(true));
+	/**
+	 * Timestamp (in microseconds) of the when the Sledgehammer Framework was initialized.
+	 */
+	define('Sledgehammer\INITIALIZED', microtime(true));
 }
 ?>
