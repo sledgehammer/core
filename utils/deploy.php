@@ -8,7 +8,7 @@ if ($argc < 2) {
 	exit(1);
 }
 define('ENVIRONMENT', 'development');
-require_once(dirname(dirname(__FILE__)).'/init.php');
+require_once(dirname(dirname(__FILE__)).'/bootstrap.php');
 
 if (strlen(PATH) <= 4) { // De PATH constante controleren. strlen("PATH") == 4
 	error("Invalid PATH");

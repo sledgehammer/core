@@ -32,7 +32,7 @@ $rewrite = "<?php
  *
  */
 include(dirname(__FILE__).'/../sledgehammer/core/render_public_folders.php');
-require(dirname(__FILE__).'/../sledgehammer/core/init_framework.php'); // Het framework initializeren
+require(dirname(__FILE__).'/../sledgehammer/core/bootstrap.php'); // Het framework initializeren
 
 \$website = new MyWebsite();
 \$website->handleRequest();

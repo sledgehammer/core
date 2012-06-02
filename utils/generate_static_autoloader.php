@@ -10,7 +10,7 @@ if ($library_db_folder == '') {
 if (file_put_contents($library_db_folder.'/AutoLoader.db.php', '<?php $classes = array(); $interfaces = array(); ?>') === false) { // Een "leeg" library.db.php bestand wegschrijven, zodat de core/init.php zonder problemen ingeladen kan worden.
 	trigger_error('Unable to write to "AutoLoader.db.php"', E_USER_ERROR);
 }
-require_once(dirname(__FILE__).'/../init.php');
+require_once(dirname(__FILE__).'/../bootstrap.php');
 
 echo "Resolving required modules...\n";
 $modules = Framework::getModules();

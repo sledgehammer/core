@@ -5,7 +5,7 @@
  * @package Core
  */
 namespace Sledgehammer;
-require (dirname(__FILE__).'/../init_framework.php');
+require (dirname(__FILE__).'/../bootstrap.php');
 Framework::$errorHandler->html = false;
 Framework::$errorHandler->cli = true;
 Framework::$autoLoader->importFolder(dirname(__FILE__).'/classes');
@@ -19,12 +19,12 @@ if ($argc < 2) {
 	exit(1);
 }
 $targets = array(
-	'php' => PATH.'pear/classes',
-	'data' => PATH.'pear/data',
-	'script' => PATH.'pear/scripts',
-	'bin' => PATH.'pear/bin',
-	'doc' => PATH.'pear/docs',
-	'www' => APPLICATION_DIR.'public'
+	'php' => PATH.'vendor/pear/php',
+	'data' => PATH.'vendor/pear/data',
+	'script' => PATH.'vendor/pear/script',
+	'bin' => PATH.'vendor/pear/bin',
+	'doc' => PATH.'vendor/pear/docs',
+	'www' => APPLICATION_DIR.'vendor/pear/www'
 //	'test' => ? // Skip tests
 //	'src' => ?,
 //	'ext' => ?,

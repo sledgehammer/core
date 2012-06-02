@@ -4,7 +4,7 @@
  */
 namespace Sledgehammer;
 
-require_once(dirname(__FILE__).'/../../core/init.php');
+require_once(dirname(__FILE__).'/../../core/bootstrap.php');
 if ($argc > 1) {
 	$targetFolders = array_slice($argv, 1);
 } else {
@@ -43,7 +43,7 @@ foreach ($targetFolders as $targetFolder) {
 		$targetPath = PATH.$targetFolder.$targetSuffix;
 		mkdirs($targetPath);
        	$fileCount += copydir($folder, $targetPath, array('.svn'));
-		
+
 	}
 	echo '  '.$fileCount." files copied\n";
 }

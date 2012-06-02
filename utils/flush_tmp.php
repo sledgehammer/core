@@ -6,7 +6,7 @@
  */
 namespace Sledgehammer;
 
-include(dirname(__FILE__).'/../init.php');
+include(dirname(__FILE__).'/../bootstrap.php');
 
 $gitignoreFile = TMP_DIR.'.gitignore';
 if (file_exists($gitignoreFile)) {

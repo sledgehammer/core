@@ -5,7 +5,7 @@
  */
 namespace Sledgehammer;
 echo "Cleaning modules...\n";
-require_once(dirname(__FILE__).'/../../core/init.php');
+require_once(dirname(__FILE__).'/../../core/bootstrap.php');
 $modules = Framework::getModules();
 foreach ($modules as $module) {
 	if (file_exists($module['path'].'.svn')) {
