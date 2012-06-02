@@ -1069,8 +1069,8 @@ namespace Sledgehammer {
 		}
 		$paths = array('.', $path);
 		foreach (explode(PATH_SEPARATOR, get_include_path()) as $dir) {
-			if ($dir != '.' && $dir != $path) {
-				$paths[] = $path;
+			if ($dir !== '.' && $dir !== $path) {
+				$paths[] = $dir;
 			}
 		}
 		set_include_path(implode(PATH_SEPARATOR, $paths));
