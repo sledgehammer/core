@@ -33,7 +33,7 @@ class ServerEnvironmentTest extends TestCase {
 	}
 
 	function test_environment() {
-		$allowedEnvironments = array('development', 'staging', 'production');
+		$allowedEnvironments = array('development', 'testing', 'acceptation', 'production', 'phpunit');
 		$this->assertTrue(in_array(ENVIRONMENT, $allowedEnvironments), 'ENVIRONMENT moet een van de volgende waarden zijn: "'.human_implode('" of "', $allowedEnvironments, '", "').'"');
 	}
 

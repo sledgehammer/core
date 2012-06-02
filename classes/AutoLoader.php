@@ -77,8 +77,11 @@ class AutoLoader extends Object {
 	function init() {
 		if (file_exists($this->path.'AutoLoader.db.php')) {
 			include($this->path.'AutoLoader.db.php');
-			$this->definitions = $definitions;
-			return;
+			if (isset($definitions)) {
+				$this->definitions = $definitions;
+			} else {
+				notice('AutoLoader.db.php is corrupted');
+			}
 		}
 		$modules = Framework::getModules();
 		foreach ($modules as $module) {

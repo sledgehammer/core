@@ -50,7 +50,7 @@ abstract class DatabaseTestCase extends TestCase {
 			Database::$instances['default_backup'] = Database::$instances['default'];
 			Database::$instances['default'] = 'INVALID';
 		}
-		if (ENVIRONMENT != 'development') {
+		if (ENVIRONMENT !== 'phpunit') {
 			return;
 		}
 
@@ -95,7 +95,7 @@ abstract class DatabaseTestCase extends TestCase {
 	 * @return array
 	 */
 	function getTests() {
-		if (ENVIRONMENT != 'development') {
+		if (ENVIRONMENT !== 'phpunit') {
 			$this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
 			return array();
 		}

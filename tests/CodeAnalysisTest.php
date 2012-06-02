@@ -83,7 +83,7 @@ class CodeAnalysisTest extends TestCase {
 				$analyzer->open($filename);
 			} catch (\Exception $e) {
 //				report_exception($e);
-				$this->fail($e->getMessage());
+				throw $e;
 			}
 		}
 		/* checking parents wordt ook gedaan door de used check
