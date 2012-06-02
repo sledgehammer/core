@@ -9,6 +9,7 @@ namespace Sledgehammer;
  * @link http://msdn.microsoft.com/en-us/library/system.string.aspx
  *
  * @property-read int $length  The number of characters
+ *
  * @package Core
  */
 class Text extends Object implements \ArrayAccess {

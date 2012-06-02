@@ -5,7 +5,7 @@
 namespace Sledgehammer;
 /**
  * Een iterator die de tags uit htmlcode haalt.
- * Met name geschikt voor html met fouten.
+ * Met name geschikt voor html met fouten, zoals bijvoorbeeld een "header.php" waarbij een aantal tags niet worden gesloten.
  * Met de uitvoer kun je de exacte (foute) html weer reconstrueren.
  *
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
@@ -15,29 +15,56 @@ namespace Sledgehammer;
  */
 class TagIterator extends Object implements \Iterator {
 
-	public
-		$warnings;
-
-	private
-		$tokenizer,
-		$toLowerCase,
-		$key,
-		$tag,
-		$valid;
+	/**
+	 * Generated parser warnings. (The tokenizer doesn't report warnings, it just stores them in this array)
+	 * @var array
+	 */
+	public $warnings;
 
 	/**
-	 *
-	 * @param string $html
-	 * @param bool $toLowerCase  Bij true worden alle tags en attributen omgezet naar lowercase. '<ImG SrC="TeSt">' wordt array('<img', array('src' => 'TeSt'),'>', 'html' => <ImG SrC='TeSt'>)
+	 * The tokenizer which proceesses the HTML.
+	 * @var HTMLTokenizer
 	 */
-	function __construct($html, $toLowerCase = true) {
+	private $tokenizer;
+
+	/**
+	 * Convert tagnames to lowercase.
+	 * @var bool
+	 */
+	private $toLowercase;
+
+	/**
+	 * Iterator::key()
+	 * @var int
+	 */
+	private $key;
+
+	/**
+	 * Iterator::current()
+	 * @var array
+	 */
+	private $tag;
+
+	/**
+	 * Iterator::valid()
+	 * @var bool
+	 */
+	private $valid;
+
+	/**
+	 * Constructor
+	 * @param string $html
+	 * @param bool $toLowercase  Bij true worden alle tags en attributen omgezet naar lowercase. '<ImG SrC="TeSt">' wordt array('<img', array('src' => 'TeSt'),'>', 'html' => <ImG SrC='TeSt'>)
+	 */
+	function __construct($html, $toLowercase = true) {
 		$this->tokenizer = new HTMLTokenizer($html);
-		$this->toLowerCase = $toLowerCase;
+		$this->toLowercase = $toLowercase;
 		$this->warnings = & $this->tokenizer->warnings;
 	}
 
 	/**
-	 *
+	 * Iterator::rewind()
+	 * @return void
 	 */
 	function rewind() {
 		$this->tokenizer->rewind();
@@ -47,8 +74,31 @@ class TagIterator extends Object implements \Iterator {
 	}
 
 	/**
-	 *
-	 *
+	 * Iterator::valid()
+	 * @return bool
+	 */
+	function valid() {
+		return $this->valid;
+	}
+
+	/**
+	 * Iterator::current()
+	 * @return array
+	 */
+	function current() {
+		return $this->tag;
+	}
+
+	/**
+	 * Iterator::key()
+	 * @return int
+	 */
+	function key() {
+		return $this->key;
+	}
+
+	/**
+	 * Iterator::next()
 	 * @return void
 	 */
 	function next() {
@@ -95,6 +145,10 @@ class TagIterator extends Object implements \Iterator {
 		$this->key++;
 	}
 
+	/**
+	 * Extract an open or closing tag.
+	 * @return array token
+	 */
 	private function extractTag() {
 		$tag = array(
 			0 => '', // tag '<a' of '</a'
@@ -128,13 +182,13 @@ class TagIterator extends Object implements \Iterator {
 							$this->warnings[] = 'TagIterator: Unexpected token: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
 							return $tag['html'];
 						}
-						$tag[0] .= ($this->toLowerCase ? strtolower($token[1]) : $token[1]);
+						$tag[0] .= ($this->toLowercase ? strtolower($token[1]) : $token[1]);
 						$state = 'ATTRIBUTES';
 						break;
 
 					case 'ATTRIBUTES':
 						if ($token[0] == 'T_ATTRIBUTE') {
-							$attribute = ($this->toLowerCase ? strtolower($token[1]) : $token[1]);
+							$attribute = ($this->toLowercase ? strtolower($token[1]) : $token[1]);
 							$tag[1][$attribute] = null;
 						}
 						if ($token[0] == 'T_VALUE') {
@@ -151,7 +205,11 @@ class TagIterator extends Object implements \Iterator {
 		}
 	}
 
-	function extractEntity() {
+	/**
+	 * Extract an entity like "<!DOCTYPE html>"
+	 * @return array|string
+	 */
+	private function extractEntity() {
 		$entity = array(
 			0 => '', // entity '<!DOCTYPE'
 			1 => array(), // parameters
@@ -181,25 +239,6 @@ class TagIterator extends Object implements \Iterator {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
-	function valid() {
-		return $this->valid;
-	}
-
-	/**
-	 * @return array
-	 */
-	function current() {
-		return $this->tag;
-	}
-
-	/**
-	 * @return int
-	 */
-	function key() {
-		return $this->key;
-	}
 }
+
 ?>

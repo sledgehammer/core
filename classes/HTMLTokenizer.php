@@ -44,31 +44,76 @@ namespace Sledgehammer;
  * @link http://en.wikipedia.org/wiki/HTML_element#Syntax
  * @package Core
  */
-class HTMLTokenizer extends Object implements \Iterator{
+class HTMLTokenizer extends Object implements \Iterator {
 
-	// Genereer parser warnings (Makes UnitTests easier)
-	// Design upgradeable naar streams interface
-	public
-		$warnings = array();
+	/**
+	 * Generated parser warnings. (The tokenizer doesn't report warnings it just stores them in this array)
+	 * @var array
+	 */
+	public $warnings = array();
+	/**
+	 * The html code this tokenizer is parsing.
+	 * @var string
+	 */
+	private $html;
+	private $position;
 
-	private
-		$html,
-		$position,
-		$state, // CONTENT, TAG_BODY, VALUE
-		$tagType, // T_TAG of T_CLOSE_TAG
-		$currentTag,
-		$dtdLevel, // int
-		$tokenQueue = array(),
+	/**
+	 * CONTENT, TAG_BODY, VALUE
+	 * @var string
+	 */
+	private $state;
 
-		$htmlLength,
+	/**
+	 * T_TAG of T_CLOSE_TAG
+	 * @var string
+	 */
+	private $tagType;
+	private $currentTag;
 
-		$valid,
-		$iteratorKey,
-		$iteratorCurrent,
-		// Whitespace helpers
-		$wsPattern,
-		$wsArray;
+	/**
+	 * @var int
+	 */
+	private $dtdLevel;
 
+	/**
+	 * @var array
+	 */
+	private $tokenQueue = array();
+	/**
+	 * Number of characters in the html string.
+	 * @var int
+	 */
+	private $htmlLength;
+	/**
+	 * Iterator::valid()
+	 * @var bool
+	 */
+	private $valid;
+
+	/**
+	 * Iterator::key()
+	 * @var int
+	 */
+	private $iteratorKey;
+
+	/**
+	 * Iterator::current()
+	 * @var array|string
+	 */
+	private $iteratorCurrent;
+
+	/**
+	 * Array containing possible whitespace characters.
+	 * @var array
+	 */
+	private $wsArray;
+
+	/**
+	 * String containing whitespace characters (for use in regular expressions)
+	 * @var string
+	 */
+	private $wsPattern;
 
 	function __construct($html) {
 		$this->html = $html;
@@ -262,11 +307,11 @@ class HTMLTokenizer extends Object implements \Iterator{
 
 	function parseValue() {
 		$invalid = ($this->tagType === 'T_CLOSE_TAG'); // T_CLOSE_TAG mogen geen attributen bevatten.
-		$t_value = ($invalid ? 'T_INVALID': 'T_VALUE');
-		$t_delimiter = ($invalid ? 'T_INVALID': 'T_DELIMITER');
+		$t_value = ($invalid ? 'T_INVALID' : 'T_VALUE');
+		$t_delimiter = ($invalid ? 'T_INVALID' : 'T_DELIMITER');
 
 		$delimiter = $this->getChar();
-		if (in_array($delimiter, array('"',"'"))) { // Heeft de waarde delimiters?
+		if (in_array($delimiter, array('"', "'"))) { // Heeft de waarde delimiters?
 			$this->buildToken($this->position, $t_delimiter);
 			$pos = $this->strpos($delimiter);
 			if ($pos === false) {
@@ -294,9 +339,9 @@ class HTMLTokenizer extends Object implements \Iterator{
 	function parseHtmlComment() {
 		$pos = $this->strpos('-->');
 		if ($pos === false) {
-				$this->warning('Unterminated T_COMMENT. Use "-->" ');
-				$this->buildLastToken('T_COMMENT');
-				return;
+			$this->warning('Unterminated T_COMMENT. Use "-->" ');
+			$this->buildLastToken('T_COMMENT');
+			return;
 		}
 		if ($this->position === $pos) {
 			$this->warning('Empty T_COMMENT block');
@@ -305,7 +350,6 @@ class HTMLTokenizer extends Object implements \Iterator{
 		}
 		$this->buildToken($this->position + 2);
 		$this->state = 'CONTENT';
-
 	}
 
 	/**
@@ -332,7 +376,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 			throw new \Exception('parseDTDTag() saninty check failed');
 		}
 		// @link http://en.wikipedia.org/wiki/CDATA#CDATA_sections_in_XML
-		if($this->substr(0, 9) == '<![CDATA[') {
+		if ($this->substr(0, 9) == '<![CDATA[') {
 			$this->buildToken($this->position + 8);
 			$pos = $this->strpos(']]>');
 			if ($pos === false) {
@@ -376,7 +420,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 				// $this->warning(' No DTD attributes'); // Niet verplicht?
 			}
 		} else {
-			$this->buildToken($pos -1, 'T_DTD_ATTRIBUTES');
+			$this->buildToken($pos - 1, 'T_DTD_ATTRIBUTES');
 		}
 		$this->buildToken($this->position);
 		if ($match == '[') { // DTD met elementen
@@ -436,7 +480,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 
 	function collectWhitespace($tokenType = 'T_WHITESPACE') {
 		$whitespace = false;
-		for($i = $this->position; $i < $this->htmlLength; $i++) {
+		for ($i = $this->position; $i < $this->htmlLength; $i++) {
 			if (in_array($this->html{$i}, $this->wsArray)) {
 				$whitespace = true;
 			} else {
@@ -447,9 +491,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 			$this->buildToken($i - 1, $tokenType);
 			return;
 		}
-
 	}
-
 
 	/**
 	 * Een token instellen o.b.v. van de eind positie van de token.
@@ -488,10 +530,11 @@ class HTMLTokenizer extends Object implements \Iterator{
 		}
 		return $this->html{$this->position};
 	}
+
 	/**
- 	 * Een substr op de $html
+	 * Een substr op de $html
 	 * relatief vanaf de huidige $position
- 	 */
+	 */
 	function substr($start, $length = null) {
 		if ($start < 0) {
 			throw new \Exception('substr() doesnt accept a negative $start');
@@ -523,7 +566,7 @@ class HTMLTokenizer extends Object implements \Iterator{
 	 */
 	function firstOccurrance($needles, &$match = null) {
 		$pos = false;
-		foreach($needles as $needle) {
+		foreach ($needles as $needle) {
 			$needlePos = $this->strpos($needle);
 			if ($needlePos === false) {
 				continue;
@@ -582,33 +625,31 @@ class HTMLTokenizer extends Object implements \Iterator{
 			'T_CLOSE_TAG' => 'purple',
 			'T_OPEN' => 'green',
 			'T_CLOSE' => 'green',
-
 			'T_ATTRIBUTE' => 'brown',
 			'T_VALUE' => 'darkblue',
 			'T_COMMENT' => 'gray',
 			'T_DTD_ENTITY' => 'orange',
 			'T_DTD_ATTRIBUTES' => 'brown',
-
 			'T_TEXT' => 'black',
 			'T_CDATA' => 'black',
 			'T_WHITESPACE' => 'red',
 			'T_INVALID' => $errorColor,
 			'T_LT' => $errorColor,
 			'T_GT' => $errorColor,
-
 			'T_PARSER_TAG' => 'Aquamarine',
-
 			'T_DELIMITER' => 'orange',
 		);
 		echo '<pre style="background:white;overflow:auto;padding:10px;color:red">';
 		foreach ($this as $index => $token) {
 			if (is_array($token)) {
-				echo '<span title="', $token[0] ,'" style="color:' , $colors[$token[0]], '">', htmlentities($token[1], ENT_COMPAT, $charset), '</span>';
+				echo '<span title="', $token[0], '" style="color:', $colors[$token[0]], '">', htmlentities($token[1], ENT_COMPAT, $charset), '</span>';
 			} else {
 				echo '<span style="color:green">', htmlentities($token, ENT_COMPAT, $charset), '</span>';
 			}
 		}
 		echo "</pre>";
 	}
+
 }
+
 ?>

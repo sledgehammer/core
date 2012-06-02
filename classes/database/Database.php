@@ -6,6 +6,7 @@ namespace Sledgehammer;
 /**
  * A PDO Database class with additional debugging functions.
  * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behaviour to FECTH_ASSOC
+ *
  * @package Core
  */
 class Database extends \PDO {
@@ -301,6 +302,7 @@ class Database extends \PDO {
 	function __get($property) {
 		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
 	}
+
 	/**
 	 * Generate warnings for setting non-existing properties.
 	 *

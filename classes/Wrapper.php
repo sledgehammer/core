@@ -8,6 +8,7 @@ namespace Sledgehammer;
  * Allow filters and accesscontrol to any object or array.
  *
  * @see \Sledgehammer\Readonly for an example implementation.
+ *
  * @package Core
  */
 abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {

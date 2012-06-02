@@ -8,29 +8,30 @@ namespace Sledgehammer;
  * Simplifies asynchronous requests & paralell downloads.
  * Uses the curl functions and throws exceptions on errors.
  *
- * @property string $effective_url  Last effective URL
- * @property string $http_code      Last received HTTP code
- * @property mixed $filetime        Remote time of the retrieved document, if -1 is returned the time of the document is unknown
- * @property mixed $total_time      Total transaction time in seconds for last transfer
- * @property mixed $namelookup_time Time in seconds until name resolving was complete
- * @property mixed $connect_time    Time in seconds it took to establish the connection
- * @property mixed $pretransfer_time    Time in seconds from start until just before file transfer begins
- * @property mixed $starttransfer_time  Time in seconds until the first byte is about to be transferred
- * @property mixed $redirect_time   Time in seconds of all redirection steps before final transaction was started
- * @property mixed $size_upload     Total number of bytes uploaded
- * @property mixed $size_download   Total number of bytes downloaded
- * @property mixed $speed_download  Average download speed
- * @property mixed $speed_upload    Average upload speed
- * @property mixed $header_size     Total size of all headers received
- * @property mixed $header_out      The request string sent. For this to work, add the CURLINFO_HEADER_OUT option to the handle by calling curl_setopt()
- * @property mixed $request_size    Total size of issued requests, currently only for HTTP requests
- * @property mixed $ssl_verifyresult         Result of SSL certification verification requested by setting CURLOPT_SSL_VERIFYPEER
- * @property mixed $content_length_download  content-length of download, read from Content-Length: field
- * @property mixed $content_length_upload    Specified size of upload
- * @property mixed $content_type    Content-Type: of the requested document, NULL indicates server did not send valid Content-Type: header
+ * @property-read string $effective_url  Last effective URL
+ * @property-read string $http_code      Last received HTTP code
+ * @property-read mixed $filetime        Remote time of the retrieved document, if -1 is returned the time of the document is unknown
+ * @property-read mixed $total_time      Total transaction time in seconds for last transfer
+ * @property-read mixed $namelookup_time Time in seconds until name resolving was complete
+ * @property-read mixed $connect_time    Time in seconds it took to establish the connection
+ * @property-read mixed $pretransfer_time    Time in seconds from start until just before file transfer begins
+ * @property-read mixed $starttransfer_time  Time in seconds until the first byte is about to be transferred
+ * @property-read mixed $redirect_time   Time in seconds of all redirection steps before final transaction was started
+ * @property-read mixed $size_upload     Total number of bytes uploaded
+ * @property-read mixed $size_download   Total number of bytes downloaded
+ * @property-read mixed $speed_download  Average download speed
+ * @property-read mixed $speed_upload    Average upload speed
+ * @property-read mixed $header_size     Total size of all headers received
+ * @property-read mixed $header_out      The request string sent. For this to work, add the CURLINFO_HEADER_OUT option to the handle by calling curl_setopt()
+ * @property-read mixed $request_size    Total size of issued requests, currently only for HTTP requests
+ * @property-read mixed $ssl_verifyresult         Result of SSL certification verification requested by setting CURLOPT_SSL_VERIFYPEER
+ * @property-read mixed $content_length_download  content-length of download, read from Content-Length: field
+ * @property-read mixed $content_length_upload    Specified size of upload
+ * @property-read mixed $content_type    Content-Type: of the requested document, NULL indicates server did not send valid Content-Type: header
  *
- * @property Closure $onLoad  Event fires when the request has successfully completed.
+ * @property-write Closure $onLoad  Event fires when the request has successfully completed.
  * @property Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
+ *
  * @package Core
  */
 class cURL extends Observable {

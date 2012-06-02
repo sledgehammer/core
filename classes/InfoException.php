@@ -40,6 +40,7 @@ class InfoException extends \Exception {
 	function getInformation() {
 		return $this->information;
 	}
+
 }
 
 ?>

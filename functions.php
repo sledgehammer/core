@@ -103,6 +103,7 @@ namespace {
 	 * Schrijf je:
 	 *   if (value($_GET['foo']) == 'bar') {
 	 *
+	 * @param mixed $variable
 	 * @return mixed
 	 */
 	function value(&$variable) {
@@ -144,6 +145,7 @@ namespace Sledgehammer {
 	/**
 	 * Test of een array een assoc array is. (Als een key NIET van het type integer zijn)
 	 *
+	 * @param array $array
 	 * @return bool
 	 */
 	function is_assoc($array) {
@@ -158,6 +160,7 @@ namespace Sledgehammer {
 	/**
 	 * Test of een array een indexed array is. (Als de keys liniair zijn opgebouwd)
 	 *
+	 * @param array $array
 	 * @return bool
 	 */
 	function is_indexed($array) {
@@ -333,7 +336,9 @@ namespace Sledgehammer {
 	 * Een element uit een array opvragen. Kan ook een subelement opvragen "element[subelement1][subelement2]"
 	 * Retourneert true als de waarde is gevonden. [abc] wordt ['abc'], maar [1] wordt geen ['1']
 	 *
-	 * @param mixed $value wordt ingesteld
+	 * @param array $array
+	 * @param string $identifier
+	 * @param mixed $value  value of the element
 	 * @return bool
 	 */
 	function extract_element($array, $identifier, &$value) {
@@ -372,6 +377,8 @@ namespace Sledgehammer {
 	 * equals("1.1", 1.1) == true
 	 * equals("abc", "ABC") == f
 	 *
+	 * @param mixed $var1
+	 * @param mixed $var2
 	 * @return bool
 	 */
 	function equals($var1, $var2) {
@@ -421,8 +428,8 @@ namespace Sledgehammer {
 	/**
 	 * Vergelijk de eigenschappen van 2 objecten met de equals functie.
 	 *
-	 * @param Object $object1
-	 * @param Object $object2
+	 * @param stdClass $object1
+	 * @param stdClass $object2
 	 * @param array $properties De eigenschappen die vergeleken moeten worden
 	 * @return bool True als de eigenschappen gelijk zijn aan elkaar
 	 */
@@ -438,21 +445,21 @@ namespace Sledgehammer {
 	/**
 	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
 	 *
-	 * @param Object $Object Het (doel) object waar de eigenschappen worden aangepast
+	 * @param stdClass $object Het (doel) object waar de eigenschappen worden aangepast
 	 * @param array $values Een assoc array met als key de eigenschap. bv: array('id' => 1)
-	 * @param bool $check_for_propery Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
+	 * @param bool $check_for_property Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
 	 * @return void
 	 */
-	function set_object_vars($Object, $values, $check_for_property = false) {
+	function set_object_vars($object, $values, $check_for_property = false) {
 		if ($check_for_property) {
 			foreach ($values as $property => $value) {
-				if (property_exists($Object, $property)) {
-					$Object->$property = $value;
+				if (property_exists($object, $property)) {
+					$object->$property = $value;
 				}
 			}
 		} else {
 			foreach ($values as $property => $value) {
-				$Object->$property = $value;
+				$object->$property = $value;
 			}
 		}
 	}
@@ -486,7 +493,7 @@ namespace Sledgehammer {
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
 	 *
 	 * @param string $url
-	 * @param bool $permanent  Bij true wordt ook de "301 Moved Permanently" header verstuurd
+	 * @param bool $permanently  Bij true wordt ook de "301 Moved Permanently" header verstuurd
 	 * @return exit()
 	 */
 	function redirect($url, $permanently = false) {
@@ -506,9 +513,11 @@ namespace Sledgehammer {
 	}
 
 	/**
-	 * Download a  bestand downloaden(naar het geheugen) en opslaan.
+	 * Bestand downloaden(naar het geheugen) en opslaan.
 	 * retourneert de groote van het bestand (in karakters)
 	 *
+	 * @param string $url
+	 * @param string $filename
 	 * @return int|false
 	 */
 	function wget($url, $filename) {
@@ -547,6 +556,9 @@ namespace Sledgehammer {
 	 * De map, inclusief alle bestanden en submappen in het $path verwijderen.
 	 *
 	 * @throws Exception on failure
+	 *
+	 * @param string $path
+	 * @param bool $allowFailures
 	 * @return int Het aantal verwijderde bestanden
 	 */
 	function rmdir_recursive($path, $allowFailures = false) {
@@ -575,6 +587,8 @@ namespace Sledgehammer {
 	 * Delete the contents of the folder, but not the folder itself.
 	 *
 	 * @throws Exception on failure
+	 * @param string $path
+	 * @param bool $allowFailures
 	 * @return int Het aantal verwijderde bestanden
 	 */
 	function rmdir_contents($path, $allowFailures = false) {
@@ -600,8 +614,9 @@ namespace Sledgehammer {
 	 * Een bestand verwijderen, met extra controle dat het bestand zich in de $basepath map bevind.
 	 *
 	 * @throws Exception
-	 * @param $filepath
-	 * @param $basepath
+	 * @param string $filepath
+	 * @param string $basepath
+	 * @param bool $recursive
 	 * @return void
 	 */
 	function safe_unlink($filepath, $basepath, $recursive = false) {
@@ -673,31 +688,32 @@ namespace Sledgehammer {
 	 * De doelmap wordt NIET eerst verwijderd
 	 *
 	 * @param string $source  De bronmap
-	 * @param string $target  De doelmap
+	 * @param string $destination  De doelmap
 	 * @param array $exclude  Een array met bestand en/of mapnamen die niet gekopieerd zullen.
+	 * @return int
 	 */
-	function copydir($source, $dest, $exclude = array()) {
-		if (!is_dir($dest) && !mkdir($dest)) {
+	function copydir($source, $destination, $exclude = array()) {
+		if (!is_dir($destination) && !mkdir($destination)) {
 			return false;
 		}
-		$file_count = 0;
-		$DirectoryIterator = new \DirectoryIterator($source);
-		foreach ($DirectoryIterator as $Entry) {
-			if ($Entry->isDot() || in_array($Entry->getFilename(), $exclude)) {
+		$count = 0;
+		$dir = new \DirectoryIterator($source);
+		foreach ($dir as $entry) {
+			if ($entry->isDot() || in_array($entry->getFilename(), $exclude)) {
 				continue;
-			} elseif ($Entry->isFile()) {
-				if (copy($Entry->getPathname(), $dest.'/'.$Entry->getFilename())) {
-					$file_count++;
+			} elseif ($entry->isFile()) {
+				if (copy($entry->getPathname(), $destination.'/'.$entry->getFilename())) {
+					$count++;
 				} else {
 					break;
 				}
-			} elseif ($Entry->isDir()) {
-				$file_count += copydir($Entry->getPathname(), $dest.'/'.$Entry->getFilename(), $exclude);
+			} elseif ($entry->isDir()) {
+				$count += copydir($entry->getPathname(), $destination.'/'.$entry->getFilename(), $exclude);
 			} else {
 				notice('Unsupported filetype');
 			}
 		}
-		return $file_count;
+		return $count;
 	}
 
 	/**
@@ -706,10 +722,10 @@ namespace Sledgehammer {
 	 *
 	 * @param mixed $variable
 	 * @param string $datatype  Skip autodetection/force a type
-	 * @param int $maxLenghtTitle  maximum length for the title attribute (which contains the contents of the array|object)
+	 * @param int $titleLimit  maximum length for the title attribute (which contains the contents of the array|object)
 	 * @return string
 	 */
-	function syntax_highlight($variable, $datatype = null, $maxLenghtTitle = 256) {
+	function syntax_highlight($variable, $datatype = null, $titleLimit = 256) {
 		if ($datatype === null) {
 			$datatype = gettype($variable);
 		}
@@ -778,8 +794,8 @@ namespace Sledgehammer {
 				break;
 		}
 		$html = '<span';
-		if (($datatype === 'object' || $datatype === 'array') && $maxLenghtTitle > 0) { // Built title attribute?
-			$title = partial_var_export($variable, $maxLenghtTitle, 4);
+		if (($datatype === 'object' || $datatype === 'array') && $titleLimit > 0) { // Built title attribute?
+			$title = partial_var_export($variable, $titleLimit, 4);
 			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
 		}
 		$colorCodes = array(
@@ -908,6 +924,11 @@ namespace Sledgehammer {
 
 	/**
 	 * Zet een float om naar een leesbare (parse)tijdnotatie
+	 * 61.23 => '1:01.230'
+	 *
+	 * @param float $seconds
+	 * @param int $precision
+	 * @return string
 	 */
 	function format_parsetime($seconds, $precision = 3) {
 		if ($seconds < 60) { // Duurde het genereren korter dan 1 minuut?
@@ -993,10 +1014,10 @@ namespace Sledgehammer {
 	 * Geeft de keys van een iterator in een array. Net als array_key(), maar dan voor iterators.
 	 *
 	 * @see array_keys()
-	 * @param Iterator $iterator
-	 * @return array *
+	 * @param Iterator|array $iterator
+	 * @return array
 	 */
-	function iterator_keys($iterator, $search_value = null, $strict = false) {
+	function iterator_keys($iterator) {
 		if (is_array($iterator)) {
 			return array_keys($iterator);
 		}
@@ -1019,7 +1040,8 @@ namespace Sledgehammer {
 	 * (De reeds ingestelde timeout zal nooit ingekort worden)
 	 * Bij $relative op false (absolute) zullen de $seconden bij de huidige timeout worden opgeteld.
 	 *
-	 * @param $fromNow
+	 * @param int $seconds
+	 * @param int $relative
 	 * @return void
 	 */
 	function extend_time_limit($seconds, $relative = false) {
@@ -1321,6 +1343,9 @@ namespace Sledgehammer {
 	/**
 	 * Mappen en bestandsnaam in de url corrigeren
 	 * Geen " " maar "%20" enz
+	 *
+	 * @param string $path
+	 * @return string
 	 */
 	function urlencode_path($path) {
 		$escaped_path = rawurlencode($path);
@@ -1452,7 +1477,7 @@ exit [lindex $result 3]');
 	 *   select('*')->from('table')->where('column = "value"');
 	 *
 	 * @param array|string $columns
-	 * @param string ...
+	 * param string ...
 	 * @return SQL
 	 */
 	function select($columns) {
@@ -1468,6 +1493,8 @@ exit [lindex $result 3]');
 	 * Allows direct method-chaining:
 	 *   text('my text')->toUpper()->trim();
 	 *
+	 * @param string $text
+	 * @param string $charset Charset of the given $text. (output is alway UTF-8).
 	 * @return Text
 	 */
 	function text($text, $charset = null) {
@@ -1479,10 +1506,11 @@ exit [lindex $result 3]');
 	 * Allows direct method-chaining:
 	 *   collection($array)->select('name');
 	 *
+	 * @param \Traversable|array $traversable
 	 * @return Collection
 	 */
-	function collection($iterator) {
-		return new Collection($iterator);
+	function collection($traversable) {
+		return new Collection($traversable);
 	}
 
 }

@@ -393,7 +393,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		return $this->data->valid();
 	}
 
-
 	/**
 	 * Whether a offset exists.
 	 * @link http://php.net/manual/en/arrayaccess.offsetexists.php

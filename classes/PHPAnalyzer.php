@@ -360,8 +360,9 @@ class PHPAnalyzer extends Object {
 	/**
 	 * Resolve the full classname.
 	 *
-	 * @param string $namespace
+	 * @param string $namespace  Active namespace
 	 * @param string $identifier  The class or interface name
+	 * @param array $uses  Active USE statements.
 	 * @return string
 	 */
 	private function prefixNamespace($namespace, $identifier, $uses = array()) {

@@ -64,6 +64,7 @@ class PHPTokenizer extends Object implements \Iterator {
 	 * @var array
 	 */
 	private $tokens;
+
 	/**
 	 * The linenumber of the current token.
 	 * @var int
