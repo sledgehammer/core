@@ -101,7 +101,13 @@ class URL extends Object {
 			}
 			$url .= $this->host;
 			if ($this->port) {
-				$url .= ':'.$this->port;
+				$standardPorts = array(
+					'http' => 80,
+					'https' => 443,
+				);
+				if ($this->scheme === null || empty($standardPorts[$this->scheme]) || $standardPorts[$this->scheme] != $this->port) { // Is the port non-standard?
+					$url .= ':'.$this->port;
+				}
 			}
 		}
 		if ($this->path !== null) {
@@ -157,7 +163,7 @@ class URL extends Object {
 				$url .= 's';
 			}
 			$url .= '://';
-			$url .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+			$url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			self::$current = new URL($url);
 		}
 		return clone self::$current;
