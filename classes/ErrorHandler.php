@@ -273,7 +273,8 @@ class ErrorHandler {
 		}
 		echo '<div style="', implode(';', $style), '">';
 		if ($showDetails) {
-			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'http://bfanger.nl/core/img/ErrorHandler.png\')'.$offset.'"></span>';
+			$scheme = (array_value($_SERVER, 'HTTPS') == 'on') ? 'https' : 'http';
+			echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\''.$scheme.'://bfanger.nl/core/img/ErrorHandler.png\')'.$offset.'"></span>';
 		}
 		echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, "\">";
 		if (is_array($message)) {
