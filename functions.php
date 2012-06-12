@@ -497,9 +497,14 @@ namespace Sledgehammer {
 	 */
 	function redirect($url, $permanently = false) {
 		if (headers_sent()) {
-			echo '<script type="text/javascript">window.location="'.addslashes($url).'";</script>'; // Probeer een javascript redirect
-			echo '<noscript><meta http-equiv="refresh" content="'.addslashes('0; url='.$url).'"></noscript>'; // Probeer meta-refresh (kan in Internet Explorer uitgezet worden >< )
-			echo 'U werd doorverwezen naar een nieuwe pagina. Dit lukte niet automatisch. Gebruik deze <a href="'.$url.'">link</a> om verder te gaan.';
+			// Javascript fallback
+			echo '<script type="text/javascript">window.location='.json_encode((string)$url).';</script>';
+			echo '<noscript>';
+			// Meta refresh fallback
+			echo '<meta http-equiv="refresh" content="0; url='.htmlentities($url, ENT_QUOTES).'">';
+			// Show a link
+			echo '<a href="'.htmlentities($url, ENT_QUOTES).'">Continue</a>';
+			echo '</noscript>';
 		} else {
 			if ($permanently) {
 				header($_SERVER['SERVER_PROTOCOL'].' 301 Moved Permanently');
