@@ -152,28 +152,26 @@ class URL extends Object {
 	}
 
 	/**
-	 * Gets the current url based on the information in the $_SERVER array
+	 * Gets the current url based on the information in the $_SERVER array.
 	 *
 	 * @return URL
 	 */
 	static function getCurrentURL() {
 		if (self::$current === null) {
-			if (isset($_SERVER['HTTP_HOST'])) {
-				$url = 'http';
-				if (array_value($_SERVER, 'HTTPS') == 'on') {
-					$url .= 's';
-				}
-				$url .= '://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-				self::$current = new URL($url);
+			if (array_value($_SERVER, 'HTTPS') == 'on') {
+				$scheme = 'https';
+				$port = ($_SERVER['SERVER_PORT'] == '443') ? '' : ':'.$_SERVER['SERVER_PORT'];
 			} else {
-				self::$current = new URL($_SERVER['REQUEST_URI']);
+				$scheme = 'http';
+				$port = ($_SERVER['SERVER_PORT'] == '80') ? '' : ':'.$_SERVER['SERVER_PORT'];
 			}
+			self::$current = new URL($scheme.'://'.$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI']);
 		}
 		return clone self::$current;
 	}
 
 	/**
-	 * Set the current url (Mock an request)
+	 * Set the current url (Mock a request)
 	 *
 	 * @param string|URL $url
 	 */
