@@ -158,13 +158,16 @@ class URL extends Object {
 	 */
 	static function getCurrentURL() {
 		if (self::$current === null) {
-			$url = 'http';
-			if (array_value($_SERVER, 'HTTPS') == 'on') {
-				$url .= 's';
+			if (isset($_SERVER['HTTP_HOST'])) {
+				$url = 'http';
+				if (array_value($_SERVER, 'HTTPS') == 'on') {
+					$url .= 's';
+				}
+				$url .= '://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+				self::$current = new URL($url);
+			} else {
+				self::$current = new URL($_SERVER['REQUEST_URI']);
 			}
-			$url .= '://';
-			$url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-			self::$current = new URL($url);
 		}
 		return clone self::$current;
 	}
