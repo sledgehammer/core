@@ -4,7 +4,8 @@
  */
 namespace Sledgehammer;
 /**
- * Parses a var_dump() and renders a syntax highlighted version of var_export();
+ * Parses a var_dump() and renders a syntax highlighted version of var_export()
+ *
  * Usage:
  *   dump($var);
  * or in a VirtualFolder:
@@ -35,10 +36,30 @@ class Dump extends Object {
 	private static $xdebug = null;
 
 	/**
+	 * Colors based on Tomorrow Night
+	 * @link https://github.com/ChrisKempson/Tomorrow-Theme
+	 * @var array
+	 */
+	private static $colors = array(
+		'background' => '#1d1f21',
+		'foreground' => '#c5c8c6', // lightgray: =>,  {, (
+		'current' => '#282a2e', // darkgray
+
+		'class' => '#f0c674', // yellow
+		'attribute' => '#cc6666', // red
+		'method' => '#81a2be', // blue
+		'keyword' => '#b294bb', // purple
+		'string' => '#b5bd68', // green: "hello"
+		'number' => '#8abeb7', // agua: 123
+		'symbol' => '#de935f', // orange: {true, null}
+		'comment' => '#969896', // gray
+	);
+
+	/**
 	 * Constructor
 	 * @param mixed $variable  The variable to display on render()
 	 */
-	function __construct($variable = null) {
+	function __construct($variable) {
 		$this->variable = $variable;
 		$trace = debug_backtrace();
 		$file = $trace[0]['file'];
@@ -55,28 +76,26 @@ class Dump extends Object {
 	 * @return void
 	 */
 	function render() {
-		$this->render_dump($this->variable, $this->trace);
+		$this->dump($this->variable, $this->trace);
 	}
 
 	/**
-	 * De een gekleurde var_dump van de variabele weergeven
+	 * Dumps information about a variable, like var_dump() but with improved syntax and coloring.
 	 *
 	 * @param mixed $variable
 	 * @param array|null $trace
 	 */
-	static function render_dump($variable, $trace = null) {
-		self::render_trace($trace);
+	static function dump($variable, $trace = null) {
+		self::renderTrace($trace);
 
 		$style = array(
-			'border: 1px solid #e1e1e8',
-			'border-top: 0',
 			'margin: 0 5px 18px 5px',
 			'padding: 10px 15px 15px 15px',
 			'line-height: 14px',
-			'background: #fbfbfc',
+			'background: '.self::$colors['background'],
 			'border-radius: 0 0 4px 4px',
 			'font: 10px/13px Monaco, monospace',
-			'color: teal', /* kleur van een operator */
+			'color: '.self::$colors['foreground'],
 			'-webkit-font-smoothing: none',
 			'font-smoothing: none',
 			'overflow-x: auto',
@@ -99,7 +118,7 @@ class Dump extends Object {
 		var_dump($variable);
 		$output = rtrim(ob_get_clean());
 		try {
-			self::render_vardump($output);
+			self::renderVardump($output);
 		} catch (\Exception $e) {
 			report_exception($e);
 		}
@@ -115,7 +134,7 @@ class Dump extends Object {
 	 * @param int $indenting The the number of leading spaces
 	 * @return int the number of characters the variable/array/object occupied in the var_dump() output
 	 */
-	private static function render_vardump($data, $indenting = 0) {
+	private static function renderVardump($data, $indenting = 0) {
 		if ($data[0] == '&') {
 			$data = substr($data, 1);
 			$pos = 1;
@@ -124,11 +143,12 @@ class Dump extends Object {
 			$pos = 0;
 		}
 		if (substr($data, 0, 4) == 'NULL') {
-			echo syntax_highlight('null', 'constant');
+			self::renderType('null', 'symbol');
 			return $pos + 4;
 		}
 		if (substr($data, 0, 11) == '*RECURSION*') {
-			echo '*RECURSION* ', syntax_highlight('// This variable is already shown', 'comment');
+			self::renderType('*RECURSION* ', 'keyword');
+			self::renderType('// This variable is already shown', 'comment');
 			return $pos + 11;
 		}
 		$bracketStart = strpos($data, '(');
@@ -149,19 +169,19 @@ class Dump extends Object {
 
 			// boolean (true en false)
 			case 'bool':
-				echo syntax_highlight($length, 'constant');
+				self::renderType($length, 'symbol');
 				return $pos;
 
 			// numbers (int, float)
 			case 'int':
 			case 'float':
-				echo syntax_highlight($length, 'number');
+				self::renderType($length, 'number');
 				return $pos;
 
 			// text (string)
 			case 'string':
 				$text = substr($data, $bracketEnd + 3, $length);
-				echo syntax_highlight($text, 'string_pre');
+				self::renderType($text, 'string');
 				return $pos + $length + 3;
 
 			// Resources (file, gd, curl)
@@ -177,21 +197,23 @@ class Dump extends Object {
 
 				$resource.= preg_replace('/.*\(/', ' (', $data);
 				$resource = substr($resource, 0);
-				echo syntax_highlight($resource, 'constant');
+				self::renderType($resource, 'constant');
 				return $pos;
 
 			// Arrays
 			case 'array':
 				if ($length == 0) {// Empty array?
-					echo syntax_highlight('array()', 'method');
+					self::renderType('array', 'method');
+					echo '()';
 					return $pos + $indenting + 4;
 				}
 				$data = substr($data, $bracketEnd + 4); // ') {\n' eraf halen
-				echo syntax_highlight('array(', 'method');
-				echo "\n";
+				self::renderType('array', 'method');
+				echo "(\n";
 				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) {// xdebug limit reached?
 					echo str_repeat(' ', $indenting + 4), "...\n";
-					echo str_repeat(' ', $indenting), syntax_highlight(')', 'method');
+					echo str_repeat(' ', $indenting);
+					echo ')';
 					return $pos + $indenting - 2 + strpos($data, '}');
 				}
 				$indenting += 2;
@@ -202,10 +224,10 @@ class Dump extends Object {
 						$arrowPos = strpos($data, " =>\n");
 						$index = substr($data, 0, $arrowPos);
 						if ($index[0] === '[') { // numeric index?
-							echo syntax_highlight(substr($index, 1, -1), 'number');
+							self::renderType(substr($index, 1, -1), 'number');
 						} elseif ($index[0] == "'") {
 							// @todo detect " =>\n" in the index
-							echo syntax_highlight(substr($index, 1, -1), 'string');
+							self::renderType(substr($index, 1, -1), 'string');
 						} else {
 							throw new InfoException('Invalid index', array('index' => $index));
 						}
@@ -218,15 +240,15 @@ class Dump extends Object {
 						$index = substr($data, 0, $arrowPos);
 
 						if ($index[0] == '"') { // assoc array?
-							echo syntax_highlight(substr($index, 1, -1), 'string');
+							self::renderType(substr($index, 1, -1), 'string');
 						} else {
-							echo syntax_highlight($index, 'number');
+							self::renderType($index, 'number');
 						}
 						echo ' => ';
 						$data = substr($data, $arrowPos + 4 + $indenting);
 						$pos += strlen($index) + 6;
 					}
-					$elementLength = self::render_vardump($data, $indenting);
+					$elementLength = self::renderVardump($data, $indenting);
 					$data = substr($data, $elementLength + 1);
 					$pos += $elementLength + ($indenting * 2);
 					echo ",\n";
@@ -234,8 +256,7 @@ class Dump extends Object {
 				$indenting -= 2;
 				$pos += 4 + $indenting;
 				echo str_repeat(' ', $indenting);
-
-				echo syntax_highlight(')', 'method');
+				echo ')';
 				return $pos;
 
 			// Objects
@@ -255,15 +276,15 @@ class Dump extends Object {
 					$length = substr($data, $bracketStart + 1, $bracketEnd - $bracketStart - 1);
 				}
 				$data = substr($data, $bracketEnd + 4); // ' {\n' eraf halen
-				echo syntax_highlight($object, 'class');
+				self::renderType($object, 'class');
 				if ($length == 0) { // Geen attributen?
 					return $pos + $bracketEnd + strpos($data, '}') + 5; // tot '}\n' eraf halen.
 				}
-				echo syntax_highlight(' {', 'class');
-				echo "\n";
+				echo " {\n";
 				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) { // xdebug limit reached?
 					echo str_repeat(' ', $indenting + 4), "...\n";
-					echo str_repeat(' ', $indenting), syntax_highlight('}', 'class');
+					echo str_repeat(' ', $indenting);
+					self::renderType('}', 'class');
 					return $pos + strpos($data, '}') + 2;
 				}
 				$indenting += 2;
@@ -282,14 +303,15 @@ class Dump extends Object {
 						$data = substr($data, $arrowPos + 4 + $indenting);
 						$pos += strlen($attribute) + 6;
 					}
-					self::render_attribute($attribute);
+					self::renderAttribute($attribute);
 					echo ' -> ';
 					if (self::$xdebug && preg_match('/^\s+\.\.\.\n\n/', $data, $matches)) { // xdebug limit reached?
 						echo "\n", str_repeat(' ', $indenting + 4), "...\n\n";
-						echo str_repeat(' ', $indenting - 2), syntax_highlight('}', 'class');
+						echo str_repeat(' ', $indenting - 2);
+						echo '}';
 						return $pos + strlen($matches[0]);
 					}
-					$elementLength = self::render_vardump($data, $indenting);
+					$elementLength = self::renderVardump($data, $indenting);
 					$data = substr($data, $elementLength + 1);
 					echo ",\n";
 					$pos += $elementLength + ($indenting * 2);
@@ -297,7 +319,7 @@ class Dump extends Object {
 				$indenting -= 2;
 				$pos += $bracketEnd + 5 + $indenting;
 				echo str_repeat(' ', $indenting);
-				echo syntax_highlight('}', 'class');
+				echo '}';
 				return $pos;
 				break;
 
@@ -310,7 +332,7 @@ class Dump extends Object {
 	 * Achterhaald het bestand en regelnummer waarvan de dump functie is aangeroepen
 	 * @param array $trace
 	 */
-	private static function render_trace($trace = null) {
+	private static function renderTrace($trace = null) {
 		if ($trace === null) {
 			$trace = array(
 				'invocation' => 'dump'
@@ -329,18 +351,17 @@ class Dump extends Object {
 		}
 		$style = array(
 			'font: 13px/22px \'Helvetica Neue\', Helvetica, sans-serif',
-			'border: 1px solid #e1e1e8',
-			'border-bottom: 1px solid #ececf0',
 			'border-radius: 4px 4px 0 0',
-			'background-color: #f7f7f9',
+			'background-color: '.self::$colors['current'],
 			'margin: 15px 5px 0 5px',
 			'padding: 3px',
 			'padding-left: 9px',
-			'color: #777',
-			'text-shadow: 0 1px 0 #fff',
+			'color: '.self::$colors['foreground'],
+			'text-shadow: 0 1px 0 #000',
 		);
 		echo '<div style="'.implode(';', $style).'">';
-		echo $trace['invocation'], '(<span style="margin: 0 3px;">';
+		self::renderType($trace['invocation'], 'comment');
+		echo '(<span style="margin: 0 3px;">';
 
 		$file = file($trace['file']);
 		$line = $file[($trace['line'] - 1)];
@@ -348,34 +369,46 @@ class Dump extends Object {
 		$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
 		$argument = trim($argument);
 		if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
-			echo syntax_highlight($argument, 'attribute');
+			self::renderType($argument, 'attribute');
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
-			echo syntax_highlight($matches['function'], 'method'), '<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+			self::renderType($matches['function'], 'method');
+			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)(?P<element>\[.+\])$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
-			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['attribute'], 'attribute');
+			self::renderType($matches['object'], 'class');
+			echo '->';
+			self::renderType($matches['attribute'], 'attribute');
 			if ($matches['element']) {
-				echo syntax_highlight('[', 'operator'), '<span style="color:#333">', substr($matches['element'], 1, -1), '</span>', syntax_highlight(']', 'operator');
+				echo '['.substr($matches['element'], 1, -1).']';
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			echo syntax_highlight($matches['object'], 'class'), syntax_highlight('->', 'operator'), syntax_highlight($matches['method'], 'method'), '<span style="color:#444">(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')</span>';
+			self::renderType($matches['object'], 'class');
+			echo '->';
+			self::renderType($matches['method'], 'method');
+			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
 		} else {
-			echo '<span style="color:#333">', htmlentities($argument, ENT_COMPAT, Framework::$charset), '</span>';
+			echo htmlentities($argument, ENT_COMPAT, Framework::$charset);
 		}
-		echo '</span>)&nbsp; in /', str_replace('\\', '/', str_replace(PATH, '', $trace['file'])), ' on line ', $trace['line'];
+		echo '</span>)&nbsp;';
+		self::renderType(' in ', 'comment');
+		echo '/', str_replace('\\', '/', str_replace(PATH, '', $trace['file']));
+		self::renderType(' on line ', 'comment');
+		echo $trace['line'];
 		echo "</div>\n";
 	}
 
 	/**
-	 * Haal de scope uit de attribute string en
+	 * Haal de scope uit de attribute string.
 	 *
 	 * @param string $attribute Bv '"log", '"error_types:private" of '"error_types":"ErrorHandler":private'
 	 */
-	static private function render_attribute($attribute) {
+	static private function renderAttribute($attribute) {
 		if (self::$xdebug) {
 			if (preg_match('/(public|protected|private) \$(.+)$/', $attribute, $matches)) {
-				echo syntax_highlight($matches[2], 'attribute');
+				self::renderType($matches[2], 'attribute');
 				if ($matches[1] !== 'public') {
-					echo '<span style="font-size:9px">:', $matches[1], '</span>';
+					echo '<span style="font-size:9px">:';
+					$this->renderColor($matches[1], 'comment');
+					echo '</span>';
 				}
 				return;
 			} else {
@@ -387,25 +420,47 @@ class Dump extends Object {
 		switch ($partsCount) {
 
 			case 1: // Is de scope niet opgegeven?
-				echo syntax_highlight(substr($attribute, 1, -1), 'attribute');
+				self::renderType(substr($attribute, 1, -1), 'attribute');
 				break;
 
 			case 2:
 				if (substr($parts[1], -1) == '"') { // Sinds php 5.3 is wordt ':protected' en ':private' NA de '"' gezet ipv ervoor
 					// php < 5.3
-					echo syntax_highlight(substr($parts[0], 1), 'attribute'), '<span style="font-size:9px">:', substr($parts[1], 0, -1), '</span>';
+					self::renderType(substr($parts[0], 1), 'attribute');
+					echo '<span style="font-size:9px">:';
+					self::renderType(substr($parts[1], 0, -1), 'comment');
+					echo '</span>';
 				} else { // php >= 5.3
-					echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px">:', $parts[1], '</span>';
+					self::renderType(substr($parts[0], 1, -1), 'attribute');
+					echo '<span style="font-size:9px">:';
+					self::renderType($parts[1], 'comment');
+					echo '</span>';
 				}
 				break;
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private
-				echo syntax_highlight(substr($parts[0], 1, -1), 'attribute'), '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:', $parts[2], '</span>';
+				self::renderType(substr($parts[0], 1, -1), 'attribute');
+				echo '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:';
+				self::renderType($parts[2], 'comment');
+				echo '</span>';
 				break;
 
 			default:
 				throw new InfoException('Unexpected number of parts: '.$partsCount, $parts);
 		}
+	}
+
+	/**
+	 * Render the contents in the color of the type.
+	 *
+	 * @param string $data
+	 * @param string $type
+	 */
+	private static function renderType($data, $type) {
+		if ($type === 'string') {
+			$data = '&#39;'.htmlspecialchars($data).'&#39;';
+		}
+		echo '<span style="color: ', self::$colors[$type], '">', $data, '</span>';
 	}
 
 }

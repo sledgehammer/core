@@ -22,10 +22,10 @@ namespace {
 		}
 		if ($export) {
 			ob_start();
-			Sledgehammer\Dump::render_dump($variable);
+			Sledgehammer\Dump::dump($variable);
 			return ob_get_clean();
 		} else {
-			Sledgehammer\Dump::render_dump($variable);
+			Sledgehammer\Dump::dump($variable);
 		}
 	}
 

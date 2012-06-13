@@ -134,7 +134,7 @@ class CompareEnvironments extends Util {
 					'target' => '['.$target.']',
 					);
 			$ConstantsDiff->Iterator = $constants_diff;
-			$output .= '<h2>Constants.ini\'s</h2>'.export_view($ConstantsDiff);
+			$output .= '<h2>Constants.ini\'s</h2>'.view_to_string($ConstantsDiff);
 		}
 
 		if (count($database_diff) > 0) {
@@ -145,13 +145,13 @@ class CompareEnvironments extends Util {
 					'target' => '['.$target.']',
 					);
 			$DatabaseDiff->Iterator = $database_diff;
-			$output .= '<h2>Database.ini</h2>'.export_view($DatabaseDiff);
+			$output .= '<h2>Database.ini</h2>'.view_to_string($DatabaseDiff);
 		}
 
 		if ($output == '') {
-			$output .= export_view(new MessageBox('information.gif', 'No differences found', 'The environments are identical'));
+			$output .= view_to_string(new MessageBox('information.gif', 'No differences found', 'The environments are identical'));
 		}
-		return new HTML(export_view($Form).'<br />'.$output);
+		return new HTML(view_to_string($Form).'<br />'.$output);
 	}
 }
 ?>
