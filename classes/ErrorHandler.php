@@ -556,10 +556,10 @@ class ErrorHandler {
 		if (!$location_only) {
 			if (isset($call['object'])) {
 				echo syntax_highlight($call['object'], null, 512);
-				echo $call['type'];
+				echo syntax_highlight($call['type'], 'operator');
 			} elseif (isset($call['class'])) {
 				echo syntax_highlight($call['class'], 'class');
-				echo $call['type'];
+				echo syntax_highlight($call['type'], 'operator');
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
@@ -568,7 +568,7 @@ class ErrorHandler {
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
 				if (
 						in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], array('connect', '__construct'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
-					echo '(...)';
+					echo '(&hellip;)';
 				} else {
 					echo '(';
 					if (isset($call['args'])) {

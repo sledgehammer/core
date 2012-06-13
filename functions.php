@@ -498,7 +498,7 @@ namespace Sledgehammer {
 	function redirect($url, $permanently = false) {
 		if (headers_sent()) {
 			// Javascript fallback
-			echo '<script type="text/javascript">window.location='.json_encode((string)$url).';</script>';
+			echo '<script type="text/javascript">window.location='.json_encode((string) $url).';</script>';
 			echo '<noscript>';
 			// Meta refresh fallback
 			echo '<meta http-equiv="refresh" content="0; url='.htmlentities($url, ENT_QUOTES).'">';
@@ -736,7 +736,7 @@ namespace Sledgehammer {
 		switch ($datatype) {
 
 			case 'boolean':
-				$color = 'constant';
+				$color = 'symbol';
 				$label = $variable ? 'true' : 'false';
 				break;
 
@@ -751,11 +751,6 @@ namespace Sledgehammer {
 				$label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
 				break;
 
-			case 'string_pre': // voor strings binnen een <pre> zoals bij de dump()
-				$color = 'string';
-				$label = '&#39;'.htmlspecialchars($variable).'&#39;';
-				break;
-
 			case 'array':
 				$color = 'method';
 				$label = 'array('.count($variable).')';
@@ -767,28 +762,29 @@ namespace Sledgehammer {
 				break;
 
 			case 'resource':
-				$color = 'constant';
+				$color = 'resource';
 				$label = $variable;
 				break;
 
 			case 'NULL':
-				$color = 'constant';
+				$color = 'symbol';
 				$label = 'null';
 				break;
 
 			case 'unknown type':
-				$color = 'operator';
+				$color = 'resource';
 				$label = $variable;
 				break;
 
 			// al geconverteerde datatypes
-			case 'constant':
-			case 'operator':
+			case 'symbol':
 			case 'number':
 			case 'comment':
 			case 'class':
 			case 'attribute':
 			case 'method':
+			case 'operator':
+			case 'foreground': // (, [, etc
 				$color = $datatype;
 				$label = $variable;
 				break;
@@ -802,16 +798,22 @@ namespace Sledgehammer {
 			$title = partial_var_export($variable, $titleLimit, 4);
 			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
 		}
+		// Based on the Tomorrow theme.
+		// @link https://github.com/ChrisKempson/Tomorrow-Theme
 		$colorCodes = array(
-			'string' => '#777',
-			'number' => '#d14',
-			'constant' => '#f83',
-			'resource' => '#484',
-			'method' => '#41d',
-			'class' => '#808',
-			'attribute' => '#844',
-			'operator' => 'teal',
-			'comment' => '#088',
+			// #ffffff Background
+			// #efefef Current Line
+			// #d6d6d6 Selection
+			'foreground' => '#4d4d4c', //lightblack
+			'string' => '#718c00', // Green
+			'number' => '#f5871f', // Orange
+			'operator' => '#3e999f', // Aqua
+			'symbol' => '#c82829', // Red
+			'resource' => '#eab700', // Yellow
+			'method' => '#4271ae', // Blue
+			'class' => '#8959a8', // Purple (instead of yellow to improve readability on the yellow error background)
+			'attribute' => '#f5871f', // Orange
+			'comment' => '#8e908c', // Gray
 		);
 		return $html.' style="color:'.$colorCodes[$color].'">'.$label.'</span>';
 	}
