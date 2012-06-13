@@ -42,17 +42,19 @@ class Dump extends Object {
 	 */
 	private static $colors = array(
 		'background' => '#1d1f21',
-		'foreground' => '#c5c8c6', // lightgray: =>,  {, (
+		'foreground' => '#c5c8c6', // lightgray:  [, {, ( and ,
 		'current' => '#282a2e', // darkgray
 
-		'class' => '#f0c674', // yellow
-		'attribute' => '#cc6666', // red
-		'method' => '#81a2be', // blue
-		'keyword' => '#b294bb', // purple
-		'string' => '#b5bd68', // green: "hello"
-		'number' => '#8abeb7', // agua: 123
-		'symbol' => '#de935f', // orange: {true, null}
-		'comment' => '#969896', // gray
+		'class' => '#f0c674', // Yellow
+		'attribute' => '#cc6666', // Red
+		'method' => '#81a2be', // Blue
+		'keyword' => '#b294bb', // Purple
+		'resource' => '#b294bb', // Purple
+		'string' => '#b5bd68', // Green: "hello"
+		'number' => '#de935f', // Orange: 0
+		'symbol' => '#de935f', // Orange: true, null
+		'comment' => '#969896', // Gray
+		'operator' => '#8abeb7', // Agua: +, ->
 	);
 
 	/**
@@ -104,8 +106,8 @@ class Dump extends Object {
 			'text-align: left',
 			'box-shadow: none',
 		);
-
-		echo "<pre style=\"".implode(';', $style)."\">\n";
+		$id = uniqid('dump');
+		echo "<pre id=\"".$id."\" style=\"".implode(';', $style)."\">\n";
 		$old_value = ini_get('html_errors');
 		ini_set('html_errors', false); // Forces xdebug < 2.2.0 to use render with the internal var_dump()
 		ob_start();
@@ -123,6 +125,29 @@ class Dump extends Object {
 			report_exception($e);
 		}
 		echo "\n</pre>\n";
+		echo "<script type=\"text/javascript\">\n";
+		echo "window.$ || document.write('<script src=\"".WEBROOT."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
+		echo "</script>";
+		echo "<script type=\"text/javascript\">\n";
+		echo "(function () {\n";
+		echo "	var dump = $('#".$id."');\n";
+		echo "	$('[data-dump=container]', dump).each(function () {\n";
+		echo "		var contents = $(this);\n";
+		echo "		var toggle = $(this).prev();\n";
+		echo "		toggle.css('cursor', 'pointer');\n";
+		echo "		toggle.click(function () {\n";
+		echo "			contents.toggle();\n";
+		echo "			if (contents.is(':visible')) {\n";
+		echo "				contents.prev('[data-dump=placeholder]').remove();\n";
+		echo "			} else {\n";
+		echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
+		echo "				contents.before(hellip);\n";
+		echo "				hellip.click(function () { toggle.trigger('click');});\n";
+		echo "			}\n";
+		echo "		});\n";
+		echo "	});\n";
+		echo "})();\n";
+		echo "</script>";
 		ini_set('html_errors', $old_value);
 	}
 
@@ -197,7 +222,7 @@ class Dump extends Object {
 
 				$resource.= preg_replace('/.*\(/', ' (', $data);
 				$resource = substr($resource, 0);
-				self::renderType($resource, 'constant');
+				self::renderType($resource, 'resource');
 				return $pos;
 
 			// Arrays
@@ -209,11 +234,11 @@ class Dump extends Object {
 				}
 				$data = substr($data, $bracketEnd + 4); // ') {\n' eraf halen
 				self::renderType('array', 'method');
-				echo "(\n";
+				echo "(<span data-dump=\"container\">\n";
 				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) {// xdebug limit reached?
 					echo str_repeat(' ', $indenting + 4), "...\n";
 					echo str_repeat(' ', $indenting);
-					echo ')';
+					echo '</span>)';
 					return $pos + $indenting - 2 + strpos($data, '}');
 				}
 				$indenting += 2;
@@ -231,7 +256,7 @@ class Dump extends Object {
 						} else {
 							throw new InfoException('Invalid index', array('index' => $index));
 						}
-						echo ' => ';
+						self::renderType(' => ', 'operator');
 						$pos += strlen($index) + 5;
 						$data = substr($data, $arrowPos + 4 + $indenting);
 					} else {
@@ -244,7 +269,7 @@ class Dump extends Object {
 						} else {
 							self::renderType($index, 'number');
 						}
-						echo ' => ';
+						self::renderType(' => ', 'operator');
 						$data = substr($data, $arrowPos + 4 + $indenting);
 						$pos += strlen($index) + 6;
 					}
@@ -256,7 +281,7 @@ class Dump extends Object {
 				$indenting -= 2;
 				$pos += 4 + $indenting;
 				echo str_repeat(' ', $indenting);
-				echo ')';
+				echo '</span>)';
 				return $pos;
 
 			// Objects
@@ -280,11 +305,11 @@ class Dump extends Object {
 				if ($length == 0) { // Geen attributen?
 					return $pos + $bracketEnd + strpos($data, '}') + 5; // tot '}\n' eraf halen.
 				}
-				echo " {\n";
+				echo " {<span data-dump=\"container\">\n";
 				if (self::$xdebug && preg_match('/^\s+\.\.\.\n/', $data, $matches)) { // xdebug limit reached?
 					echo str_repeat(' ', $indenting + 4), "...\n";
 					echo str_repeat(' ', $indenting);
-					self::renderType('}', 'class');
+					echo '</span>}';
 					return $pos + strpos($data, '}') + 2;
 				}
 				$indenting += 2;
@@ -304,11 +329,11 @@ class Dump extends Object {
 						$pos += strlen($attribute) + 6;
 					}
 					self::renderAttribute($attribute);
-					echo ' -> ';
+					self::renderType(' -> ', 'operator');
 					if (self::$xdebug && preg_match('/^\s+\.\.\.\n\n/', $data, $matches)) { // xdebug limit reached?
 						echo "\n", str_repeat(' ', $indenting + 4), "...\n\n";
 						echo str_repeat(' ', $indenting - 2);
-						echo '}';
+						echo '</span>}';
 						return $pos + strlen($matches[0]);
 					}
 					$elementLength = self::renderVardump($data, $indenting);
@@ -319,7 +344,7 @@ class Dump extends Object {
 				$indenting -= 2;
 				$pos += $bracketEnd + 5 + $indenting;
 				echo str_repeat(' ', $indenting);
-				echo '}';
+				echo '</span>}';
 				return $pos;
 				break;
 
@@ -374,15 +399,15 @@ class Dump extends Object {
 			self::renderType($matches['function'], 'method');
 			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)(?P<element>\[.+\])$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
-			self::renderType($matches['object'], 'class');
-			echo '->';
+			echo $matches['object'];
+			self::renderType('->', 'operator');
 			self::renderType($matches['attribute'], 'attribute');
 			if ($matches['element']) {
 				echo '['.substr($matches['element'], 1, -1).']';
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			self::renderType($matches['object'], 'class');
-			echo '->';
+			echo $matches['object'];
+			self::renderType('->', 'operator');
 			self::renderType($matches['method'], 'method');
 			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
 		} else {
@@ -407,7 +432,7 @@ class Dump extends Object {
 				self::renderType($matches[2], 'attribute');
 				if ($matches[1] !== 'public') {
 					echo '<span style="font-size:9px">:';
-					$this->renderColor($matches[1], 'comment');
+					self::renderColor($matches[1], 'comment');
 					echo '</span>';
 				}
 				return;
