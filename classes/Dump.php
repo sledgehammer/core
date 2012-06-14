@@ -125,29 +125,29 @@ class Dump extends Object {
 			report_exception($e);
 		}
 		echo "\n</pre>\n";
-		echo "<script type=\"text/javascript\">\n";
-		echo "window.$ || document.write('<script src=\"".WEBROOT."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
-		echo "</script>";
-		echo "<script type=\"text/javascript\">\n";
-		echo "(function () {\n";
-		echo "	var dump = $('#".$id."');\n";
-		echo "	$('[data-dump=container]', dump).each(function () {\n";
-		echo "		var contents = $(this);\n";
-		echo "		var toggle = $(this).prev();\n";
-		echo "		toggle.css('cursor', 'pointer');\n";
-		echo "		toggle.click(function () {\n";
-		echo "			contents.toggle();\n";
-		echo "			if (contents.is(':visible')) {\n";
-		echo "				contents.prev('[data-dump=placeholder]').remove();\n";
-		echo "			} else {\n";
-		echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
-		echo "				contents.before(hellip);\n";
-		echo "				hellip.click(function () { toggle.trigger('click');});\n";
-		echo "			}\n";
-		echo "		});\n";
-		echo "	});\n";
-		echo "})();\n";
-		echo "</script>";
+		if (defined('Sledgehammer\WEBROOT')) {
+			echo "<script type=\"text/javascript\">window.$ || document.write('<script src=\"".WEBROOT."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
+			echo "<script type=\"text/javascript\">\n";
+			echo "(function () {\n";
+			echo "	var dump = $('#".$id."');\n";
+			echo "	$('[data-dump=container]', dump).each(function () {\n";
+			echo "		var contents = $(this);\n";
+			echo "		var toggle = $(this).prev();\n";
+			echo "		toggle.css('cursor', 'pointer');\n";
+			echo "		toggle.click(function () {\n";
+			echo "			contents.toggle();\n";
+			echo "			if (contents.is(':visible')) {\n";
+			echo "				contents.prev('[data-dump=placeholder]').remove();\n";
+			echo "			} else {\n";
+			echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
+			echo "				contents.before(hellip);\n";
+			echo "				hellip.click(function () { toggle.trigger('click');});\n";
+			echo "			}\n";
+			echo "		});\n";
+			echo "	});\n";
+			echo "})();\n";
+			echo "</script>";
+		}
 		ini_set('html_errors', $old_value);
 	}
 
@@ -382,9 +382,10 @@ class Dump extends Object {
 			'padding: 3px',
 			'padding-left: 9px',
 			'color: '.self::$colors['foreground'],
-			'text-shadow: 0 1px 0 #000',
+			// reset styling
+			'text-shadow: none',
 		);
-		echo '<div style="'.implode(';', $style).'">';
+		echo "<div style=\"".implode(';', $style)."\">";
 		self::renderType($trace['invocation'], 'comment');
 		echo '(<span style="margin: 0 3px;">';
 
@@ -398,11 +399,11 @@ class Dump extends Object {
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
 			self::renderType($matches['function'], 'method');
 			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
-		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)(?P<element>\[.+\])$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
+		} elseif (preg_match('/^(?P<object>\$[a-z_]{1}[a-z_0-9]*)\-\>(?P<attribute>[a-z_]{1}[a-z_0-9]*)(?P<element>\[.+\]){0,1}$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
 			echo $matches['object'];
 			self::renderType('->', 'operator');
 			self::renderType($matches['attribute'], 'attribute');
-			if ($matches['element']) {
+			if (isset($matches['element'])) {
 				echo '['.substr($matches['element'], 1, -1).']';
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
