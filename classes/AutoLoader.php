@@ -109,11 +109,19 @@ class AutoLoader extends Object {
 			return false;
 		}
 		$success = include_once($filename);
-		if ($success !== 1) { // Lukte het includen van het bestand?
-			throw new \Exception('Failed to include "'.$filename.'"');
-		}
 		if (class_exists($definition, false) || interface_exists($definition, false)) {
 			return true;
+		}
+		if ($success === true) { // file might already included.
+			// Detect class_exists() autoloader loop.
+			$backtrace = debug_backtrace();
+			if (isset($backtrace[2]['function']) && $backtrace[2]['function'] === 'class_exists' && realpath($backtrace[2]['file']) == realpath($filename)) {
+				// class definition is inside a if (class_exists($clasname, true)) statement;
+				return false;
+			}
+		}
+		if ($success !== 1) {
+			throw new \Exception('Failed to include "'.$filename.'"');
 		}
 		throw new \Exception('AutoLoader is corrupt, class "'.$definition.'" not found in "'.$filename.'"');
 	}
