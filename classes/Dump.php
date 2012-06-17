@@ -379,8 +379,7 @@ class Dump extends Object {
 			'border-radius: 4px 4px 0 0',
 			'background-color: '.self::$colors['current'],
 			'margin: 15px 5px 0 5px',
-			'padding: 3px',
-			'padding-left: 9px',
+			'padding: 3px 15px',
 			'color: '.self::$colors['foreground'],
 			'text-shadow: 0 1px 0 #000',
 		);
@@ -397,21 +396,21 @@ class Dump extends Object {
 			self::renderType($argument, 'attribute');
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
 			self::renderType($matches['function'], 'method');
-			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
+			echo '(', self::escape($matches['arguments']), ')';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<attribute>[a-z_]+[a-z_0-9]*)(?P<element>\[.+\])$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
-			echo $matches['object'];
+			echo self::escape($matches['object']);
 			self::renderType('->', 'operator');
 			self::renderType($matches['attribute'], 'attribute');
 			if ($matches['element']) {
-				echo '['.substr($matches['element'], 1, -1).']';
+				echo '['.self::escape(substr($matches['element'], 1, -1)).']';
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			echo $matches['object'];
+			echo self::escape($matches['object']);
 			self::renderType('->', 'operator');
 			self::renderType($matches['method'], 'method');
-			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
+			echo '(', self::escape($matches['arguments']), ')';
 		} else {
-			echo htmlentities($argument, ENT_COMPAT, Framework::$charset);
+			echo self::escape($argument);
 		}
 		echo '</span>)&nbsp;';
 		self::renderType(' in ', 'comment');
@@ -465,7 +464,7 @@ class Dump extends Object {
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private
 				self::renderType(substr($parts[0], 1, -1), 'attribute');
-				echo '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1)).'">:';
+				echo '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1), ENT_NOQUOTES + ENT_IGNORE, Framework::$charset).'">:';
 				self::renderType($parts[2], 'comment');
 				echo '</span>';
 				break;
@@ -483,11 +482,21 @@ class Dump extends Object {
 	 */
 	private static function renderType($data, $type) {
 		if ($type === 'string') {
-			$data = '&#39;'.htmlspecialchars($data).'&#39;';
+			$data = '&#39;'.htmlspecialchars($data, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset).'&#39;';
+		} else {
+			$data = htmlspecialchars($data, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset);
 		}
 		echo '<span style="color: ', self::$colors[$type], '">', $data, '</span>';
 	}
 
+	/**
+	 *
+	 * @param string $text
+	 * @return string
+	 */
+	private static function escape($text) {
+		return htmlspecialchars($text, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset);
+	}
 }
 
 ?>
