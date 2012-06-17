@@ -804,15 +804,15 @@ namespace Sledgehammer {
 			// #ffffff Background
 			// #efefef Current Line
 			// #d6d6d6 Selection
-			'foreground' => '#4d4d4c', //lightblack
+			'foreground' => '#4d4d4c', // Lightblack
 			'string' => '#718c00', // Green
 			'number' => '#f5871f', // Orange
 			'operator' => '#3e999f', // Aqua
-			'symbol' => '#c82829', // Red
+			'symbol' => '#f5871f', // Orange
 			'resource' => '#eab700', // Yellow
 			'method' => '#4271ae', // Blue
 			'class' => '#8959a8', // Purple (instead of yellow to improve readability on the yellow error background)
-			'attribute' => '#f5871f', // Orange
+			'attribute' => '#c82829', // Red
 			'comment' => '#8e908c', // Gray
 		);
 		return $html.' style="color:'.$colorCodes[$color].'">'.$label.'</span>';
