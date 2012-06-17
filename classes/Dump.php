@@ -88,6 +88,9 @@ class Dump extends Object {
 	 * @param array|null $trace
 	 */
 	static function dump($variable, $trace = null) {
+		if (headers_sent() === false) {
+			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
+		}
 		self::renderTrace($trace);
 
 		$style = array(
