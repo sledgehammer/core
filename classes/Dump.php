@@ -89,6 +89,7 @@ class Dump extends Object {
 	 */
 	static function dump($variable, $trace = null) {
 		if (headers_sent() === false) {
+			// Force correct encoding.
 			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
 		}
 		self::renderTrace($trace);
@@ -209,7 +210,7 @@ class Dump extends Object {
 			// text (string)
 			case 'string':
 				$text = substr($data, $bracketEnd + 3, $length);
-				self::renderType($text, 'string');
+				self::renderString($text);
 				return $pos + $length + 3;
 
 			// Resources (file, gd, curl)
@@ -255,7 +256,7 @@ class Dump extends Object {
 							self::renderType(substr($index, 1, -1), 'number');
 						} elseif ($index[0] == "'") {
 							// @todo detect " =>\n" in the index
-							self::renderType(substr($index, 1, -1), 'string');
+							self::renderString(substr($index, 1, -1));
 						} else {
 							throw new InfoException('Invalid index', array('index' => $index));
 						}
@@ -268,7 +269,7 @@ class Dump extends Object {
 						$index = substr($data, 0, $arrowPos);
 
 						if ($index[0] == '"') { // assoc array?
-							self::renderType(substr($index, 1, -1), 'string');
+							self::renderString(substr($index, 1, -1));
 						} else {
 							self::renderType($index, 'number');
 						}
@@ -400,7 +401,7 @@ class Dump extends Object {
 			self::renderType($argument, 'attribute');
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
 			self::renderType($matches['function'], 'method');
-			echo '(', htmlentities($matches['arguments'], ENT_COMPAT, Framework::$charset), ')';
+			echo '(', self::escape($matches['arguments']), ')';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]{1}[a-z_0-9]*)\-\>(?P<attribute>[a-z_]{1}[a-z_0-9]*)(?P<element>\[.+\]){0,1}$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
 			echo self::escape($matches['object']);
 			self::renderType('->', 'operator');
@@ -468,7 +469,7 @@ class Dump extends Object {
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private
 				self::renderType(substr($parts[0], 1, -1), 'attribute');
-				echo '<span style="font-size:9px" title="'.htmlentities(substr($parts[1], 1, -1), ENT_NOQUOTES + ENT_IGNORE, Framework::$charset).'">:';
+				echo '<span style="font-size:9px" title="'.self::escape(substr($parts[1], 1, -1)).'">:';
 				self::renderType($parts[2], 'comment');
 				echo '</span>';
 				break;
@@ -479,27 +480,32 @@ class Dump extends Object {
 	}
 
 	/**
-	 * Render the contents in the color of the type.
+	 * Render the text in the color of the type.
 	 *
-	 * @param string $data
+	 * @param string $text
 	 * @param string $type
 	 */
-	private static function renderType($data, $type) {
-		if ($type === 'string') {
-			$data = '&#39;'.htmlspecialchars($data, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset).'&#39;';
-		} else {
-			$data = htmlspecialchars($data, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset);
-		}
-		echo '<span style="color: ', self::$colors[$type], '">', $data, '</span>';
+	private static function renderType($text, $type) {
+		echo '<span style="color: ', self::$colors[$type], '">', htmlspecialchars($text, ENT_NOQUOTES, 'ISO-8859-1'), '</span>';
 	}
 
 	/**
+	 * RenderType for strings. (adds single quotes around the string)
+	 *
+	 * @param string $text
+	 */
+	private static function renderString($text) {
+		echo '&#39;<span style="color: ', self::$colors['string'], '">', htmlspecialchars($text, ENT_NOQUOTES, 'ISO-8859-1'), '</span>&#39;';
+	}
+
+	/**
+	 * Escape html output.
 	 *
 	 * @param string $text
 	 * @return string
 	 */
 	private static function escape($text) {
-		return htmlspecialchars($text, ENT_NOQUOTES + ENT_IGNORE, Framework::$charset);
+		return htmlspecialchars($text, ENT_NOQUOTES, 'ISO-8859-1');
 	}
 }
 
