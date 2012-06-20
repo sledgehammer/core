@@ -47,6 +47,7 @@ class Dump extends Object {
 
 		'class' => '#f0c674', // Yellow
 		'attribute' => '#cc6666', // Red
+		'variable' => '#cc6666', // Red: $x, $this
 		'method' => '#81a2be', // Blue
 		'keyword' => '#b294bb', // Purple
 		'resource' => '#b294bb', // Purple
@@ -398,19 +399,19 @@ class Dump extends Object {
 		$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
 		$argument = trim($argument);
 		if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
-			self::renderType($argument, 'attribute');
+			self::renderType($argument, 'variable');
 		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
 			self::renderType($matches['function'], 'method');
 			echo '(', self::escape($matches['arguments']), ')';
 		} elseif (preg_match('/^(?P<object>\$[a-z_]{1}[a-z_0-9]*)\-\>(?P<attribute>[a-z_]{1}[a-z_0-9]*)(?P<element>\[.+\]){0,1}$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
-			echo self::escape($matches['object']);
+			self::renderType($matches['object'], 'variable');
 			self::renderType('->', 'operator');
 			self::renderType($matches['attribute'], 'attribute');
 			if (isset($matches['element'])) {
 				echo '['.self::escape(substr($matches['element']), 1, -1).']';
 			}
 		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			echo self::escape($matches['object']);
+			self::renderType($matches['object'], 'variable');
 			self::renderType('->', 'operator');
 			self::renderType($matches['method'], 'method');
 			echo '(', self::escape($matches['arguments']), ')';

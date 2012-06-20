@@ -793,11 +793,6 @@ namespace Sledgehammer {
 				notice('Datatype: "'.$datatype.'" is unknown');
 				break;
 		}
-		$html = '<span';
-		if (($datatype === 'object' || $datatype === 'array') && $titleLimit > 0) { // Built title attribute?
-			$title = partial_var_export($variable, $titleLimit, 4);
-			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
-		}
 		// Based on the Tomorrow theme.
 		// @link https://github.com/ChrisKempson/Tomorrow-Theme
 		$colorCodes = array(
@@ -813,9 +808,15 @@ namespace Sledgehammer {
 			'method' => '#4271ae', // Blue
 			'class' => '#8959a8', // Purple (instead of yellow to improve readability on the yellow error background)
 			'attribute' => '#c82829', // Red
+			'variable' => '#c82829', // Red
 			'comment' => '#8e908c', // Gray
 		);
-		return $html.' style="color:'.$colorCodes[$color].'">'.$label.'</span>';
+		$html = '<span style="color:'.$colorCodes[$color].'"';
+		if (($datatype === 'object' || $datatype === 'array') && $titleLimit > 0) { // Built title attribute?
+			$title = partial_var_export($variable, $titleLimit, 4);
+			$html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
+		}
+		return $html.'>'.$label.'</span>';
 	}
 
 	/**
