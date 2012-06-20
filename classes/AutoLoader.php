@@ -453,19 +453,24 @@ class AutoLoader extends Object {
 	 * Deze functie NIET gebruiken in productie-code
 	 *
 	 * @throws Exception Als de class al gedefineerd is. (De eval() zou anders fatale "Cannot redeclare class" veroorzaken).
-	 * @param string $class Classname
+	 * @param string $definition Classname
 	 * @return void
 	 */
-	function exposePrivates($class) {
-		if (class_exists($class, false)) {
-			throw new \Exception('Class: "'.$class.'" is already defined');
+	function exposePrivates($definition) {
+		if (class_exists($definition, false)) {
+			throw new \Exception('Class: "'.$definition.'" is already defined');
 		}
-		$filename = $this->getFilename($class);
+		if (interface_exists($definition, false)) {
+			throw new \Exception('Interace: "'.$definition.'" is already defined');
+		}
+		$filename = $this->getFilename($definition);
+		if ($filename === null) {
+			throw new InfoException('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+		}
 		$tokens = token_get_all(file_get_contents($filename));
 		$php_code = '';
 		if ($tokens[0][0] != T_OPEN_TAG) {
-			notice('Unexpected beginning of the file, expecting "<?php"');
-			return;
+			throw new \Exception('Unexpected beginning of the file, expecting "<?php"');
 		} else {
 			unset($tokens[0]); // Haal de "<?php" er vanaf
 		}
@@ -476,10 +481,6 @@ class AutoLoader extends Object {
 			}
 			switch ($token[0]) {
 
-				// Geen commentaar
-				case T_DOC_COMMENT:
-				case T_COMMENT:
-					break;
 				// Geen private en protected
 				case T_PRIVATE:
 				case T_PROTECTED:
