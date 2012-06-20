@@ -39,16 +39,20 @@ class PropertyPathTest extends TestCase {
 		$any = PropertyPath::TYPE_ANY;
 		$element = PropertyPath::TYPE_ELEMENT;
 		$property = PropertyPath::TYPE_PROPERTY;
+
 		$this->assertEquals(PropertyPath::compile('any'), array(array($any, 'any')));
 		$this->assertEquals(PropertyPath::compile('any1.any2'), array(array($any, 'any1'), array($any, 'any2')));
+		$this->assertEquals(PropertyPath::compile('any?'), array(array(PropertyPath::TYPE_OPTIONAL, 'any')));
 
 		$this->assertEquals(PropertyPath::compile('[element]'), array(array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('any[element]'), array(array($any, 'any'), array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('[element1][element2]'), array(array($element, 'element1'), array($element, 'element2')));
+		$this->assertEquals(PropertyPath::compile('[element?]'), array(array(PropertyPath::TYPE_OPTIONAL_ELEMENT, 'element')));
 
 		$this->assertEquals(PropertyPath::compile('->property'), array(array($property, 'property')));
 		$this->assertEquals(PropertyPath::compile('any->property'), array(array($any, 'any'), array($property, 'property')));
 		$this->assertEquals(PropertyPath::compile('->property1->property2'), array(array($property, 'property1'), array($property, 'property2')));
+		$this->assertEquals(PropertyPath::compile('->property?'), array(array(PropertyPath::TYPE_OPTIONAL_PROPERTY, 'property')));
 
 		$this->assertEquals(PropertyPath::compile('[element]->property'), array(array($element, 'element'), array($property, 'property')));
 		$this->assertEquals(PropertyPath::compile('any[element]->property'), array(array($any, 'any'), array($element, 'element'), array($property, 'property')));

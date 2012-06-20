@@ -20,6 +20,10 @@ namespace Sledgehammer;
  *   '->abc->efg' maps to property $data->abc->efg
  *   '->abc[efg]' maps to property $data->abc[efg]
  *
+ * Use "\" to escape characters. Example "[complex\[key\]]" look up $data["complex[key]"]
+ *
+ * Add "?" after an identifier to allow missing properties/elements. Example: "[abc?]" or "abc?" checks if the abc property/element exists. (and returns null if they don't)
+ *
  * @package Core
  */
 class PropertyPath extends Object {
@@ -85,6 +89,51 @@ class PropertyPath extends Object {
 				case self::TYPE_METHOD:
 					if (is_object($data)) {
 						$data = $data->{$part[1]}();
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object');
+						return;
+					}
+					break;
+
+				case self::TYPE_OPTIONAL:
+					if (is_object($data)) {
+						if (isset($data->{$part[1]})) {
+							$data = $data->{$part[1]};
+						} else {
+							return null;
+						}
+					} elseif (is_array($data)) {
+						if (array_key_exists($part[1], $data)) {
+							$data = $data[$part[1]];
+						} else {
+							return null;
+						}
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object or array');
+						return;
+					}
+					break;
+
+				case self::TYPE_OPTIONAL_ELEMENT:
+					if (is_array($data) || (is_object($data) && ($data instanceof \ArrayAccess || $data instanceof \SimpleXMLElement))) {
+						if (isset($data[$part[1]])) {
+							$data = $data[$part[1]];
+						} else {
+							return null;
+						}
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an array');
+						return;
+					}
+					break;
+
+				case self::TYPE_OPTIONAL_PROPERTY:
+					if (is_object($data)) {
+						if (isset($data->{$part[1]})) {
+							$data = $data->{$part[1]};
+						} else {
+							return null;
+						}
 					} else {
 						notice('Unexpected type: '.gettype($data).', expecting an object');
 						return;
@@ -205,6 +254,7 @@ class PropertyPath extends Object {
 		switch ($last[0]) {
 
 			case self::TYPE_ANY:
+			case self::TYPE_OPTIONAL:
 				if (is_object($data)) {
 					$data->{$last[1]} = $value;
 				} else {
@@ -213,15 +263,17 @@ class PropertyPath extends Object {
 				break;
 
 			case self::TYPE_ELEMENT:
+			case self::TYPE_OPTIONAL_ELEMENT:
 				$data[$last[1]] = $value;
 				break;
 
 			case self::TYPE_PROPERTY:
+			case self::TYPE_OPTIONAL_PROPERTY:
 				$data->{$last[1]} = $value;
 				break;
 
 			default:
-				throw new \Exception('Unsupported type: '.$part[0]);
+				throw new \Exception('Unsupported type: '.$last[0]);
 		}
 	}
 
@@ -295,6 +347,7 @@ class PropertyPath extends Object {
 			'()' => '\()',
 		));
 	}
+
 	/**
 	 * Build a path string from a (mutated) compiled path.
 	 *
@@ -359,11 +412,11 @@ class PropertyPath extends Object {
 		$length = count($tokens);
 		$first = true;
 		for ($i = 0; $i < $length; $i++) {
-			$token =  $tokens[$i];
+			$token = $tokens[$i];
 			if (($i + 1) === $length) {
 				$nextToken = array('T_END', '');
 			} else {
-				$nextToken =  $tokens[$i + 1];
+				$nextToken = $tokens[$i + 1];
 			}
 			switch ($token[0]) {
 
@@ -373,11 +426,13 @@ class PropertyPath extends Object {
 						notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
 						return array();
 					}
+
 					if ($nextToken[0] === self::T_OPTIONAL) {
 						$compiled[] = array(
 							self::TYPE_OPTIONAL,
 							$token[1],
 						);
+						$i++;
 					} else {
 						$compiled[] = array(
 							self::TYPE_ANY,
@@ -401,7 +456,7 @@ class PropertyPath extends Object {
 							self::TYPE_OPTIONAL,
 							$nextToken[1],
 						);
-						$i+=2;
+						$i += 2;
 					} else {
 						$compiled[] = array(
 							self::TYPE_ANY,
@@ -422,7 +477,7 @@ class PropertyPath extends Object {
 							self::TYPE_OPTIONAL_PROPERTY,
 							$nextToken[1],
 						);
-						$i+=2;
+						$i += 2;
 					} else {
 						$compiled[] = array(
 							self::TYPE_PROPERTY,
@@ -442,22 +497,26 @@ class PropertyPath extends Object {
 						notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
 						return array();
 					}
-					if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
-						notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
-						return array();
-					}
-					if (($i + 3) !== $length && $tokens[$i + 3][0] === self::T_OPTIONAL) {
+					if ($tokens[$i + 2][0] === self::T_OPTIONAL) {
+						if (($i + 2) === $length || $tokens[$i + 3][0] !== self::T_BRACKET_CLOSE) {
+							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'?"');
+							return array();
+						}
 						$compiled[] = array(
 							self::TYPE_OPTIONAL_ELEMENT,
 							$nextToken[1],
 						);
-						$i+=3;
+						$i += 3;
 					} else {
+						if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
+							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
+							return array();
+						}
 						$compiled[] = array(
 							self::TYPE_ELEMENT,
 							$nextToken[1],
 						);
-						$i+=2;
+						$i += 2;
 					}
 					break;
 
@@ -563,6 +622,7 @@ class PropertyPath extends Object {
 		}
 		return array_values($tokens);
 	}
+
 }
 
 ?>
