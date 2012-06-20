@@ -5,13 +5,43 @@
 namespace Sledgehammer;
 class PropertyPathTest extends TestCase {
 
+	function test_tokenizer() {
+		if (class_exists('Sledgehammer\PropertyPath', false)) {
+			$this->markTestSkipped('PropertyPath already defined, skipping private functions');
+		}
+		Framework::$autoLoader->exposePrivates('Sledgehammer\PropertyPath');
+
+		$string = PropertyPath::T_STRING;
+		$dot = PropertyPath::T_DOT;
+		$arrow = PropertyPath::T_ARROW;
+		$bracketOpen = PropertyPath::T_BRACKET_OPEN;
+		$bracketClose = PropertyPath::T_BRACKET_CLOSE;
+		$parentheses = PropertyPath::T_PARENTHESES;
+		$optional = PropertyPath::T_OPTIONAL;
+
+		$this->assertEquals(PropertyPath::tokenize('any'), array(array($string, 'any')));
+		$this->assertEquals(PropertyPath::tokenize('any?'), array(array($string, 'any'), array($optional, '?')));
+		$this->assertEquals(PropertyPath::tokenize('any1.any2'), array(array($string, 'any1'), array($dot, '.'), array($string, 'any2')));
+		$this->assertEquals(PropertyPath::tokenize('any->property[element]->method()'), array(
+			array($string, 'any'),
+			array($arrow, '->'),
+			array($string, 'property'),
+			array($bracketOpen, '['),
+			array($string, 'element'),
+			array($bracketClose, ']'),
+			array($arrow, '->'),
+			array($string, 'method'),
+			array($parentheses, '()'),
+		));
+	}
+
 	function test_compile() {
 		$any = PropertyPath::TYPE_ANY;
 		$element = PropertyPath::TYPE_ELEMENT;
 		$property = PropertyPath::TYPE_PROPERTY;
-
 		$this->assertEquals(PropertyPath::compile('any'), array(array($any, 'any')));
 		$this->assertEquals(PropertyPath::compile('any1.any2'), array(array($any, 'any1'), array($any, 'any2')));
+
 		$this->assertEquals(PropertyPath::compile('[element]'), array(array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('any[element]'), array(array($any, 'any'), array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('[element1][element2]'), array(array($element, 'element1'), array($element, 'element2')));
@@ -43,7 +73,7 @@ class PropertyPathTest extends TestCase {
 	}
 
 	function test_compile_warning_invalid_start() {
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid start: "." for path: ".any"');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "." in the path');
 		$this->assertEquals(PropertyPath::compile('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
 	}
 
@@ -53,12 +83,12 @@ class PropertyPathTest extends TestCase {
 	}
 
 	function test_compile_warning_invalid_arrow() {
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in in the chain');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
 		$this->assertEquals(PropertyPath::compile('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
 	}
 
 	function test_compile_warning_unmatched_brackets() {
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path: "[element"');
+		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path after "element"');
 		$this->assertEquals(PropertyPath::compile('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
 	}
 

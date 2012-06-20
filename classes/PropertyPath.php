@@ -4,12 +4,11 @@
  */
 namespace Sledgehammer;
 /**
- * PropertyPath, a helper class that resolves properties inside arrays and objects based on a path.
+ * An helper class that resolves properties inside arrays and objects based on a path.
  * Inspired by XPath
  * But implemented similar to "Property Path Syntax" in Silverlight
  * @link http://msdn.microsoft.com/en-us/library/cc645024(v=VS.95).aspx
  *
- * @todo Escaping '[12\[34]' for key '12[34'
  * @todo? Wildcards for getting and setting a range of properties ''
  * @todo? $path Validation properties
  *
@@ -25,11 +24,22 @@ namespace Sledgehammer;
  */
 class PropertyPath extends Object {
 
+	const TYPE_ANY = 'ANY'; // object-property or array-element
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
-	const TYPE_ANY = 'ANY'; // object-property or array-element
 	const TYPE_METHOD = 'METHOD';
-	const CHAIN = 'CHAIN';
+	const TYPE_OPTIONAL_PROPERTY = 'PROPERTY?';
+	const TYPE_OPTIONAL_ELEMENT = 'ELEMENT?';
+	const TYPE_OPTIONAL = 'ANY?';
+
+	// Tokens
+	const T_STRING = 'T_STRING';
+	const T_DOT = 'T_DOT';
+	const T_ARROW = 'T_ARROW';
+	const T_OPTIONAL = 'T_OPTIONAL';
+	const T_BRACKET_OPEN = 'T_BRACKET_OPEN';
+	const T_BRACKET_CLOSE = 'T_BRACKET_CLOSE';
+	const T_PARENTHESES = 'T_PARENTHESES';
 
 	/**
 	 * Retrieve a value.
@@ -216,18 +226,44 @@ class PropertyPath extends Object {
 	}
 
 	/**
+	 * Copy values from the $source to the $target using the paths in the $mapping array.
+	 * Keys in the $mapping array are used as **targetpath**
+	 * This might be counterintuitive, but allows 1 path in the $source to be mapped to several paths in the $target
+	 *
+	 * Tip: Use array_flip($mapping) for a reverse mapping.
+	 *
+	 * @param array|stdClass $source
+	 * @param array|stdClass $target
+	 * @param array $mapping array(
+	 *   pathInTarget => pathInSource,
+	 *   to => from
+	 * )
+	 */
+	static function map($source, &$target, $mapping) {
+		foreach ($mapping as $to => $from) {
+			$value = PropertyPath::get($source, $from);
+			PropertyPath::set($target, $to, $value);
+		}
+	}
+
+	/**
 	 * Compile a path.
 	 *
 	 * @param string $path
 	 * @return array
 	 */
 	static function compile($path) {
+		if ($path === '') {
+			notice('Path is empty');
+			return array();
+		}
 		// Check if the path is cached
 		static $cache = array();
 		if (isset($cache[$path])) {
 			return $cache[$path];
 		}
-		$parts = self::compilePath($path, self::TYPE_ANY);
+		$tokens = self::tokenize($path);
+		$parts = self::parse($tokens);
 		// Validate parts
 		foreach ($parts as $part) {
 			if ($part[0] == self::TYPE_PROPERTY && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
@@ -241,6 +277,24 @@ class PropertyPath extends Object {
 		return $parts;
 	}
 
+	/**
+	 * Escapes  an identifier for use in a path.
+	 * Escapes all path-modifiers "[", ".", "->", "()", etc.
+	 * "a[b]c" => "a\[b\]c"
+	 *
+	 * @param type $identifier
+	 * @return string
+	 */
+	static function escape($identifier) {
+		$escaped = str_replace('\\', '\\\\', $identifier); // escape the escape-character.
+		return  strtr($escaped, array(
+			'.' => '\.',
+			'[' => '\[',
+			']' => '\[',
+			'->' => '\->',
+			'()' => '\()',
+		));
+	}
 	/**
 	 * Build a path string from a (mutated) compiled path.
 	 *
@@ -268,6 +322,25 @@ class PropertyPath extends Object {
 					$path .= '['.$token[1].']';
 					break;
 
+				case self::TYPE_METHOD:
+					$path .= $token[1].'()';
+					break;
+
+				case self::TYPE_OPTIONAL:
+					if ($index != 0) {
+						$path .= '.';
+					}
+					$path .= $token[1].'?';
+					break;
+
+				case self::TYPE_OPTIONAL_PROPERTY:
+					$path .= '->'.$token[1].'?';
+					break;
+
+				case self::TYPE_OPTIONAL_ELEMENT:
+					$path .= '['.$token[1].']?';
+					break;
+
 				default:
 					warning('Unsupported token', $token);
 			}
@@ -276,149 +349,220 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Really compiles the path.
+	 * Converts the tokens into a compiled path.
 	 *
-	 * @param string $path
-	 * @param TYPE $type start type
+	 * @param array $tokens
 	 * @return array
 	 */
-	private static function compilePath($path, $type) {
-		$path = (string) $path;
-		if ($path === '') {
-			notice('Path is empty');
-			return array();
+	private static function parse($tokens) {
+		$compiled = array();
+		$length = count($tokens);
+		$first = true;
+		for ($i = 0; $i < $length; $i++) {
+			$token =  $tokens[$i];
+			if (($i + 1) === $length) {
+				$nextToken = array('T_END', '');
+			} else {
+				$nextToken =  $tokens[$i + 1];
+			}
+			switch ($token[0]) {
+
+				// TYPE_ANY
+				case self::T_STRING;
+					if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
+						notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
+						return array();
+					}
+					if ($nextToken[0] === self::T_OPTIONAL) {
+						$compiled[] = array(
+							self::TYPE_OPTIONAL,
+							$token[1],
+						);
+					} else {
+						$compiled[] = array(
+							self::TYPE_ANY,
+							$token[1],
+						);
+					}
+					break;
+
+				// Chained T_ANY
+				case self::T_DOT:
+					if ($first) {
+						notice('Invalid "." in the path', 'Use "." for chaining, not at the beginning of a path');
+						return array();
+					}
+					if ($nextToken[0] !== self::T_STRING) {
+						notice('Invalid "'.$token[1].'" in path, expecting an identifier after "."');
+						return array();
+					}
+					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
+						$compiled[] = array(
+							self::TYPE_OPTIONAL,
+							$nextToken[1],
+						);
+						$i+=2;
+					} else {
+						$compiled[] = array(
+							self::TYPE_ANY,
+							$nextToken[1],
+						);
+						$i++;
+					}
+					break;
+
+				// TYPE_PROPERTY
+				case self::T_ARROW:
+					if ($nextToken[0] !== self::T_STRING) {
+						notice('Invalid "'.$token[1].'" in path, expecting an identifier after an "->"');
+						return array();
+					}
+					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
+						$compiled[] = array(
+							self::TYPE_OPTIONAL_PROPERTY,
+							$nextToken[1],
+						);
+						$i+=2;
+					} else {
+						$compiled[] = array(
+							self::TYPE_PROPERTY,
+							$nextToken[1],
+						);
+						$i++;
+					}
+					break;
+
+				// TYPE_ELEMENT
+				case self::T_BRACKET_OPEN:
+					if ($nextToken[0] !== self::T_STRING) {
+						notice('Unexpected token "'.$token[0].'" in path, expecting T_STRING after ".["', $token);
+						return array();
+					}
+					if (($i + 2) === $length) {
+						notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
+						return array();
+					}
+					if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
+						notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
+						return array();
+					}
+					if (($i + 3) !== $length && $tokens[$i + 3][0] === self::T_OPTIONAL) {
+						$compiled[] = array(
+							self::TYPE_OPTIONAL_ELEMENT,
+							$nextToken[1],
+						);
+						$i+=3;
+					} else {
+						$compiled[] = array(
+							self::TYPE_ELEMENT,
+							$nextToken[1],
+						);
+						$i+=2;
+					}
+					break;
+
+				default:
+					notice('Unexpected token: "'.$token[0].'"');
+					return array();
+			}
+			$first = false;
 		}
+		return $compiled;
+	}
+
+	/**
+	 * Convert the path into tokens for the parser.
+	 *
+	 * @param string $path
+	 */
+	private static function tokenize($path) {
 		$tokens = array();
-		$arrowPos = self::arrowPosition($path);
-		$bracketPos = self::openBracketPosition($path);
-		$dotPos = self::dotPosition($path);
-		$parenthesesPos = self::parenthesesPosition($path);
-		if ($type === self::CHAIN) {
-			if ($dotPos === 0) {
-				return self::compilePath(substr($path, 1), self::TYPE_ANY);
-			}
-			if ($arrowPos !== 0 && $bracketPos !== 0) {
-				notice('Invalid chain, expecting a ".", "->" or "[" before "'.$path.'"');
-			}
-			$type = self::TYPE_ANY;
-		}
-		if ($arrowPos === false && $bracketPos === false && $dotPos === false && $parenthesesPos === false) {
-			$tokens[] = array($type, $path);
-			return $tokens;
-		}
-		if ($arrowPos !== false && ($bracketPos === false || $arrowPos < $bracketPos) && ($dotPos === false || $arrowPos < $dotPos) && ($parenthesesPos === false || $arrowPos < $parenthesesPos)) {
-			// PROPERTY(OBJECT)
-			if ($arrowPos !== 0) {
-				$tokens[] = array($type, substr($path, 0, $arrowPos));
-			} elseif ($type !== self::TYPE_ANY) {
-				notice('Invalid "->" in in the chain', array('path' => $path));
-			}
-//			if ($bracketPos === false) {
-//				$secondArrowPos = self::arrowPosition($path, $arrowPos + 2);
-//				// if secondArrow is 0 notice
-//				if ($secondArrowPos === false) {
-//					$tokens[] = array(self::TYPE_PROPERTY, substr($path, $arrowPos + 2));
-//					return $tokens;
-//				}
-//			}
-//
-			return array_merge($tokens, self::compilePath(substr($path, $arrowPos + 2), self::TYPE_PROPERTY));
-		}
-		if ($bracketPos !== false && ($dotPos === false || $bracketPos < $dotPos) && ($parenthesesPos === false || $bracketPos < $parenthesesPos)) {
-			// ELEMENT(ARRAY)
-			if ($bracketPos !== 0) {
-				$tokens[] = array($type, substr($path, 0, $bracketPos));
-			}
-			$closeBracketPos = self::closeBracketPosition($path, $bracketPos + 1);
-			if ($closeBracketPos === false) {
-				notice('Unmatched brackets, missing a "]" in path: "'.$path.'"');
-				return array(array(self::TYPE_ANY, $path)); // return the entire path as identifier
-			}
-			$tokens[] = array(self::TYPE_ELEMENT, substr($path, $bracketPos + 1, $closeBracketPos - $bracketPos - 1));
-			if ($closeBracketPos + 1 == strlen($path)) { // laatste element?
-				return $tokens;
-			}
-			return array_merge($tokens, self::compilePath(substr($path, $closeBracketPos + 1), self::CHAIN));
-		}
-		if ($parenthesesPos !== false && ($dotPos === false || $parenthesesPos < $dotPos)) {
-			if ($parenthesesPos === 0) {
-				notice('no methodname given');
-				return array(array(self::TYPE_ANY, $path)); // return the entire path as identifier
-			}
-			if ($path[$parenthesesPos + 1] != ')') {
-				notice('Parameter not (yet) supported');
-				return array(array(self::TYPE_ANY, $path)); // return the entire path as identifier
-			}
-			$tokens[] = array(self::TYPE_METHOD, substr($path, 0, $parenthesesPos));
-			if ($parenthesesPos + 2 == strlen($path)) { // Laatste token?
-				return $tokens;
-			}
-			return array_merge($tokens, self::compilePath(substr($path, $parenthesesPos + 2), self::CHAIN));
-		}
-		// ANY (ARRAY or OBJECT)
-		if ($dotPos !== 0) {
-			$tokens[] = array($type, substr($path, 0, $dotPos));
-		} else {
-			notice('Invalid start: "." for path: "'.$path.'"', 'Use "." for chaining, not at the beginning of a path');
-		}
-		return array_merge($tokens, self::compilePath(substr($path, $dotPos), self::CHAIN));
-	}
+		$length = strlen($path);
+		$buffer = '';
+		for ($i = 0; $i < $length; $i++) {
+			$char = $path[$i];
+			switch ($char) {
 
-	/**
-	 * Return the position of the next "."
-	 *
-	 * @param string $path
-	 * @param int $offset
-	 * @return int
-	 */
-	private static function dotPosition($path, $offset = null) {
-		return strpos($path, '.', $offset);
-	}
+				case '\\':
+					if (($i + 1) === $length) { // is '\' the last character?
+						$buffer .= $char;
+						break;
+					}
+					if (in_array($path[$i + 1], array('.', '-', '[', ']', '?', '(', '\\'))) {
+						$buffer .= $path[$i + 1];
+						$i++;
+					}
+					break;
 
-	/**
-	 * Return the position of the next "->"
-	 *
-	 * @param string $path
-	 * @param int $offset
-	 * @return int
-	 */
-	private static function arrowPosition($path, $offset = null) {
-		return strpos($path, '->', $offset);
-	}
+				case '.':
+					$tokens[] = array(self::T_STRING, $buffer);
+					$tokens[] = array(self::T_DOT, '.');
+					$buffer = '';
+					break;
 
-	/**
-	 * Return the position of the next "["
-	 *
-	 * @param string $path
-	 * @param int $offset
-	 * @return int
-	 */
-	private static function openBracketPosition($path, $offset = null) {
-		return strpos($path, '[', $offset);
-	}
+				case '[':
+					$tokens[] = array(self::T_STRING, $buffer);
+					$tokens[] = array(self::T_BRACKET_OPEN, '[');
+					$buffer = '';
+					break;
 
-	/**
-	 * Return the position of the next "]"
-	 *
-	 * @param string $path
-	 * @param int $offset
-	 * @return int
-	 */
-	private static function closeBracketPosition($path, $offset = null) {
-		return strpos($path, ']', $offset);
-	}
+				case ']':
+					$tokens[] = array(self::T_STRING, $buffer);
+					$tokens[] = array(self::T_BRACKET_CLOSE, ']');
+					$buffer = '';
+					break;
 
-	/**
-	 * Return the position of the next "("
-	 *
-	 * @param string $path
-	 * @param int $offset
-	 * @return int
-	 */
-	private static function parenthesesPosition($path, $offset = null) {
-		return strpos($path, '(', $offset);
-	}
+				case '?':
+					$tokens[] = array(self::T_STRING, $buffer);
+					$tokens[] = array(self::T_OPTIONAL, '?');
+					$buffer = '';
+					break;
 
+				case '-': // ->
+					if (($i + 1) === $length) { // is '-' the last character?
+						$buffer .= $char;
+						break;
+					}
+					if ($path[$i + 1] !== '>') {
+						$buffer .= $char;
+					} else {
+						// Arrow "->" detected
+						$tokens[] = array(self::T_STRING, $buffer);
+						$tokens[] = array(self::T_ARROW, '->');
+						$buffer = '';
+						$i++;
+					}
+					break;
+
+				case '(': // ->
+					if (($i + 1) === $length) { // is '(' the last character?
+						$buffer .= $char;
+						break;
+					}
+					if ($path[$i + 1] !== ')') {
+						$buffer .= $char;
+					} else {
+						// parentheses "()" detected.
+						$tokens[] = array(self::T_STRING, $buffer);
+						$tokens[] = array(self::T_PARENTHESES, '()');
+						$buffer = '';
+						$i++;
+					}
+					break;
+
+				default:
+					$buffer .= $char;
+					break;
+			}
+		}
+		$tokens[] = array(self::T_STRING, $buffer);
+		foreach ($tokens as $key => $token) {
+			if ($token[1] === '') {
+				unset($tokens[$key]);
+			}
+		}
+		return array_values($tokens);
+	}
 }
 
 ?>

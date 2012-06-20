@@ -63,10 +63,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				$items[$key] = $selector($item, $key);
 			} else {
 				$items[$key] = array();
-				foreach ($selector as $fieldPath => $valuePath) {
-					$value = PropertyPath::get($item, $valuePath);
-					PropertyPath::set($items[$key], $fieldPath, $value);
-				}
+				PropertyPath::map($item, $items[$key], $selector);
 			}
 		}
 		return new Collection($items);
