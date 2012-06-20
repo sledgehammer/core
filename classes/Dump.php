@@ -393,30 +393,32 @@ class Dump extends Object {
 		self::renderType($trace['invocation'], 'comment');
 		echo '(<span style="margin: 0 3px;">';
 
-		$file = file($trace['file']);
-		$line = $file[($trace['line'] - 1)];
-		$line = preg_replace('/.*dump\(/i', '', $line); // Alles voor de dump aanroep weghalen
-		$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
-		$argument = trim($argument);
-		if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
-			self::renderType($argument, 'variable');
-		} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
-			self::renderType($matches['function'], 'method');
-			echo '(', self::escape($matches['arguments']), ')';
-		} elseif (preg_match('/^(?P<object>\$[a-z_]{1}[a-z_0-9]*)\-\>(?P<attribute>[a-z_]{1}[a-z_0-9]*)(?P<element>\[.+\]){0,1}$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
-			self::renderType($matches['object'], 'variable');
-			self::renderType('->', 'operator');
-			self::renderType($matches['attribute'], 'attribute');
-			if (isset($matches['element'])) {
-				echo '['.self::escape(substr($matches['element']), 1, -1).']';
+		if (substr($trace['file'], -14) !== ' eval()\'d code') {
+			$file = file($trace['file']);
+			$line = $file[($trace['line'] - 1)];
+			$line = preg_replace('/.*dump\(/i', '', $line); // Alles voor de dump aanroep weghalen
+			$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
+			$argument = trim($argument);
+			if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
+				self::renderType($argument, 'variable');
+			} elseif (preg_match('/^(?P<function>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // function()?
+				self::renderType($matches['function'], 'method');
+				echo '(', self::escape($matches['arguments']), ')';
+			} elseif (preg_match('/^(?P<object>\$[a-z_]{1}[a-z_0-9]*)\-\>(?P<attribute>[a-z_]{1}[a-z_0-9]*)(?P<element>\[.+\]){0,1}$/i', $argument, $matches)) { // $object->attribute or $object->attribute[12]?
+				self::renderType($matches['object'], 'variable');
+				self::renderType('->', 'operator');
+				self::renderType($matches['attribute'], 'attribute');
+				if (isset($matches['element'])) {
+					echo '['.self::escape(substr($matches['element']), 1, -1).']';
+				}
+			} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
+				self::renderType($matches['object'], 'variable');
+				self::renderType('->', 'operator');
+				self::renderType($matches['method'], 'method');
+				echo '(', self::escape($matches['arguments']), ')';
+			} else {
+				echo self::escape($argument);
 			}
-		} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
-			self::renderType($matches['object'], 'variable');
-			self::renderType('->', 'operator');
-			self::renderType($matches['method'], 'method');
-			echo '(', self::escape($matches['arguments']), ')';
-		} else {
-			echo self::escape($argument);
 		}
 		echo '</span>)&nbsp;';
 		self::renderType(' in ', 'comment');
