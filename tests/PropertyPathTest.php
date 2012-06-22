@@ -104,11 +104,7 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::get($object, 'id'), '2', 'Path "id" should also work on objects');
 		// force array element
 		$this->assertEquals(PropertyPath::get($array, '[id]'), '1', 'Path "[id]" should work on arrays');
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: object, expecting an array');
-		$this->assertEquals(PropertyPath::get($object, '[id]'), null, 'Path "[id]" should NOT work on objects');
 		// force object property
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: array, expecting an object');
-		$this->assertEquals(PropertyPath::get($array, '->id'), null, 'Path "->id" should NOT work on arrays');
 		$this->assertEquals(PropertyPath::get($object, '->id'), '2', 'Path "->id" should work on objects');
 		$object->property = array('id' => '3');
 		$this->assertEquals(PropertyPath::get($object, 'property[id]'), '3', 'Path "property[id]" should work on objects');
@@ -117,17 +113,24 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::get($object, 'object->id'), '4', 'Path "object->id" should work on objects in objects');
 		$this->assertEquals(PropertyPath::get($object, '->object->id'), '4', 'Path "->object->id" should work on objects in objects');
 		$object->property['element'] = (object) array('id' => '5');
-//		$this->assertEquals(PropertyPath::get($object, 'property[element]id'), '5'); // @todo dont allow this notation?
 		$this->assertEquals(PropertyPath::get($object, 'property[element]->id'), '5');
-//		$this->assertEquals(PropertyPath::get($object, '->property[element]id'), '5'); // @todo idem
 		$this->assertEquals(PropertyPath::get($object, '->property[element]->id'), '5');
-		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unexpected type: array, expecting an object');
-		$this->assertEquals(PropertyPath::get($object, '->property->element'), null);
 		$array['object'] = (object) array('id' => 6);
 		$this->assertEquals(PropertyPath::get($array, 'object->id'), 6);
 		$this->assertEquals(PropertyPath::get($array, '[object]->id'), 6);
-
 		// @todo Add UnitTest for method notation "getFilename()"
+
+		\PHPUnit_Framework_Error_Notice::$enabled = false;
+		ob_start();
+		$this->assertEquals(PropertyPath::get($object, '->property->element'), null);
+		$this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
+		ob_start();
+		$this->assertEquals(PropertyPath::get($array, '->id'), null, 'Path "->id" should NOT work on arrays');
+		$this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
+		ob_start();
+		$this->assertEquals(PropertyPath::get($object, '[id]'), null, 'Path "[id]" should NOT work on objects');
+		$this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
+		\PHPUnit_Framework_Error_Notice::$enabled = true;
 	}
 
 	function test_PropertyPath_set() {
