@@ -32,9 +32,10 @@ class PropertyPath extends Object {
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
 	const TYPE_METHOD = 'METHOD';
+	const TYPE_OPTIONAL = 'OPTIONAL';
 	const TYPE_OPTIONAL_PROPERTY = 'PROPERTY?';
 	const TYPE_OPTIONAL_ELEMENT = 'ELEMENT?';
-	const TYPE_OPTIONAL = 'ANY?';
+	const TYPE_SUBPATH = 'SUBPATH';
 
 	// Tokens
 	const T_STRING = 'T_STRING';
@@ -44,6 +45,7 @@ class PropertyPath extends Object {
 	const T_BRACKET_OPEN = 'T_BRACKET_OPEN';
 	const T_BRACKET_CLOSE = 'T_BRACKET_CLOSE';
 	const T_PARENTHESES = 'T_PARENTHESES';
+	const T_STAR = 'T_STAR';
 
 	/**
 	 * Retrieve a value.
@@ -54,7 +56,7 @@ class PropertyPath extends Object {
 	 */
 	static function get($data, $path) {
 		$parts = self::compile($path);
-		foreach ($parts as $part) {
+		foreach ($parts as $i => $part) {
 			switch ($part[0]) {
 
 				case self::TYPE_ANY:
@@ -139,6 +141,18 @@ class PropertyPath extends Object {
 						return;
 					}
 					break;
+
+				case self::TYPE_SUBPATH:
+					if (is_object($data) || is_array($data)) {
+						$items = array();
+						foreach ($data as $key => $item) {
+							$items[$key] = self::get($item, $part[1]);
+						}
+						return $items;
+					} else {
+						notice('Unexpected type: '.gettype($data).', expecting an object or array');
+						return;
+					}
 
 				default:
 					throw new \Exception('Unsupported type: '.$part[0]);
@@ -520,6 +534,19 @@ class PropertyPath extends Object {
 					}
 					break;
 
+				case self::T_STAR:
+					// Merge remaining tokens as subpath
+					$path  = '';
+					$tokens = array_slice($tokens, $i + 1);
+					foreach ($tokens as $token) {
+						$path .= $token[1];
+					}
+					$compiled[] = array(
+						self::TYPE_SUBPATH,
+						$path,
+					);
+					return $compiled;
+
 				default:
 					notice('Unexpected token: "'.$token[0].'"');
 					return array();
@@ -547,7 +574,7 @@ class PropertyPath extends Object {
 						$buffer .= $char;
 						break;
 					}
-					if (in_array($path[$i + 1], array('.', '-', '[', ']', '?', '(', '\\'))) {
+					if (in_array($path[$i + 1], array('.', '-', '[', ']', '?', '(', '\\', '*'))) {
 						$buffer .= $path[$i + 1];
 						$i++;
 					}
@@ -607,6 +634,12 @@ class PropertyPath extends Object {
 						$buffer = '';
 						$i++;
 					}
+					break;
+
+				case '*':
+					$tokens[] = array(self::T_STRING, $buffer);
+					$tokens[] = array(self::T_STAR, '*');
+					$buffer = '';
 					break;
 
 				default:

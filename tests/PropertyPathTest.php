@@ -120,6 +120,13 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::get($array, '[object]->id'), 6);
 		// @todo Add UnitTest for method notation "getFilename()"
 
+		$sequence = array(
+			array('id' => 1),
+			array('id' => 3),
+			array('id' => 5),
+		);
+		$this->assertEquals(PropertyPath::get($sequence, '*id'), array(1, 3, 5));
+
 		\PHPUnit_Framework_Error_Notice::$enabled = false;
 		ob_start();
 		$this->assertEquals(PropertyPath::get($object, '->property->element'), null);
