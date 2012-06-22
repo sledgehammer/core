@@ -112,7 +112,14 @@ class Database extends \PDO {
 			if (isset($config['charset'])) {
 				$charset = $config['charset'];
 			} elseif (strpos($dsn, ';charset=')) {
-				notice('TODO: Extract $charset from dsn'); // @todo implement
+				$parts = explode(';', $dsn);
+				foreach ($parts as $i => $part) {
+					if (strpos($part, 'charset=') === 0) {
+						$charset = substr($part, 8);
+						unset($parts[$i]);
+					}
+				}
+				$dsn = implode(';', $parts);
 			} else {
 				// Use Sledgehammer setting (default utf-8)
 				switch (strtolower(Framework::$charset)) {
