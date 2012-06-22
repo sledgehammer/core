@@ -125,7 +125,7 @@ class PropertyPathTest extends TestCase {
 			array('id' => 3),
 			array('id' => 5),
 		);
-		$this->assertEquals(PropertyPath::get($sequence, '*id'), array(1, 3, 5));
+		$this->assertEquals(PropertyPath::get($sequence, '[*].id'), array(1, 3, 5));
 
 		\PHPUnit_Framework_Error_Notice::$enabled = false;
 		ob_start();

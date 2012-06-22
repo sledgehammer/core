@@ -45,7 +45,7 @@ class PropertyPath extends Object {
 	const T_BRACKET_OPEN = 'T_BRACKET_OPEN';
 	const T_BRACKET_CLOSE = 'T_BRACKET_CLOSE';
 	const T_PARENTHESES = 'T_PARENTHESES';
-	const T_STAR = 'T_STAR';
+	const T_ALL_ELEMENTS = 'T_ALL_ELEMENTS';
 
 	/**
 	 * Retrieve a value.
@@ -56,7 +56,7 @@ class PropertyPath extends Object {
 	 */
 	static function get($data, $path) {
 		$parts = self::compile($path);
-		foreach ($parts as $i => $part) {
+		foreach ($parts as $part) {
 			switch ($part[0]) {
 
 				case self::TYPE_ANY:
@@ -438,7 +438,7 @@ class PropertyPath extends Object {
 				case self::T_STRING;
 					if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
 						notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
-						return array();
+						return false;
 					}
 
 					if ($nextToken[0] === self::T_OPTIONAL) {
@@ -459,11 +459,11 @@ class PropertyPath extends Object {
 				case self::T_DOT:
 					if ($first) {
 						notice('Invalid "." in the path', 'Use "." for chaining, not at the beginning of a path');
-						return array();
+						return false;
 					}
 					if ($nextToken[0] !== self::T_STRING) {
 						notice('Invalid "'.$token[1].'" in path, expecting an identifier after "."');
-						return array();
+						return false;
 					}
 					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
 						$compiled[] = array(
@@ -484,7 +484,7 @@ class PropertyPath extends Object {
 				case self::T_ARROW:
 					if ($nextToken[0] !== self::T_STRING) {
 						notice('Invalid "'.$token[1].'" in path, expecting an identifier after an "->"');
-						return array();
+						return false;
 					}
 					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
 						$compiled[] = array(
@@ -505,16 +505,16 @@ class PropertyPath extends Object {
 				case self::T_BRACKET_OPEN:
 					if ($nextToken[0] !== self::T_STRING) {
 						notice('Unexpected token "'.$token[0].'" in path, expecting T_STRING after ".["', $token);
-						return array();
+						return false;
 					}
 					if (($i + 2) === $length) {
 						notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
-						return array();
+						return false;
 					}
 					if ($tokens[$i + 2][0] === self::T_OPTIONAL) {
 						if (($i + 2) === $length || $tokens[$i + 3][0] !== self::T_BRACKET_CLOSE) {
 							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'?"');
-							return array();
+							return false;
 						}
 						$compiled[] = array(
 							self::TYPE_OPTIONAL_ELEMENT,
@@ -524,7 +524,7 @@ class PropertyPath extends Object {
 					} else {
 						if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
 							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
-							return array();
+							return false;
 						}
 						$compiled[] = array(
 							self::TYPE_ELEMENT,
@@ -534,10 +534,18 @@ class PropertyPath extends Object {
 					}
 					break;
 
-				case self::T_STAR:
+				case self::T_ALL_ELEMENTS: // [*]
+					if ($nextToken[0] === self::T_STRING) {
+						notice('Invalid chain, expecting a ".", "->" or "[" before "'.$nextToken[1].'"');
+						return false;
+					}
+					$offset = $i + 1;
+					if ($nextToken[0] === self::T_DOT) {
+						$offset++; // skip the dot to prevent "Invalid beginning error"
+					}
 					// Merge remaining tokens as subpath
 					$path  = '';
-					$tokens = array_slice($tokens, $i + 1);
+					$tokens = array_slice($tokens, $offset);
 					foreach ($tokens as $token) {
 						$path .= $token[1];
 					}
@@ -549,7 +557,7 @@ class PropertyPath extends Object {
 
 				default:
 					notice('Unexpected token: "'.$token[0].'"');
-					return array();
+					return false;
 			}
 			$first = false;
 		}
@@ -587,9 +595,18 @@ class PropertyPath extends Object {
 					break;
 
 				case '[':
+					if (($i + 1) === $length) { // is '[' the last character?
+						$buffer .= $char;
+						break;
+					}
 					$tokens[] = array(self::T_STRING, $buffer);
-					$tokens[] = array(self::T_BRACKET_OPEN, '[');
 					$buffer = '';
+					if (($i + 2) < $length && $path[$i + 1].$path[$i + 2] == '*]') { // [*] ?
+						$tokens[] = array(self::T_ALL_ELEMENTS, '[*]');
+						$i += 2;
+					} else {
+						$tokens[] = array(self::T_BRACKET_OPEN, '[');
+					}
 					break;
 
 				case ']':
@@ -634,12 +651,6 @@ class PropertyPath extends Object {
 						$buffer = '';
 						$i++;
 					}
-					break;
-
-				case '*':
-					$tokens[] = array(self::T_STRING, $buffer);
-					$tokens[] = array(self::T_STAR, '*');
-					$buffer = '';
 					break;
 
 				default:
