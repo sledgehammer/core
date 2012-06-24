@@ -488,6 +488,23 @@ namespace Sledgehammer {
 	}
 
 	/**
+	 * Call a static method on a specific class without Late Static Binding.
+	 * Using "call_user_func" will bind the get_called_class() to subclass when the method is inside the parent class.
+	 *
+	 * @param string $class
+	 * @param string $staticMethod
+	 * param ...
+	 */
+	function call_static_func($class, $staticMethod) {
+		if (is_object($class)) {
+			$class = get_class($class);
+		}
+		$arguments = func_get_args();
+		array_shift($arguments);
+		array_shift($arguments);
+		return call_user_func_array(array($class, $staticMethod), $arguments);
+	}
+	/**
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
 	 *
