@@ -24,21 +24,24 @@ class Text extends Object implements \ArrayAccess {
 	 * Construct the Text object and convert $text to UTF-8.
 	 *
 	 * @param string $text  The text
-	 * @param string $charset  The charset of $text, null will auto-detect
+	 * @param string|array $charset  string: The charset of $text; array: Autodetect encoding, example: array('ASCII', 'UTF-8', 'ISO-8859-15'); null: defaults to Framework::$charset
 	 */
 	function __construct($text, $charset = null) {
 		if ($text instanceof Text) {
-			$this->text = $text;
+			$this->text = $text->text;
 			if ($charset !== null && $charset !== 'UTF-8') {
 				notice('Invalid charset given, an Text object will alway be UTF-8 encoded');
 			}
 			return;
 		}
 		if ($charset === null) {
-			$charset = mb_detect_encoding($text, array('ASCII', 'UTF-8', 'ISO-8859-15'), true);
+			$charset = Framework::$charset;
+		} elseif (is_array($charset)) {
+			$charset = mb_detect_encoding($text, $charset, true);
 			if ($charset === false) {
 				notice('Unable to detect charset');
-				$charset = 'UTF-8';
+				$this->text = mb_convert_encoding($text, 'UTF-8');
+				return;
 			}
 		}
 		$this->text = mb_convert_encoding($text, 'UTF-8', $charset);

@@ -1518,8 +1518,8 @@ exit [lindex $result 3]');
 	 *   text('my text')->toUpper()->trim();
 	 *
 	 * @param string $text
-	 * @param string $charset Charset of the given $text. (output is alway UTF-8).
-	 * @return Text
+	 * @param string|array $charset  string: The charset of $text; array: Autodetect encoding, example: array('ASCII', 'UTF-8', 'ISO-8859-15'); null: defaults to Framework::$charset
+	 * @return Text	(__toString is alway UTF-8 encoded).
 	 */
 	function text($text, $charset = null) {
 		return new Text($text, $charset);

@@ -13,13 +13,14 @@ class TextTest extends TestCase {
 		$ascii = 'abc';
 		$expectedLength = 13;
 		$numberOfBytesInUtf8 = 17;
+		$detectOrder = array('ASCII', 'UTF-8', 'ISO-8859-15');
 		$this->assertEquals(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
 		$this->assertEquals(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
 
-		$this->assertEquals(text($latin1)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
-		$this->assertEquals(text($utf8)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
+		$this->assertEquals(text($latin1, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
+		$this->assertEquals(text($utf8, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
 
-		$this->assertEquals(strlen(text($latin1)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
+		$this->assertEquals(strlen(text($latin1, $detectOrder)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
 	}
 
 	function test_toUpper() {
