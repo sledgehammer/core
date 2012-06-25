@@ -27,9 +27,13 @@ abstract class Object {
 	 */
 	function __get($property) {
 		$rObject = new \ReflectionObject($this);
+		$values = get_object_vars($this);
 		$properties = array();
 		foreach ($rObject->getProperties() as $rProperty) {
 			if ($rProperty->isPublic()) {
+				if (array_key_exists($rProperty->name, $values) === false) {
+					continue; // skip properties that are unset()
+				}
 				$scope = 'public';
 			} elseif ($rProperty->isProtected()) {
 				$scope = 'protected';
