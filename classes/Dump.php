@@ -409,7 +409,7 @@ class Dump extends Object {
 				self::renderType('->', 'operator');
 				self::renderType($matches['attribute'], 'attribute');
 				if (isset($matches['element'])) {
-					echo '['.self::escape(substr($matches['element']), 1, -1).']';
+					echo '['.self::escape(substr($matches['element'], 1, -1)).']';
 				}
 			} elseif (preg_match('/^(?P<object>\$[a-z_]+[a-z_0-9]*)\-\>(?P<method>[a-z_]+[a-z_0-9]*)\((?<arguments>[^\)]*)\)$/i', $argument, $matches)) { // $object->method()?
 				self::renderType($matches['object'], 'variable');
