@@ -6,7 +6,7 @@
  *
  * @package Core
  */
-// Functions that are available outside everywhere (global namespace)
+// Functions that are available everywhere (global namespace)
 namespace {
 
 	/**
