@@ -504,6 +504,7 @@ namespace Sledgehammer {
 		array_shift($arguments);
 		return call_user_func_array(array($class, $staticMethod), $arguments);
 	}
+
 	/**
 	 * Een redirect naar een andere pagina.
 	 * Werkt indien mogelijk via de HTTP header en anders via Javascript of een META refresh tag.
@@ -515,12 +516,13 @@ namespace Sledgehammer {
 	function redirect($url, $permanently = false) {
 		if (headers_sent()) {
 			// Javascript fallback
+
 			echo '<script type="text/javascript">window.location='.json_encode((string) $url).';</script>';
 			echo '<noscript>';
 			// Meta refresh fallback
 			echo '<meta http-equiv="refresh" content="0; url='.htmlentities($url, ENT_QUOTES).'">';
 			// Show a link
-			echo '<a href="'.htmlentities($url, ENT_QUOTES).'">Continue</a>';
+			echo 'Redirecting to <a href="', htmlspecialchars($url, ENT_QUOTES, 'ISO-8859-15'), '">', htmlspecialchars($url, ENT_QUOTES, 'ISO-8859-15'), '</a>';
 			echo '</noscript>';
 		} else {
 			if ($permanently) {
