@@ -4,7 +4,8 @@
  */
 namespace Sledgehammer;
 /**
- * A tokenizer that helps to identify the class and interface names.
+ * A tokenizer that gives context to tokens of php internal tokenizer.
+ * Serves as a helper for the PHPAnalyer class.
  *
  * Tokens:
  *   T_HTML        Inline html output
@@ -279,6 +280,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 	}
 
+	/**
+	 * Collect tokens until a "<?php" or "<?=" token.
+	 *
+	 * @param array|string $token
+	 * @param array|string $nextToken
+	 * @return array
+	 */
 	private function parse_HTML($token, $nextToken) {
 		if ($nextToken === false) {
 			return array(
@@ -306,6 +314,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		);
 	}
 
+	/**
+	 * Detect tokens that indicate context change.
+	 *
+	 * @param array|string $token
+	 * @param array|string $nextToken
+	 * @return array
+	 */
 	private function parse_PHP($token, $nextToken) {
 		if ($token[0] == T_CLOSE_TAG) { // end of php section?
 			return array(
@@ -356,6 +371,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the name of the namespace.
+	 *
+	 * @param array|string $token
+	 * @param array|string $nextToken
+	 * @return array
+	 */
 	private function parse_NAMESPACE($token, $nextToken) {
 		if ($token[0] == '{') { // Global namespace?
 			return array('action' => 'EMPTY_TOKEN', 'token' => 'T_NAMESPACE', 'state' => 'PHP');
@@ -370,6 +392,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		}
 	}
 
+	/**
+	 * Collect the fully qualified name.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_USE($token, $nextToken) {
 		if ($nextToken == ';') {
 			return array(
@@ -392,6 +421,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Detect the ending of a USE statement or collect the alias.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_USE_AS($token, $nextToken) {
 		if (in_array($token, array(';', '{'))) {
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
@@ -403,6 +439,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the alias of an USE statement.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_USE_ALIAS($token, $nextToken) {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_USE_ALIAS', 'state' => 'PHP');
@@ -410,6 +453,12 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the classname.
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_CLASS($token, $nextToken) {
 		$this->expectToken($token, T_STRING);
 		return array(
@@ -419,6 +468,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		);
 	}
 
+	/**
+	 * Collect the interfacename.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_INTERFACE($token, $nextToken) {
 		$this->expectToken($token, T_STRING);
 		return array(
@@ -428,6 +484,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		);
 	}
 
+	/**
+	 * Collect the definition a class of interface extends.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_EXTENDS($token, $nextToken) {
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
@@ -440,6 +503,12 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the first interface a class implements.
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_IMPLEMENTS($token, $nextToken) {
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
@@ -452,6 +521,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect remaining interfaces the class implements.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_IMPLEMENTS_MORE($token, $nextToken) {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
 			return array(
@@ -470,6 +546,12 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_FUNCTION($token, $nextToken) {
 		if ($token[0] == T_STRING) {
 			return array('action' => 'SINGLE_TOKEN', 'token' => 'T_FUNCTION', 'tokenBefore' => 'T_PHP');
@@ -481,6 +563,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect parameters and default values of a function.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_PARAMETERS($token, $nextToken) {
 		if ($token == ')') {
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
@@ -494,10 +583,17 @@ class PHPTokenizer extends Object implements \Iterator {
 		if ($token[0] == T_VARIABLE) {
 			return array('action' => 'SINGLE_TOKEN', 'token' => 'T_PARAMETER', 'tokenBefore' => 'T_PHP');
 		}
-		$this->expectTokens($token, array(T_WHITESPACE, ',', '(', '&'));
+		$this->expectTokens($token, array(T_WHITESPACE, T_COMMENT, ',', '(', '&'));
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the classname that is used to typehint the argument.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_PARAMETER_TYPE_HINT($token, $nextToken) {
 		if ($nextToken[0] == T_WHITESPACE) {
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_TYPE_HINT', 'state' => 'PARAMETERS');
@@ -506,6 +602,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Collect the default value of a function parameter.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_PARAMETER_VALUE($token, $nextToken) {
 		$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
 		if (in_array($token[0], $valueTokens)) {
@@ -522,6 +625,14 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->failure('Unknown default value');
 	}
 
+	/**
+	 * Collect a default value of an array.
+	 *   function myFunc($var = array("1",3))
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_PARAMETER_ARRAY_VALUE($token, $nextToken) {
 		if ($token == '(') {
 			$this->arrayDepth++;
@@ -537,7 +648,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
-	// new X or instanceof Y
+	/**
+	 * Detect "new X" or "instanceof Y" and collect the definition.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_TYPE($token, $nextToken) {
 		if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
 			return array('action' => 'SWITCH', 'state' => 'OBJECT', 'token' => 'T_PHP');
@@ -547,7 +664,11 @@ class PHPTokenizer extends Object implements \Iterator {
 	}
 
 	/**
-	 * Parse the classname and return to PHP state
+	 * Collect the classname and continue in PHP state.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
 	 */
 	private function parse_OBJECT($token, $nextToken) {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
@@ -556,6 +677,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Skip { and } tokens that belong to a complex variable: "{$var[123]}".
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_COMPLEX_VARIABLE($token, $nextToken) {
 		if ($token == '}') { // end of complex var
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
@@ -568,6 +696,13 @@ class PHPTokenizer extends Object implements \Iterator {
 		return array('action' => 'CONTINUE');
 	}
 
+	/**
+	 * Skip { and } tokens that belong to a complex variable: "${$varname}".
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
 	private function parse_INNER_COMPLEX_VARIABLE($token, $nextToken) {
 		if ($token == '}') { // end of the inner complex var
 			return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
@@ -577,8 +712,8 @@ class PHPTokenizer extends Object implements \Iterator {
 	}
 
 	/**
-	 * Translates the int to the token_name (371 => T_WHITESPACE)
-	 * @param token $token
+	 * Translates the int to the token_name (371 => T_WHITESPACE) and dumps the result.
+	 * @param array|string $token
 	 */
 	private function dump($token) {
 		if (is_array($token)) {
@@ -591,6 +726,11 @@ class PHPTokenizer extends Object implements \Iterator {
 		throw new \Exception($message.' (state "'.$this->state.'" parsing line '.$this->lineNumber.')');
 	}
 
+	/**
+	 * Check if the $token is one of the expected tokens.
+	 * @throws Exception on unexpected tokens.
+	 * @return void
+	 */
 	private function expectToken($token, $expectedToken) {
 		if ($this->isEqual($token, $expectedToken) == false) {
 			$this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.$this->tokenName($expectedToken).'"');
@@ -598,7 +738,9 @@ class PHPTokenizer extends Object implements \Iterator {
 	}
 
 	/**
-	 * Check if the $token is one of the expected tokens
+	 * Check if the $token is one of the expected tokens.
+	 * @throws Exception on unexpected tokens.
+	 * @return void
 	 */
 	private function expectTokens($token, $expectedTokens) {
 		foreach ($expectedTokens as $expectedToken) {
@@ -613,6 +755,12 @@ class PHPTokenizer extends Object implements \Iterator {
 		$this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.human_implode('" or "', $names, '", "').'"');
 	}
 
+	/**
+	 * Translates the int to the token_name (371 => T_WHITESPACE)
+	 *
+	 * @param string|int|array $token
+	 * @return string
+	 */
 	private function tokenName($token) {
 		if (is_array($token)) {
 			return token_name($token[0]).' "'.$token[1].'"';

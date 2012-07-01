@@ -90,6 +90,7 @@ class PHPAnalyzer extends Object {
 		$globalFunctions = array();
 		$functions = &$globalFunctions;
 		$level = 0;
+		$parameterLevel = -1; // skip parameters in anonymous functions
 		foreach ($tokens as $token) {
 			$type = $token[0];
 			$value = $token[1];
