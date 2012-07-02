@@ -67,6 +67,12 @@ class PHPAnalyzer extends Object {
 	public $usedDefinitions = array();
 
 	/**
+	 * Function calls
+	 * @var array
+	 */
+	public $usedFunctions = array();
+
+	/**
 	 * The AutoLoader used to lookup the corresponding filename for the definitions.
 	 * Uses the Framework::$autoLoader by default.
 	 * @var AutoLoader
@@ -196,8 +202,11 @@ class PHPAnalyzer extends Object {
 					$level--;
 					break;
 
-				case 'T_METHOD_CALL':
 				case 'T_CALL':
+					$this->addCalledIn($value, $filename, $token[2]);
+					break;
+
+				case 'T_METHOD_CALL':
 					break;
 
 				case 'T_OBJECT':
@@ -390,7 +399,7 @@ class PHPAnalyzer extends Object {
 	}
 
 	/**
-	 * Register that a definition is used on a $line in $file.
+	 * Register that a definition is used in $file on $line.
 	 *
 	 * @param string $definition  The class/interface that is used
 	 * @param string $filename  The filename it is use in
@@ -400,6 +409,16 @@ class PHPAnalyzer extends Object {
 		@$this->usedDefinitions[$definition][$filename][] = $line;
 	}
 
+	/**
+	 * Register that a function is called in $file on $line.
+	 *
+	 * @param string $function  The class/interface that is used
+	 * @param string $filename  The filename it is use in
+	 * @param int $line  The line number it is used on
+	 */
+	private function addCalledIn($function, $filename, $line) {
+		@$this->usedFunctions[$function][$filename][] = $line;
+	}
 }
 
 ?>
