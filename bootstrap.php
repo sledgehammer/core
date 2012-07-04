@@ -149,7 +149,7 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	Framework::$autoLoader->init(); // De AutoLoader initialiseren
 
 	if (file_exists(PATH.'vendor/')) { // Does the application have vendor packages?
-
+		extend_include_path(PATH.'vendor/');
 		// Add classes to the AutoLoader
 		Framework::$autoLoader->importFolder(PATH.'vendor/', array(
 			'matching_filename' => false,

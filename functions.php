@@ -716,7 +716,7 @@ namespace Sledgehammer {
 	 * @return int
 	 */
 	function copydir($source, $destination, $exclude = array()) {
-		if (!is_dir($destination) && !mkdir($destination)) {
+		if (!is_dir($destination) && !mkdirs($destination)) {
 			return false;
 		}
 		$count = 0;
