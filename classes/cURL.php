@@ -166,6 +166,7 @@ class cURL extends Observable {
 	 * @param array $options
 	 * @param bool $async
 	 * @throws \Exception
+	 * @return cURL
 	 */
 	static function download($url, $filename, $options = array(), $async = false) {
 		$fp = fopen($filename, 'w');
@@ -186,6 +187,7 @@ class cURL extends Observable {
 			$response->waitForCompletion();
 			fclose($fp);
 		}
+		return $response;
 	}
 
 	/**
