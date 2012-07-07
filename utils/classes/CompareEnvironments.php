@@ -149,7 +149,7 @@ class CompareEnvironments extends Util {
 		}
 
 		if ($output == '') {
-			$output .= view_to_string(new MessageBox('information.gif', 'No differences found', 'The environments are identical'));
+			$output .= view_to_string(Alert::info('<h3>No differences found</h3>The environments are identical'));
 		}
 		return new HTML(view_to_string($Form).'<br />'.$output);
 	}

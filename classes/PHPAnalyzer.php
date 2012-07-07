@@ -379,18 +379,21 @@ class PHPAnalyzer extends Object {
 		$pos = strpos($identifier, '\\');
 		if ($pos !== false) {
 			if ($pos === 0) {
+				// Fully qualified name (\Foo\Bar)
 				return substr($identifier, 1);
 			}
+			// Qualified name (Foo\Bar)
 			foreach ($uses as $alias => $namespace) {
 				$alias .= '\\';
 				if (substr($identifier, 0, strlen($alias)) === $alias) {
 					return $namespace.substr($identifier, strlen($alias) - 1);
 				}
 			}
-			return $identifier;
-		}
-		if (isset($uses[$identifier])) {
-			return $uses[$identifier];
+		} else {
+			// Unqualified name (Foo)
+			if (isset($uses[$identifier])) { // Is an alias?
+				return $uses[$identifier];
+			}
 		}
 		if ($namespace == '') {
 			return $identifier;

@@ -390,6 +390,7 @@ class PHPTokenizer extends Object implements \Iterator {
 				'state' => 'PHP',
 			);
 		}
+		return array('action' => 'CONTINUE');
 	}
 
 	/**

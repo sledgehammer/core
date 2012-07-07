@@ -18,7 +18,7 @@ class FlushTmpFolders extends Util {
 		$output = shell_exec('php '.$script);
 		$output .= '<br />';
 		$output .= DevUtilsWebsite::suExec('php '.escapeshellarg($script));
-		return new Alert('<h4>Flush temporary files</h4><br />'. $output, array('alert' => 'success'));
+		return Alert::success('<h4>Flush temporary files</h4><br />'. $output);
 	}
 }
 

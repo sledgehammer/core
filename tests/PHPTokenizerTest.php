@@ -1,10 +1,11 @@
 <?php
 /**
- * PHPTokenizerTests
- *
+ * PHPTokenizerTest
  */
 namespace Sledgehammer;
-
+/**
+ *
+ */
 class PHPTokenizerTest extends TestCase {
 
 	function test_skipped() {
@@ -12,7 +13,7 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	function donttest_tokenizer() {
-		$filename = Framework::$autoLoader->getFilename('Sledgehammer\FFVideo');
+		$filename = Framework::$autoLoader->getFilename('Sledgehammer\Facebook\Album');
 		$this->assertEqualTokenizer($filename);
 
 		try {
@@ -26,6 +27,7 @@ class PHPTokenizerTest extends TestCase {
 				}
 			}
 			dump($tokens);
+			ob_flush();
 //			dump($tokenizer);
 //			dump($analyzer->getInfo('Sledgehammer\CSVIterator'));
 		} catch (\Exception $e) {

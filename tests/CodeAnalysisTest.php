@@ -14,8 +14,7 @@ class CodeAnalysisTest extends TestCase {
 		}
 		$this->assertTrue(true, 'Importing all modules should not generate any errors');
 		if (file_exists(PATH.'AutoLoader.db.php')) {
-			$php_code = file_get_contents(PATH.'AutoLoader.db.php');
-			$php_code = substr($php_code, 5, -3); // <?php eraf halen
+			$php_code = substr(file_get_contents(PATH.'AutoLoader.db.php'), 5, -3); // Strip "<?php"
 			$this->assertNull(eval($php_code), 'AutoLoader.db.php zou geen php fouten mogen bevatten');
 			$this->assertTrue(isset($definitions), '$definitions zou gedefineerd moeten zijn');
 		} else {
@@ -26,8 +25,9 @@ class CodeAnalysisTest extends TestCase {
 
 	function donttest_single_file() {
 		$phpAnalyzer = new PHPAnalyzer();
-		$info = $phpAnalyzer->getInfo('CssMin');
+		$info = $phpAnalyzer->getInfo('Sledgehammer\Facebook');
 		dump($info);
+		ob_flush();
 	}
 
 	/**
@@ -75,45 +75,16 @@ class CodeAnalysisTest extends TestCase {
 		foreach ($definitions as $definition) {
 			$files[] = Framework::$autoLoader->getFilename($definition);
 		}
-		$files = array_unique($files);
-
 		$analyzer = new PHPAnalyzer();
-		foreach ($files as $filename) {
+		foreach (array_unique($files) as $filename) {
 			try {
 				$analyzer->open($filename);
 			} catch (\Exception $e) {
-//				report_exception($e);
+				report_exception($e); ob_flush();
 				throw $e;
 			}
 		}
-		/* checking parents wordt ook gedaan door de used check
-		  foreach ($analyzer->classes as $class => $info) {
-		  // check parent class
-		  if (isset($info['extends'])) {
-		  if (!isset($analyzer->classes[$info['extends']]) && !class_exists($info['extends'], false)) {
-		  notice('Parent class "'.$info['extends'].'" not found for class "'.$class.'" in '.$info['filename']);
-		  }
-		  }
-
-		  if (isset($info['implements'])) {
-		  foreach ($info['implements'] as $interface) {
-		  if (!isset($analyzer->interfaces[$interface]) && !interface_exists($interface, false)) {
-		  notice('Interface "'.$interface.'" not found for class "'.$class.'" in '.$info['filename']);
-		  }
-		  }
-		  }
-		  }
-		  foreach ($analyzer->interfaces as $interface => $info) {
-		  // check parent interface(s)
-		  if (isset($info['extends'])) {
-		  foreach ($info['extends'] as $parentInterface) {
-		  if (!isset($analyzer->interfaces[$parentInterface]) && !interface_exists($parentInterface, false)) {
-		  notice('Parent interface "'.$parentInterface.'" not found for interface "'.$interface.'" in '.$info['filename']);
-		  }
-		  }
-		  }
-		  } */
-		// Check all used definitions
+		// Check all used definitions (implements, extends, new, catch, etc)
 		$failed = false;
 		foreach (array_keys($analyzer->usedDefinitions) as $definition) {
 			if ($this->tryGetInfo($analyzer, $definition) == false) {
