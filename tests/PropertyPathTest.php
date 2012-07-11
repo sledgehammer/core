@@ -60,6 +60,7 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals(PropertyPath::compile('->property[element]'), array(array($property, 'property'), array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('any->property[element]'), array(array($any, 'any'), array($property, 'property'), array($element, 'element')));
 		$this->assertEquals(PropertyPath::compile('->property[element].any'), array(array($property, 'property'), array($element, 'element'), array($any, 'any')));
+		$this->assertEquals(PropertyPath::compile(123), array(array($any, '123')), 'Allow integer paths');
 	}
 
 	function test_assemble() {

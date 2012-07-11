@@ -328,7 +328,7 @@ class PropertyPath extends Object {
 		if (isset($cache[$path])) {
 			return $cache[$path];
 		}
-		$tokens = self::tokenize($path);
+		$tokens = self::tokenize((string) $path);
 		$parts = self::parse($tokens);
 		// Validate parts
 		foreach ($parts as $part) {
@@ -336,7 +336,7 @@ class PropertyPath extends Object {
 				notice('Invalid property identifier "'.$part[1].'" in path "'.$path.'"');
 			}
 			if ($part[0] == self::TYPE_METHOD && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
-				notice('Invalid property identifier "'.$part[1].'" in path "'.$path.'"');
+				notice('Invalid method identifier "'.$part[1].'" in path "'.$path.'"');
 			}
 		}
 		$cache[$path] = $parts;
