@@ -14,6 +14,7 @@ class CSVTest extends TestCase {
 		$this->assertEquals(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");
 		$csv = new CSV($filename);
 		$this->assertEquals(iterator_to_array($csv), $data);
+		unlink($filename);
 	}
 
 }

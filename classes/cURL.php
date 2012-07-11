@@ -30,7 +30,7 @@ namespace Sledgehammer;
  * @property-read mixed $content_type    Content-Type: of the requested document, NULL indicates server did not send valid Content-Type: header
  *
  * @property-write Closure $onLoad  Event fires when the request has successfully completed.
- * @property Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
+ * @property-write Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
  *
  * @package Core
  */
@@ -41,8 +41,9 @@ class cURL extends Observable {
 	 * @var array
 	 */
 	protected $events = array(
-		'load' => array(),
-		'abort' => array(),
+		'load' => array(), // Fires when the request has completed
+		'abort' => array(), // Fires when the request was aborted
+		'closed' => array(), // Fires when the curl handle is closed
 	);
 
 	/**
@@ -109,6 +110,7 @@ class cURL extends Observable {
 				$this->stop(); // Remove the cURL handle from the pool
 			}
 			curl_close($this->handle);
+			$this->trigger('closed', $this);
 		}
 	}
 
@@ -180,7 +182,7 @@ class cURL extends Observable {
 		);
 		$response = new cURL($options + $defaults);
 		if ($async) {
-			$response->addListener('load', function () use ($fp) {
+			$response->addListener('closed', function () use ($fp) {
 						fclose($fp);
 					});
 		} else {

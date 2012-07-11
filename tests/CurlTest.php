@@ -19,8 +19,8 @@ class CurlTest extends TestCase {
 		$this->assertEmptyPool();
 		$response = cURL::get('http://bfanger.nl/');
 		$this->assertFalse($response->isComplete());
-		for ($i = 0; $i < 10; $i++) {
-			sleep(1);
+		for ($i = 0; $i < 50; $i++) {
+			usleep(10000);
 			$complete = $response->isComplete();
 			if ($complete) {
 				break;
@@ -36,7 +36,7 @@ class CurlTest extends TestCase {
 		$now = microtime(true);
 		cUrl::synchronize(); // wait for both request to complete
 		$elapsed = microtime(true) - $now;
-		$this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel downloads are faster');
+		$this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel requests are faster');
 	}
 
 	function test_exception_on_error() {
@@ -83,10 +83,20 @@ class CurlTest extends TestCase {
 		$this->assertTrue(strstr($log, 'About to connect() to ') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
 	}
 
-	private function assertEmptyPool() {
-		if (isset(cURL::$requests) && count(cURL::$requests) > 0) {
-			$this->fail('Global cURL pool shoud be emtpy');
+	function test_paralell_download() {
+		$this->assertEmptyPool();
+		for ($i = 0; $i < 2; $i++) {
+			cURL::download('http://bfanger.nl/', TMP_DIR.'curltest'.$i.'.downoad', array(), true);
 		}
+		cURL::synchronize();
+		$this->assertEmptyPool();
+		for ($i = 0; $i < 2; $i++) {
+			unlink(TMP_DIR.'curltest'.$i.'.downoad');
+		}
+	}
+
+	private function assertEmptyPool() {
+		$this->assertFalse(isset(cURL::$requests) && count(cURL::$requests) > 0, 'Global cURL pool should be emtpy');
 	}
 
 }
