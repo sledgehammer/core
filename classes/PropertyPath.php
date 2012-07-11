@@ -328,7 +328,7 @@ class PropertyPath extends Object {
 		if (isset($cache[$path])) {
 			return $cache[$path];
 		}
-		$tokens = self::tokenize((string) $path);
+		$tokens = self::tokenize($path);
 		$parts = self::parse($tokens);
 		// Validate parts
 		foreach ($parts as $part) {
@@ -570,6 +570,7 @@ class PropertyPath extends Object {
 	 * @param string $path
 	 */
 	private static function tokenize($path) {
+		$path = (string) $path;
 		$tokens = array();
 		$length = strlen($path);
 		$buffer = '';

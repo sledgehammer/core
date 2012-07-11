@@ -148,7 +148,7 @@ class CodeAnalysisTest extends TestCase {
 	 * @return bool  Success
 	 */
 	private function tryGetInfo(PHPAnalyzer $analyzer, $definition) {
-		if (in_array($definition, array('AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase'))) {
+		if (in_array($definition, array('self', 'AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase', 'PHPUnit_TextUI_ResultPrinter'))) {
 			return true;
 		}
 		try {
