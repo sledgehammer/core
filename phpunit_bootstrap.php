@@ -16,4 +16,9 @@ foreach ($modules as $module) {
 		));
 	}
 }
+// Disable error & exception handlers
+for ($i = 1; $i < 5; $i++) {
+	restore_error_handler();
+	restore_exception_handler();
+}
 ?>
