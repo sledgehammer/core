@@ -611,6 +611,10 @@ class PHPTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_PARAMETER_VALUE($token, $nextToken) {
+		$classConstantTokens = array(T_DOUBLE_COLON, T_NS_SEPARATOR);
+		if (in_array($token[0], $classConstantTokens) || in_array($nextToken[0], $classConstantTokens)) { // A constant value from inside an class?
+			return array('action' => 'CONTINUE');
+		}
 		$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
 		if (in_array($token[0], $valueTokens)) {
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
@@ -622,7 +626,6 @@ class PHPTokenizer extends Object implements \Iterator {
 		if ($token == '-') {
 			return array('action' => 'CONTINUE');
 		}
-		$this->dump($token);
 		$this->failure('Unknown default value');
 	}
 

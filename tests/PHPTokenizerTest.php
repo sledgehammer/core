@@ -13,7 +13,7 @@ class PHPTokenizerTest extends TestCase {
 	}
 
 	function donttest_tokenizer() {
-		$filename = Framework::$autoLoader->getFilename('Sledgehammer\Facebook\Album');
+		$filename = Framework::$autoLoader->getFilename('App');
 		$this->assertEqualTokenizer($filename);
 
 		try {
@@ -28,10 +28,9 @@ class PHPTokenizerTest extends TestCase {
 			}
 			dump($tokens);
 			ob_flush();
-//			dump($tokenizer);
-//			dump($analyzer->getInfo('Sledgehammer\CSVIterator'));
 		} catch (\Exception $e) {
 			report_exception($e);
+			ob_flush();
 		}
 	}
 
@@ -55,6 +54,7 @@ class PHPTokenizerTest extends TestCase {
 			$this->assertEquals($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
 		} catch (\Exception $e) {
 			report_exception($e);
+			ob_flush();
 			$this->fail($e->getMessage());
 		}
 	}
