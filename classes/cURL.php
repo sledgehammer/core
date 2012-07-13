@@ -181,13 +181,11 @@ class cURL extends Observable {
 			CURLOPT_FAILONERROR => true,
 		);
 		$response = new cURL($options + $defaults);
-		if ($async) {
-			$response->addListener('closed', function () use ($fp) {
-						fclose($fp);
-					});
-		} else {
+		$response->addListener('closed', function () use ($fp) {
+				fclose($fp);
+			});
+		if ($async == false) {
 			$response->waitForCompletion();
-			fclose($fp);
 		}
 		return $response;
 	}
