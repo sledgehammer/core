@@ -13,6 +13,9 @@ namespace Sledgehammer;
  *
  * (Compatible with the View interface from MVC)
  *
+ * Disable xdebug's var_dump() for full-length, full-depth dump() output.
+ * By adding "xdebug.overload_var_dump = Off" to the php.ini
+ *
  * @package Core
  */
 class Dump extends Object {
