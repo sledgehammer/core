@@ -43,7 +43,7 @@ class AutoLoader extends Object {
 	 * The settings can be overridden with by placing an  autoloader.ini in the offending folder.
 	 * @var array
 	 */
-	private $settings = array(
+	private $defaultSettings = array(
 		'matching_filename' => true, // The classname should match the filename.
 		'mandatory_definition' => true, // A php-file should declare a class or interface
 		'mandatory_superclass' => true, // A class should extend another class (preferably \Sledgehammer\Object as base)
@@ -72,20 +72,21 @@ class AutoLoader extends Object {
 	/**
 	 * Load definitions from a static file or detect definition for all modules.
 	 *
+	 * @param string $filename Location of the database file.
+	 * @param bool $merge  Merge the definitions with the existing definitions. (false: overwrite all definitions)
 	 * @return void
 	 */
-	function init() {
-		if (file_exists($this->path.'AutoLoader.db.php')) {
-			include($this->path.'AutoLoader.db.php');
-			if (isset($definitions)) {
-				$this->definitions = $definitions;
-			} else {
-				notice('AutoLoader.db.php is corrupted');
-			}
+	function loadDatabase($filename, $merge = false) {
+		$definitions = '__NONE__';
+		include($filename);
+		if ($definitions === '__NONE__') {
+			warning('Invalid database file: "'.$filename.'"', 'No $definitions where found');
+			return;
 		}
-		$modules = Framework::getModules();
-		foreach ($modules as $module) {
-			$this->importModule($module);
+		if ($merge) {
+			$this->definitions += $definitions;
+		} else {
+			$this->definitions = $definitions;
 		}
 	}
 
@@ -233,6 +234,7 @@ class AutoLoader extends Object {
 	 * @return void
 	 */
 	function importModule($module) {
+		deprecated('importModule is deprecated in favor of importFolder()');
 		$path = $module['path'];
 		if (file_exists($module['path'].'classes')) {
 			$path = $path.'classes';
@@ -277,9 +279,7 @@ class AutoLoader extends Object {
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
 				$mtimeFolder = ($revalidateCache ? mtime_folders($path) : 0);
 				if ($mtimeFolder !== false && $mtimeCache > $mtimeFolder) { // Is het cache bestand niet verouderd?
-					// Use the cacheFile
-					include($cacheFile);
-					$this->definitions += $definitions;
+					$this->loadDatabase($cacheFile, true);
 					if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
 						touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
 					}
@@ -311,7 +311,7 @@ class AutoLoader extends Object {
 			}
 		}
 		if ($useCache) {
-			$this->writeCache($cacheFile, $this->relativePath($path));
+			$this->saveDatabase($cacheFile, $this->relativePath($path));
 		}
 	}
 
@@ -498,30 +498,31 @@ class AutoLoader extends Object {
 	}
 
 	/**
-	 * Generate a static AutoLoader.db.php file
+	 * Save all imported definitions to database file.
 	 *
-	 * @param string $cacheFile
-	 * @param null|string $definitionPath
+	 * @param string $filename  The location of the database file.
+	 * @param null|string $pathFilter  Only save definition in this path. null: saves all imported definitions.
+	 * @return void
 	 */
-	function writeCache($cacheFile, $definitionPath = null) {
+	function saveDatabase($filename, $pathFilter = null) {
 		$definitions = array();
-		if ($definitionPath === null) {
+		if ($pathFilter === null) {
 			$definitions = $this->definitions;
 		} else {
-			$length = strlen($definitionPath);
-			foreach ($this->definitions as $definition => $filename) {
-				if (substr($filename, 0, $length) == $definitionPath) {
-					$definitions[$definition] = $filename;
+			$length = strlen($pathFilter);
+			foreach ($this->definitions as $definition => $file) {
+				if (substr($file, 0, $length) == $pathFilter) {
+					$definitions[$definition] = $file;
 				}
 			}
 		}
 		ksort($definitions);
-		$php = "<?php\n/**\n * Generated AutoLoader Cache\n */\n\$definitions = array(\n";
-		foreach ($definitions as $definition => $filename) {
-			$php .= "\t'".addslashes($definition)."' => '".addslashes($filename)."',\n";
+		$php = "<?php\n/**\n * AutoLoader database\n */\n\$definitions = array(\n";
+		foreach ($definitions as $definition => $file) {
+			$php .= "\t'".addslashes($definition)."' => '".addslashes($file)."',\n";
 		}
 		$php .= ");\n?>";
-		file_put_contents($cacheFile, $php);
+		file_put_contents($filename, $php);
 	}
 
 	/**
@@ -532,21 +533,21 @@ class AutoLoader extends Object {
 	 * @return array
 	 */
 	private function mergeSettings($settings, $overrides = array()) {
-		$availableSettings = array_keys($this->settings);
+		$availableSettings = array_keys($this->defaultSettings);
 		foreach ($overrides as $key => $value) {
-			if (array_key_exists($key, $this->settings)) {
+			if (array_key_exists($key, $this->defaultSettings)) {
 				$settings[$key] = $value;
 			} else {
 				notice('Invalid setting: "'.$key.'" = '.syntax_highlight($value), array('Available settings' => $availableSettings));
 			}
 		}
 		if (array_keys($settings) != $availableSettings) {
-			$missing = array_diff_key($this->settings, $settings);
+			$missing = array_diff_key($this->defaultSettings, $settings);
 			foreach ($missing as $key => $value) {
 				$settings[$key] = $value; // Use global setting
 			}
-			if (count($settings) !== count($this->settings)) { // Contains invalid settings?
-				$invalid = array_diff_key($settings, $this->settings);
+			if (count($settings) !== count($this->defaultSettings)) { // Contains invalid settings?
+				$invalid = array_diff_key($settings, $this->defaultSettings);
 				notice('Invalid setting: "'.key($invalid).'" = '.syntax_highlight(current($invalid)), array('Available settings' => $availableSettings));
 			}
 		}

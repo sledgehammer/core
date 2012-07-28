@@ -89,8 +89,9 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	// Include classes
 	require_once(CORE_DIR.'classes/Object.php'); // The generic superclass
 	require_once(CORE_DIR.'classes/Framework.php'); // Helper class for extracting and loading Sledgehammer modules
-	require(CORE_DIR.'classes/ErrorHandler.php');
-	require(CORE_DIR.'classes/AutoLoader.php');
+	require_once(CORE_DIR.'classes/InfoException.php');
+	require_once(CORE_DIR.'classes/ErrorHandler.php');
+	require_once(CORE_DIR.'classes/AutoLoader.php');
 
 	if (function_exists('mb_internal_encoding')) {
 		mb_internal_encoding(Framework::$charset);
@@ -146,7 +147,33 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 			Framework::$errorHandler->html = (bool) $overrideDebugOutput;
 		}
 	}
-	Framework::$autoLoader->init(); // De AutoLoader initialiseren
+	// Dectect modules
+	$modules = Framework::getModules();
+
+	// Initialize the AutoLoader
+	if (file_exists(PATH.'AutoLoader.db.php')) {
+		Framework::$autoLoader->loadDatabase(PATH.'AutoLoader.db.php');
+	} else {
+		// Import definitions inside the modules.
+		foreach ($modules as $module) {
+			$path = $module['path'];
+			if (file_exists($module['path'].'classes')) { // A sledgehammer folder layout?
+				$path = $path.'classes'; // Only import the classes folder
+				$settings = array(); // Use the strict default settings
+			} else {
+				// Disable validations
+				$settings = array(
+					'matching_filename' => false,
+					'mandatory_definition' => false,
+					'mandatory_superclass' => false,
+					'one_definition_per_file' => false,
+					'revalidate_cache_delay' => 20,
+					'detect_accidental_output' => false,
+				);
+			}
+			Framework::$autoLoader->importFolder($path, $settings);
+		}
+	}
 
 	if (file_exists(PATH.'vendor/')) { // Does the application have vendor packages?
 		extend_include_path(PATH.'vendor/');
@@ -167,7 +194,6 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	}
 
 	// Initialize modules
-	$modules = Framework::getModules();
 	unset($modules['core']);
 	foreach($modules as $module) {
 		Framework::initModule($module['path']);

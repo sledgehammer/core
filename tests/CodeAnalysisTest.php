@@ -10,7 +10,22 @@ class CodeAnalysisTest extends TestCase {
 		$loader->enableCache = false;
 		$modules = Framework::getModules();
 		foreach ($modules as $module) {
-			$loader->importModule($module);
+			$path = $module['path'];
+			if (file_exists($module['path'].'classes')) { // A sledgehammer folder layout?
+				$path = $path.'classes'; // Only import the classes folder
+				$settings = array(); // Use the strict default settings
+			} else {
+				// Disable validations
+				$settings = array(
+					'matching_filename' => false,
+					'mandatory_definition' => false,
+					'mandatory_superclass' => false,
+					'one_definition_per_file' => false,
+					'revalidate_cache_delay' => 20,
+					'detect_accidental_output' => false,
+				);
+			}
+			$loader->importFolder($path, $settings);
 		}
 		$this->assertTrue(true, 'Importing all modules should not generate any errors');
 		if (file_exists(PATH.'AutoLoader.db.php')) {
