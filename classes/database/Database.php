@@ -324,10 +324,11 @@ class Database extends \PDO {
 	/**
 	 * Debug informatie tonen
 	 *
-	 * @param bool $popup Bij true zullen de queries pas getoond worden na het klikken een icoon, Bij false worden de queries direct getoond.
+	 * @param bool $popup true: Add javascript to open the querylog in a popup.
+	 * @param string|null $connection  Name of the connection a.k.a. $dblink.
 	 * @return void
 	 */
-	function debug($popup = true) {
+	function debug($popup = true, $connection = null) {
 		$query_log_count = count($this->log); // Het aantal onthouden queries.
 		if ($query_log_count > 0) {
 			$id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
@@ -335,12 +336,17 @@ class Database extends \PDO {
 				echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); document.getElementById(\''.$id.'\').focus(); return false">';
 			}
 		}
-		echo '<b>', $this->queryCount, '</b>&nbsp;queries';
+		if ($connection !== null) {
+			echo ' <b>', $connection, '</b>&nbsp;connection ';
+		}
+		echo '<b>', $this->queryCount, '</b>&nbsp;';
+		echo ($this->queryCount === 1) ? 'query' : 'queries';
+		if ($this->queryCount != 0) {
+			echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>&nbsp;sec';
+		}
+
 		if ($popup && $query_log_count > 0) {
 			echo '</a>';
-		}
-		if ($this->queryCount != 0) {
-			echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>sec';
 		}
 		if (!$popup) {
 			echo '<br />';

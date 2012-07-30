@@ -65,10 +65,10 @@
 }
 /* Statusbar styling */
 .statusbar, .statusbar-cache {
-	color: #141414;
-	font: normal 11px/26px Menlo, Monaco, monospace;
-	text-shadow: 0 1px 0 #eee;
-	padding: 0 0 0;
+	color: #111;
+	font: normal 11px/20px 'Lucida Grande', Helvetica, sans-serif;
+	text-shadow: 0 1px 0 #e0e0e0;
+	padding: 0 0 1px 0;
 	margin: 5px 0 0 0;
 	text-align: center;
 	clear: both;
@@ -76,43 +76,69 @@
 	bottom: 0;
 	left: 0px;
 	right: 0px;
-	z-index: 5000;
-	border-top: 1px solid #646464;
-	background: #b5b5b5;
-	background-image: -webkit-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
-	background-image:    -moz-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
-	background-image:     -ms-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
-	background-image:      -o-linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
-	background-image:         linear-gradient(bottom, rgb(151,151,151) 0%, rgb(191,191,191) 90%);
+	z-index: 10000;
+	border-top: 1px solid #828282;
+	background: #bcbcbc;
+	background-image: -webkit-linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
+	background-image:    -moz-linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
+	background-image:     -ms-linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
+	background-image:      -o-linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
+	background-image:         linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
+	box-shadow: inset 0px 1px 0px #ececec;
 }
 .statusbar-placeholder {
 	display: block;
-	height: 27px;
+	height: 21px;
 }
 .statusbar a {
-	color: #141414;
-	text-shadow: 0 1px 0 #eee;
-	text-decoration: underline;
+	display: inline-block;
+	color: #111;
+	font: normal 11px/20px 'Lucida Grande', Helvetica, sans-serif;
+	text-shadow: 0 1px 0 #e0e0e0;
+	text-decoration: none;
 }
 .statusbar a:hover {
-	color: #000;
+	color: black;
+	text-decoration: none;
+	text-shadow: 0 1px 0 #efefef;
+}
+.statusbar .statusbar-tab {
+	display: inline-block;
+	height: 20px;
+	padding: 0px 1px;
+	margin: 0px 1px;
+}
+.statusbar .statusbar-tab:hover {
+	background-image: -webkit-linear-gradient(bottom, #a8a8a8 0%, #626262 40%, #d0d0d0 100%);
+	background-image:    -moz-linear-gradient(bottom, #a8a8a8 0%, #626262 40%, #d0d0d0 100%);
+	background-image:     -ms-linear-gradient(bottom, #a8a8a8 0%, #626262 40%, #d0d0d0 100%);
+	background-image:      -o-linear-gradient(bottom, #a8a8a8 0%, #626262 40%, #d0d0d0 100%);
+	background-image:         linear-gradient(bottom, #a8a8a8 0%, #626262 40%, #d0d0d0 100%);
+}
+.statusbar .statusbar-tab > a, .statusbar .statusbar-tab > span {
+	display: inline-block;
+	height: 20px;
+	padding: 0 3px;
+}
+.statusbar .statusbar-tab:hover > a, .statusbar .statusbar-tab:hover > span {
+	background-image: -webkit-linear-gradient(bottom, #bababa 10%, #b5b5b5 30%, #d5d5d5 90%);
+	background-image:    -moz-linear-gradient(bottom, #bababa 10%, #b5b5b5 30%, #d5d5d5 90%);
+	background-image:     -ms-linear-gradient(bottom, #bababa 10%, #b5b5b5 30%, #d5d5d5 90%);
+	background-image:      -o-linear-gradient(bottom, #bababa 10%, #b5b5b5 30%, #d5d5d5 90%);
+	background-image:         linear-gradient(bottom, #bababa 10%, #b5b5b5 30%, #d5d5d5 90%);
 }
 .statusbar .statusbar-close {
+	display: inline-block;
 	position: absolute;
-	left: 6px;
-	bottom: 6px;
-	width: 14px;
-	height: 14px;
-	font: 13px/10px sans-serif;
-	color: #fff;
-	background: #808080;
+	left: 0px;
+	bottom: 1px;
+	padding: 0px 5px 3px 7px;
+	font: 18px/18px sans-serif;
+	color: #606060;
 	text-decoration: none;
-	text-align: center;
-	border-radius: 7px;
 }
 .statusbar .statusbar-close:hover {
-	color: #cdcdcd;
-	background: #5d5d5d;
+	color: #111;
 	text-decoration: none;
 }
 .statusbar-cache {
@@ -126,13 +152,18 @@
 	display: none;
 	position: absolute;
 	bottom: 19px;
-	left: -2px;
-	background: #bfbfbf;
-	border: 1px solid #646464;
-	border-bottom: 0;
-	border-radius: 8px 8px 0 0;
+	left: -16px;
+	height: 20px;
+	background: #d6d6d6;
+	background-image: -webkit-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	border: 1px solid #626262;
+	border-bottom: 1px solid #d5d5d5;
+	border-radius: 4px 4px 0 0;
 	white-space: nowrap;
 	line-height: 22px;
+	padding: 0 15px;
+	box-shadow: inset 0 1px 0px #f1f1f1;
+	text-shadow: 0 1px 0 #eee;
 }
 
 .statusbar .statusbar-parsetime:hover > .statusbar-popout {

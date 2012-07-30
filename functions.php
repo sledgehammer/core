@@ -981,31 +981,40 @@ namespace Sledgehammer {
 	function statusbar() {
 		if (defined('Sledgehammer\STARTED')) {
 			$now = microtime(true);
-			echo '<span class="statusbar-parsetime">Parsetime:&nbsp;<b>'.format_parsetime($now - STARTED).'</b>sec. ';
+			echo '<span class="statusbar-tab"><span class="statusbar-parsetime">Time&nbsp;<b>'.format_parsetime($now - STARTED).'</b>&nbsp;sec, ';
 			if (defined('Sledgehammer\INITIALIZED')) {
-				echo '<span class="statusbar-popout">(Init:&nbsp;<b>'.format_parsetime(INITIALIZED - STARTED).'</b>sec.';
+				echo '<span class="statusbar-popout">Init&nbsp;<b>'.format_parsetime(INITIALIZED - STARTED).'</b>&nbsp;sec';
 				if (defined('Sledgehammer\GENERATED')) {
-					echo ' Execute:&nbsp;<b>'.format_parsetime(GENERATED - INITIALIZED).'</b>sec. ';
-					echo 'Render:&nbsp;<b>'.format_parsetime($now - GENERATED).'</b>sec.';
+					echo ', &nbsp;Execute&nbsp;<b>'.format_parsetime(GENERATED - INITIALIZED).'</b>&nbsp;sec, &nbsp;';
+					echo 'Render&nbsp;<b>'.format_parsetime($now - GENERATED).'</b>&nbsp;sec';
 				}
-				echo ')</span> ';
+				echo '</span> ';
 			}
-			echo '</span>'."\n";
+			echo '</span></span>'."\n";
 		}
 		if (function_exists('memory_get_usage')) { // Geheugenverbruik in MiB tonen
-			echo 'Memory:&nbsp;<b>'.number_format(memory_get_usage() / 1048576, 2).'</b>';
+			echo 'Memory&nbsp;<b>'.number_format(memory_get_usage() / 1048576, 2).'</b>';
 			if (function_exists('memory_get_peak_usage')) {
 				echo '/<b>'.number_format(memory_get_peak_usage() / 1048576, 2).'</b>';
 			}
-			echo 'MiB.'."\n";
+			echo '&nbsp;MiB, &nbsp;'."\n";
 		}
 		if (class_exists('Sledgehammer\Database', false) && count(Database::$instances) > 0) {
-			echo 'Databases: ';
+			echo (count(Database::$instances) === 1) ? 'Database' : 'Databases';
+			$first = true;
 			foreach (Database::$instances as $name => $database) {
 				if (is_object($database)) {
-					echo '['.$name.'&nbsp;';
-					$database->debug();
-					echo '] ';
+					if ($first) {
+						$first = false;
+					} else {
+						echo ', &nbsp;';
+					}
+					if (count(Database::$instances) === 1  && $name === 'default') {
+						$name = null;
+					}
+					echo '<span class="statusbar-tab">';
+					$database->debug(true, $name);
+					echo '</span>';
 				}
 			}
 		}
