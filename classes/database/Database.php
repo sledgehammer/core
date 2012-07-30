@@ -12,7 +12,7 @@ namespace Sledgehammer;
 class Database extends \PDO {
 
 	/**
-	 * Report MySQL warnings
+	 * Report MySQL warnings.
 	 * @var bool
 	 */
 	public $reportWarnings;
@@ -30,13 +30,13 @@ class Database extends \PDO {
 	public $logBacktrace = 0;
 
 	/**
-	 * Total time it took to execute all queries (in seconds);
+	 * Total time it took to execute all queries. (in seconds)
 	 * @var float
 	 */
 	public $executionTime = 0;
 
 	/**
-	 * Structure containing all logged executed queries
+	 * Structure containing all logged executed queries.
 	 * @var array
 	 */
 	public $log = array();
@@ -60,13 +60,13 @@ class Database extends \PDO {
 	private $previousInsertId;
 
 	/**
-	 * The \PDO::ATTR_DRIVER_NAME
+	 * The \PDO::ATTR_DRIVER_NAME. "mysql" or "sqlite"
 	 * @var string
 	 */
 	private $driver;
 
 	/**
-	 * The database instances that are accesable by getDatabase() and the statusbar() functions.
+	 * The database instances that are accessible by getDatabase() and the statusbar() functions.
 	 * array('link' => Database)
 	 * @var array|Database
 	 */

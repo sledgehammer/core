@@ -394,7 +394,7 @@ namespace Sledgehammer {
 	/**
 	 * Regex for supported operators for the compare() function
 	 */
-	define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=');
+	define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN');
 
 	/**
 	 * Compare two values with the given operator.
@@ -420,6 +420,13 @@ namespace Sledgehammer {
 			case '>': return $value > $expectation;
 			case '<=': return $value <= $expectation;
 			case '>=': return $value >= $expectation;
+			case 'IN':
+				foreach ($expectation as $val) {
+					if (equals($value, $val)) {
+						return true;
+					}
+				}
+				return false;
 		}
 		throw new \Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', explode('|', COMPARE_OPERATORS)));
 	}

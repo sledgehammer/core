@@ -102,6 +102,16 @@ class DatabaseCollection extends Collection {
 			} else {
 				if ($operator === '!=') {
 					$expression = '('.$db->quoteIdentifier($column).' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$db->quoteIdentifier($column).' IS NULL)'; // Include
+				} elseif ($operator === 'IN') {
+					if ((is_array($value) || $value instanceof \Traversable) === false) {
+						notice('Operator IN expects an array or Traversable', $value);
+						$value = explode(',', $value);
+					}
+					$quoted = array();
+					foreach ($value as $val) {
+						$quoted[] = $this->quote($db, $column, $val);
+					}
+					$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' ('.implode(', ', $quoted).')');
 				} else {
 					if ($operator === '==') {
 						$operator = '=';
@@ -262,7 +272,7 @@ class DatabaseCollection extends Collection {
 	 * @param mixed $value
 	 */
 	private function quote($db, $column, $value) {
-		if ((is_int($value) || preg_match('/^[123456789]{1}[0-9]*$/', $value)) && ($column == 'id' || substr($column, -3) == '_id')) {
+		if (($column == 'id' || substr($column, -3) == '_id') && (is_int($value) || preg_match('/^[123456789]{1}[0-9]*$/', $value))) {
 			return $value;
 		}
 		return $db->quote($value);

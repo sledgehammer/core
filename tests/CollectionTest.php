@@ -115,6 +115,8 @@ class CollectionTest extends TestCase {
 		$this->assertTrue(compare(0, '>=', null));
 		$this->assertFalse(compare('', '==', 0));
 		$this->assertFalse(compare(0, '>', null));
+		$this->assertTrue(compare(2, 'IN', array(1,2,3)));
+		$this->assertFalse(compare(4, 'IN', array(1,2,3)));
 	}
 	function test_database_where() {
 		$fruits = $this->getDatabaseCollection();
