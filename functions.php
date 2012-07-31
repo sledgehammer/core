@@ -979,25 +979,26 @@ namespace Sledgehammer {
 	 * Contains parsetime, memory usage and (sql)querylogs.
 	 */
 	function statusbar() {
+		$divider = '<span class="statusbar-divider">, </span>';
 		if (defined('Sledgehammer\STARTED')) {
 			$now = microtime(true);
-			echo '<span class="statusbar-tab"><span class="statusbar-parsetime">Time&nbsp;<b>'.format_parsetime($now - STARTED).'</b>&nbsp;sec, ';
+			echo '<span class="statusbar-tab"><span class="statusbar-parsetime">Time&nbsp;<b>', format_parsetime($now - STARTED), '</b>&nbsp;sec';
 			if (defined('Sledgehammer\INITIALIZED')) {
-				echo '<span class="statusbar-popout">Init&nbsp;<b>'.format_parsetime(INITIALIZED - STARTED).'</b>&nbsp;sec';
+				echo ' <span class="statusbar-popout">Init&nbsp;<b>', format_parsetime(INITIALIZED - STARTED), '</b>&nbsp;sec';
 				if (defined('Sledgehammer\GENERATED')) {
-					echo ', &nbsp;Execute&nbsp;<b>'.format_parsetime(GENERATED - INITIALIZED).'</b>&nbsp;sec, &nbsp;';
-					echo 'Render&nbsp;<b>'.format_parsetime($now - GENERATED).'</b>&nbsp;sec';
+					echo $divider, 'Execute&nbsp;<b>', format_parsetime(GENERATED - INITIALIZED), '</b>&nbsp;sec', $divider;
+					echo 'Render&nbsp;<b>', format_parsetime($now - GENERATED), '</b>&nbsp;sec';
 				}
-				echo '</span> ';
+				echo '</span>';
 			}
-			echo '</span></span>'."\n";
+			echo '</span></span>', $divider, "\n";
 		}
 		if (function_exists('memory_get_usage')) { // Geheugenverbruik in MiB tonen
-			echo 'Memory&nbsp;<b>'.number_format(memory_get_usage() / 1048576, 2).'</b>';
+			echo 'Memory&nbsp;<b title="Current memory usage">', number_format(memory_get_usage() / 1048576, 2), '</b>';
 			if (function_exists('memory_get_peak_usage')) {
-				echo '/<b>'.number_format(memory_get_peak_usage() / 1048576, 2).'</b>';
+				echo '<span style="margin: 0 1px;">/</span><b title="Peak memory usage">', number_format(memory_get_peak_usage() / 1048576, 2), '</b>';
 			}
-			echo '&nbsp;MiB, &nbsp;'."\n";
+			echo '&nbsp;MiB', $divider, "\n";
 		}
 		if (class_exists('Sledgehammer\Database', false) && count(Database::$instances) > 0) {
 			echo (count(Database::$instances) === 1) ? 'Database' : 'Databases';
@@ -1007,9 +1008,9 @@ namespace Sledgehammer {
 					if ($first) {
 						$first = false;
 					} else {
-						echo ', &nbsp;';
+						echo $divider;
 					}
-					if (count(Database::$instances) === 1  && $name === 'default') {
+					if (count(Database::$instances) === 1 && $name === 'default') {
 						$name = null;
 					}
 					echo '<span class="statusbar-tab">';

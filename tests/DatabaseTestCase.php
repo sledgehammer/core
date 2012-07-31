@@ -57,8 +57,8 @@ abstract class DatabaseTestCase extends TestCase {
 		if ($this->dbLink == '__NOT_CONNECTED__') {
 			$parts = explode('\\', get_class($this));
 			$class = preg_replace('/Tests$/', '', array_pop($parts)); // Classname without namespace and "Tests" suffix
-			$this->dbName = 'TestDB_'.preg_replace('/[^0-9a-z_]*/i', '', $class); // Genereer databasenaam
-			$this->dbLink = $this->dbName;
+			$this->dbName = 'unittest_'.preg_replace('/[^0-9a-z_]*/i', '', $class); // Genereer databasenaam
+			$this->dbLink = substr($this->dbName, 9);
 
 			switch ($pdoDriver) {
 
