@@ -991,16 +991,17 @@ namespace Sledgehammer {
 				}
 				echo '</span>';
 			}
-			echo '</span></span>', $divider, "\n";
+			echo '</span></span>';
 		}
 		if (function_exists('memory_get_usage')) { // Geheugenverbruik in MiB tonen
-			echo 'Memory&nbsp;<b title="Current memory usage">', number_format(memory_get_usage() / 1048576, 2), '</b>';
+			echo $divider, 'Memory&nbsp;<b title="Current memory usage">', number_format(memory_get_usage() / 1048576, 2), '</b>';
 			if (function_exists('memory_get_peak_usage')) {
 				echo '<span style="margin: 0 1px;">/</span><b title="Peak memory usage">', number_format(memory_get_peak_usage() / 1048576, 2), '</b>';
 			}
-			echo '&nbsp;MiB', $divider, "\n";
+			echo '&nbsp;MiB';
 		}
 		if (class_exists('Sledgehammer\Database', false) && count(Database::$instances) > 0) {
+			echo $divider;
 			echo (count(Database::$instances) === 1) ? 'Database' : 'Databases';
 			$first = true;
 			foreach (Database::$instances as $name => $database) {
