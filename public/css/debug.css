@@ -172,7 +172,7 @@
 	display: block;
 	opacity: 0;
 	position: absolute;
-	bottom: 0px;
+	bottom: -23px;
 	left: -11px;
 	height: 20px;
 	background: #d6d6d6;
@@ -181,7 +181,7 @@
 	border-bottom: 1px solid #d5d5d5;
 	border-radius: 4px 4px 0 0;
 	white-space: nowrap;
-	line-height: 22px;
+	line-height: 20px;
 	padding: 0 13px;
 	box-shadow: inset 0 1px 0px #f1f1f1;
 	text-shadow: 0 1px 0 #eee;
