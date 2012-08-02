@@ -110,7 +110,7 @@ class AutoLoader extends Object {
 			return false;
 		}
 		$success = include_once($filename);
-		if (class_exists($definition, false) || interface_exists($definition, false)) {
+		if (class_exists($definition, false) || interface_exists($definition, false) || (version_compare(PHP_VERSION, '5.4.0') >= 0 && trait_exists($definition, false))) {
 			return true;
 		}
 		if ($success === true) { // file might already included.
@@ -352,6 +352,10 @@ class AutoLoader extends Object {
 							break;
 
 						case T_INTERFACE:
+							$state = 'INTERFACE';
+							break;
+
+						case T_TRAIT:
 							$state = 'INTERFACE';
 							break;
 					}
