@@ -44,11 +44,11 @@ class PreparedStatement extends PDOStatement {
 		$result = parent::execute($input_parameters);
 		$statement = $this->queryString;
 		$executedIn = (microtime(true) - $start);
-		if ($this->database->logLimit != 0) { // Only interpolate the query if it's going to be logged.
+		if ($this->database->logger->count < $this->database->logger->limit) { // Only interpolate the query if it's going to be logged.
 			$params = (count($input_parameters) === 0) ? $this->params : $input_parameters;
 			$statement = $this->interpolate($statement, $params);
 		}
-		$this->database->logStatement($statement, $executedIn);
+		$this->database->logger->append($statement, array('duration' => $executedIn));
 		if ($result === false) {
 			$this->database->reportError($statement);
 		} else {

@@ -943,13 +943,25 @@ namespace Sledgehammer {
 			}
 			$settings = $all_settings[ENVIRONMENT];
 		}
+		$db = false;
 		if (isset($settings[$link])) {
-			Database::$instances[$link] = new Database($settings[$link]);
-			return Database::$instances[$link];
+			$db = new Database($settings[$link]);
+			foreach (Logger::$instances as $name => $logger) {
+				if ($db->logger === $logger) {
+					$loggerName  = ($link === 'default') ? 'Database' : 'Database[<b>'.$link.'</b>]';
+					if (empty(Logger::$instances[$loggerName])) {
+						Logger::$instances[$loggerName] = $logger;
+						unset(Logger::$instances[$name]);
+					}
+					break;
+				}
+			}
+			Database::$instances[$link] = $db;
+			return $db;
 		}
 		if ($link === 'default' && count($settings) == 1) {
-			Database::$instances['default'] = current($settings);
-			return getDatabase(current($settings));
+			Database::$instances[$link] = key($settings);
+			return getDatabase(key($settings));
 		}
 		throw new InfoException('Database connection: "'.$link.'" is not configured', 'Available connections: '.quoted_human_implode(' and ', array_keys($settings)));
 		return false;
@@ -1000,23 +1012,11 @@ namespace Sledgehammer {
 			}
 			echo '&nbsp;MiB';
 		}
-		if (class_exists('Sledgehammer\Database', false) && count(Database::$instances) > 0) {
-			echo $divider;
-			echo (count(Database::$instances) === 1) ? 'Database' : 'Databases';
-			$first = true;
-			foreach (Database::$instances as $name => $database) {
-				if (is_object($database)) {
-					if ($first) {
-						$first = false;
-					} else {
-						echo $divider;
-					}
-					if (count(Database::$instances) === 1 && $name === 'default') {
-						$name = null;
-					}
-					echo '<span class="statusbar-tab">';
-					$database->debug(true, $name);
-					echo '</span>';
+		if (class_exists('Sledgehammer\Logger', false) && count(Logger::$instances) > 0) {
+			foreach (Logger::$instances as $name => $logger) {
+				if ($logger->count !== 0 || count($logger->entries) > 0) {
+					echo $divider;
+					$logger->statusbar($name);
 				}
 			}
 		}

@@ -15,43 +15,13 @@ class Database extends \PDO {
 	 * Report MySQL warnings.
 	 * @var bool
 	 */
-	public $reportWarnings;
+	public $reportWarnings = true;
 
 	/**
-	 * The remaining amount of queries that will be logged in full (when logLimit reaches 0, only the queryCount and executionTime will be logged).
-	 * @var int
+	 * Logs en profiles the executed queries.
+	 * @var Logger
 	 */
-	public $logLimit = 1000;
-
-	/**
-	 * Add N filename and linenumber traces to the log.
-	 * @var int
-	 */
-	public $logBacktrace = 0;
-
-	/**
-	 * Total time it took to execute all queries. (in seconds)
-	 * @var float
-	 */
-	public $executionTime = 0;
-
-	/**
-	 * Structure containing all logged executed queries.
-	 * @var array
-	 */
-	public $log = array();
-
-	/**
-	 * Number of executed queries.
-	 * @var int
-	 */
-	public $queryCount;
-
-	/**
-	 * Only log the first 50KiB of a long query.
-	 * @var int
-	 */
-	public $logCharacterLimit = 51200;
+	public $logger;
 
 	/**
 	 * Remember the previous insertId when using warnings. (Because "SHOW WARNINGS" query resets the value of lastInsertId() to "0")
@@ -157,11 +127,22 @@ class Database extends \PDO {
 			}
 		}
 		// Parse $options
+		$this->logger = new Logger('Database['.$dsn.']', array(
+			'plural' => 'queries',
+			'renderer' => array($this, 'renderLog'),
+			'start' => 0,
+			'columns' => array('SQL', 'Duration')
+		));
 		foreach ($options as $property => $value) {
-			if (in_array($property, array('logLimit', 'logBacktrace', 'reportWarnings', 'logCharacterLimit'))) {
-				$this->$property = $value;
+			if (in_array($property, array('logLimit', 'logBacktrace', 'logCharacterLimit'))) {
 				unset($options[$property]);
+				$property = lcfirst(substr($property, 3));
+				$this->logger->$property = $value;
+
+			} elseif ($property === 'reportWarnings') {
+				$this->$property = $value;
 			}
+
 		}
 		if (empty($options[\PDO::ATTR_DEFAULT_FETCH_MODE])) {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
@@ -170,13 +151,14 @@ class Database extends \PDO {
 			$options[\PDO::ATTR_STATEMENT_CLASS] = array('Sledgehammer\PDOStatement');
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
+		$this->logger->append('Database connection to '.$dsn, array('duration' => (microtime(true) - $start)));
+		$this->logger->count--;
+
 		$this->driver = $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
 		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			parent::exec('SET sql_warnings = ON');
 		}
-		$this->logStatement('[DSN] "'.$dsn.'"', (microtime(true) - $start));
-		$this->queryCount = 0;
 	}
 
 	/**
@@ -189,7 +171,7 @@ class Database extends \PDO {
 	function exec($statement) {
 		$start = microtime(true);
 		$result = parent::exec($statement);
-		$this->logStatement($statement, (microtime(true) - $start));
+		$this->logger->append((string) $statement, array('duration' => (microtime(true) - $start)));
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
@@ -207,8 +189,9 @@ class Database extends \PDO {
 	 */
 	function query($statement) {
 		$start = microtime(true);
+		$statement = (string) $statement;
 		$result = parent::query($statement);
-		$this->logStatement($statement, (microtime(true) - $start));
+		$this->logger->append($statement, array('duration' => (microtime(true) - $start)));
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
@@ -230,7 +213,7 @@ class Database extends \PDO {
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PreparedStatement', array($this)));
 		$result = parent::prepare($statement, $driver_options);
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PDOStatement')); // Restore default class
-		$this->executionTime += (microtime(true) - $start);
+		$this->logger->totalDuration += (microtime(true) - $start);
 		if ($result === false) {
 			$this->reportError($statement);
 		} else {
@@ -524,45 +507,34 @@ class Database extends \PDO {
 	 *
 	 * @param string $sql
 	 * @param int $truncated Number of bytes that where truncated
-	 * @param float $time
+	 * @param float $duration
 	 * @param array $backtrace
 	 * @return string
 	 */
-	private function highlight($sql, $truncated, $time, $backtrace) {
-		$sql = htmlspecialchars($sql, ENT_COMPAT, Framework::$charset);
+	function renderLog($entry, $meta) {
+		$sql = htmlspecialchars($entry, ENT_COMPAT, 'ISO-8859-15');
 		static $regex = null;
 		if ($regex === null) {
 			$startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
 			$inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
 			$regex = '/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/';
 		}
-		$sql = preg_replace($regex, '<span class="sql_keyword">\\0</span>', $sql);
-		$sql = preg_replace('/`[^`]+`/', '<span class="sql_identifier">\\0</span>', $sql);
-		if ($time > 0.1) {
-			$color = 'red';
-		} elseif ($time > 0.01) {
-			$color = '#ffa500';
+		$sql = preg_replace($regex, '<span class="sql-keyword">\\0</span>', $sql);
+		$sql = preg_replace('/`[^`]+`/', '<span class="sql-identifier">\\0</span>', $sql);
+		if (isset($meta['truncated'])) {
+			$kib = round($meta['truncated'] / 1024);
+			$sql .= '<span class="logentry-alert">...'.$kib.' KiB truncated</span>';
+		}
+		echo '<td class="sql-statement">', $sql, '</td>';
+		$duration = $meta['duration'];
+		if ($duration > 0.2) {
+			$color = 'logentry-alert';
+		} elseif ($duration > 0.05) {
+			$color = 'logentry-warning';
 		} else {
-			$color = '#999';
+			$color = 'logentry-debug';
 		}
-		if ($truncated) {
-			$kib = round($truncated / 1024);
-			$sql .= '<b style="color:#ffa500">...'.$kib.' KiB truncated</b>';
-		}
-		if ($backtrace) {
-			$call = array_shift($backtrace);
-			$trace = ' in '.$call['file'].' on line <b">'.$call['line'].'</b>';
-			$tooltip = '';
-			foreach ($backtrace as $call) {
-				$tooltip .= ' '.$call['file'].' on line '.$call['line']."\n";
-			}
-			$trace = ' <span class="sql_backtrace" title="'.HTML::escape($tooltip).'">'.$trace.'</span>';
-		} elseif ($backtrace !== null) {
-			$trace = ' backtrace failed';
-		} else {
-			$trace = '';
-		}
-		return $sql.' <em class="execution_time" style="color:'.$color.'">('.number_format($time, 3).' sec)</em>'.$trace;
+		echo '<td class="logentry-number ', $color, '"><b>', format_parsetime($duration), '</b>&nbsp;sec</td>';
 	}
 
 	/**
@@ -601,7 +573,7 @@ class Database extends \PDO {
 				$this->reportError('SHOW WARNINGS');
 				return;
 			}
-			$this->executionTime += (microtime(true) - $start);
+			$this->logger->totalDuration += (microtime(true) - $start);
 			if ($warnings->rowCount()) {
 				foreach ($warnings->fetchAll(\PDO::FETCH_ASSOC) as $warning) {
 					notice('SQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
@@ -610,65 +582,6 @@ class Database extends \PDO {
 				// PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.
 			}
 		}
-	}
-
-	/**
-	 * Append the statement to $this->log
-	 * Very large queries are trucated based on the $this->logCharacterLimit
-	 *
-	 * @param string $statement  The SQL statement
-	 * @param float $executedIn  The time it took to execute the query
-	 * @return void
-	 */
-	function logStatement($statement, $executedIn) {
-		$this->queryCount++;
-		$this->executionTime += $executedIn;
-		if ($this->logLimit == 0) {
-			return;
-		}
-		$sql = $statement;
-		$sql_length = strlen($sql);
-		$truncated = 0;
-		if ($sql_length > $this->logCharacterLimit) {
-			$sql = substr($sql, 0, $this->logCharacterLimit);
-			$truncated = ($sql_length - $this->logCharacterLimit);
-		}
-		$this->log[] = array('sql' => $sql, 'time' => $executedIn, 'truncated' => $truncated, 'backtrace' => $this->logBacktrace());
-		$this->logLimit--;
-	}
-
-	/**
-	 * Trace the location where the query was executed from.
-	 *
-	 * @return null|array
-	 */
-	private function logBacktrace() {
-		if ($this->logBacktrace == 0) {
-			return null;
-		}
-		$backtrace = debug_backtrace();
-		$index = 0;
-		foreach ($backtrace as $index => $call) {
-			if ($call['file'] != __FILE__ && isset($call['function']) && $call['function'] != 'logStatement') { // Skip calls inside this class (and the logStatement call from PreparedStatement)
-				break;
-			}
-		}
-		$backtrace = array_slice($backtrace, $index);
-		$depth = (int) $this->logBacktrace;
-		$trace = array();
-		foreach ($backtrace as $call) {
-			if ($depth === 0) {
-				break;
-			}
-			$depth--;
-			if (isset($call['file']) && isset($call['line'])) {
-				$trace[] = array(
-					'file' => str_replace(PATH, '', $call['file']),
-					'line' => $call['line']
-				);
-			}
-		}
-		return $trace;
 	}
 
 }

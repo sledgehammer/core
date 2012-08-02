@@ -340,13 +340,18 @@ class ErrorHandler {
 				case E_USER_ERROR:
 				case E_USER_WARNING:
 					if (class_exists('Sledgehammer\Database', false) && !empty(Database::$instances)) {
-						echo '<b>Databases</b><br />';
-						$popup = $this->email ? false : true;
-						foreach (Database::$instances as $link => $Database) {
-							if (is_object($Database) && method_exists($Database, 'debug')) {
-								echo $link, ': ';
-								$Database->debug($popup);
-								echo "<br />\n";
+						if ($this->email == false) {
+							echo '<b>Databases</b><br />';
+						}
+						foreach (Database::$instances as $link => $db) {
+							if (is_object($db) && $db->logger instanceof Logger) {
+								if ($this->email == false) {
+									$db->logger->statusbar($link.': ');
+									echo "<br />\n";
+								} else {
+									echo '<b>Database[', $link, ']</b><br />';
+									$db->logger->render();
+								}
 							}
 						}
 					}
