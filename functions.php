@@ -1014,7 +1014,10 @@ namespace Sledgehammer {
 		}
 		if (class_exists('Sledgehammer\Logger', false) && count(Logger::$instances) > 0) {
 			foreach (Logger::$instances as $name => $logger) {
-				if ($logger->count !== 0 || count($logger->entries) > 0) {
+				if ($logger->count !== 0) {
+					echo $divider;
+					$logger->statusbar($name);
+				} elseif (count($logger->entries) > 0 && $logger->totalDuration > 0.05) {
 					echo $divider;
 					$logger->statusbar($name);
 				}

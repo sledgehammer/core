@@ -58,14 +58,14 @@ abstract class DatabaseTestCase extends TestCase {
 			$parts = explode('\\', get_class($this));
 			$class = preg_replace('/Tests$/', '', array_pop($parts)); // Classname without namespace and "Tests" suffix
 			$this->dbName = 'unittest_'.preg_replace('/[^0-9a-z_]*/i', '', $class); // Genereer databasenaam
-			$this->dbLink = substr($this->dbName, 9);
+			$this->dbLink = $this->dbName;
 
 			switch ($pdoDriver) {
 
 				case 'mysql':
 					$this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
 					;
-					$db = new Database('mysql://root@localhost');
+					$db = new Database('mysql://root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
 					$db->reportWarnings = false;
 					$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
 					$db->query('CREATE DATABASE '.$this->dbName);
@@ -73,7 +73,7 @@ abstract class DatabaseTestCase extends TestCase {
 					break;
 
 				case 'sqlite':
-					$db = new Database('sqlite::memory:');
+					$db = new Database('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
 					break;
 				default:
 					throw new \Exception('Unsupported pdoDriver');
@@ -145,10 +145,10 @@ abstract class DatabaseTestCase extends TestCase {
 			$message = 'SQL ['.$sql.'] should be executed';
 		}
 		$db = $this->getDatabase();
-		$query_log = array_slice($db->log, $this->queryCount); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
+		$entries = array_slice($db->logger->entries, $this->queryCount); // Haal de queries uit de query_log die sinds de setUp() van deze test_*() zijn uitgevoert
 		$queries = array();
-		foreach ($query_log as $row) {
-			$queries[] = (string) $row['sql'];
+		foreach ($entries as $row) {
+			$queries[] = (string) $row[0];
 		}
 		foreach ($queries as $query) {
 			if ($sql == $query) {
@@ -172,8 +172,8 @@ abstract class DatabaseTestCase extends TestCase {
 	 */
 	function assertLastQuery($sql, $message = NULL) {
 		$db = $this->getDatabase();
-		$query = $db->log[count($db->log) - 1];
-		if ($sql == $query['sql']) {
+		$entry = $db->logger->entries[count($db->logger->entries) - 1][0];
+		if ($sql == $entry) {
 			if ($message === NULL) {
 				$message = 'SQL ['.$sql.'] is executed';
 			}
@@ -181,7 +181,7 @@ abstract class DatabaseTestCase extends TestCase {
 			return true;
 		} else {
 			if ($message === NULL) {
-				$message = 'Unexpected SQL ['.$query['sql'].'], expecting ['.$sql.']';
+				$message = 'Unexpected SQL ['.$entry.'], expecting ['.$sql.']';
 			}
 			$this->fail($message);
 			return false;
@@ -196,7 +196,7 @@ abstract class DatabaseTestCase extends TestCase {
 	 */
 	function assertQueryCount($expectedCount, $message = null) {
 		$db = $this->getDatabase();
-		$count = count($db->log) - $this->queryCount;
+		$count = count($db->logger->entries) - $this->queryCount;
 		if ($message === null) {
 			$message = 'Number of queries ('.$count.') should match '.$expectedCount;
 		}
@@ -240,7 +240,7 @@ abstract class DatabaseTestCase extends TestCase {
 
 				case 'sqlite';
 					unset(Database::$instances[$this->dbLink]);
-					$newDb = new Database('sqlite::memory:');
+					$newDb = new Database('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
 					foreach ($db as $property => $value) {
 						$newDb->$property = $value;
 					}
@@ -250,7 +250,7 @@ abstract class DatabaseTestCase extends TestCase {
 			}
 			$this->fillDatabase($db);
 		}
-		$this->queryCount = count($db->log);
+		$this->queryCount = count($db->logger->entries);
 	}
 
 }

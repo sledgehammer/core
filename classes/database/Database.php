@@ -127,23 +127,22 @@ class Database extends \PDO {
 			}
 		}
 		// Parse $options
-		$this->logger = new Logger('Database['.$dsn.']', array(
+		$loggerOptions = array(
+			'identifier' => 'Database['.$dsn.']',
 			'plural' => 'queries',
 			'renderer' => array($this, 'renderLog'),
 			'start' => 0,
 			'columns' => array('SQL', 'Duration')
-		));
+		);
 		foreach ($options as $property => $value) {
-			if (in_array($property, array('logLimit', 'logBacktrace', 'logCharacterLimit'))) {
+			if (substr($property, 0, 3) === 'log') {
+				$loggerOptions[lcfirst(substr($property, 3))]= $value;
 				unset($options[$property]);
-				$property = lcfirst(substr($property, 3));
-				$this->logger->$property = $value;
-
 			} elseif ($property === 'reportWarnings') {
 				$this->$property = $value;
 			}
-
 		}
+		$this->logger = new Logger($loggerOptions);
 		if (empty($options[\PDO::ATTR_DEFAULT_FETCH_MODE])) {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}

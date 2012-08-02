@@ -86,19 +86,20 @@ class Logger extends Object {
 
 	/**
 	 * Constructor
-	 * @param string $name
 	 * @param array $options
 	 */
-	function __construct($name = 'Log', $options = array()) {
-		if (isset(self::$instances[$name])) {
+	function __construct($options = array()) {
+		$identifier =(isset($options['identifier'])) ? $options['identifier'] : 'Log';
+		if (isset(self::$instances[$identifier])) {
 			$suffix = 2;
-			while (isset(self::$instances[$name.'['.$suffix.']'])) {
+			while (isset(self::$instances[$identifier.'['.$suffix.']'])) {
 				// also exists, check again.
 				$suffix++;
 			}
-			$name = $name.'['.$suffix.']';
+			$identifier = $identifier.'['.$suffix.']';
 		}
-		self::$instances[$name] = $this;
+		self::$instances[$identifier] = $this;
+		unset($options['identifier']);
 		foreach ($options as $property => $value) {
 			$this->$property = $value;
 		}
@@ -147,7 +148,7 @@ class Logger extends Object {
 		if ($popup) {
 			$id = 'logger_C'.$this->count.'_R'.uniqid(); // Generate unique ID
 			echo '<div id="'.$id.'" class="statusbar-log" tabindex="-1" style="display:none;">';
-//			echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" class="log-container-close">&times;</a>';
+			echo '<div class="statusbar-log-overlay" onclick="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';"></div>';
 			$this->render();
 			echo '</div>';
 			echo '<span class="statusbar-tab"><a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); document.getElementById(\''.$id.'\').focus(); return false">';
