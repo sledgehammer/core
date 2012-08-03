@@ -36,12 +36,16 @@ class PreparedStatement extends PDOStatement {
 	 * Executes a prepared statement.
 	 * @link http://php.net/manual/en/pdostatement.execute.php
 	 *
-	 * @param array $input_parameters
+	 * @param array $input_parameters (optional)
 	 * @return bool
 	 */
 	function execute($input_parameters = array()) {
 		$start = microtime(true);
-		$result = parent::execute($input_parameters);
+		if (func_num_args() === 0) {
+			$result = parent::execute();
+		} else {
+			$result = parent::execute($input_parameters);
+		}
 		$statement = $this->queryString;
 		$executedIn = (microtime(true) - $start);
 		if ($this->database->logger->count < $this->database->logger->limit) { // Only interpolate the query if it's going to be logged.

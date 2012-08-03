@@ -92,11 +92,11 @@ class Logger extends Object {
 		$identifier =(isset($options['identifier'])) ? $options['identifier'] : 'Log';
 		if (isset(self::$instances[$identifier])) {
 			$suffix = 2;
-			while (isset(self::$instances[$identifier.'['.$suffix.']'])) {
+			while (isset(self::$instances[$identifier.'('.$suffix.')'])) {
 				// also exists, check again.
 				$suffix++;
 			}
-			$identifier = $identifier.'['.$suffix.']';
+			$identifier = $identifier.'('.$suffix.')';
 		}
 		self::$instances[$identifier] = $this;
 		unset($options['identifier']);

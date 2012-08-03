@@ -998,8 +998,8 @@ namespace Sledgehammer {
 			if (defined('Sledgehammer\INITIALIZED')) {
 				echo ' <span class="statusbar-popout">Init&nbsp;<b>', format_parsetime(INITIALIZED - STARTED), '</b>&nbsp;sec';
 				if (defined('Sledgehammer\GENERATED')) {
-					echo $divider, 'Execute&nbsp;<b>', format_parsetime(GENERATED - INITIALIZED), '</b>&nbsp;sec', $divider;
-					echo 'Render&nbsp;<b>', format_parsetime($now - GENERATED), '</b>&nbsp;sec';
+					echo $divider, 'Execute&nbsp;<b>', format_parsetime(GENERATED - INITIALIZED), '</b>&nbsp;sec';
+					echo $divider, 'Render&nbsp;<b>', format_parsetime($now - GENERATED), '</b>&nbsp;sec';
 				}
 				echo '</span>';
 			}
