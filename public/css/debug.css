@@ -113,6 +113,11 @@
 	height: 20px;
 	background: #d6d6d6;
 	background-image: -webkit-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	background-image: -webkit-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	background-image:    -moz-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	background-image:     -ms-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	background-image:      -o-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
+	background-image:         linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
 	border: 1px solid #626262;
 	border-bottom: 1px solid #d5d5d5;
 	border-radius: 4px 4px 0 0;
@@ -140,7 +145,7 @@
 	bottom: 0;
 	overflow: auto;
 	display: block;
-	padding: 0;
+	padding: 0 20px;
 	color: #333;
 	text-shadow: none;
 	text-align: left;
@@ -162,29 +167,31 @@
 	z-index: 1;
 	position: relative;
 }
-.log-header {
-	background: #bcbcbc;
-	background-image: -webkit-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
-	background-image:    -moz-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
-	background-image:     -ms-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
-	background-image:      -o-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
-	background-image:         linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+.log-container {
 	border: 1px solid #999999;
-	border-bottom: none;
-	padding: 2px 6px;
-	font: normal 11px/1.5 'Lucida Grande', Helvetica, sans-serif;
+	border-collapse: collapse;
+	border-spacing: 0;
 }
 .log-header-column {
-	border-left: 1px solid #999999;
 	padding: 3px 6px;
 	margin: 0;
 	text-align: left;
 	font-weight: normal;
 	text-shadow: 0 1px 0 #fff;
 	white-space: nowrap;
+	border-left: 1px solid #999999;
+	border-bottom: 1px solid #999999;
+	background: #bcbcbc;
+	background-image: -webkit-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+	background-image:    -moz-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+	background-image:     -ms-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+	background-image:      -o-linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+	background-image:         linear-gradient(bottom, #d1d1d1 0%, #f0f0f0 100%);
+	padding: 2px 7px;
+	font: normal 11px/16px 'Lucida Grande', Helvetica, sans-serif;
 }
 .log-entries {
-	font: normal 11px/1.5 'Lucida Grande', Helvetica, sans-serif;
+	font: normal 11px/16px 'Lucida Grande', Helvetica, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	font-smoothing: antialiased;
 	border: 1px solid #999999;
@@ -192,7 +199,7 @@
 }
 .logentry > td {
 	border-left: 1px solid #b3b3b3;
-	padding: 2px 6px;
+	padding: 2px 7px;
 	margin: 0;
 	white-space: pre-wrap;
 	vertical-align: top;
@@ -217,8 +224,9 @@
 .logentry-debug {
 	color: #969896;
 }
-.logentry .sql-statement {
-	font: 10px Monaco, monospace;
+.logentry-code {
+	padding: 3px 7px;
+	font: 10px/16px Monaco, monospace;
 	-webkit-font-smoothing: none;
 	font-smoothing: none;
 }

@@ -524,7 +524,7 @@ class Database extends \PDO {
 			$kib = round($meta['truncated'] / 1024);
 			$sql .= '<span class="logentry-alert">...'.$kib.' KiB truncated</span>';
 		}
-		echo '<td class="sql-statement">', $sql, '</td>';
+		echo '<td class="logentry-code">', $sql, '</td>';
 		$duration = $meta['duration'];
 		if ($duration > 0.2) {
 			$color = 'logentry-alert';
