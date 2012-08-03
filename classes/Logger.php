@@ -32,7 +32,7 @@ class Logger extends Object {
 	public $totalDuration = 0.0;
 
 	/**
-	 * Maximum number of "actions" that will be logged.
+	 * Maximum number of "actions" that will be logged. (-1: Unlimited)
 	 * @var int
 	 */
 	public $limit = -1;
@@ -119,7 +119,7 @@ class Logger extends Object {
 		if (isset($meta['duration'])) {
 			$this->totalDuration += $meta['duration'];
 		}
-		if ($this->limit >= $this->count) {
+		if ($this->limit === -1 || $this->count > $this->limit) {
 			return; // Limit reached
 		}
 		$length = strlen($entry);

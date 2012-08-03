@@ -129,10 +129,11 @@ class Database extends \PDO {
 		// Parse $options
 		$loggerOptions = array(
 			'identifier' => 'Database['.$dsn.']',
-			'plural' => 'queries',
+			'limit' => 1000,
 			'renderer' => array($this, 'renderLog'),
 			'start' => 0,
-			'columns' => array('SQL', 'Duration')
+			'plural' => 'queries',
+			'columns' => array('SQL', 'Duration'),
 		);
 		foreach ($options as $property => $value) {
 			if (substr($property, 0, 3) === 'log') {

@@ -169,7 +169,6 @@
 }
 .log-container {
 	border: 1px solid #999999;
-	border-collapse: collapse;
 	border-spacing: 0;
 }
 .log-header-column {
