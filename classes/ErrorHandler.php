@@ -339,19 +339,15 @@ class ErrorHandler {
 				case E_WARNING:
 				case E_USER_ERROR:
 				case E_USER_WARNING:
-					if (class_exists('Sledgehammer\Database', false) && !empty(Database::$instances)) {
-						if ($this->email == false) {
-							echo '<b>Databases</b><br />';
-						}
-						foreach (Database::$instances as $link => $db) {
-							if (is_object($db) && $db->logger instanceof Logger) {
-								if ($this->email == false) {
-									$db->logger->statusbar($link.': ');
-									echo "<br />\n";
-								} else {
-									echo '<b>Database[', $link, ']</b><br />';
-									$db->logger->render();
-								}
+					if (class_exists('Sledgehammer\Logger', false) && !empty(Logger::$instances)) {
+						echo '<br />';
+						foreach (Logger::$instances as $name => $logger) {
+							if ($this->email == false) {
+								$logger->statusbar($name.': ');
+								echo "<br />\n";
+							} else {
+								echo '<b>', $name, ']<br />';
+								$logger->render();
 							}
 						}
 					}
