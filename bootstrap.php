@@ -44,18 +44,20 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 		 */
 		define('Sledgehammer\APPLICATION_DIR', PATH.'application'.DIRECTORY_SEPARATOR);
 	}
-	/**
-	 * Errorlevel for all errors messages. (E_ALL doesn't include E_STRICT messages)
-	 */
-	define('Sledgehammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing level that includes all message types (E_ALL doesn't include E_STRICT)
-	error_reporting(E_MAX); // Activate the maximum error_level
-	if (defined('SORT_NATURAL') === false) {
+
+	if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
 		/**
-		 * "natural order" sorting method for Collection->orderBy()
-		 * Uses natsort()
+		 * Errorlevel for all errors messages.
 		 */
-		define('Sledgehammer\SORT_NATURAL', -1);
+		define('Sledgehammer\E_MAX', E_ALL);
+	} else {
+		// Declare constans missing in PHP 5.3
+		define('Sledgehammer\SORT_NATURAL', 6); // "natural order" sorting method for Collection->orderBy()
+		define('Sledgehammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing level that includes all message types (E_ALL doesn't include E_STRICT)
+		define('T_TRAIT', -1); // Used in the AutoLoader
 	}
+	error_reporting(E_MAX); // Activate the maximum error_level
+
 	/**
 	 * Case insensitive "natural order" sorting method for Collection->orderBy()
 	 * Uses natcasesort()
