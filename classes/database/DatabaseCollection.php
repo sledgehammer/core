@@ -48,6 +48,62 @@ class DatabaseCollection extends Collection {
 	}
 
 	/**
+	 * Return a new collection where each element is a subselection of the original element.
+	 * (Known as "collect" in Ruby or "pluck" in underscore.js)
+	 *
+	 * @param string|array $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
+	 * @param string|null|false $selectKey  (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
+	 * @return Collection
+	 */
+	function select($selector, $selectKey = false) {
+		if ($this->data !== null || is_string($this->sql) || (is_object($selector) && is_callable($selector))) {
+			return parent::select($selector, $selectKey);
+		}
+		if (is_int($selector)) {
+			$selector = (string) $selector;
+		}
+		$selectorPaths = is_string($selector) ? array($selector => $selector) : $selector;
+		$hasKeySelector = ($selectKey !== false && $selectKey !== null);
+		if ($hasKeySelector) {
+			array_key_unshift($selectorPaths, $selectKey, $selectKey);
+		}
+		if (count($selectorPaths) === 0) { // empty selector?
+			return parent::select($selector, $selectKey);
+		}
+		$isWildcardSelector = ($this->sql->columns === '*' || $this->sql->columns == array('*' => '*'));
+		if ($isWildcardSelector === false && (is_string($this->sql->columns) || count($selectorPaths) >= count($this->sql->columns))) {
+			// The selector can't be a subsection of current columns.
+			return parent::select($selector, $selectKey);
+		}
+
+		$columns = array();
+		foreach ($selectorPaths as $to => $from) {
+			$column = $this->convertPathToColumn($from);
+			$alias = $this->convertPathToColumn($to);
+			if ($column === false || $alias === false) { // Path can't be mapped to column
+				return parent::select($selector, $selectKey);
+			}
+			if ($isWildcardSelector === false) {
+				if (isset($this->sql->columns[$column])) {
+					$column = $this->sql->columns[$column]; // Use the original column/calculation (just change the alias)
+				} else {
+					// @todo Use array_search() for support of indexed array of columns.
+					return parent::select($selector, $selectKey);
+				}
+			}
+			if ($hasKeySelector) {
+				$alias = $column; // Don't alias in SQL, but (re)use the $selector.
+			}
+			$columns[$alias] = $column;
+		}
+		$collection = new DatabaseCollection($this->sql->select($columns), $this->dbLink);
+		if ($hasKeySelector || is_string($selector)) { // Does the $collection requires additional selecting?
+			return $collection->select($selector, $selectKey);
+		}
+		return $collection;
+	}
+
+	/**
 	 * Return a subsection of the collection based on the conditions.
 	 *
 	 * Convert the $conditions to SQL object when appropriate.
@@ -67,12 +123,16 @@ class DatabaseCollection extends Collection {
 		$db = getDatabase($this->dbLink);
 		$sql = $this->sql;
 		// The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
-		foreach ($conditions as $column => $value) {
-			if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $column, $matches)) {
-				$column = $matches[1];
+		foreach ($conditions as $path => $value) {
+			if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
+				$column = $this->convertPathToColumn($matches[1]);
 				$operator = $matches[2];
 			} else {
+				$column = $this->convertPathToColumn($path);
 				$operator = '==';
+			}
+			if ($column === false) { // Converting to path failed?
+				return parent::where($conditions);
 			}
 			if ($value === null) {
 				switch ($operator) {
@@ -98,10 +158,10 @@ class DatabaseCollection extends Collection {
 						$expectation = $db->quote($expectation);
 						break;
 				}
-				$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' '.$expectation);
+				$sql = $sql->andWhere($column.' '.$operator.' '.$expectation);
 			} else {
 				if ($operator === '!=') {
-					$expression = '('.$db->quoteIdentifier($column).' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$db->quoteIdentifier($column).' IS NULL)'; // Include
+					$sql = $sql->andWhere('('.$column.' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$column.' IS NULL)');
 				} elseif ($operator === 'IN') {
 					if ((is_array($value) || $value instanceof \Traversable) === false) {
 						notice('Operator IN expects an array or Traversable', $value);
@@ -111,12 +171,12 @@ class DatabaseCollection extends Collection {
 					foreach ($value as $val) {
 						$quoted[] = $this->quote($db, $column, $val);
 					}
-					$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' ('.implode(', ', $quoted).')');
+					$sql = $sql->andWhere($column.' '.$operator.' ('.implode(', ', $quoted).')');
 				} else {
 					if ($operator === '==') {
 						$operator = '=';
 					}
-					$sql = $sql->andWhere($db->quoteIdentifier($column).' '.$operator.' '.$this->quote($db, $column, $value));
+					$sql = $sql->andWhere($column.' '.$operator.' '.$this->quote($db, $column, $value));
 				}
 			}
 		}
@@ -278,6 +338,22 @@ class DatabaseCollection extends Collection {
 		return $db->quote($value);
 	}
 
+	/**
+	 * Convert a path to a (escaped) columnname.
+	 *
+	 * @param string $path
+	 */
+	private function convertPathToColumn($path) {
+		$compiled = PropertyPath::compile($path);
+		if (count($compiled) > 1) {
+			return false;
+		}
+		if (in_array($compiled[0][0], array(PropertyPath::TYPE_ANY, PropertyPath::TYPE_ELEMENT))) {
+			$db = getDatabase($this->dbLink);
+			return $db->quoteIdentifier($compiled[0][1]);
+		}
+		return false;
+	}
 }
 
 ?>

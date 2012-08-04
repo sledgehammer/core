@@ -25,7 +25,11 @@ class SQL extends Object {
 	public $select = 'SELECT';
 
 	/**
-	 * Array met kolommen, als de key een string is wordt deze gebruikt als naam "$key AS $value"
+	 * Array or string containing the fields, When the key is a string it will be used as alias "$value AS $key"
+	 * "*" becomes "*"
+	 * "id, name" becomes "id, name"
+	 * array('id', 'name') becomes "id, name"
+	 * array('id', 'name2' => 'name') becomes "id, name AS name2"
 	 * @var array|string
 	 */
 	public $columns = array();

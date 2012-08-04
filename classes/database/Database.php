@@ -235,7 +235,7 @@ class Database extends \PDO {
 			return self::$quotedIdentifiers[$this->driver][$identifier];
 		}
 		$addQuotes = false;
-		if (preg_match('/^[0-9a-z_]+$/i', $identifier) == false) { // Does the column contain a strange character?
+		if (preg_match('/^[^0-9][0-9a-z_]+$/i', $identifier) == false) { // Does the column contain a strange character?
 			$addQuotes = true;
 		} else {
 			// generic keywords (included in both sqlite and mysql)
