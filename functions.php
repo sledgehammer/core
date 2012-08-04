@@ -925,6 +925,9 @@ namespace Sledgehammer {
 	 * @return \Sledgehammer\Database
 	 */
 	function getDatabase($link = 'default') {
+		if ($link instanceof Database) {
+			return $link;
+		}
 		if (isset(Database::$instances[$link])) {
 			if (is_string(Database::$instances[$link])) { // Is dit een verwijzing naar een andere database?
 				return getDatabase(Database::$instances[$link]);
