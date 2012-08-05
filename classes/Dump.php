@@ -133,8 +133,9 @@ class Dump extends Object {
 			report_exception($e);
 		}
 		echo "\n</pre>\n";
-		if (defined('Sledgehammer\WEBROOT')) {
-			echo "<script type=\"text/javascript\">window.$ || document.write('<script src=\"".WEBROOT."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
+		if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
+			$webroot = defined('Sledgehammer\WEBPATH') ? WEBPATH : WEBROOT;
+			echo "<script type=\"text/javascript\">window.$ || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
 			echo "<script type=\"text/javascript\">\n";
 			echo "(function () {\n";
 			echo "	var dump = $('#".$id."');\n";
