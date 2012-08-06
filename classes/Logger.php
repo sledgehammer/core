@@ -119,7 +119,7 @@ class Logger extends Object {
 		if (isset($meta['duration'])) {
 			$this->totalDuration += $meta['duration'];
 		}
-		if ($this->limit === -1 || $this->count > $this->limit) {
+		if ($this->limit !== -1 && $this->count > $this->limit) {
 			return; // Limit reached
 		}
 		$length = strlen($entry);
