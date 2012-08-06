@@ -8,11 +8,15 @@ namespace Sledgehammer;
 if (!defined('Sledgehammer\CORE_DIR')) {
 
 	// Define constants
-	if (!defined('ENVIRONMENT') && !defined('Sledgehammer\ENVIRONMENT')) {
-		/**
-		 * The configured environment. Uses $_SERVER['APPLICATION_ENV'] or uses 'production' as fallback.
-		 */
-		define('Sledgehammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+	if (defined('Sledgehammer\ENVIRONMENT') === false) {
+		if (defined('ENVIRONMENT') === false) {
+			/**
+			 * The configured environment. Uses $_SERVER['APPLICATION_ENV'] or uses 'production' as fallback.
+			 */
+			define('Sledgehammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+		} else {
+			define('Sledgehammer\ENVIRONMENT', ENVIRONMENT);
+		}
 	}
 	if (ENVIRONMENT === 'development' || ENVIRONMENT === 'phpunit') {
 		ini_set('display_errors', true);
