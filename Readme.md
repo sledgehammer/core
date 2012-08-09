@@ -1,13 +1,12 @@
-
 Sledgehammer Core
 ------------------
 
-Core fasilitates the base and intialisation of the Sledgehammer Framework.
+Core facilitates the base and initialisation of the Sledgehammer Framework.
 
 Scope
 ------
 * Framework initialisation (+Module detection & initialisation)
-* A collection of global functions (that should be included in php)
+* A collection of global functions (that should be included in php, imho)
 * Debugging & Error-reporting and Profiling functionality.
 
 
@@ -36,7 +35,7 @@ MODULE_DIR  : The absolute (server)path of the sledgehammer (module) folder
 
 Misc
 ------
-$_SERVER['SERVER_ADMIN'] wordt gebruikt als ErrorHander email in non-development modus.
+$_SERVER['SERVER_ADMIN'] is used by the ErrorHander as the e-mail address in non-development modes.
 
 = Outside the scope =
 
