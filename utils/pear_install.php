@@ -31,10 +31,10 @@ $targets = array(
 //	'extsrc' => ?,
 );
 $pear = new PearInstaller($targets);
-$pear->addListener('channelAdded', function ($sender, $domain, $channel) {
+$pear->on('channelAdded', function ($sender, $domain, $channel) {
 			echo 'Channel "'.$domain.'" loaded. ('.count($channel['packages'])." packages)\n";
 		});
-$pear->addListener('installed', function ($sender, $package, $version) {
+$pear->on('installed', function ($sender, $package, $version) {
 			echo '  '.$package.' ['.$version."] installed.\n";
 		});
 

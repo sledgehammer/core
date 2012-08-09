@@ -17,7 +17,7 @@ namespace Sledgehammer;
  * }
  *
  * $button = new Button();
- * $button->addListener(function ($sender) {
+ * $button->on('click', function ($sender) {
  *   echo 'clicked';
  * });
  *
@@ -74,36 +74,41 @@ abstract class Observable extends Object {
 	 *
 	 * @param string $event
 	 * @param Closure|string|array $callback
-	 * @param string $identifier  The
-	 * @return bool
+	 * @return string identifier
 	 */
-	function addListener($event, $callback, $identifier = null) {
+	function on($event, $callback) {
 		if (is_callable($callback) == false) {
-			warning('Parameter $callback issn\'t callable', $callback);
-			return false;
+			throw new InfoException('Parameter $callback issn\'t callable', $callback);
 		}
 		if ($this->hasEvent($event) === false) {
-			warning('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
-			return false;
+
+			$availableEvents = array_keys($this->events);
+			$availableEvents[] = 'change';
+			foreach (array_keys(get_public_vars($this)) as $property) {
+				$availableEvents[] = 'change:'.$property;
+			}
+			throw new InfoException('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
 		}
-		if ($identifier === null) {
-			$this->events[$event][] = $callback;
-		} elseif (isset($this->events[$event][$identifier])) {
-			warning('Identifier: "'.$identifier.'" in already in use for event: "'.$event.'"');
-			return false;
-		} else {
-			$this->events[$event][$identifier] = $callback;
-		}
+		$this->events[$event][] = $callback;
+		end($this->events[$event]);
+		$identifier = key($this->events[$event]);
 		if ($event === 'change') {
 			$properties = array_merge(array_keys(get_public_vars($this)), array_keys($this->__kvo));
 			$self = $this;
 			foreach ($properties as $property) {
-				$this->addListener('change:'.$property, function ($sender, $new, $old) use ($self, $property) {
-					$self->trigger('change', $sender, $property, $new, $old);
-				});
+				$this->on('change:'.$property, function ($sender, $new, $old) use ($self, $property) {
+						$self->trigger('change', $sender, $property, $new, $old);
+					});
 			}
 		}
-		return true;
+		if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
+			$property = $matches[1];
+			if (array_key_exists($matches[1], $this->__kvo) === false) {
+				$this->__kvo[$property] = $this->$property;
+				unset($this->$property);
+			}
+		}
+		return $identifier;
 	}
 
 	/**
@@ -114,20 +119,25 @@ abstract class Observable extends Object {
 	 */
 	function hasEvent($event) {
 		$found = array_key_exists($event, $this->events);
-		if ($found === false) {
-			if ($event === 'change') {
-				return ((count(get_public_vars($this)) + count($this->__kvo)) !== 0); // A class without public properties doenst have a change event.
+		if ($found) {
+			return true;
+		}
+		if ($event === 'change') {
+			return ((count(get_public_vars($this)) + count($this->__kvo)) !== 0); // A class without public properties doesn't have a change event.
+		}
+		if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
+			if (array_key_exists($matches[1], $this->__kvo)) {
+				return true;
 			}
-			if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
-				$property = $matches[1];
-				if (property_exists($this, $property)) {
-					$found = true;
-					$this->__kvo[$property] = $this->$property;
-					unset($this->$property);
+			$reflection = new \ReflectionObject($this);
+			$properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+			foreach ($properties as $property) {
+				if ($property->name === $matches[1]) { // a public property exists?
+					return true;
 				}
 			}
 		}
-		return $found;
+		return false;
 	}
 
 	/**
@@ -136,7 +146,7 @@ abstract class Observable extends Object {
 	 * @param string $event
 	 * @param string $identifier
 	 */
-	function removeListener($event, $identifier) {
+	function off($event, $identifier) {
 		if ($this->hasEvent($event) === false) {
 			warning('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
 			return false;
@@ -174,7 +184,7 @@ abstract class Observable extends Object {
 			if ($this->hasEvent($event)) {
 				$this->events[$event] = array(); // Reset listeners.
 				if ($value !== null) {
-					$this->addListener($event, $value);
+					$this->on($event, $value);
 				}
 				return;
 			}

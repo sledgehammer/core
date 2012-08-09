@@ -131,7 +131,7 @@ class cURL extends Observable {
 		);
 		$response = new cURL($options + $defaults);
 		if ($callback !== null) {
-			$response->addListener('load', $callback);
+			$response->on('load', $callback);
 		}
 		return $response;
 	}
@@ -155,7 +155,7 @@ class cURL extends Observable {
 		);
 		$response = new cURL($options + $defaults);
 		if ($callback !== null) {
-			$response->addListener('load', $callback);
+			$response->on('load', $callback);
 		}
 		return $response;
 	}
@@ -181,7 +181,7 @@ class cURL extends Observable {
 			CURLOPT_FAILONERROR => true,
 		);
 		$response = new cURL($options + $defaults);
-		$response->addListener('closed', function () use ($fp) {
+		$response->on('closed', function () use ($fp) {
 				fclose($fp);
 			});
 		if ($async == false) {
