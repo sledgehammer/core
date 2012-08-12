@@ -331,14 +331,12 @@ class Dump extends Object {
 	private function parseArrayContents($length, $indentationLevel) {
 		$indent = $indentationLevel * 2; // var_dump uses 2 spaces per indent.
 		for ($i = 0; $i < $length; $i++) {
-			if (self::$xdebug && $this->vardump[$this->offset] === "\n") {
-				if ($this->part(18, ($indentationLevel * 2) + 1) === '(more elements)...') {
-					echo "\n";
-					$this->renderIndent($indentationLevel);
-					echo "&hellip; ";
-					$this->renderType('comment', "// more elements\n");
-					$this->offset += ($indentationLevel * 2) + 20;
-				}
+			if (self::$xdebug && $this->vardump[$this->offset] === "\n" && $this->part(18, ($indentationLevel * 2) + 1) === '(more elements)...') {
+				echo "\n";
+				$this->renderIndent($indentationLevel);
+				echo "&hellip; ";
+				$this->renderType('comment', "// more elements\n");
+				$this->offset += ($indentationLevel * 2) + 20;
 				return;
 			}
 			$this->assertIndentation($indentationLevel);
@@ -370,6 +368,11 @@ class Dump extends Object {
 				echo '&#39;';
 			}
 			$this->renderType('operator', ' => ');
+			if (self::$xdebug && $this->part(3, $indent + 2) === '...') {
+				echo "&hellip;\n";
+				$this->offset += $indent + 7; // "  ...\n\n" = 7
+				continue;
+			}
 			// Value
 			$this->parseVardump($indentationLevel);
 			$this->offset += 1; // "\n"
