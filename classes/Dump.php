@@ -237,10 +237,22 @@ class Dump extends Object {
 
 			// text (string)
 			case 'string':
-				echo '&#39;';
-				$this->renderType('string', $this->part($length, 2));
-				echo '&#39;';
-				$this->offset += $length + 3; // ' "' + '"' = 3
+				$this->offset += 2; // strip ' "'
+				$quote = '&#39;'; // single quote (&apos)
+				if (self::$xdebug) {
+					$endQuotePos = $this->position("\"\n");
+					if ($endQuotePos === false) { // vardump only has 1 line.
+						$endQuotePos = strlen($this->vardump) - $this->offset - 1;
+					}
+					if ($endQuotePos != $length) {
+						$quote = '&quot;'; // double quote, because xdebug renders newlines as "\n"
+						$length = $endQuotePos;
+					}
+				}
+				echo $quote;
+				$this->renderType('string', $this->part($length));
+				echo $quote;
+				$this->offset += $length + 1; // '"' = 1
 				return;
 
 			// Resources (file, gd, curl)
@@ -377,7 +389,7 @@ class Dump extends Object {
 			$this->assertIndentation($indentationLevel);
 			$this->offset += $indent; // strip spaces
 			// Extract attribute
-			$arrowPos = $this->position('=>');
+			$arrowPos = $this->position("=>\n");
 			if (self::$xdebug) {
 				$attribute = $this->part($arrowPos - 1);
 			} else {
