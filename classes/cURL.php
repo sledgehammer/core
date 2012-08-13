@@ -201,7 +201,7 @@ class cURL extends Observable {
 		}
 		do {
 			// Wait for (incomming) data
-			if (curl_multi_select(self::$pool) === -1) {
+			if (curl_multi_select(self::$pool, 0.2) === -1) {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
 			$wait = false;
@@ -428,7 +428,7 @@ class cURL extends Observable {
 		}
 		while ($this->isComplete() === false) {
 			// Wait for (incomming) data
-			if (curl_multi_select(self::$pool) === -1) {
+			if (curl_multi_select(self::$pool, 0.1) === -1) {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
 		}
