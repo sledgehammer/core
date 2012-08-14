@@ -107,7 +107,7 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		foreach ($arguments as $key => $value) {
 			$filtered[$key] = $this->in($value, $method.'['.$key.']', 'parameter');
 		}
-		return $this->out(call_user_func_array(array($this->_data, $method), $filtered), $method, 'method');
+		return $this->out(call_user_func_array(array($this->_data, $method), $filtered), $method, 'method', $filtered);
 	}
 
 	/**
@@ -119,6 +119,10 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	function offsetGet($key) {
 		if (is_array($this->_data)) {
 			return $this->out($this->_data[$key], $key, 'array');
+		} elseif ($this->_data instanceof \ArrayAccess) {
+			return $this->out($this->_data[$key], $key, 'array');
+		} else {
+			throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
 		}
 	}
 
@@ -132,6 +136,11 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 		if (is_array($this->_data)) {
 			$value = $this->in($value, $key, 'array');
 			$this->_data[$key] = $value;
+		} elseif ($this->_data instanceof \ArrayAccess) {
+			$value = $this->in($value, $key, 'array');
+			$this->_data[$key] = $value;
+		} else {
+			throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
 		}
 	}
 
