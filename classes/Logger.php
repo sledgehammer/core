@@ -263,6 +263,25 @@ class Logger extends Object {
 		return $trace;
 	}
 
+	function __wakeup() {
+		foreach (self::$instances as $logger) {
+			if ($logger === $this) {
+				return; // Already connected
+			}
+		}
+		// Reconnect
+		$identifier = 'Log';
+		if (isset(self::$instances[$identifier])) {
+			$suffix = 2;
+			while (isset(self::$instances[$identifier.'('.$suffix.')'])) {
+				// also exists, check again.
+				$suffix++;
+			}
+			$identifier = $identifier.'('.$suffix.')';
+		}
+		self::$instances[$identifier] = $this;
+	}
+
 }
 
 ?>
