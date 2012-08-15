@@ -31,7 +31,7 @@ class Cache extends Object implements \ArrayAccess {
 	private $_path;
 
 	/**
-	 * Connected nodes
+	 * Connected nodes.
 	 * @var array|Cache
 	 */
 	private $_nodes = array();
@@ -107,6 +107,8 @@ class Cache extends Object implements \ArrayAccess {
 	 * Retrieve the value from the cache and set it to the $ouput value.
 	 * Returns true if the cache entry was valid.
 	 *
+	 * Maintains a lock when the cache is invalid, its expected to store a new value which auto-releases the lock.
+	 *
 	 * @param mixed $output
 	 * @param string|int|null $maxAge (optional) The entry must be newer than the $maxAge. Example: "-5min", "2012-01-01"
 	 * @return boolean
@@ -115,16 +117,26 @@ class Cache extends Object implements \ArrayAccess {
 		$this->lock();
 		$method = $this->_backend.'_read';
 		$success = $this->$method($node);
-		if ($success) {
-			if ($node['expires'] == 0 || $node['expires'] > time()) { // has not expired?
-				// Maintain lock
-				$output = $node['data'];
-				$this->release();
-				return true;
+		if ($success === false) {
+			return false;
+		}
+		if ($maxAge !== null) {
+			if (is_string($maxAge)) {
+				$maxAge = strtotime($maxAge);
+			}
+			if ($maxAge <= 3600) { // Is a ttl?
+				$maxAge = time() - $maxAge;
+			}
+			if ($node['updated'] < $maxAge) { // Cache is older than the maximum age?
+				return false;
 			}
 		}
-		// Maintain lock
-		return false;
+		if ($node['expires'] != 0 && $node['expires'] <= time()) { // has expired?
+			return false;
+		}
+		$output = $node['data'];
+		$this->release();
+		return true;
 	}
 
 	/**
@@ -210,7 +222,6 @@ class Cache extends Object implements \ArrayAccess {
 		}
 		return $this->_nodes[$property];
 	}
-
 
 	/**
 	 * Check if a key has a cached value, and set the value to the $output argument.
@@ -363,6 +374,7 @@ class Cache extends Object implements \ArrayAccess {
 	function __sleep() {
 		throw new \Exception('Cache not compatible with serialize');
 	}
+
 }
 
 ?>
