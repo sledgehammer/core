@@ -9,16 +9,12 @@ namespace Sledgehammer;
  *
  * Example:
  *   $cache = cache('Twitter.feeds');
- *   $cache->lock();
  *   if ($cache->hit($value)) {
- *     $cache->release();
  *     return $value;
  *   }
  *   // slow operation
  *   ...
- *   $cache->storeUntil('+15min', $result);
- *   $cache->release();
- *   return $result;
+ *   return $cache->storeUntil('+15min', $result);
  */
 class Cache extends Object {
 
@@ -91,11 +87,14 @@ class Cache extends Object {
 	 * @return boolean
 	 */
 	function hit(&$output, $maxAge = null) {
+		$this->lock();
 		$method = $this->_backend.'_read';
 		if ($this->$method($node)) {
 			$output = $node['data'];
+			$this->release();
 			return true;
 		}
+		// Maintain lock
 		return false;
 	}
 
@@ -117,6 +116,7 @@ class Cache extends Object {
 		}
 		$method = $this->_backend.'_write';
 		$this->$method($value, $expires);
+		$this->release();
 		return $value;
 	}
 
@@ -129,18 +129,24 @@ class Cache extends Object {
 	function storeForever($value) {
 		$method = $this->_backend.'_write';
 		$this->$method($value);
+		$this->release();
 		return $value;
 	}
 
+	/**
+	 * Clear the cached value.
+	 */
 	function clear() {
+		$this->lock();
 		$method = $this->_backend.'_delete';
 		$this->$method($value);
+		$this->release();
 	}
 
 	/**
 	 * Obtain a lock for this cached node
 	 */
-	function lock() {
+	private function lock() {
 		$method = $this->_backend.'_lock';
 		$this->$method();
 		$this->_locked = time();
@@ -149,7 +155,7 @@ class Cache extends Object {
 	 * Release the lock for this cached node
 	 * @throws \Exception
 	 */
-	function release() {
+	private function release() {
 		if ($this->_locked === false) {
 			throw new \Exception('Must call lock() before release()');
 		}
