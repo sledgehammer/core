@@ -29,23 +29,39 @@ class Cache extends Object {
 	 * @var string
 	 */
 	private $_path;
+	/**
+	 * ENUM 'apc' or 'file'
+	 * @var string
+	 */
 	private $_backend;
+
+	/**
+	 * Timestamp of when lock took place or false if not locked.
+	 * @var false|int
+	 */
 	private $_locked = false;
 
+	/**
+	 * The application root node.
+	 * @var Cache
+	 */
 	private static $instance;
+
+	/**
+	 * Property that has a backend specific contents.
+	 * @var mixed
+	 */
+	private $_config;
 
 	/**
 	 * Constructor
 	 * @param string $identifier
 	 * @param string $backend ENUM "apc" or "file"
 	 */
-	function __construct($identifier, $backend = null) {
+	function __construct($identifier, $backend) {
 		$this->_guid = sha1('Sledgehammer'.__FILE__.$identifier);
 		$this->_path = $identifier;
 		$this->_backend = $backend;
-		if ($backend === null) {
-			$this->_backend = function_exists('apc_fetch') ? 'apc' : 'file';
-		}
 	}
 
 	function __destruct() {
@@ -58,7 +74,9 @@ class Cache extends Object {
 		if (self::$instance !== null) {
 			return self::$instance;
 		}
-		self::$instance = new Cache('');
+		mkdirs(TMP_DIR.'Cache');
+		$backend = function_exists('apc_fetch') ? 'apc' : 'file';
+		self::$instance = new Cache('', $backend);
 		return self::$instance;
 
 	}
@@ -90,6 +108,10 @@ class Cache extends Object {
 		$this->lock();
 		$method = $this->_backend.'_read';
 		if ($this->$method($node)) {
+			if ($node['expires'] != 0 && $node['expires'] <= time()) { // has expired?
+				// Maintain lock
+				return false;
+			}
 			$output = $node['data'];
 			$this->release();
 			return true;
@@ -106,6 +128,9 @@ class Cache extends Object {
 	 * @return mixed
 	 */
 	function storeUntil($expires, $value) {
+		if ($this->_locked === false) {
+			throw new \Exception('Cache wasn\'t locked, call hit() or fetch() before storeUntil()');
+		}
 		if (is_string($expires)) {
 			$expires = strtotime($expires);
 		}
@@ -127,6 +152,9 @@ class Cache extends Object {
 	 * @return mixed
 	 */
 	function storeForever($value) {
+		if ($this->_locked === false) {
+			throw new \Exception('Cache wasn\'t locked, call hit() or fetch() before storeForever()');
+		}
 		$method = $this->_backend.'_write';
 		$this->$method($value);
 		$this->release();
@@ -137,10 +165,8 @@ class Cache extends Object {
 	 * Clear the cached value.
 	 */
 	function clear() {
-		$this->lock();
 		$method = $this->_backend.'_delete';
-		$this->$method($value);
-		$this->release();
+		$this->$method();
 	}
 
 	/**
@@ -251,6 +277,67 @@ class Cache extends Object {
 		if (apc_delete($this->_guid.'.lock') == false) {
 			warning('Release failed, was already released?');
 		}
+	}
+
+	private function file_lock() {
+		if ($this->_config !== null) {
+			throw new \Exception('Cache already has an open filepointer');
+		}
+		$this->_config = fopen(TMP_DIR.'Cache/'.$this->_guid, 'c+');
+		if ($this->_config === false) {
+			throw new \Exception('Creating lockfile failed');
+		}
+		while (true) {
+			if (flock($this->_config, LOCK_EX)) {
+				break;
+			}
+			usleep(100);
+		}
+		$this->_locked = time();
+	}
+
+	private function file_release() {
+		if ($this->_config === null) {
+			throw new \Exception('Cache doesn\'t have an open filepointer');
+		}
+		flock($this->_config, LOCK_UN);
+		fclose($this->_config);
+		$this->_config = null;
+	}
+
+	private function file_read(&$output) {
+		$expires = stream_get_line($this->_config, 1024,"\n");
+		if ($expires == false) { // Entry is empty?
+			return false;
+		}
+		$updated = stream_get_line($this->_config, 1024,"\n");
+		$output = array(
+			'expires' => intval(substr($expires, 9)), // "Expires: " = 9
+			'updated' => intval(substr($updated, 9)), // "Updated: " = 9
+			'data' => unserialize(stream_get_contents($this->_config)),
+		);
+		return true;
+	}
+
+	private function file_write($value, $expires = null) {
+		if ($this->_config === null) {
+			throw new \Exception('Cache doesn\'t have an open filepointer');
+		}
+		if ($expires === null) {
+			$expires = 'Never';
+		}
+		fseek($this->_config, 0);
+		ftruncate($this->_config, 0);
+		fwrite($this->_config, 'Expires: '.$expires."\nUpdated: ".time()."\n");
+		fwrite($this->_config, serialize($value));
+		fflush($this->_config);
+	}
+
+	private function file_delete() {
+		if ($this->_config) {
+			throw new \Exception('Can\'t clear a locked file');
+		}
+		unlink(TMP_DIR.'Cache/'.$this->_guid);
 	}
 }
 
