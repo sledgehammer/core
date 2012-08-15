@@ -16,7 +16,7 @@ namespace Sledgehammer;
  *   ...
  *   return $cache->storeUntil('+15min', $result);
  */
-class Cache extends Object {
+class Cache extends Object implements \ArrayAccess {
 
 	/**
 	 * Unique identifier for this cache node.
@@ -29,6 +29,13 @@ class Cache extends Object {
 	 * @var string
 	 */
 	private $_path;
+
+	/**
+	 * Connected nodes
+	 * @var array|Cache
+	 */
+	private $_nodes = array();
+
 	/**
 	 * ENUM 'apc' or 'file'
 	 * @var string
@@ -66,6 +73,7 @@ class Cache extends Object {
 
 	function __destruct() {
 		if ($this->_locked) {
+			notice('Cache is locked, releasing...');
 			$this->release(); // Auto-release locks on time-outs
 		}
 	}
@@ -78,7 +86,6 @@ class Cache extends Object {
 		$backend = function_exists('apc_fetch') ? 'apc' : 'file';
 		self::$instance = new Cache('', $backend);
 		return self::$instance;
-
 	}
 
 	/**
@@ -107,14 +114,14 @@ class Cache extends Object {
 	function hit(&$output, $maxAge = null) {
 		$this->lock();
 		$method = $this->_backend.'_read';
-		if ($this->$method($node)) {
-			if ($node['expires'] != 0 && $node['expires'] <= time()) { // has expired?
+		$success = $this->$method($node);
+		if ($success) {
+			if ($node['expires'] == 0 || $node['expires'] > time()) { // has not expired?
 				// Maintain lock
-				return false;
+				$output = $node['data'];
+				$this->release();
+				return true;
 			}
-			$output = $node['data'];
-			$this->release();
-			return true;
 		}
 		// Maintain lock
 		return false;
@@ -177,6 +184,7 @@ class Cache extends Object {
 		$this->$method();
 		$this->_locked = time();
 	}
+
 	/**
 	 * Release the lock for this cached node
 	 * @throws \Exception
@@ -197,17 +205,12 @@ class Cache extends Object {
 	 * @return Cache
 	 */
 	function __get($property) {
-		$this->$property = new Cache($this->_path.'.'.$property, $this->_backend);
-		return $this->$property;
+		if (empty($this->_nodes[$property])) {
+			$this->_nodes[$property] = new Cache($this->_path.'.'.$property, $this->_backend);
+		}
+		return $this->_nodes[$property];
 	}
 
-	function __set($property, $value) {
-		if ($value instanceof Cache) {
-			$this->$property = $value;
-			return;
-		}
-		parent::__set($property, $value);
-	}
 
 	/**
 	 * Check if a key has a cached value, and set the value to the $output argument.
@@ -260,14 +263,13 @@ class Cache extends Object {
 	 */
 	private function apc_lock() {
 		$ttl = intval(ini_get('max_execution_time'));
-		while(true) {
+		while (true) {
 			if (apc_add($this->_guid.'.lock', 'LOCKED', $ttl)) {
 				break;
 			}
 			// @todo Implement a timeout / Exception?
 			usleep(100);
 		}
-		$this->_locked = time();
 	}
 
 	/**
@@ -275,7 +277,7 @@ class Cache extends Object {
 	 */
 	private function apc_release() {
 		if (apc_delete($this->_guid.'.lock') == false) {
-			warning('Release failed, was already released?');
+			warning('apc_delete() failed, was already released?');
 		}
 	}
 
@@ -293,7 +295,6 @@ class Cache extends Object {
 			}
 			usleep(100);
 		}
-		$this->_locked = time();
 	}
 
 	private function file_release() {
@@ -306,11 +307,11 @@ class Cache extends Object {
 	}
 
 	private function file_read(&$output) {
-		$expires = stream_get_line($this->_config, 1024,"\n");
+		$expires = stream_get_line($this->_config, 1024, "\n");
 		if ($expires == false) { // Entry is empty?
 			return false;
 		}
-		$updated = stream_get_line($this->_config, 1024,"\n");
+		$updated = stream_get_line($this->_config, 1024, "\n");
 		$output = array(
 			'expires' => intval(substr($expires, 9)), // "Expires: " = 9
 			'updated' => intval(substr($updated, 9)), // "Updated: " = 9
@@ -338,6 +339,29 @@ class Cache extends Object {
 			throw new \Exception('Can\'t clear a locked file');
 		}
 		unlink(TMP_DIR.'Cache/'.$this->_guid);
+	}
+
+	function offsetGet($offset) {
+		if (empty($this->_nodes['['.$offset.']'])) {
+			$this->_nodes['['.$offset.']'] = new Cache($this->_path.'['.$offset.']', $this->_backend);
+		}
+		return $this->_nodes['['.$offset.']'];
+	}
+
+	function offsetExists($offset) {
+		throw new \Exception('Not implemented');
+	}
+
+	function offsetSet($offset, $value) {
+		throw new \Exception('Not implemented');
+	}
+
+	function offsetUnset($offset) {
+		throw new \Exception('Not implemented');
+	}
+
+	function __sleep() {
+		throw new \Exception('Cache not compatible with serialize');
 	}
 }
 

@@ -8,37 +8,47 @@ namespace Sledgehammer;
  */
 class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 
+	/**
+	 * The wrapped object
+	 * @var object
+	 */
 	private $object;
-	private $keyPrefix;
-	private $ttl;
+
+	/**
+	 * The cache node
+	 * @var Cache
+	 */
+	private $cachePath;
+	private $expires;
 	private $iterator;
 
 	/**
 	 * Constructor
-	 * @param string $key  Unique key for the cache
 	 * @param object $object
+	 * @param string $cachePath  Unique path for the cache
 	 * @param int ttl  Time-to-Live in seconds
 	 */
-	function __construct($key, $object, $ttl = 0) {
-		$this->keyPrefix = $key;
+	function __construct($object, $cachePath, $expires) {
 		$this->object = $object;
-		$this->ttl = $ttl;
+		$this->cachePath = $cachePath;
+		$this->expires = $expires;
 	}
 
 	function __get($property) {
-		$key = $this->keyPrefix.'->'.$property;
-		if (Cache::hit($key, $value)) {
+		$path = $this->cachePath.'->'.$property;
+		$cache = cache($path);
+		if ($cache->hit($value)) {
 			return $value;
 		}
 		$value = $this->object->$property;
 		if (is_object($value)) {
-			$value = new CacheWrapper($key, $value, $this->ttl);
+			$value = new CacheWrapper($value, $path, $this->expires);
 		}
-		return Cache::cached($key, $value, $this->ttl);
+		return $cache->storeUntil($this->expires, $value);
 	}
 
 	function __call($method, $arguments) {
-		$key = $this->keyPrefix.'->'.$method.'(';
+		$key = $method.'(';
 		foreach ($arguments as $i => $argument) {
 			if ($i !== 0) {
 				$key .= ', ';
@@ -52,14 +62,16 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 			}
 		}
 		$key .= ')';
-		if (Cache::hit($key, $value)) {
+		$path = $this->cachePath.'['.PropertyPath::escape($key).']';
+		$cache = cache($path);
+		if ($cache->hit($value)) {
 			return $value;
 		}
 		$value = call_user_func_array(array($this->object, $method), $arguments);
 		if (is_object($value)) {
-			$value = new CacheWrapper($key, $value, $this->ttl);
+			$value = new CacheWrapper($value, $path, $this->expires);
 		}
-		return Cache::cached($key, $value, $this->ttl);
+		return $cache->storeUntil($this->expires, $value);
 	}
 
 	public function offsetExists($offset) {
@@ -110,7 +122,7 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 			return $this->iterator;
 		}
 		if (Cache::hit($this->keyPrefix.'#Iterator', $array) === false) {
-			$array = Cache::cached($this->keyPrefix.'#Iterator', iterator_to_array($this->object), $this->ttl);
+			$array = Cache::cached($this->keyPrefix.'#Iterator', iterator_to_array($this->object), $this->expires);
 		}
 		$this->iterator = new \ArrayIterator($array);
 		return $this->iterator;
