@@ -1564,5 +1564,19 @@ exit [lindex $result 3]');
 		return new Collection($traversable);
 	}
 
+	/**
+	 * Returns a Cache node from the Caching graph.
+	 *
+	 * @param string $path
+	 * @return Cache
+	 */
+	function cache($path = null) {
+		$root = Cache::getInstance();
+		if ($path === null) {
+			return $root;
+		}
+		return PropertyPath::get($path, $root);
+	}
+
 }
 ?>
