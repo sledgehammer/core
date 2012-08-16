@@ -509,23 +509,23 @@ class SQL extends Object {
 		}
 		unset($restrictions['operator']); // De operator uit de array halen
 		$sql_statements = array();
-		foreach ($restrictions as $sql) {
-			if (is_array($sql)) { // Is het geen sql maar nog een 'restriction'?
-				$haakjes_voor_node = ($sql['operator'] !== $operator); // Als de subnode dezelde verbinding heeft, dan geen haakjes. "x = 1 AND (y = 5 AND z = 8)" == "x = 1 AND y = 5 AND z = 8"
-				$sql = $sql->composeRestrictions($sql, $haakjes_voor_node); // recursief
+		foreach ($restrictions as $restriction) {
+			if (is_array($restriction)) { // Is het geen sql maar nog een 'restriction'?
+				$haakjes_voor_node = ($restriction['operator'] !== $operator); // Als de subnode dezelde verbinding heeft, dan geen haakjes. "x = 1 AND (y = 5 AND z = 8)" == "x = 1 AND y = 5 AND z = 8"
+				$restriction = $this->composeRestrictions($restriction, $haakjes_voor_node); // recursief
 			}
-			if ($sql != '') { // lege sql statements negeren.
-				$sql_statements[] = $sql; // stukje sql aan de statement toevoegen
+			if ($restriction != '') { // lege sql statements negeren.
+				$sql_statements[] = $restriction; // stukje sql aan de statement toevoegen
 			}
 		}
 		if (count($sql_statements) == 0) { // Het was een restriction met alleen een operator "array('operator'=>'AND')", maar geen eisen.
 			return '';
 		}
-		$sql = implode($glue, $sql_statements); // De sql statements met elkaar verbinden met de operator.
+		$restriction = implode($glue, $sql_statements); // De sql statements met elkaar verbinden met de operator.
 		if ($haakjes) { // moeten er haakjes omheen?
-			$sql = '('.$sql.')';
+			$restriction = '('.$restriction.')';
 		}
-		return $prefix.$sql;
+		return $prefix.$restriction;
 	}
 
 	/**
