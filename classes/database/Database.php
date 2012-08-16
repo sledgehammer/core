@@ -133,6 +133,7 @@ class Database extends \PDO {
 			'renderer' => array($this, 'renderLog'),
 			'start' => 0,
 			'plural' => 'queries',
+			'singular' => 'query',
 			'columns' => array('SQL', 'Duration'),
 		);
 		foreach ($options as $property => $value) {

@@ -56,6 +56,12 @@ class Logger extends Object {
 	public $plural = 'entries';
 
 	/**
+	 * Singular  description of the entry type: Example: "request", "query", etc
+	 * @var string
+	 */
+	public $singular = 'entry';
+
+	/**
 	 * Callback for rendering the log entry <td>'s
 	 * @var Closure|array|string
 	 */
@@ -102,6 +108,13 @@ class Logger extends Object {
 		unset($options['identifier']);
 		foreach ($options as $property => $value) {
 			$this->$property = $value;
+		}
+		if (isset($options['plural']) && empty($options['singular'])) {
+			if (class_exists('Sledgehammer\Inflector')) {
+				$this->singular = Inflector::singular($this->plural);
+			} else {
+				$this->singular = $this->plural;
+			}
 		}
 	}
 
@@ -155,7 +168,7 @@ class Logger extends Object {
 		}
 		echo $name, '&nbsp;<b>', $this->count, '</b>&nbsp;';
 		if ($this->count === 1) {
-			echo Inflector::singularize($this->plural);
+			echo $this->singular;
 		} else {
 			echo $this->plural;
 		}
@@ -175,7 +188,7 @@ class Logger extends Object {
 		echo '<table class="log-container">';
 		echo '<thead class="log-header"><tr><th class="log-header-column logentry-number">Nr.</th>';
 		if ($this->columns === null) {
-			echo '<th class="log-header-column">', ucfirst(Inflector::singularize($this->plural)), '</th>';
+			echo '<th class="log-header-column">', ucfirst($this->singular), '</th>';
 		} else {
 			foreach ($this->columns as $column) {
 				echo '<th class="log-header-column">', $column, '</th>';

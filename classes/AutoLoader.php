@@ -100,7 +100,12 @@ class AutoLoader extends Object {
 			return true;
 		}
 		$filename = $this->getFilename($definition);
-		if ($filename === null) {
+		if ($filename === null) { // Class not found?
+			$backtrace = debug_backtrace();
+			if (isset($backtrace[2]['function']) && $backtrace[2]['function'] === 'class_exists') {
+				// Don't report warnings or resolveNamespace for "class_exists()"
+				return false;
+			}
 			if ($this->resolveNamespaces && $this->resolveNamespace($definition)) {
 				return true; // The class/interface is defined by resolving a namespace
 			}
