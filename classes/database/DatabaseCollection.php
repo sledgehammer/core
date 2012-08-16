@@ -16,7 +16,7 @@ class DatabaseCollection extends Collection {
 	 * The SQL object  or string fetches the items in this collection.
 	 * @var SQL|string
 	 */
-	public $sql;
+	private $sql;
 
 	/**
 	 * The database identifier. (default: "default")
@@ -186,33 +186,33 @@ class DatabaseCollection extends Collection {
 	/**
 	 * Return a new collection sorted by the given field in ascending order.
 	 *
-	 * @param string $path
+	 * @param string $selector
 	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
-	function orderBy($path, $method = SORT_REGULAR) {
-		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
+	function orderBy($selector, $method = SORT_REGULAR) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($selector) && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
-			array_key_unshift($sql->orderBy, $path, 'ASC');
+			array_key_unshift($sql->orderBy, $selector, 'ASC');
 			return new DatabaseCollection($sql, $this->dbLink);
 		}
-		return parent::orderBy($path, $method);
+		return parent::orderBy($selector, $method);
 	}
 
 	/**
 	 * Return a new collection sorted by the given field in descending order.
 	 *
-	 * @param string $path
+	 * @param string $selector
 	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
-	function orderByDescending($path, $method = SORT_REGULAR) {
-		if ($this->data === null && $method == SORT_REGULAR && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
+	function orderByDescending($selector, $method = SORT_REGULAR) {
+		if ($this->data === null && $method == SORT_REGULAR && is_string($selector) && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
 			$sql = clone $this->sql;
-			array_key_unshift($sql->orderBy, $path, 'DESC');
+			array_key_unshift($sql->orderBy, $selector, 'DESC');
 			return new DatabaseCollection($sql, $this->dbLink);
 		}
-		return parent::orderBy($path, $method);
+		return parent::orderByDescending($selector, $method);
 	}
 
 	/**
@@ -251,6 +251,18 @@ class DatabaseCollection extends Collection {
 			}
 		}
 		return parent::take($limit);
+	}
+
+	/**
+	 * Inspect the SQL query.
+	 * @return string|SQL
+	 */
+	function getQuery() {
+		if (is_object($this->sql)) {
+			return clone $this->sql;
+		} else {
+			return $this->sql;
+		}
 	}
 
 	/**

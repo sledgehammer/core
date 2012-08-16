@@ -33,7 +33,7 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 	function test_where() {
 		$fruits = $this->getDatabaseCollection();
 		$this->assertEquals($fruits->toArray(), $this->fruitsAndVegetables); // The contents of the database collections should identical to array based collection
-		$this->assertEquals((string) $fruits->sql, 'SELECT * FROM fruits');
+		$this->assertEquals((string) $fruits->getQuery(), 'SELECT * FROM fruits');
 		$this->assertQueryCount(1);
 		$this->assertLastQuery('SELECT * FROM fruits');
 		$this->assertCount(4, $fruits);
@@ -46,13 +46,13 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$this->assertEquals($pear->count(), 1);
 		$this->assertQueryCount(2);
 		$this->assertLastQuery("SELECT COUNT(*) FROM fruits WHERE name = 'pear'");
-		$this->assertEquals((string) $pear->sql, "SELECT * FROM fruits WHERE name = 'pear'");
+		$this->assertEquals((string) $pear->getQuery(), "SELECT * FROM fruits WHERE name = 'pear'");
 
 
 		$lowIds = $this->getDatabaseCollection()->where(array('id <=' => 6));
 		$this->assertQueryCount(2);
 		$this->assertEquals($lowIds->count(), 2);
-		$this->assertEquals((string) $lowIds->sql, "SELECT * FROM fruits WHERE id <= 6");
+		$this->assertEquals((string) $lowIds->getQuery(), "SELECT * FROM fruits WHERE id <= 6");
 	}
 
 	function test_select() {
@@ -105,12 +105,12 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		} else {
 			$this->assertLastQuery("SELECT * FROM fruits WHERE name = '\''");
 		}
-		$this->assertEquals($collection->sql->__toString(), "SELECT * FROM fruits", 'Collection->where() does not	modify the orginal collection');
+		$this->assertEquals((string) $collection->getQuery(), "SELECT * FROM fruits", 'Collection->where() does not	modify the orginal collection');
 	}
 
 	function test_unescaped_where() {
 		$collection = $this->getDatabaseCollection();
-		$collection->sql = $collection->sql->andWhere("name LIKE 'B%'"); // Direct modification of the $collection
+		$collection->setQuery($collection->getQuery()->andWhere("name LIKE 'B%'")); // Direct modification of the $collection
 		$this->assertEquals(count($collection->toArray()), 1);
 		$this->assertLastQuery("SELECT * FROM fruits WHERE name LIKE 'B%'");
 	}

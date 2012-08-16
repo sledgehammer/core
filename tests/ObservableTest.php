@@ -50,7 +50,7 @@ class ObservableTest extends TestCase {
 		$button->trigger('click', $button);
 		$this->assertEquals($tempvar2, 'custom event2');
 		$this->assertEquals($tempvar3, 'custom event3');
-		$button->off('click', $listernerId);
+		$button->off('click', $listenerId);
 		$tempvar3 = 'nothing happend';
 		$button->trigger('click', $button);
 		$this->assertEquals($tempvar3, 'nothing happend');

@@ -48,12 +48,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		$items = array();
 		$isClosure = (is_object($selector) && is_callable($selector));
 		if ($selectKey === null) {
-			$index = -1;
+			$index = 0;
 		}
 		foreach ($this as $key => $item) {
 			if ($selectKey === null) {
-				$index++;
 				$key = $index;
+				$index++;
 			} elseif ($selectKey !== false) {
 				$key = PropertyPath::get($item, $selectKey);
 			}
@@ -178,22 +178,23 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Return a new collection sorted by the given field in ascending order.
 	 *
-	 * @param string $path
+	 * @param string|Closure $selector
 	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
-	function orderBy($path, $method = SORT_REGULAR) {
+	function orderBy($selector, $method = SORT_REGULAR) {
 		$sortOrder = array();
 		$items = array();
 		$indexed = true;
 		$counter = 0;
+		$isClosure = (is_object($selector) && is_callable($selector));
 		// Collect values
 		foreach ($this as $key => $item) {
 			$items[$key] = $item;
-			if (is_string($path)) {
-				$sortOrder[$key] = PropertyPath::get($item, $path);
+			if ($isClosure) {
+				$sortOrder[$key] = call_user_func($selector, $item);
 			} else {
-				$sortOrder[$key] = call_user_func($path, $item);
+				$sortOrder[$key] = PropertyPath::get($item, $selector);
 			}
 			if ($key !== $counter) {
 				$indexed = false;
@@ -222,12 +223,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Return a new collection sorted by the given field in descending order.
 	 *
-	 * @param string $path
+	 * @param string|Closure $selector
 	 * @param int $method  The sorting method, options are: SORT_REGULAR, SORT_NUMERIC, SORT_STRING or SORT_NATURAL
 	 * @return Collection
 	 */
-	function orderByDescending($path, $method = SORT_REGULAR) {
-		return $this->orderBy($path, $method)->reverse();
+	function orderByDescending($selector, $method = SORT_REGULAR) {
+		return $this->orderBy($selector, $method)->reverse();
 	}
 
 	/**
@@ -306,6 +307,15 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		}
 		$this->dataToArray();
 		return count($this->data);
+	}
+
+	/**
+	 * Inspect the internal query.
+	 *
+	 * @return mixed
+	 */
+	function getQuery() {
+		throw new \Exception('The getQuery() method is not supported by '.get_class($this));
 	}
 
 	/**
