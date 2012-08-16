@@ -190,7 +190,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		// Collect values
 		foreach ($this as $key => $item) {
 			$items[$key] = $item;
-			$sortOrder[$key] = PropertyPath::get($item, $path);
+			if (is_string($path)) {
+				$sortOrder[$key] = PropertyPath::get($item, $path);
+			} else {
+				$sortOrder[$key] = call_user_func($path, $item);
+			}
 			if ($key !== $counter) {
 				$indexed = false;
 			}
