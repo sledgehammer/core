@@ -37,8 +37,16 @@ class Dump extends Object {
 	 * @var bool
 	 */
 	private static $xdebug;
-	private static $arrayLiterals; // show [], insteadof array()
+
+	/**
+	 * The position of the cursor while parsing the var_dump() string
+	 * @var int
+	 */
 	private $offset;
+	/**
+	 *
+	 * @var type
+	 */
 	private $vardump;
 
 	/**
@@ -89,10 +97,7 @@ class Dump extends Object {
 	}
 
 	/**
-	 * Dumps information about a variable, like var_dump() but with improved syntax and coloring.
-	 *
-	 * @param mixed $variable
-	 * @param array|null $trace
+	 * Renders information about the variable, like var_dump() but with improved syntax and coloring.
 	 */
 	function render() {
 		if (headers_sent() === false) {
@@ -106,9 +111,6 @@ class Dump extends Object {
 			ob_start();
 			var_dump(array('' => null));
 			self::$xdebug = (strpos(ob_get_clean(), "'' =>") !== false);
-		}
-		if (self::$arrayLiterals === null) {
-			self::$arrayLiterals = (version_compare(PHP_VERSION, '5.4.0') >= 0);
 		}
 		$this->renderTrace();
 		$style = array(
@@ -132,15 +134,14 @@ class Dump extends Object {
 
 		ob_start();
 		var_dump($this->variable);
-		$output = rtrim(ob_get_clean());
+		$this->vardump = rtrim(ob_get_clean());
 //		$this->debug($output);
 		try {
-			$this->vardump = $output;
 			$this->offset = 0;
 			$this->parseVardump();
-		} catch (\Exception $e) {
+		} catch (\Exception $e) { // parsing failed?
 			report_exception($e);
-			echo $this->vardump;
+			echo $this->vardump; //show original var_dump()
 		}
 		echo "\n</pre>\n";
 		if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
@@ -400,7 +401,7 @@ class Dump extends Object {
 			}
 			// Render attribute
 			$this->renderIndent($indentationLevel);
-			$this->renderAttribute($attribute);
+			$this->parseAttribute($attribute);
 			$this->offset += $arrowPos + 3 + $indent; // "=>\n" = 3
 
 			$this->renderType('operator', ' -> ');
@@ -529,11 +530,11 @@ class Dump extends Object {
 	}
 
 	/**
-	 * Haal de scope uit de attribute string.
+	 * Parse an attribute name from an object.
 	 *
-	 * @param string $attribute Bv '"log", '"error_types:private" of '"error_types":"ErrorHandler":private'
+	 * @param string $attribute Examples: '"log"', '"error_types:private"' or '"error_types":"ErrorHandler":private'
 	 */
-	private function renderAttribute($attribute) {
+	private function parseAttribute($attribute) {
 		if (self::$xdebug) {
 			if (preg_match('/(public|protected|private) \$(.+)$/', $attribute, $matches)) {
 				$this->renderType('attribute', $matches[2]);
@@ -556,18 +557,10 @@ class Dump extends Object {
 				break;
 
 			case 2:
-				if (substr($parts[1], -1) == '"') { // Sinds php 5.3 is wordt ':protected' en ':private' NA de '"' gezet ipv ervoor
-					// php < 5.3
-					$this->renderType('attribute', substr($parts[0], 1));
-					echo '<span style="font-size:9px">:';
-					$this->renderType('comment', substr($parts[1], 0, -1));
-					echo '</span>';
-				} else { // php >= 5.3
-					$this->renderType('attribute', substr($parts[0], 1, -1));
-					echo '<span style="font-size:9px">:';
-					$this->renderType('comment', $parts[1]);
-					echo '</span>';
-				}
+				$this->renderType('attribute', substr($parts[0], 1, -1));
+				echo '<span style="font-size:9px">:';
+				$this->renderType('comment', $parts[1]);
+				echo '</span>';
 				break;
 
 			case 3: // Sinds 5.3 staat bij er naast :private ook van welke class deze private is. bv: "max_string_length_backtrace":"ErrorHandler":private

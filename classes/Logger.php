@@ -14,10 +14,6 @@ namespace Sledgehammer;
  * - Ability to add a backtrace per log message.
  */
 class Logger extends Object {
-	/**
-	 * Total number of API requests
-	 * @var int
-	 */
 
 	/**
 	 * Total number of "actions" (may exceed the $limit)
@@ -27,6 +23,7 @@ class Logger extends Object {
 
 	/**
 	 * Total elapsed time it took to execute all "actions" (in seconds)
+	 * Collects all 'duration' values in the $meta array.
 	 * @var float
 	 */
 	public $totalDuration = 0.0;
@@ -111,7 +108,7 @@ class Logger extends Object {
 		}
 		if (isset($options['plural']) && empty($options['singular'])) {
 			if (class_exists('Sledgehammer\Inflector')) {
-				$this->singular = Inflector::singular($this->plural);
+				$this->singular = Inflector::singularize($this->plural);
 			} else {
 				$this->singular = $this->plural;
 			}
