@@ -182,6 +182,16 @@ namespace Sledgehammer {
 	}
 
 	/**
+	 * Checks if a variable is a closure.
+	 *
+	 * @param mixed $variable
+	 * @return bool
+	 */
+	function is_closure($variable) {
+		return (is_object($variable) && is_callable($variable));
+	}
+
+	/**
 	 * Prepend/moves the value to the beginning of the array using the specified $key.
 	 *
 	 * @param array $array

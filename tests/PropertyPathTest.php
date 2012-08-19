@@ -176,6 +176,28 @@ class PropertyPathTest extends TestCase {
 		$this->assertEquals($array['element']['id'], 10);
 	}
 
+	function test_compile() {
+		$closure = PropertyPath::compile('id');
+		$item = array('id' => 8);
+		$this->assertTrue(is_closure($closure), 'compile() should return a closure' );
+		$this->assertEquals(8, $closure($item));
+	}
+
+	function test_map() {
+		$source = array(
+			'deep' => array(
+				'nested' => 1,
+			),
+			'value'=> 2
+		);
+		$target = array();
+		$mapping = array(
+			'dn' => 'deep.nested',
+			'meta[value]' => 'value'
+		);
+		PropertyPath::map($source, $target, $mapping);
+		$this->assertEquals(array('dn' => 1, 'meta' => array('value' => 2)), $target, '');
+	}
 }
 
 ?>

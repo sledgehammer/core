@@ -408,12 +408,20 @@ class PropertyPath extends Object {
 
 	/**
 	 * Compile a path into a closure function.
+	 * The generated function expected 1 parameter (The $data for the property get)
 	 *
-	 * @param string|array $selector a path of mapping
+	 * @param string $path
 	 * return Closure
 	 */
-	static function compile($selector) {
-		
+	static function compile($path) {
+		static $cache = array();
+		if (isset($cache[$path])) {
+			return $cache[$path];
+		}
+		$cache[$path] = function ($data) use ($path) {
+			return PropertyPath::get($path, $data);
+		};
+		return $cache[$path];
 	}
 	/**
 	 * Converts the tokens into a parsed path.
@@ -422,16 +430,16 @@ class PropertyPath extends Object {
 	 * @return array
 	 */
 	static function parse($path) {
-		if ($path === '') {
-			notice('Path is empty');
-			return array();
-		}
 		// Check if the path is cached
 		static $cache = array();
 		if (isset($cache[$path])) {
 			return $cache[$path];
 		}
 		$tokens = self::tokenize($path);
+		if (count($tokens) === 0) {
+			notice('Path is empty');
+			return false;
+		}
 		$compiled = array();
 		$length = count($tokens);
 		$first = true;
