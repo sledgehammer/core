@@ -32,66 +32,66 @@ class PropertyPathTest extends TestCase {
 		));
 	}
 
-	function test_compile() {
+	function test_parse() {
 		$any = PropertyPath::TYPE_ANY;
 		$element = PropertyPath::TYPE_ELEMENT;
 		$property = PropertyPath::TYPE_PROPERTY;
 
-		$this->assertEquals(PropertyPath::compile('any'), array(array($any, 'any')));
-		$this->assertEquals(PropertyPath::compile('any1.any2'), array(array($any, 'any1'), array($any, 'any2')));
-		$this->assertEquals(PropertyPath::compile('any?'), array(array(PropertyPath::TYPE_OPTIONAL, 'any')));
+		$this->assertEquals(PropertyPath::parse('any'), array(array($any, 'any')));
+		$this->assertEquals(PropertyPath::parse('any1.any2'), array(array($any, 'any1'), array($any, 'any2')));
+		$this->assertEquals(PropertyPath::parse('any?'), array(array(PropertyPath::TYPE_OPTIONAL, 'any')));
 
-		$this->assertEquals(PropertyPath::compile('[element]'), array(array($element, 'element')));
-		$this->assertEquals(PropertyPath::compile('any[element]'), array(array($any, 'any'), array($element, 'element')));
-		$this->assertEquals(PropertyPath::compile('[element1][element2]'), array(array($element, 'element1'), array($element, 'element2')));
-		$this->assertEquals(PropertyPath::compile('[element?]'), array(array(PropertyPath::TYPE_OPTIONAL_ELEMENT, 'element')));
+		$this->assertEquals(PropertyPath::parse('[element]'), array(array($element, 'element')));
+		$this->assertEquals(PropertyPath::parse('any[element]'), array(array($any, 'any'), array($element, 'element')));
+		$this->assertEquals(PropertyPath::parse('[element1][element2]'), array(array($element, 'element1'), array($element, 'element2')));
+		$this->assertEquals(PropertyPath::parse('[element?]'), array(array(PropertyPath::TYPE_OPTIONAL_ELEMENT, 'element')));
 
-		$this->assertEquals(PropertyPath::compile('->property'), array(array($property, 'property')));
-		$this->assertEquals(PropertyPath::compile('any->property'), array(array($any, 'any'), array($property, 'property')));
-		$this->assertEquals(PropertyPath::compile('->property1->property2'), array(array($property, 'property1'), array($property, 'property2')));
-		$this->assertEquals(PropertyPath::compile('->property?'), array(array(PropertyPath::TYPE_OPTIONAL_PROPERTY, 'property')));
+		$this->assertEquals(PropertyPath::parse('->property'), array(array($property, 'property')));
+		$this->assertEquals(PropertyPath::parse('any->property'), array(array($any, 'any'), array($property, 'property')));
+		$this->assertEquals(PropertyPath::parse('->property1->property2'), array(array($property, 'property1'), array($property, 'property2')));
+		$this->assertEquals(PropertyPath::parse('->property?'), array(array(PropertyPath::TYPE_OPTIONAL_PROPERTY, 'property')));
 
-		$this->assertEquals(PropertyPath::compile('[element]->property'), array(array($element, 'element'), array($property, 'property')));
-		$this->assertEquals(PropertyPath::compile('any[element]->property'), array(array($any, 'any'), array($element, 'element'), array($property, 'property')));
-		$this->assertEquals(PropertyPath::compile('[element]->property.any'), array(array($element, 'element'), array($property, 'property'), array($any, 'any')));
-		$this->assertEquals(PropertyPath::compile('->property[element]'), array(array($property, 'property'), array($element, 'element')));
-		$this->assertEquals(PropertyPath::compile('any->property[element]'), array(array($any, 'any'), array($property, 'property'), array($element, 'element')));
-		$this->assertEquals(PropertyPath::compile('->property[element].any'), array(array($property, 'property'), array($element, 'element'), array($any, 'any')));
-		$this->assertEquals(PropertyPath::compile(123), array(array($any, '123')), 'Allow integer paths');
+		$this->assertEquals(PropertyPath::parse('[element]->property'), array(array($element, 'element'), array($property, 'property')));
+		$this->assertEquals(PropertyPath::parse('any[element]->property'), array(array($any, 'any'), array($element, 'element'), array($property, 'property')));
+		$this->assertEquals(PropertyPath::parse('[element]->property.any'), array(array($element, 'element'), array($property, 'property'), array($any, 'any')));
+		$this->assertEquals(PropertyPath::parse('->property[element]'), array(array($property, 'property'), array($element, 'element')));
+		$this->assertEquals(PropertyPath::parse('any->property[element]'), array(array($any, 'any'), array($property, 'property'), array($element, 'element')));
+		$this->assertEquals(PropertyPath::parse('->property[element].any'), array(array($property, 'property'), array($element, 'element'), array($any, 'any')));
+		$this->assertEquals(PropertyPath::parse(123), array(array($any, '123')), 'Allow integer paths');
 	}
 
 	function test_assemble() {
 		$path = '[element]->property';
-		$this->assertEquals(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+		$this->assertEquals(PropertyPath::assemble(PropertyPath::parse($path)), $path);
 		$path = 'any[element]->property';
-		$this->assertEquals(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+		$this->assertEquals(PropertyPath::assemble(PropertyPath::parse($path)), $path);
 		$path = '->property[element].any';
-		$this->assertEquals(PropertyPath::assemble(PropertyPath::compile($path)), $path);
+		$this->assertEquals(PropertyPath::assemble(PropertyPath::parse($path)), $path);
 	}
 
-	function test_compile_warning_empty_path() {
+	function test_parser_warning_empty_path() {
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Path is empty');
-		$this->assertEquals(PropertyPath::compile(''), array());
+		$this->assertEquals(PropertyPath::parse(''), array());
 	}
 
-	function test_compile_warning_invalid_start() {
+	function test_parser_warning_invalid_start() {
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "." in the path');
-		$this->assertEquals(PropertyPath::compile('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
+		$this->assertEquals(PropertyPath::parse('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
 	}
 
-	function test_compile_warning_invalid_chain() {
+	function test_parser_warning_invalid_chain() {
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
-		$this->assertEquals(PropertyPath::compile('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
+		$this->assertEquals(PropertyPath::parse('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
 	}
 
-	function test_compile_warning_invalid_arrow() {
+	function test_parser_warning_invalid_arrow() {
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
-		$this->assertEquals(PropertyPath::compile('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
+		$this->assertEquals(PropertyPath::parse('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
 	}
 
-	function test_compile_warning_unmatched_brackets() {
+	function test_parser_warning_unmatched_brackets() {
 		$this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path after "element"');
-		$this->assertEquals(PropertyPath::compile('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
+		$this->assertEquals(PropertyPath::parse('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
 	}
 
 	function test_PropertyPath_get() {

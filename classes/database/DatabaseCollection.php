@@ -356,7 +356,7 @@ class DatabaseCollection extends Collection {
 	 * @param string $path
 	 */
 	private function convertPathToColumn($path) {
-		$compiled = PropertyPath::compile($path);
+		$compiled = PropertyPath::parse($path);
 		if (count($compiled) > 1) {
 			return false;
 		}

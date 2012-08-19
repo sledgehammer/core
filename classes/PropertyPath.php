@@ -66,7 +66,7 @@ class PropertyPath extends Object {
 			$data = $path;
 			$path = $tmp;
 		}
-		$parts = self::compile($path);
+		$parts = self::parse($path);
 		foreach ($parts as $part) {
 			switch ($part[0]) {
 
@@ -187,7 +187,7 @@ class PropertyPath extends Object {
 		if (is_string($path) === false) {
 			warning('The $path & $data parameters were swapped');
 		}
-		$parts = self::compile($path);
+		$parts = self::parse($path);
 		foreach ($parts as $part) {
 			switch ($part[0]) {
 
@@ -247,7 +247,7 @@ class PropertyPath extends Object {
 		if (is_string($path) === false && is_string($data)) {
 			warning('The $path, $value & $data parameters were swapped');
 		}
-		$parts = self::compile($path);
+		$parts = self::parse($path);
 		$last = array_pop($parts);
 		foreach ($parts as $part) {
 			switch ($part[0]) {
@@ -334,37 +334,6 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Compile a path.
-	 *
-	 * @param string $path
-	 * @return array
-	 */
-	static function compile($path) {
-		if ($path === '') {
-			notice('Path is empty');
-			return array();
-		}
-		// Check if the path is cached
-		static $cache = array();
-		if (isset($cache[$path])) {
-			return $cache[$path];
-		}
-		$tokens = self::tokenize($path);
-		$parts = self::parse($tokens);
-		// Validate parts
-		foreach ($parts as $part) {
-			if ($part[0] == self::TYPE_PROPERTY && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
-				notice('Invalid property identifier "'.$part[1].'" in path "'.$path.'"');
-			}
-			if ($part[0] == self::TYPE_METHOD && preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $part[1]) != 1) {
-				notice('Invalid method identifier "'.$part[1].'" in path "'.$path.'"');
-			}
-		}
-		$cache[$path] = $parts;
-		return $parts;
-	}
-
-	/**
 	 * Escapes  an identifier for use in a path.
 	 * Escapes all path-modifiers "[", ".", "->", "()", etc.
 	 * "a[b]c" => "a\[b\]c"
@@ -384,49 +353,50 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Build a path string from a (mutated) compiled path.
+	 * Build a path string from a (mutated) parsed path.
 	 *
-	 * @param array $compiledPath
+	 * @param array $parsedPath  Output from PropertyPath::parse($path)
 	 * @return string path
 	 */
-	static function assemble($compiledPath) {
+	static function assemble($parsedPath) {
 		$path = '';
 		// @todo Excape values
-		$tokens = array_values($compiledPath); // Force to first $index to 0
+		$tokens = array_values($parsedPath); // Force to first $index to 0
 		foreach ($tokens as $index => $token) {
+			$value = self::escape($token[1]);
 			switch ($token[0]) {
 				case self::TYPE_ANY:
 					if ($index != 0) {
 						$path .= '.';
 					}
-					$path .= $token[1];
+					$path .= $value;
 					break;
 
 				case self::TYPE_PROPERTY:
-					$path .= '->'.$token[1];
+					$path .= '->'.$value;
 					break;
 
 				case self::TYPE_ELEMENT:
-					$path .= '['.$token[1].']';
+					$path .= '['.$value.']';
 					break;
 
 				case self::TYPE_METHOD:
-					$path .= $token[1].'()';
+					$path .= $value.'()';
 					break;
 
 				case self::TYPE_OPTIONAL:
 					if ($index != 0) {
 						$path .= '.';
 					}
-					$path .= $token[1].'?';
+					$path .= $value.'?';
 					break;
 
 				case self::TYPE_OPTIONAL_PROPERTY:
-					$path .= '->'.$token[1].'?';
+					$path .= '->'.$value.'?';
 					break;
 
 				case self::TYPE_OPTIONAL_ELEMENT:
-					$path .= '['.$token[1].']?';
+					$path .= '['.$value.'?]';
 					break;
 
 				default:
@@ -437,12 +407,31 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Converts the tokens into a compiled path.
+	 * Compile a path into a closure function.
 	 *
-	 * @param array $tokens
+	 * @param string|array $selector a path of mapping
+	 * return Closure
+	 */
+	static function compile($selector) {
+		
+	}
+	/**
+	 * Converts the tokens into a parsed path.
+	 *
+	 * @param string $tokens
 	 * @return array
 	 */
-	private static function parse($tokens) {
+	static function parse($path) {
+		if ($path === '') {
+			notice('Path is empty');
+			return array();
+		}
+		// Check if the path is cached
+		static $cache = array();
+		if (isset($cache[$path])) {
+			return $cache[$path];
+		}
+		$tokens = self::tokenize($path);
 		$compiled = array();
 		$length = count($tokens);
 		$first = true;
@@ -506,6 +495,9 @@ class PropertyPath extends Object {
 						$compiled[] = array(self::TYPE_OPTIONAL_PROPERTY, $nextToken[1]);
 						$i += 2;
 					} else {
+						if (preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $nextToken[1]) != 1) {
+							notice('Invalid property identifier "'.$nextToken[1].'" in path "'.$path.'"');
+						}
 						$compiled[] = array(self::TYPE_PROPERTY, $nextToken[1]);
 						$i++;
 					}
@@ -548,12 +540,12 @@ class PropertyPath extends Object {
 						$offset++; // skip the dot to prevent "Invalid beginning error"
 					}
 					// Merge remaining tokens as subpath
-					$path = '';
+					$subpath = '';
 					$tokens = array_slice($tokens, $offset);
 					foreach ($tokens as $token) {
-						$path .= $token[1];
+						$subpath .= $token[1];
 					}
-					$compiled[] = array(self::TYPE_SUBPATH, $path);
+					$compiled[] = array(self::TYPE_SUBPATH, $subpath);
 					return $compiled;
 
 				default:
@@ -562,6 +554,7 @@ class PropertyPath extends Object {
 			}
 			$first = false;
 		}
+		$cache[$path] = $compiled;
 		return $compiled;
 	}
 

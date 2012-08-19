@@ -80,7 +80,7 @@ class CurlTest extends TestCase {
 		rewind($fp);
 		$log = stream_get_contents($fp);
 		fclose($fp);
-		$this->assertTrue(strstr($log, 'About to connect() to ') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+		$this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
 	}
 
 	function test_paralell_download() {
