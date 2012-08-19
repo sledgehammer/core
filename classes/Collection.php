@@ -40,16 +40,26 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * Return a new collection where each element is a subselection of the original element.
 	 * (Known as "collect" in Ruby or "pluck" in underscore.js)
 	 *
-	 * @param string|array $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
+	 * @param string|array|Closure $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
 	 * @param string|null|false $selectKey  (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
 	 * @return Collection
 	 */
 	function select($selector, $selectKey = false) {
-		$items = array();
-		$isClosure = (is_object($selector) && is_callable($selector));
+		if (is_closure($selector)) {
+			$closure = $selector;
+		} elseif (is_array($selector)) {
+			$closure = function ($item) use ($selector) {
+				$target = array();
+				PropertyPath::map($item, $target, $selector);
+				return $target;
+			};
+		} else {
+			$closure = PropertyPath::compile($selector);
+		}
 		if ($selectKey === null) {
 			$index = 0;
 		}
+		$items = array();
 		foreach ($this as $key => $item) {
 			if ($selectKey === null) {
 				$key = $index;
@@ -57,14 +67,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			} elseif ($selectKey !== false) {
 				$key = PropertyPath::get($selectKey, $item);
 			}
-			if (is_string($selector)) {
-				$items[$key] = PropertyPath::get($selector, $item);
-			} elseif ($isClosure) {
-				$items[$key] = $selector($item, $key);
-			} else {
-				$items[$key] = array();
-				PropertyPath::map($item, $items[$key], $selector);
-			}
+			$items[$key] = $closure($item, $key);
 		}
 		return new Collection($items);
 	}
@@ -76,23 +79,23 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return Collection
 	 */
 	function selectKey($selector) {
-		$items = array();
-		if (is_object($selector) && is_callable($selector)) {
-			foreach ($this as $key => $item) {
-				$items[$selector($item, $key)] = $item;
-			}
-		} elseif ($selector === null) {
+		if ($selector === null) {
 			if (is_array($this->data)) {
-				$items = array_values($this->data);
-			} else {
-				foreach ($this as $item) {
-					$items[] = $item;
-				}
+				return new Collection(array_values($this->data));
 			}
+			$items = array();
+			foreach ($this as $key => $item) {
+				$items[] = $item;
+			}
+			return new Collection($items);
+		} elseif (is_closure($selector)) {
+			$closure = $selector;
 		} else {
-			foreach ($this as $item) {
-				$items[PropertyPath::get($selector, $item)] = $item;
-			}
+			$closure = PropertyPath::compile($selector);
+		}
+		$items = array();
+		foreach ($this as $key => $item) {
+			$items[$closure($item, $key)] = $item;
 		}
 		return new Collection($items);
 	}
@@ -116,32 +119,32 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return Collection
 	 */
 	function where($conditions) {
-		if (is_object($conditions) && is_callable($conditions)) {
-			$isClosure = true;
-		} elseif (is_array($conditions) == false) { // Example: '<= 5' or '10'
-			// Compare the items directly (1D)
-			if (preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
-				$operator = $matches[1];
-				$expectation = $matches[2];
-			} else {
-				$expectation = $conditions;
-				$operator = '==';
-			}
-			$conditions = function ($value) use ($expectation, $operator) {
-						return compare($value, $operator, $expectation);
-					};
-			$isClosure = true;
-		} else {
-			$isClosure = false;
-			$operators = array();
-			foreach ($conditions as $path => $expectation) {
-				if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
-					unset($conditions[$path]);
-					$conditions[$matches[1]] = $expectation;
-					$operators[$matches[1]] = $matches[2];
-				} else {
-					$operators[$path] = false;
+		$isClosure = is_closure($conditions);
+		if ($isClosure === false) {
+			if (is_array($conditions)) {
+				$operators = array();
+				foreach ($conditions as $path => $expectation) {
+					if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
+						unset($conditions[$path]);
+						$conditions[$matches[1]] = $expectation;
+						$operators[$matches[1]] = $matches[2];
+					} else {
+						$operators[$path] = false;
+					}
 				}
+			} else { //'<= 5' or '10'
+				// Compare the items directly (1D)
+				if (preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
+					$operator = $matches[1];
+					$expectation = $matches[2];
+				} else {
+					$expectation = $conditions;
+					$operator = '==';
+				}
+				$conditions = function ($value) use ($expectation, $operator) {
+					return compare($value, $operator, $expectation);
+				};
+				$isClosure = true;
 			}
 		}
 
@@ -166,7 +169,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 					}
 				}
 			}
-			if ($key != $counter) { // Is this an array
+			if ($key != $counter) { // Is this an array?
 				$data[$key] = $item;
 			} else {
 				$data[] = $item;
@@ -187,15 +190,15 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		$items = array();
 		$indexed = true;
 		$counter = 0;
-		$isClosure = (is_object($selector) && is_callable($selector));
+		if (is_closure($selector)) {
+			$closure = $selector;
+		} else {
+			$closure = PropertyPath::compile($selector);
+		}
 		// Collect values
 		foreach ($this as $key => $item) {
 			$items[$key] = $item;
-			if ($isClosure) {
-				$sortOrder[$key] = call_user_func($selector, $item);
-			} else {
-				$sortOrder[$key] = PropertyPath::get($selector, $item);
-			}
+			$sortOrder[$key] = $closure($item, $key);
 			if ($key !== $counter) {
 				$indexed = false;
 			}
@@ -388,8 +391,8 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			return;
 		}
 		$type = gettype($this->data);
-		$type = ($type == 'object') ? get_class($this->data) : $type;
-		throw new \Exception(''.$type.' is not an Traversable');
+		$typeOrClass = ($type === 'object') ? get_class($this->data) : $type;
+		throw new \Exception(''.$typeOrClass.' is not an Traversable');
 	}
 
 	/**

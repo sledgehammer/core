@@ -72,7 +72,7 @@ class CollectionTest extends TestCase {
 		));
 	}
 
-	function test_sorting() {
+	function test_orderBy() {
 		$fruitsAndVegetables = $this->getFruitsAndVegetables();
 		// indexed
 		$abc = $fruitsAndVegetables->orderBy('name')->select('name');
@@ -89,6 +89,16 @@ class CollectionTest extends TestCase {
 			'banana',
 			'apple',
 		));
+	}
+
+	function test_selectKey() {
+		$xyz= new Collection(array('x' => 10, 'y' => 20, 'z' => 30));
+		$this->assertEquals(array(10, 20, 30), $xyz->selectKey(null)->toArray(), 'null should return an index array.');
+		$this->assertEquals(array(10 => 10, 20 => 20, 30 => 30), $xyz->selectKey('.')->toArray(), 'Using a path as key.');
+		$closure = function ($item, $key) {
+			return $key.$item;
+		};
+		$this->assertEquals(array('x10' => 10, 'y20' => 20, 'z30' => 30), $xyz->selectKey($closure)->toArray(), 'Using a closure as key.');
 	}
 
 	function test_where_operators() {
