@@ -53,13 +53,19 @@ class PropertyPath extends Object {
 	const T_ALL_ELEMENTS = 'T_ALL_ELEMENTS';
 
 	/**
-	 * Retrieve a value.
+	 * Retrieve $path from $data.
 	 *
-	 * @param array|object $data
 	 * @param string $path
+	 * @param array|object $data
 	 * @return mixed
 	 */
-	static function get($data, $path) {
+	static function get($path, $data) {
+		if (is_string($path) === false) {
+			deprecated('The $path & $data parameters were swapped');
+			$tmp = $data;
+			$data = $path;
+			$path = $tmp;
+		}
 		$parts = self::compile($path);
 		foreach ($parts as $part) {
 			switch ($part[0]) {
@@ -151,7 +157,7 @@ class PropertyPath extends Object {
 					if (is_object($data) || is_array($data)) {
 						$items = array();
 						foreach ($data as $key => $item) {
-							$items[$key] = self::get($item, $part[1]);
+							$items[$key] = self::get($part[1], $item);
 						}
 						return $items;
 					} else {
@@ -173,11 +179,14 @@ class PropertyPath extends Object {
 	/**
 	 * Retrieve a reference to a value.
 	 *
-	 * @param array|object $data
 	 * @param string $path
+	 * @param array|object $data
 	 * @return mixed
 	 */
-	static function &getReference(&$data, $path) {
+	static function &getReference($path, &$data) {
+		if (is_string($path) === false) {
+			warning('The $path & $data parameters were swapped');
+		}
 		$parts = self::compile($path);
 		foreach ($parts as $part) {
 			switch ($part[0]) {
@@ -228,13 +237,16 @@ class PropertyPath extends Object {
 	}
 
 	/**
-	 * Set a value.
+	 * Set $path to $value in $data.
 	 *
-	 * @param array|object $data
 	 * @param string $path
 	 * @param mixed $value
+	 * @param array|object $data
 	 */
-	static function set(&$data, $path, $value) {
+	static function set($path, $value, &$data) {
+		if (is_string($path) === false && is_string($data)) {
+			warning('The $path, $value & $data parameters were swapped');
+		}
 		$parts = self::compile($path);
 		$last = array_pop($parts);
 		foreach ($parts as $part) {
@@ -316,8 +328,8 @@ class PropertyPath extends Object {
 	 */
 	static function map($source, &$target, $mapping) {
 		foreach ($mapping as $to => $from) {
-			$value = PropertyPath::get($source, $from);
-			PropertyPath::set($target, $to, $value);
+			$value = PropertyPath::get($from, $source);
+			PropertyPath::set($to, $value, $target);
 		}
 	}
 

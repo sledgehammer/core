@@ -55,10 +55,10 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				$key = $index;
 				$index++;
 			} elseif ($selectKey !== false) {
-				$key = PropertyPath::get($item, $selectKey);
+				$key = PropertyPath::get($selectKey, $item);
 			}
 			if (is_string($selector)) {
-				$items[$key] = PropertyPath::get($item, $selector);
+				$items[$key] = PropertyPath::get($selector, $item);
 			} elseif ($isClosure) {
 				$items[$key] = $selector($item, $key);
 			} else {
@@ -91,7 +91,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			}
 		} else {
 			foreach ($this as $item) {
-				$items[PropertyPath::get($item, $selector)] = $item;
+				$items[PropertyPath::get($selector, $item)] = $item;
 			}
 		}
 		return new Collection($items);
@@ -155,7 +155,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				}
 			} else {
 				foreach ($conditions as $path => $expectation) {
-					$actual = PropertyPath::get($item, $path);
+					$actual = PropertyPath::get($path, $item);
 					$operator = $operators[$path];
 					if ($operator) {
 						if (compare($actual, $operator, $expectation) === false) {
@@ -194,7 +194,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			if ($isClosure) {
 				$sortOrder[$key] = call_user_func($selector, $item);
 			} else {
-				$sortOrder[$key] = PropertyPath::get($item, $selector);
+				$sortOrder[$key] = PropertyPath::get($selector, $item);
 			}
 			if ($key !== $counter) {
 				$indexed = false;

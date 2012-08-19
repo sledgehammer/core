@@ -1575,7 +1575,7 @@ exit [lindex $result 3]');
 		if ($path === null) {
 			return $root;
 		}
-		return PropertyPath::get($root, $path);
+		return PropertyPath::get($path, $root);
 	}
 
 }

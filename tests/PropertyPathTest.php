@@ -98,34 +98,34 @@ class PropertyPathTest extends TestCase {
 		$array = array('id' => '1');
 		$object = (object) array('id' => '2');
 
-		$this->assertEquals(PropertyPath::get('me', '.'), 'me', 'Path "." should return the input');
+		$this->assertEquals(PropertyPath::get('.', 'me'), 'me', 'Path "." should return the input');
 		// autodetect type
-		$this->assertEquals(PropertyPath::get($array, 'id'), '1', 'Path "id" should work on arrays');
-		$this->assertEquals(PropertyPath::get($object, 'id'), '2', 'Path "id" should also work on objects');
+		$this->assertEquals(PropertyPath::get('id', $array), '1', 'Path "id" should work on arrays');
+		$this->assertEquals(PropertyPath::get('id', $object), '2', 'Path "id" should also work on objects');
 		// force array element
-		$this->assertEquals(PropertyPath::get($array, '[id]'), '1', 'Path "[id]" should work on arrays');
+		$this->assertEquals(PropertyPath::get('[id]', $array), '1', 'Path "[id]" should work on arrays');
 		// force object property
-		$this->assertEquals(PropertyPath::get($object, '->id'), '2', 'Path "->id" should work on objects');
+		$this->assertEquals(PropertyPath::get('->id', $object), '2', 'Path "->id" should work on objects');
 		$object->property = array('id' => '3');
-		$this->assertEquals(PropertyPath::get($object, 'property[id]'), '3', 'Path "property[id]" should work on objects');
-		$this->assertEquals(PropertyPath::get($object, '->property[id]'), '3', 'Path "->property[id]" should work on objects');
+		$this->assertEquals(PropertyPath::get('property[id]', $object), '3', 'Path "property[id]" should work on objects');
+		$this->assertEquals(PropertyPath::get('->property[id]', $object), '3', 'Path "->property[id]" should work on objects');
 		$object->object = (object) array('id' => '4');
-		$this->assertEquals(PropertyPath::get($object, 'object->id'), '4', 'Path "object->id" should work on objects in objects');
-		$this->assertEquals(PropertyPath::get($object, '->object->id'), '4', 'Path "->object->id" should work on objects in objects');
+		$this->assertEquals(PropertyPath::get('object->id', $object), '4', 'Path "object->id" should work on objects in objects');
+		$this->assertEquals(PropertyPath::get('->object->id', $object), '4', 'Path "->object->id" should work on objects in objects');
 		$object->property['element'] = (object) array('id' => '5');
-		$this->assertEquals(PropertyPath::get($object, 'property[element]->id'), '5');
-		$this->assertEquals(PropertyPath::get($object, '->property[element]->id'), '5');
+		$this->assertEquals(PropertyPath::get('property[element]->id', $object), '5');
+		$this->assertEquals(PropertyPath::get('->property[element]->id', $object), '5');
 		$array['object'] = (object) array('id' => 6);
-		$this->assertEquals(PropertyPath::get($array, 'object->id'), 6);
-		$this->assertEquals(PropertyPath::get($array, '[object]->id'), 6);
+		$this->assertEquals(PropertyPath::get('object->id', $array), 6);
+		$this->assertEquals(PropertyPath::get('[object]->id', $array), 6);
 		// optional
-		$this->assertEquals(PropertyPath::get($array, 'id?'), '1', 'Path "id?" should work on arrays');
-		$this->assertEquals(PropertyPath::get($object, 'id?'), '2', 'Path "id?" should work on objects');
-		$this->assertEquals(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
-		$this->assertEquals(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
+		$this->assertEquals(PropertyPath::get('id?', $array), '1', 'Path "id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get('id?', $object), '2', 'Path "id?" should work on objects');
+		$this->assertEquals(PropertyPath::get('undefined?', $array), null, 'Path "id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get('undefined?', $object), null, 'Path "id?" should work on objects');
 
-		$this->assertEquals(PropertyPath::get($array, '[id?]'), '1', 'Path "->id?" should work on arrays');
-		$this->assertEquals(PropertyPath::get($object, '->id?'), '2', 'Path "->id?" should work on objects');
+		$this->assertEquals(PropertyPath::get('[id?]', $array), '1', 'Path "->id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get('->id?', $object), '2', 'Path "->id?" should work on objects');
 
 //		$this->assertEquals(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
 //		$this->assertEquals(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
@@ -137,42 +137,42 @@ class PropertyPathTest extends TestCase {
 			array('id' => 3),
 			array('id' => 5),
 		);
-		$this->assertEquals(PropertyPath::get($sequence, '[*].id'), array(1, 3, 5));
+		$this->assertEquals(PropertyPath::get('[*].id', $sequence), array(1, 3, 5));
 
 		\PHPUnit_Framework_Error_Notice::$enabled = false;
 		ob_start();
-		$this->assertEquals(PropertyPath::get($object, '->property->element'), null);
+		$this->assertEquals(PropertyPath::get('->property->element', $object), null);
 		$this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
 		ob_start();
-		$this->assertEquals(PropertyPath::get($array, '->id'), null, 'Path "->id" should NOT work on arrays');
+		$this->assertEquals(PropertyPath::get('->id', $array), null, 'Path "->id" should NOT work on arrays');
 		$this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
 		ob_start();
-		$this->assertEquals(PropertyPath::get($object, '[id]'), null, 'Path "[id]" should NOT work on objects');
+		$this->assertEquals(PropertyPath::get('[id]', $object), null, 'Path "[id]" should NOT work on objects');
 		$this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
 
-//		PropertyPath::get($array, '->id?')
-//		PropertyPath::get($object, '[id?]')
+//		PropertyPath::get('->id?', $array)
+//		PropertyPath::get('[id?]', $object)
 		\PHPUnit_Framework_Error_Notice::$enabled = true;
 	}
 
 	function test_PropertyPath_set() {
 		$array = array('id' => '1');
 		$object = (object) array('id' => '2');
-		PropertyPath::set($array, 'id', 3);
+		PropertyPath::set('id', 3, $array);
 		$this->assertEquals($array['id'], 3);
-		PropertyPath::set($object, 'id', 4);
+		PropertyPath::set('id', 4, $object);
 		$this->assertEquals($object->id, 4);
-		PropertyPath::set($object, '->id', 5);
+		PropertyPath::set('->id', 5, $object);
 		$this->assertEquals($object->id, 5);
-		PropertyPath::set($array, '[id]', 6);
+		PropertyPath::set('[id]', 6, $array);
 		$this->assertEquals($array['id'], 6);
 		$array['object'] = (object) array('id' => 7);
-		PropertyPath::set($array, 'object->id', 8);
+		PropertyPath::set('object->id', 8, $array);
 		$this->assertEquals($array['object']->id, 8);
-		PropertyPath::set($array, '[object]->id', 9);
+		PropertyPath::set('[object]->id', 9, $array);
 		$this->assertEquals($array['object']->id, 9);
 		$array['element'] = array('id' => 1);
-		PropertyPath::set($array, 'element[id]', 10);
+		PropertyPath::set('element[id]', 10, $array);
 		$this->assertEquals($array['element']['id'], 10);
 	}
 
