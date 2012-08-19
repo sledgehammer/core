@@ -81,7 +81,6 @@ abstract class Observable extends Object {
 			throw new InfoException('Parameter $callback issn\'t callable', $callback);
 		}
 		if ($this->hasEvent($event) === false) {
-
 			$availableEvents = array_keys($this->events);
 			$availableEvents[] = 'change';
 			foreach (array_keys(get_public_vars($this)) as $property) {
