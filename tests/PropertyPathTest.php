@@ -6,10 +6,7 @@ namespace Sledgehammer;
 class PropertyPathTest extends TestCase {
 
 	function test_tokenizer() {
-		if (class_exists('Sledgehammer\PropertyPath', false)) {
-			$this->markTestSkipped('PropertyPath already defined, skipping private functions');
-		}
-		Framework::$autoLoader->exposePrivates('Sledgehammer\PropertyPath');
+		Framework::$autoLoader->exposePrivates('Sledgehammer\PropertyPath', 'Sledgehammer\PropertyPathTester');
 
 		$string = PropertyPath::T_STRING;
 		$dot = PropertyPath::T_DOT;
@@ -19,10 +16,10 @@ class PropertyPathTest extends TestCase {
 		$parentheses = PropertyPath::T_PARENTHESES;
 		$optional = PropertyPath::T_OPTIONAL;
 
-		$this->assertEquals(PropertyPath::tokenize('any'), array(array($string, 'any')));
-		$this->assertEquals(PropertyPath::tokenize('any?'), array(array($string, 'any'), array($optional, '?')));
-		$this->assertEquals(PropertyPath::tokenize('any1.any2'), array(array($string, 'any1'), array($dot, '.'), array($string, 'any2')));
-		$this->assertEquals(PropertyPath::tokenize('any->property[element]->method()'), array(
+		$this->assertEquals(PropertyPathTester::tokenize('any'), array(array($string, 'any')));
+		$this->assertEquals(PropertyPathTester::tokenize('any?'), array(array($string, 'any'), array($optional, '?')));
+		$this->assertEquals(PropertyPathTester::tokenize('any1.any2'), array(array($string, 'any1'), array($dot, '.'), array($string, 'any2')));
+		$this->assertEquals(PropertyPathTester::tokenize('any->property[element]->method()'), array(
 			array($string, 'any'),
 			array($arrow, '->'),
 			array($string, 'property'),
@@ -100,6 +97,8 @@ class PropertyPathTest extends TestCase {
 	function test_PropertyPath_get() {
 		$array = array('id' => '1');
 		$object = (object) array('id' => '2');
+
+		$this->assertEquals(PropertyPath::get('me', '.'), 'me', 'Path "." should return the input');
 		// autodetect type
 		$this->assertEquals(PropertyPath::get($array, 'id'), '1', 'Path "id" should work on arrays');
 		$this->assertEquals(PropertyPath::get($object, 'id'), '2', 'Path "id" should also work on objects');
@@ -119,6 +118,18 @@ class PropertyPathTest extends TestCase {
 		$array['object'] = (object) array('id' => 6);
 		$this->assertEquals(PropertyPath::get($array, 'object->id'), 6);
 		$this->assertEquals(PropertyPath::get($array, '[object]->id'), 6);
+		// optional
+		$this->assertEquals(PropertyPath::get($array, 'id?'), '1', 'Path "id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get($object, 'id?'), '2', 'Path "id?" should work on objects');
+		$this->assertEquals(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
+
+		$this->assertEquals(PropertyPath::get($array, '[id?]'), '1', 'Path "->id?" should work on arrays');
+		$this->assertEquals(PropertyPath::get($object, '->id?'), '2', 'Path "->id?" should work on objects');
+
+//		$this->assertEquals(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
+//		$this->assertEquals(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
+
 		// @todo Add UnitTest for method notation "getFilename()"
 
 		$sequence = array(
@@ -138,6 +149,9 @@ class PropertyPathTest extends TestCase {
 		ob_start();
 		$this->assertEquals(PropertyPath::get($object, '[id]'), null, 'Path "[id]" should NOT work on objects');
 		$this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
+
+//		PropertyPath::get($array, '->id?')
+//		PropertyPath::get($object, '[id?]')
 		\PHPUnit_Framework_Error_Notice::$enabled = true;
 	}
 

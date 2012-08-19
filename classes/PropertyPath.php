@@ -10,15 +10,19 @@ namespace Sledgehammer;
  * @link http://msdn.microsoft.com/en-us/library/cc645024(v=VS.95).aspx
  *
  * @todo? Wildcards for getting and setting a range of properties ''
- * @todo? $path Validation properties
+ * @todo? exists($path) method
  *
  * Format:
- *   'abc'  maps to element $data['abc'] or property $data->abc.
+ *   'abc' maps to element $data['abc'] or property $data->abc.
  *   '->abc' maps to property $data->abc
- *   '[abc] maps to element  $data['abc']
- *   'abc.efg'  maps to  $data['abc']['efg], $data['abc']->efg, $data->abc['efg] or $data->abc->efg
+ *   '[abc]' maps to element  $data['abc']
+ *   'abc.efg' maps to  $data['abc']['efg], $data['abc']->efg, $data->abc['efg] or $data->abc->efg
  *   '->abc->efg' maps to property $data->abc->efg
  *   '->abc[efg]' maps to property $data->abc[efg]
+ *
+ *  Specials operators:
+ *   '[*]' match all elements. Example: 'devices[*].id' returns an array with just the device ids.
+ *   '.' just returns the $data.
  *
  * Use "\" to escape characters. Example "[complex\[key\]]" look up $data["complex[key]"]
  *
@@ -32,10 +36,11 @@ class PropertyPath extends Object {
 	const TYPE_PROPERTY = 'PROPERTY';
 	const TYPE_ELEMENT = 'ELEMENT';
 	const TYPE_METHOD = 'METHOD';
-	const TYPE_OPTIONAL = 'OPTIONAL';
+	const TYPE_OPTIONAL = 'ANY?';
 	const TYPE_OPTIONAL_PROPERTY = 'PROPERTY?';
 	const TYPE_OPTIONAL_ELEMENT = 'ELEMENT?';
 	const TYPE_SUBPATH = 'SUBPATH';
+	const TYPE_SELF = 'SELF';
 
 	// Tokens
 	const T_STRING = 'T_STRING';
@@ -153,6 +158,10 @@ class PropertyPath extends Object {
 						notice('Unexpected type: '.gettype($data).', expecting an object or array');
 						return;
 					}
+					break;
+
+				case self::TYPE_SELF:
+					return $data;
 
 				default:
 					throw new \Exception('Unsupported type: '.$part[0]);
@@ -353,13 +362,13 @@ class PropertyPath extends Object {
 	 */
 	static function escape($identifier) {
 		$escaped = str_replace('\\', '\\\\', $identifier); // escape the escape-character.
-		return  strtr($escaped, array(
-			'.' => '\.',
-			'[' => '\[',
-			']' => '\[',
-			'->' => '\->',
-			'()' => '\()',
-		));
+		return strtr($escaped, array(
+				'.' => '\.',
+				'[' => '\[',
+				']' => '\[',
+				'->' => '\->',
+				'()' => '\()',
+			));
 	}
 
 	/**
@@ -442,10 +451,7 @@ class PropertyPath extends Object {
 					}
 
 					if ($nextToken[0] === self::T_OPTIONAL) {
-						$compiled[] = array(
-							self::TYPE_OPTIONAL,
-							$token[1],
-						);
+						$compiled[] = array(self::TYPE_OPTIONAL, $token[1]);
 						$i++;
 					} else {
 						$compiled[] = array(
@@ -458,24 +464,22 @@ class PropertyPath extends Object {
 				// Chained T_ANY
 				case self::T_DOT:
 					if ($first) {
-						notice('Invalid "." in the path', 'Use "." for chaining, not at the beginning of a path');
-						return false;
+						if ($nextToken[0] !== 'T_END') {
+							notice('Invalid "." in the path', 'Use "." for chaining, not at the beginning of a path');
+							return false;
+						}
+						$compiled[] = array(self::TYPE_SELF, $token[1]);
+						break;
 					}
 					if ($nextToken[0] !== self::T_STRING) {
 						notice('Invalid "'.$token[1].'" in path, expecting an identifier after "."');
 						return false;
 					}
 					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
-						$compiled[] = array(
-							self::TYPE_OPTIONAL,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_OPTIONAL, $nextToken[1]);
 						$i += 2;
 					} else {
-						$compiled[] = array(
-							self::TYPE_ANY,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_ANY, $nextToken[1]);
 						$i++;
 					}
 					break;
@@ -487,16 +491,10 @@ class PropertyPath extends Object {
 						return false;
 					}
 					if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
-						$compiled[] = array(
-							self::TYPE_OPTIONAL_PROPERTY,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_OPTIONAL_PROPERTY, $nextToken[1]);
 						$i += 2;
 					} else {
-						$compiled[] = array(
-							self::TYPE_PROPERTY,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_PROPERTY, $nextToken[1]);
 						$i++;
 					}
 					break;
@@ -516,20 +514,14 @@ class PropertyPath extends Object {
 							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'?"');
 							return false;
 						}
-						$compiled[] = array(
-							self::TYPE_OPTIONAL_ELEMENT,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_OPTIONAL_ELEMENT, $nextToken[1]);
 						$i += 3;
 					} else {
 						if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
 							notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
 							return false;
 						}
-						$compiled[] = array(
-							self::TYPE_ELEMENT,
-							$nextToken[1],
-						);
+						$compiled[] = array(self::TYPE_ELEMENT, $nextToken[1]);
 						$i += 2;
 					}
 					break;
@@ -544,15 +536,12 @@ class PropertyPath extends Object {
 						$offset++; // skip the dot to prevent "Invalid beginning error"
 					}
 					// Merge remaining tokens as subpath
-					$path  = '';
+					$path = '';
 					$tokens = array_slice($tokens, $offset);
 					foreach ($tokens as $token) {
 						$path .= $token[1];
 					}
-					$compiled[] = array(
-						self::TYPE_SUBPATH,
-						$path,
-					);
+					$compiled[] = array(self::TYPE_SUBPATH, $path);
 					return $compiled;
 
 				default:
