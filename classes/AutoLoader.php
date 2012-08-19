@@ -457,53 +457,72 @@ class AutoLoader extends Object {
 	}
 
 	/**
-	 * Veranderdt de scope van alle functies en eigenschappen van de $class van private of protected naar public.
-	 * Hierdoor kun je in UnitTests controleren of de inhoud van het objecten correct is.
-	 * Deze functie NIET gebruiken in productie-code
+	 * Convert the scope of all properties and methods to public.
+	 * Allows you to inspect the private parts of an object from unittests.
+	 * Don't use exposePrivates in production code.
 	 *
-	 * @throws Exception Als de class al gedefineerd is. (De eval() zou anders fatale "Cannot redeclare class" veroorzaken).
-	 * @param string $definition Classname
+	 *  @throws Exceptions when the (target)definition is already defined. (Prevent the fatal error: "Cannot redeclare class/interface")
+	 *
+	 * @param string $definition Name of the definition with private properties en methods.
+	 * @param string $targetDefinition (optional) Specify an alternative classname for the exposed code.
 	 * @return void
 	 */
-	function exposePrivates($definition) {
-		if (class_exists($definition, false)) {
-			throw new \Exception('Class: "'.$definition.'" is already defined');
+	function exposePrivates($definition, $targetDefinition = null) {
+		if ($targetDefinition === null) {
+			$targetDefinition = $definition;
+		} elseif (dirname(str_replace ('\\', '/', $definition)) !== dirname(str_replace ('\\', '/', $targetDefinition))) {
+			throw new \Exception('Target: "'.$targetDefinition.'" does\'t match the "'.$definition.'" namespace');
 		}
-		if (interface_exists($definition, false)) {
-			throw new \Exception('Interace: "'.$definition.'" is already defined');
+		if (class_exists($targetDefinition, false)) {
+			throw new \Exception('Class: "'.$targetDefinition.'" is already defined');
+		}
+		if (interface_exists($targetDefinition, false)) {
+			throw new \Exception('Interace: "'.$targetDefinition.'" is already defined');
 		}
 		$filename = $this->getFilename($definition);
 		if ($filename === null) {
 			throw new InfoException('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
 		}
 		$tokens = token_get_all(file_get_contents($filename));
-		$php_code = '';
-		if ($tokens[0][0] != T_OPEN_TAG) {
-			throw new \Exception('Unexpected beginning of the file, expecting "<?php"');
-		} else {
-			unset($tokens[0]); // Haal de "<?php" er vanaf
-		}
-		foreach ($tokens as $token) {
+		$code = '';
+		$tokenCount = count($tokens);
+		for ($i = 0; $i < $tokenCount; $i++) {
+			$token = $tokens[$i];
 			if (is_string($token)) {
-				$php_code .= $token;
+				$code .= $token;
 				continue;
 			}
+			if ($i === 0) {
+				if ($token[0] !== T_OPEN_TAG) {
+					throw new \Exception('Unexpected beginning of the file, expecting "<?php"');
+				}
+				continue; // don't add <?php to the $code.
+			}
+
 			switch ($token[0]) {
 
 				// Geen private en protected
 				case T_PRIVATE:
 				case T_PROTECTED:
-					$php_code .= 'public';
+					$code .= 'public';
+					break;
+
+				case T_CLASS:
+				case T_INTERFACE:
+					$code .= $token[1]; // 'class' or 'interface'
+					$code .= $tokens[$i + 1][1]; // whitespace
+					$code .= basename(str_replace ('\\', '/', $targetDefinition)); // target definition (without namespace)
+					$i+= 2;
 					break;
 
 				// Alle andere php_code toevoegen aan de $php_code string
 				default:
-					$php_code .= $token[1];
+					$code .= $token[1];
 					break;
 			}
 		}
 		// De php code uitvoeren en de class (zonder protected en private) declareren
-		eval($php_code);
+		eval($code);
 	}
 
 	/**
