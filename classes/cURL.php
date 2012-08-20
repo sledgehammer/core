@@ -80,7 +80,7 @@ class cURL extends Observable {
 	 * Keep the connections open, speeds up requests to the same server.
 	 * @var bool
 	 */
-	static $keepAlive = true;
+	static $keepalive = true;
 
 	/**
 	 * Number of tranfers in the pool
@@ -217,6 +217,10 @@ class cURL extends Observable {
 				}
 			}
 		} while ($wait);
+		if (self::$keepalive === false && self::$tranferCount === 0) {
+			curl_multi_close(self::$pool);
+			self::$pool = null;
+		}
 	}
 
 	/**
@@ -385,9 +389,10 @@ class cURL extends Observable {
 			if (self::$pool === false) {
 				throw new \Exception('Failed to create cURL multi handle');
 			}
-			if (self::$keepAlive) {
+			if (self::$keepalive) {
 				register_shutdown_function(function () {
-					cURL::$keepAlive = false; // Close the multi handle when all requests are completed.
+					cURL::$keepalive = false; // Close the multi handle when all requests are completed.
+					cURL::synchronize();
 				});
 			}
 		}
@@ -420,7 +425,7 @@ class cURL extends Observable {
 			if ($error !== CURLM_OK) {
 				throw new \Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
 			}
-			if (self::$tranferCount === 0 && self::$keepAlive === false) {
+			if (self::$tranferCount === 0 && self::$keepalive === false) {
 				curl_multi_close(self::$pool);
 				self::$pool = null;
 			}
