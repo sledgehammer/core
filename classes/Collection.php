@@ -262,28 +262,9 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return Collection
 	 */
 	function reverse() {
-		$order = array();
-		$indexed = true;
-		$counter = 0;
-		// Collect values
-		foreach ($this as $key => $item) {
-			$items[$key] = $item;
-			$order[] = $key;
-			if ($key !== $counter) {
-				$indexed = false;
-			}
-			$counter++;
-		}
-		rsort($order);
-		$reversed = array();
-		foreach ($order as $key) {
-			if ($indexed) {
-				$reversed[] = $items[$key];
-			} else { // Keep keys intact
-				$reversed[$key] = $items[$key];
-			}
-		}
-		return new Collection($reversed);
+		$this->dataToArray();
+		$preserveKeys = (is_indexed($this->data) === false);
+		return new Collection(array_reverse($this->data, $preserveKeys));
 	}
 
 	/**
