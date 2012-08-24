@@ -256,12 +256,12 @@ class Logger extends Object {
 				break;
 			}
 		}
+		if (isset($call['function'])) {
+			$index++; // Skip the method that calls the Logger->append()
+		}
 		$backtrace = array_slice($backtrace, $index);
 		$trace = array();
 		foreach ($backtrace as $call) {
-			if ($depth === 0) {
-				break;
-			}
 			$depth--;
 			if (isset($call['file']) && isset($call['line'])) {
 				$trace[] = array(
