@@ -1002,7 +1002,7 @@ namespace Sledgehammer {
 
 	/**
 	 * Show debug and profiling information.
-	 * Contains parsetime, memory usage and (sql)querylogs.
+	 * Contains parsetime, memory usage and (sql) log entries.
 	 */
 	function statusbar() {
 		$divider = '<span class="statusbar-divider">, </span>';
@@ -1289,19 +1289,29 @@ namespace Sledgehammer {
 			} else {
 				trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
 			}
-		} else {
-			$notices = array();
-			foreach ($headers as $header => $value) {
-				if ($header == 'Status') { // and != fastcgi?
-					header($_SERVER['SERVER_PROTOCOL'].' '.$value);
-				} elseif (is_numeric($header)) {
-					$notices[] = 'Invalid HTTP header: "'.$header.': '.$value.'"';
-				} else {
-					header($header.': '.$value);
-				}
+			return;
+		}
+		$notices = array();
+		foreach ($headers as $header => $value) {
+			if ($header == 'Status') { // and != fastcgi?
+				header($_SERVER['SERVER_PROTOCOL'].' '.$value);
+			} elseif (is_numeric($header)) {
+				$notices[] = 'Invalid HTTP header: "'.$header.': '.$value.'"';
+			} else {
+				header($header.': '.$value);
 			}
-			foreach ($notices as $notice) {
-				notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
+		}
+		foreach ($notices as $notice) {
+			notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
+		}
+		if (isset($_SERVER['HTTP_DEBUGR'])) {
+			ob_start();
+			statusbar();
+			$value = base64_encode(ob_get_clean());
+			if (strlen($value) <= 8388608) { // Under 8KiB?
+				header('DebugR-sledgehammer-statusbar: '.$value);
+			} else {
+				header('DebugR-sledgehammer-statusbar: '.base64_encode('Too much data'));
 			}
 		}
 	}

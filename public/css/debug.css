@@ -44,6 +44,7 @@
 }
 .statusbar .statusbar-tab {
 	display: inline-block;
+	position: relative;
 	height: 20px;
 	padding: 0px 1px;
 	margin: 0px 1px;
@@ -102,15 +103,14 @@
 	background: #f0f0f0;
 }
 .statusbar .statusbar-parsetime {
-	position: relative;
+
 }
 .statusbar .statusbar-popout {
-	display: block;
+	display: none;
 	opacity: 0;
 	position: absolute;
-	bottom: -23px;
+	bottom: 23px;
 	left: -11px;
-	height: 20px;
 	background: #d6d6d6;
 	background-image: -webkit-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
 	background-image: -webkit-linear-gradient(bottom, #d6d6d6 0%, #e6e6e6 100%);
@@ -126,9 +126,11 @@
 	padding: 0 13px;
 	box-shadow: inset 0 1px 0px #f1f1f1;
 	text-shadow: 0 1px 0 #eee;
+	text-align: left;
 }
 
 .statusbar *:hover > .statusbar-popout {
+	display: block;
 	bottom: 19px;
 	opacity: 1;
 	-webkit-transition: opacity .35s ease-out;
