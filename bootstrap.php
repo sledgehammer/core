@@ -7,6 +7,9 @@
 namespace Sledgehammer;
 if (!defined('Sledgehammer\CORE_DIR')) {
 
+	if (isset($_SERVER['HTTP_DEBUGR']) && headers_sent() === false) {
+		header('DebugR-sledgehammer-statusbar: '.base64_encode('no statusbar data.'));
+	}
 	// Define constants
 	if (defined('Sledgehammer\ENVIRONMENT') === false) {
 		if (defined('ENVIRONMENT') === false) {

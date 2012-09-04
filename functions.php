@@ -1275,10 +1275,10 @@ namespace Sledgehammer {
 	 * @return void
 	 */
 	function send_headers($headers) {
-		if (count($headers) == 0) {
-			return;
-		}
 		if (headers_sent($file, $line)) {
+			if (count($headers) == 0) {
+				return;
+			}
 			if ($file == '' && $line == 0) {
 				$location = '';
 			} else {
@@ -1304,14 +1304,20 @@ namespace Sledgehammer {
 		foreach ($notices as $notice) {
 			notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
 		}
+
 		if (isset($_SERVER['HTTP_DEBUGR'])) {
-			ob_start();
-			statusbar();
-			$value = base64_encode(ob_get_clean());
-			if (strlen($value) <= 8388608) { // Under 8KiB?
-				header('DebugR-sledgehammer-statusbar: '.$value);
-			} else {
-				header('DebugR-sledgehammer-statusbar: '.base64_encode('Too much data'));
+			static $debugrOnce = true;
+			if ($debugrOnce) { // Only build & send DebugR headers once.
+				$debugrOnce = false;
+				ob_start();
+				statusbar();
+				$value = base64_encode(ob_get_clean());
+				if (strlen($value) <= 8388608) { // Under 8KiB?
+					header('DebugR-sledgehammer-statusbar: '.$value);
+				} else {
+					// @todo split data in in 8KB chunks.
+					header('DebugR-sledgehammer-statusbar: '.base64_encode('Too much data'));
+				}
 			}
 		}
 	}
