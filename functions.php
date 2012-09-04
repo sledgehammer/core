@@ -1175,7 +1175,7 @@ namespace Sledgehammer {
 		$version = '';
 		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
 			$browser = 'php-'.php_sapi_name();
-		} elseif (preg_match('/MSIE ([0-9].[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
+		} elseif (preg_match('/MSIE ([0-9]{1,2}.[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
 			$browser = 'Microsoft Internet Explorer';
 			$version = $match[1];
 		} elseif (preg_match('/Opera\/([0-9].[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
