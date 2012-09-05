@@ -1276,8 +1276,8 @@ namespace Sledgehammer {
 	 */
 	function send_headers($headers) {
 		if (headers_sent($file, $line)) {
-			if (count($headers) == 0) {
-				return;
+			if (count($headers) == 0) { // sending nothing?
+				return; // no error.
 			}
 			if ($file == '' && $line == 0) {
 				$location = '';
@@ -1291,6 +1291,7 @@ namespace Sledgehammer {
 			}
 			return;
 		}
+		// Send headers.
 		$notices = array();
 		foreach ($headers as $header => $value) {
 			if ($header == 'Status') { // and != fastcgi?
@@ -1304,7 +1305,7 @@ namespace Sledgehammer {
 		foreach ($notices as $notice) {
 			notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
 		}
-
+		// Detect DebugR extension and send the sledgehammer-statusbar header.
 		if (isset($_SERVER['HTTP_DEBUGR'])) {
 			static $debugrOnce = true;
 			if ($debugrOnce) { // Only build & send DebugR headers once.
@@ -1312,11 +1313,15 @@ namespace Sledgehammer {
 				ob_start();
 				statusbar();
 				$value = base64_encode(ob_get_clean());
-				if (strlen($value) <= 8388608) { // Under 8KiB?
+				if (strlen($value) <= (4 * 1024)) { // Under 4KiB?
 					header('DebugR-sledgehammer-statusbar: '.$value);
 				} else {
-					// @todo split data in in 8KB chunks.
-					header('DebugR-sledgehammer-statusbar: '.base64_encode('Too much data'));
+					// Send in 4KB chunks.
+					header_remove('DebugR-sledgehammer-statusbar');
+					$chunks = str_split($value, (4 * 1024));
+					foreach ($chunks as $index => $chunk) {
+						header('DebugR-sledgehammer-statusbar--'.$index.': '.$chunk);
+					}
 				}
 			}
 		}
