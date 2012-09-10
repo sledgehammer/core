@@ -295,10 +295,9 @@ class cURL extends Observable {
 			return true;
 		}
 		// Add messages from the curl_multi handle to the $messages array.
-		$error = CURLM_CALL_MULTI_PERFORM;
-		while ($error === CURLM_CALL_MULTI_PERFORM) {
+		do {
 			$error = curl_multi_exec(self::$pool, $active);
-		}
+		} while ($error === CURLM_CALL_MULTI_PERFORM);
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'Failed to execute cURL multi handle');
 		}
@@ -398,15 +397,17 @@ class cURL extends Observable {
 		}
 		// Add request
 		$error = curl_multi_add_handle(self::$pool, $this->handle);
+		while ($error === CURLM_CALL_MULTI_PERFORM) {
+			$error = curl_multi_exec(self::$pool, $active);
+		}
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to add cURL handle');
 		}
 		self::$tranferCount++;
 		// Start request
-		$error = CURLM_CALL_MULTI_PERFORM;
-		while ($error === CURLM_CALL_MULTI_PERFORM) {
+		do {
 			$error = curl_multi_exec(self::$pool, $active);
-		}
+		} while ($error === CURLM_CALL_MULTI_PERFORM);
 		if ($error !== CURLM_OK) {
 			throw new \Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
 		}
