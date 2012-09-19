@@ -99,6 +99,7 @@ class HTML extends Object {
 
 	/**
 	 * Build an icon tag <img class="icon" /> or <i class="icon-*"></i>
+	 * Prefix a name with "!" to get the "icon-white" version.
 	 *
 	 * @link http://twitter.github.com/bootstrap/base-css.html#icons
 	 * @param string Name or URL of the icon
@@ -107,6 +108,9 @@ class HTML extends Object {
 	static function icon($icon) {
 		if (preg_match('/^[a-z-]+$/', $icon)) {
 			return self::element('i', array('class' => 'icon-'.$icon));
+		}
+		if (preg_match('/^\![a-z-]+/', $icon)) {
+			return self::element('i', array('class' => 'icon-'.substr($icon, 1).' icon-white'));
 		}
 		if (preg_match('/^http[s]|^\/|^[.]{1,2}\//', $icon) === 0) { // relative url?
 			$icon = WEBROOT.$icon;

@@ -342,12 +342,12 @@ class ErrorHandler {
 					if (class_exists('Sledgehammer\Logger', false) && !empty(Logger::$instances)) {
 						echo '<br />';
 						foreach (Logger::$instances as $name => $logger) {
-							if ($this->email == false) {
+							if ($this->email) {
+								echo '<b>', $name, '</b><br />';
+								$logger->render();
+							} else {
 								$logger->statusbar($name.': ');
 								echo "<br />\n";
-							} else {
-								echo '<b>', $name, ']<br />';
-								$logger->render();
 							}
 						}
 					}
