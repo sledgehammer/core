@@ -7,7 +7,9 @@ namespace Sledgehammer;
  * An exception with additonal information for the ErrorHander.
  *
  * Named "InfoException" instead of "\Sledgehammer\Exception" to prevent catch issues.
- * See http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha for details.
+ *
+ * For details see:
+ * @link http://onehackoranother.com/logfile/2009/01/php-5-3-exception-gotcha
  *
  * @package Core
  */
@@ -22,10 +24,10 @@ class InfoException extends \Exception {
 	/**
 	 * Contructor
 	 *
-	 * @param string $message
-	 * @param mixed $information
-	 * @param int $code
-	 * @param Exception $previous (optional)
+	 * @param string $message  The Exception message to throw.
+	 * @param mixed $information  The additional information for the ErrorHandler
+	 * @param int $code  The Exception code.
+	 * @param Exception $previous  The previous exception used for the exception chaining.
 	 */
 	function __construct($message, $information, $code = 0, $previous = null) {
 		parent::__construct($message, $code, $previous);

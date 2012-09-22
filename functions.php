@@ -22,6 +22,9 @@ namespace {
 		}
 		if ($export) {
 			ob_start();
+		} elseif (headers_sent() === false) {
+			// Force Content-Type to text/html.
+			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
 		}
 		$dump = new Sledgehammer\Dump($variable);
 		$dump->render();
@@ -1275,10 +1278,10 @@ namespace Sledgehammer {
 	 * @return void
 	 */
 	function send_headers($headers) {
+		if (count($headers) == 0) { // sending nothing?
+			return;
+		}
 		if (headers_sent($file, $line)) {
-			if (count($headers) == 0) { // sending nothing?
-				return; // no error.
-			}
 			if ($file == '' && $line == 0) {
 				$location = '';
 			} else {
@@ -1304,26 +1307,6 @@ namespace Sledgehammer {
 		}
 		foreach ($notices as $notice) {
 			notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
-		}
-		// Detect DebugR extension and send the sledgehammer-statusbar header.
-		if (isset($_SERVER['HTTP_DEBUGR'])) {
-			static $debugrOnce = true;
-			if ($debugrOnce) { // Only build & send DebugR headers once.
-				$debugrOnce = false;
-				ob_start();
-				statusbar();
-				$value = base64_encode(ob_get_clean());
-				if (strlen($value) <= (4 * 1024)) { // Under 4KiB?
-					header('DebugR-sledgehammer-statusbar: '.$value);
-				} else {
-					// Send in 4KB chunks.
-					header_remove('DebugR-sledgehammer-statusbar');
-					$chunks = str_split($value, (4 * 1024));
-					foreach ($chunks as $index => $chunk) {
-						header('DebugR-sledgehammer-statusbar--'.$index.': '.$chunk);
-					}
-				}
-			}
 		}
 	}
 

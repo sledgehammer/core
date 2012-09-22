@@ -7,9 +7,6 @@
 namespace Sledgehammer;
 if (!defined('Sledgehammer\CORE_DIR')) {
 
-	if (isset($_SERVER['HTTP_DEBUGR']) && headers_sent() === false) {
-		header('DebugR-sledgehammer-statusbar: '.base64_encode('no statusbar data.'));
-	}
 	// Define constants
 	if (defined('Sledgehammer\ENVIRONMENT') === false) {
 		if (defined('ENVIRONMENT') === false) {
@@ -200,6 +197,11 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 		if (file_exists(PATH.'vendor/pear/php/')) { // Add pear classes the include path.
 			extend_include_path(PATH.'vendor/pear/php/');
 		}
+	}
+
+	// Set DebugR statusbar header.
+	if (headers_sent() === false && DebugR::isEnabled()) {
+		DebugR::send('sledgehammer-statusbar', 'no statusbar data.', true);
 	}
 
 	// Initialize modules

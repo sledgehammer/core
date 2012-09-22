@@ -76,9 +76,11 @@ class Dump extends Object {
 	 * Constructor
 	 * @param mixed $variable  The variable to display on render()
 	 */
-	function __construct($variable) {
+	function __construct($variable, $backtrace = null) {
 		$this->variable = $variable;
-		$backtrace = debug_backtrace();
+		if ($backtrace === null) {
+			$backtrace = debug_backtrace();
+		}
 		if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && $backtrace[1]['function'] === 'dump') {
 			// call via the global dump() function.
 			$this->trace = array(
@@ -93,6 +95,9 @@ class Dump extends Object {
 				'file' => $backtrace[0]['file'],
 				'line' => $backtrace[0]['line'],
 			);
+			if (array_value($backtrace[0], 'class') === 'Sledgehammer\DebugR') {
+				$this->trace['invocation'] = 'DebugR::dump';
+			}
 		}
 	}
 
@@ -100,10 +105,6 @@ class Dump extends Object {
 	 * Renders information about the variable, like var_dump() but with improved syntax and coloring.
 	 */
 	function render() {
-		if (headers_sent() === false) {
-			// Force correct encoding.
-			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
-		}
 		$old_value = ini_get('html_errors');
 		ini_set('html_errors', false); // Forces xdebug < 2.2.0 to use render with the internal var_dump()
 		if (self::$xdebug === null) {
