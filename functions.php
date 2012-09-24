@@ -22,9 +22,9 @@ namespace {
 		}
 		if ($export) {
 			ob_start();
-		} elseif (headers_sent() === false) {
+		} elseif (headers_sent() === false && class_exists('Sledgehammer\Framework', false)) {
 			// Force Content-Type to text/html.
-			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
+			header('Content-Type: text/html; charset='.strtolower(Sledgehammer\Framework::$charset));
 		}
 		$dump = new Sledgehammer\Dump($variable);
 		$dump->render();
