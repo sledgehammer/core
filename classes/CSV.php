@@ -72,10 +72,10 @@ class CSV extends Object implements \Iterator {
 	 *
 	 * @param string $filename  Het path waar het csv bestand zich bevind
 	 * @param array $columns  Hiermee geef je aan welke kolommen ingelezen moeten worden. $value = kolomnaam, $key = array_key
-	 * @param char $delimiter  Scheidingsteken, ';' als default omdat dit nederlandse excel standaard is.
+	 * @param char|null $delimiter  Delimiter, usually "," or ";". null: Auto-detect the  delimiter.
 	 * @param char $enclosure  Karakter dat gebruikt word om tekst waarbinnen het scheidingsteken kan voorkomen te omsluiten
 	 */
-	function __construct($filename, $columns = null, $delimiter = ';', $enclosure = '"') {
+	function __construct($filename, $columns = null, $delimiter = null, $enclosure = '"') {
 		$this->filename = $filename;
 		$this->columns = $columns;
 		$this->delimiter = $delimiter;
@@ -145,6 +145,11 @@ class CSV extends Object implements \Iterator {
 		$this->fp = fopen($this->filename, 'r');
 		if (!$this->fp) {
 			throw new \Exception('Couldn\'t open file "'.$this->filename.'"');
+		}
+		if ($this->delimiter === null) {
+			$line = fgets($this->fp);
+			$this->delimiter = (substr_count($line, ';') > substr_count($line, ',')) ? ';' : ',';
+			fseek($this->fp, 0); // rewind
 		}
 		// Kolommen controleren
 		$keys = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
