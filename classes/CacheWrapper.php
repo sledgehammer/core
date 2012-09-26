@@ -37,14 +37,16 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 	function __get($property) {
 		$path = $this->cachePath.'->'.$property;
 		$cache = cache($path);
-		if ($cache->hit($value)) {
-			return $value;
+		if ($cache->hit($value) === false) {
+			$object = $this->object;
+			$value = $cache->storeUntil($this->expires, function () use ($object, $property) {
+				return $object->$property;
+			});
 		}
-		$value = $this->object->$property;
 		if (is_object($value)) {
 			$value = new CacheWrapper($value, $path, $this->expires);
 		}
-		return $cache->storeUntil($this->expires, $value);
+		return $value;
 	}
 
 	function __call($method, $arguments) {
@@ -64,14 +66,16 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 		$key .= ')';
 		$path = $this->cachePath.'['.PropertyPath::escape($key).']';
 		$cache = cache($path);
-		if ($cache->hit($value)) {
-			return $value;
+		if ($cache->hit($value) === false) {
+			$object = $this->object;
+			$value = $cache->storeUntil($this->expires, function () use ($object, $method, $arguments){
+				return call_user_func_array(array($object, $method), $arguments);
+			});
 		}
-		$value = call_user_func_array(array($this->object, $method), $arguments);
 		if (is_object($value)) {
 			$value = new CacheWrapper($value, $path, $this->expires);
 		}
-		return $cache->storeUntil($this->expires, $value);
+		return $value;
 	}
 
 	public function offsetExists($offset) {
@@ -84,14 +88,10 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 
 	public function offsetSet($offset, $value) {
 		throw new \Exception('Not supported for a Cached object');
-//		return $this->__call('offsetSet', array($offset, $value));
-
 	}
 
 	public function offsetUnset($offset) {
 		throw new \Exception('Not supported for a Cached object');
-		return $this->__call('offsetUnset', array($offset));
-
 	}
 
 	public function current() {
@@ -121,8 +121,12 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 		if ($this->iterator !== null) {
 			return $this->iterator;
 		}
-		if (Cache::hit($this->keyPrefix.'#Iterator', $array) === false) {
-			$array = Cache::cached($this->keyPrefix.'#Iterator', iterator_to_array($this->object), $this->expires);
+		$cache = cache($this->cachePath.':Iterator');
+		if ($cache->hit($array) === false) {
+			$object = $this->object;
+			$array = $cache->storeUntil($this->expires, function () use ($object) {
+				return iterator_to_array($object);
+			});
 		}
 		$this->iterator = new \ArrayIterator($array);
 		return $this->iterator;

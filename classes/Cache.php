@@ -12,9 +12,10 @@ namespace Sledgehammer;
  *   if ($cache->hit($value)) {
  *     return $value;
  *   }
- *   // slow operation
- *   ...
- *   return $cache->storeUntil('+15min', $result);
+ *   return $cache->storeUntil('+15min', function () {
+ *     // slow operation
+ *     return $outcome;
+ *   });
  */
 class Cache extends Object implements \ArrayAccess {
 
@@ -65,7 +66,7 @@ class Cache extends Object implements \ArrayAccess {
 	 * @param string $identifier
 	 * @param string $backend ENUM "apc" or "file"
 	 */
-	function __construct($identifier, $backend) {
+	protected function __construct($identifier, $backend) {
 		$this->_guid = sha1('Sledgehammer'.__FILE__.$identifier);
 		$this->_path = $identifier;
 		$this->_backend = $backend;
@@ -134,6 +135,7 @@ class Cache extends Object implements \ArrayAccess {
 		if ($node['expires'] != 0 && $node['expires'] <= time()) { // has expired?
 			return false;
 		}
+		// Cache hit!
 		$output = $node['data'];
 		$this->release();
 		return true;
@@ -143,10 +145,10 @@ class Cache extends Object implements \ArrayAccess {
 	 * Store the value in the cache.
 	 *
 	 * @param string|int $expires expires  A string is parsed via strtotime(). Examples: '+5min' or '2020-01-01' int's larger than 3600 (1 hour) are interpreted as unix timestamp expire date. And int's smaller or equal to 3600 are interpreted used as ttl.
-	 * @param mixed $value
+	 * @param callable $closure
 	 * @return mixed
 	 */
-	function storeUntil($expires, $value) {
+	function storeUntil($expires, $closure) {
 		if ($this->_locked === false) {
 			throw new \Exception('Cache wasn\'t locked, call hit() or fetch() before storeUntil()');
 		}
@@ -158,6 +160,12 @@ class Cache extends Object implements \ArrayAccess {
 		} elseif ($expires < time()) {
 			notice('Writing an expired cache entry', 'Use Cache->clear() to invalidate a cache entry');
 		}
+		try {
+			$value = call_user_func($closure);
+		} catch(\Exception $e) {
+			$this->release();
+			throw $e;
+		}
 		$method = $this->_backend.'_write';
 		$this->$method($value, $expires);
 		$this->release();
@@ -167,15 +175,21 @@ class Cache extends Object implements \ArrayAccess {
 	/**
 	 * Store in de cache without an expiration date.
 	 *
-	 * @param mixed $value
+	 * @param callable $closure
 	 * @return mixed
 	 */
-	function storeForever($value) {
+	function storeForever($closure) {
 		if ($this->_locked === false) {
 			throw new \Exception('Cache wasn\'t locked, call hit() or fetch() before storeForever()');
 		}
+		try {
+			$value = call_user_func($closure);
+		} catch(\Exception $e) {
+			$this->release();
+			throw $e;
+		}
 		$method = $this->_backend.'_write';
-		$this->$method($value);
+		$this->$method($closure);
 		$this->release();
 		return $value;
 	}
