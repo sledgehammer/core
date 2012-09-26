@@ -39,7 +39,7 @@ class CacheTest extends TestCase {
 	private function cache_hit_test($type) {
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);
 		$cache->fetch();
-		$cache->storeUntil(1, array($this, 'callback'));
+		$cache->storeUntil(1, array($this, 'noop'));
 		$hit = $cache->hit($output);
 		$this->assertTrue($hit);
 		$this->assertEquals('VALUE', $output);
@@ -49,7 +49,7 @@ class CacheTest extends TestCase {
 	private function cache_expires_test($type) {
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);
 		$cache->fetch(); // lock
-		$cache->storeUntil(1, array($this, 'callback')); // store for 1 sec.
+		$cache->storeUntil(1, array($this, 'noop')); // store for 1 sec.
 		usleep(100000); // 0.1 sec
 		$this->assertEquals('VALUE', $cache->fetch(), 'Should not be expired just yet');
 		sleep(2); // Wait 1.5 sec for the cache to expire.
@@ -60,12 +60,13 @@ class CacheTest extends TestCase {
 
 	/**
 	 * Callback for the "expensive" operation.
+	 * no-op for "no operation"
 	 */
-	function callback() {
+	function noop() {
 		return 'VALUE';
 	}
 	private function unlockAndClear($cache) {
-		$cache->storeUntil(0, array($this, 'callback'));
+		$cache->storeUntil(0, array($this, 'noop'));
 		$cache->clear();
 	}
 
