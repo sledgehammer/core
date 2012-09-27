@@ -112,6 +112,7 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 
 	if (ENVIRONMENT === 'development' || ENVIRONMENT === 'phpunit') {
 		Framework::$errorHandler->html = true;
+		Framework::$errorHandler->debugr = true;
 		Framework::$errorHandler->emails_per_request = 10;
 	} else {
 		Framework::$errorHandler->emails_per_request = 2;
