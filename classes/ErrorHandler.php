@@ -38,7 +38,7 @@ class ErrorHandler {
 	 * Send the errormessage as DebugR header (if headers aren't already sent).
 	 * @var bool
 	 */
-	public $debugr = false;
+	public $debugR = false;
 
 	// Limiet aan het aantal email dat de ErrorHandler verstuurd.
 	// Bij waardes zoals false ("", 0, null) is er GEEN limiet
@@ -386,10 +386,10 @@ class ErrorHandler {
 			return;
 		}
 		$this->isProcessing = true;
-		if ($this->debugr) {
-			$this->debugr = (headers_sent() === false); // Update debugr setting.
+		if ($this->debugR) {
+			$this->debugR = (headers_sent() === false); // Update debugr setting.
 		}
-		if ($this->log || $this->cli || $this->debugr) {
+		if ($this->log || $this->cli || $this->debugR) {
 			if ($type instanceof \Exception) {
 				$error_message = get_class($type).': '.$type->getMessage();
 			} else {
@@ -405,8 +405,8 @@ class ErrorHandler {
 			if ($this->cli) {
 				echo '[', date('Y-m-d H:i:s'), '] ', $error_message, "\n";
 			}
-			if ($this->debugr) {
-				if (in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
+			if ($this->debugR) {
+				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
 				} else {
 					DebugR::warning($error_message);
