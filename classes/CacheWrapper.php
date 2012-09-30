@@ -36,13 +36,10 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 
 	function __get($property) {
 		$path = $this->cachePath.'->'.$property;
-		$cache = cache($path);
-		if ($cache->hit($value) === false) {
-			$object = $this->object;
-			$value = $cache->storeUntil($this->expires, function () use ($object, $property) {
-				return $object->$property;
-			});
-		}
+		$object = $this->object;
+		$value = cache($path, $this->expires, function () use ($object, $property) {
+			return $object->$property;
+		});
 		if (is_object($value)) {
 			$value = new CacheWrapper($value, $path, $this->expires);
 		}
@@ -65,13 +62,10 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 		}
 		$key .= ')';
 		$path = $this->cachePath.'['.PropertyPath::escape($key).']';
-		$cache = cache($path);
-		if ($cache->hit($value) === false) {
-			$object = $this->object;
-			$value = $cache->storeUntil($this->expires, function () use ($object, $method, $arguments){
-				return call_user_func_array(array($object, $method), $arguments);
-			});
-		}
+		$object = $this->object;
+		$value = cache($path, $this->expires, function () use ($object, $method, $arguments){
+			return call_user_func_array(array($object, $method), $arguments);
+		});
 		if (is_object($value)) {
 			$value = new CacheWrapper($value, $path, $this->expires);
 		}
@@ -121,13 +115,10 @@ class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 		if ($this->iterator !== null) {
 			return $this->iterator;
 		}
-		$cache = cache($this->cachePath.':Iterator');
-		if ($cache->hit($array) === false) {
-			$object = $this->object;
-			$array = $cache->storeUntil($this->expires, function () use ($object) {
-				return iterator_to_array($object);
-			});
-		}
+		$object = $this->object;
+		$value = cache($this->cachePath.':Iterator', $this->expires, function () use ($object) {
+			return iterator_to_array($object);
+		});
 		$this->iterator = new \ArrayIterator($array);
 		return $this->iterator;
 	}

@@ -1579,17 +1579,22 @@ exit [lindex $result 3]');
 	}
 
 	/**
-	 * Returns a Cache node from the Caching graph.
+	 * Returns the cached value when valid cache entry was found. otherwise retrieves the value via the $closure, stores it in the cache and returns it.
 	 *
-	 * @param string $path
-	 * @return Cache
+	 * @param string $path The Protoerty path to the cache node in the caching graph.
+	 * @param string|int|array $options A string or int is interpreted as a 'expires' option.
+	 * array(
+	 *   'max_age' => int|string // The entry must be newer than the $maxAge. Example: "-5min", "2012-01-01"
+	 *   'expires' => int|string, // A string is parsed via strtotime(). Examples: '+5min' or '2020-01-01' int's larger than 3600 (1 hour) are interpreted as unix timestamp expire date. And int's smaller or equal to 3600 are interpreted used as ttl.
+	 *   'forever' => bool, // Default false (When true no )
+	 *   'lock' => (bool) // Default true, Prevents a cache stampede (http://en.wikipedia.org/wiki/Cache_stampede)
+	 * )
+	 * @param callable $closure  The method to retrieve/calculate the value.
+	 * @return mixed
 	 */
-	function cache($path = null) {
-		$root = Cache::getInstance();
-		if ($path === null) {
-			return $root;
-		}
-		return PropertyPath::get($path, $root);
+	function cache($path, $options, $closure) {
+		$cache = PropertyPath::get($path, Cache::rootNode());
+		return $cache->value($options, $closure);
 	}
 
 }
