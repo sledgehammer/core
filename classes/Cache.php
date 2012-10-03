@@ -31,7 +31,7 @@ class Cache extends Object implements \ArrayAccess {
 	 * Relative identifier for this application.
 	 * @var string
 	 */
-	private $_path;
+	private $_identifier;
 
 	/**
 	 * Connected nodes.
@@ -70,13 +70,13 @@ class Cache extends Object implements \ArrayAccess {
 	 */
 	protected function __construct($identifier, $backend) {
 		$this->_guid = sha1('Sledgehammer'.__FILE__.$identifier);
-		$this->_path = $identifier;
+		$this->_identifier = $identifier;
 		$this->_backend = $backend;
 	}
 
 	function __destruct() {
 		if ($this->_locked) {
-			notice('Cache is locked, releasing: "'.$this->_path.'"');
+			notice('Cache is locked, releasing: "'.$this->_identifier.'"');
 			$this->release(); // Auto-release locks on time-outs
 		}
 	}
@@ -89,9 +89,15 @@ class Cache extends Object implements \ArrayAccess {
 		if (self::$instance !== null) {
 			return self::$instance;
 		}
-		mkdirs(TMP_DIR.'Cache');
 		$backend = function_exists('apc_fetch') ? 'apc' : 'file';
+		$backend = 'file';
 		self::$instance = new Cache('', $backend);
+		if ($backend === 'file') {
+			mkdirs(TMP_DIR.'Cache');
+			if (rand(1, 25) === 1) { // Run gc only once in every X requests.
+				self::file_gc();
+			}
+		}
 		return self::$instance;
 	}
 
@@ -264,7 +270,7 @@ class Cache extends Object implements \ArrayAccess {
 	 */
 	function __get($property) {
 		if (empty($this->_nodes[$property])) {
-			$this->_nodes[$property] = new Cache($this->_path.'.'.$property, $this->_backend);
+			$this->_nodes[$property] = new Cache($this->_identifier.'.'.$property, $this->_backend);
 		}
 		return $this->_nodes[$property];
 	}
@@ -398,9 +404,35 @@ class Cache extends Object implements \ArrayAccess {
 		unlink(TMP_DIR.'Cache/'.$this->_guid);
 	}
 
+	/**
+	 * Cleanup expired cache entries
+	 */
+	private static function file_gc() {
+		$dir = new \DirectoryIterator(TMP_DIR.'Cache');
+		$files = array();
+		foreach ($dir as $entry) {
+			if ($entry->isFile()) {
+				$files[] = $entry->getFilename();
+			}
+		}
+		shuffle($files);
+		$files = array_slice($files, 0, ceil(count($files) / 10)); // Take 10% of the files
+		$cache = new Cache('GC', 'file');
+		foreach ($files as $id) {
+			$cache->_guid = $id;
+			$cache->_file = fopen(TMP_DIR.'Cache/'.$id, 'r');
+			$hit = $cache->read($output);
+			fclose($cache->_file);
+			$cache->_file = null;
+			if ($hit === false) { // Expired?
+				$cache->clear();
+			}
+		}
+	}
+
 	function offsetGet($offset) {
 		if (empty($this->_nodes['['.$offset.']'])) {
-			$this->_nodes['['.$offset.']'] = new Cache($this->_path.'['.$offset.']', $this->_backend);
+			$this->_nodes['['.$offset.']'] = new Cache($this->_identifier.'['.$offset.']', $this->_backend);
 		}
 		return $this->_nodes['['.$offset.']'];
 	}
