@@ -58,10 +58,10 @@ class Cache extends Object implements \ArrayAccess {
 	private static $instance;
 
 	/**
-	 * Property that has a backend specific contents.
-	 * @var mixed
+	 * File handle for the file-backend.
+	 * @var resource|null
 	 */
-	private $_config;
+	private $_file;
 
 	/**
 	 * Constructor
@@ -76,7 +76,7 @@ class Cache extends Object implements \ArrayAccess {
 
 	function __destruct() {
 		if ($this->_locked) {
-			notice('Cache is locked, releasing...');
+			notice('Cache is locked, releasing: "'.$this->_path.'"');
 			$this->release(); // Auto-release locks on time-outs
 		}
 	}
@@ -116,12 +116,16 @@ class Cache extends Object implements \ArrayAccess {
 			);
 		}
 		// Merge default options
-		$options = array_merge(array(
+		$default = array(
 			'expires' => false,
 			'forever' => false,
 			'max_age' => false,
 			'lock' => true,
-		), $options);
+		);
+		$options = array_merge($default, $options);
+		if (count($options) !== count($default)) {
+			notice('Option: '.quoted_human_implode(' and ', array_keys(array_diff($options, $default))).' is invalid');
+		}
 		if ($options['expires'] === false && $options['forever'] === false && $options['max_age'] === false) {
 			throw new InfoException('Invalid options: "expires",  "max_age" or "forever" must be set', $options);
 		}
@@ -132,7 +136,17 @@ class Cache extends Object implements \ArrayAccess {
 		if ($options['lock']) {
 			$this->lock();
 		}
-		if ($this->read($value, $options['max_age'])) { // Read value from cache
+		// Read value from cache
+		try {
+			$hit = $this->read($value, $options['max_age']);
+		} catch (\Exception $e) {
+			// Reading cache failed
+			if ($options['lock']) {
+				$this->release();
+			}
+			throw $e;
+		}
+		if ($hit) {
 			if ($options['lock']) {
 				$this->release();
 				return $value;
@@ -175,6 +189,10 @@ class Cache extends Object implements \ArrayAccess {
 			}
 			if ($maxAge <= 3600) { // Is maxAge a ttl?
 				$maxAge = time() - $maxAge;
+			}
+			if ($maxAge > time()) {
+				notice('maxAge is '.($maxAge - time()).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
+				return false;
 			}
 			if ($node['updated'] < $maxAge) { // Older than the maximum age?
 				return false;
@@ -321,15 +339,15 @@ class Cache extends Object implements \ArrayAccess {
 	}
 
 	private function file_lock() {
-		if ($this->_config !== null) {
+		if ($this->_file !== null) {
 			throw new \Exception('Cache already has an open filepointer');
 		}
-		$this->_config = fopen(TMP_DIR.'Cache/'.$this->_guid, 'c+');
-		if ($this->_config === false) {
+		$this->_file = fopen(TMP_DIR.'Cache/'.$this->_guid, 'c+');
+		if ($this->_file === false) {
 			throw new \Exception('Creating lockfile failed');
 		}
 		while (true) {
-			if (flock($this->_config, LOCK_EX)) {
+			if (flock($this->_file, LOCK_EX)) {
 				break;
 			}
 			usleep(100);
@@ -337,44 +355,44 @@ class Cache extends Object implements \ArrayAccess {
 	}
 
 	private function file_release() {
-		if ($this->_config === null) {
+		if ($this->_file === null) {
 			throw new \Exception('Cache doesn\'t have an open filepointer');
 		}
-		flock($this->_config, LOCK_UN);
-		fclose($this->_config);
-		$this->_config = null;
+		flock($this->_file, LOCK_UN);
+		fclose($this->_file);
+		$this->_file = null;
 	}
 
 	private function file_read(&$output) {
-		$expires = stream_get_line($this->_config, 1024, "\n");
+		$expires = stream_get_line($this->_file, 1024, "\n");
 		if ($expires == false) { // Entry is empty?
 			return false;
 		}
-		$updated = stream_get_line($this->_config, 1024, "\n");
+		$updated = stream_get_line($this->_file, 1024, "\n");
 		$output = array(
 			'expires' => intval(substr($expires, 9)), // "Expires: " = 9
 			'updated' => intval(substr($updated, 9)), // "Updated: " = 9
-			'data' => unserialize(stream_get_contents($this->_config)),
+			'data' => unserialize(stream_get_contents($this->_file)),
 		);
 		return true;
 	}
 
 	private function file_write($value, $expires = null) {
-		if ($this->_config === null) {
+		if ($this->_file === null) {
 			throw new \Exception('Cache doesn\'t have an open filepointer');
 		}
 		if ($expires === false) {
 			$expires = 'Never';
 		}
-		fseek($this->_config, 0);
-		ftruncate($this->_config, 0);
-		fwrite($this->_config, 'Expires: '.$expires."\nUpdated: ".time()."\n");
-		fwrite($this->_config, serialize($value));
-		fflush($this->_config);
+		fseek($this->_file, 0);
+		ftruncate($this->_file, 0);
+		fwrite($this->_file, 'Expires: '.$expires."\nUpdated: ".time()."\n");
+		fwrite($this->_file, serialize($value));
+		fflush($this->_file);
 	}
 
 	private function file_delete() {
-		if ($this->_config) {
+		if ($this->_file) {
 			throw new \Exception('Can\'t clear a locked file');
 		}
 		unlink(TMP_DIR.'Cache/'.$this->_guid);

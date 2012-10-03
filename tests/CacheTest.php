@@ -35,6 +35,24 @@ class CacheTest extends TestCase {
 		$this->cache_expires_test('apc');
 	}
 
+	function test_invalid_option() {
+		try {
+			cache(__FILE__.__FUNCTION__, array('a invalid option' => 'yes'), array($this, 'incrementCounter'));
+			$this->fail('An invalid options should generate a notice');
+		} catch (\PHPUnit_Framework_Error_Notice $e) {
+			$this->assertEquals('Option: "a invalid option" is invalid', $e->getMessage());
+		}
+	}
+
+	function test_invalid_max_age() {
+		try {
+			cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
+			$this->fail('An max_age in the future should generate a notice');
+		} catch (\PHPUnit_Framework_Error_Notice $e) {
+			$this->assertEquals('maxAge is 60 seconds in the future', $e->getMessage());
+		}
+	}
+
 	private function cache_miss_test($type) {
 		$this->counter = 0;
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);

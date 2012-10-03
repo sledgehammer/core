@@ -1,6 +1,7 @@
 
 /* Statusbar styling */
-.statusbar, .statusbar-cache {
+.statusbar,
+.statusbar-cache {
 	color: #111;
 	font: normal 11px/20px 'Lucida Grande', Helvetica, sans-serif;
 	text-shadow: 0 1px 0 #e0e0e0;
