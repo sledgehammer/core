@@ -136,40 +136,55 @@ class Framework {
 				$module_path = $modulesPath.$module.DIRECTORY_SEPARATOR;
 				if (file_exists($module_path) == false) {
 					warning('Module: "'.$module.'" is missing, but is required by "'.$required_by.'"');
-				} elseif (file_exists($module_path.'module.ini') == false) {
-					notice('Missing module.ini for module: "'.$module.'" required by "'.$required_by.'"');
+				} elseif (file_exists($module_path.'composer.json') == false) {
+					notice('Missing "composer.json" for module: "'.$module.'"', 'Module is required by "'.$required_by.'"');
 					$module_info[$module] = array('name' => $module);
 				} else {
-					$module_info[$module] = parse_ini_file($module_path.'module.ini');
-					if ($module_info[$module] === false) {
-						warning('"'.$module.'/module.ini" is corrupted');
+					$module_info[$module] = json_decode(file_get_contents($module_path.'composer.json'), true);
+					if ($module_info[$module] === null) {
+						$constants = get_defined_constants();
+						$jsonError = json_last_error();
+						foreach ($constants as $constant => $value) {
+							if ($value === $jsonError && substr($constant, 0, 10) === 'JSON_ERROR') {
+								$jsonError = $constant;
+								break;
+							}
+						}
+						warning('"'.$module.'/composer.json" is corrupted', $jsonError);
 						$module_info[$module] = array('name' => $module);
 					}
 				}
 				$module_info[$module]['path'] = $module_path;
 			}
-			if (isset($module_info[$module]['required_modules'])) {
-				$module_info[$module]['required_modules'] = explode(',', $module_info[$module]['required_modules']);
-				foreach ($module_info[$module]['required_modules'] as $index => $required_module) {
-					$module_info[$module]['required_modules'][$index] = trim($required_module);
+			$module_info[$module]['required_modules'] = array();
+			if ($module !== 'core') {
+				if (empty($module_info[$module]['require'])) {
+					warning('No "require" found in "'.$module.'" composer.json','Add `"require": { "sledgehammer/core": "*" }` to the composer.json');
+				} else {
+					$module_info[$module]['required_modules'] = array();
+					foreach ($module_info[$module]['require'] as $required_module => $version) {
+						if (dirname($required_module) == 'sledgehammer') {
+							$module_info[$module]['required_modules'][] = basename($required_module);
+						}
+						// @todo Handle unofficial sledgehammer modules (detect composer.json?)
+					}
 				}
-			} else {
-				$module_info[$module]['required_modules'] = ($module == 'core') ? array() : array('core');
 			}
-			if (isset($module_info[$module]['optional_modules'])) {
-				$module_info[$module]['optional_modules'] = explode(',', $module_info[$module]['optional_modules']);
-				foreach ($module_info[$module]['optional_modules'] as $index => $optional_module) {
-					$module_info[$module]['optional_modules'][$index] = trim($optional_module);
+			$module_info[$module]['optional_modules'] = array();
+			if (isset($module_info[$module]['suggest'])) {
+				foreach (array_keys($module_info[$module]['suggest']) as $optional_module) {
+					if (dirname($required_module) == 'sledgehammer') {
+						$module_info[$module]['optional_modules'][] = basename($optional_module);
+					}
 				}
-			} else {
-				$module_info[$module]['optional_modules'] = array();
+				// @todo Handle unofficial sledgehammer modules (detect composer.json?)
 			}
 		}
 		foreach ($module_info[$module]['required_modules'] as $required_dependancy) {
 			self::appendModules($modulesPath, $required_modules, $module_info, $required_dependancy, $module);
 		}
 		foreach ($module_info[$module]['optional_modules'] as $recommended_dependancy) {
-			if (file_exists($modulesPath.$recommended_dependancy.'/module.ini')) {
+			if (file_exists($modulesPath.$recommended_dependancy.'/composer.json')) {
 				self::appendModules($modulesPath, $required_modules, $module_info, $recommended_dependancy, $module);
 			}
 		}

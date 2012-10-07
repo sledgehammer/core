@@ -405,7 +405,7 @@ class ErrorHandler {
 			if ($this->cli) {
 				echo '[', date('Y-m-d H:i:s'), '] ', $error_message, "\n";
 			}
-			if ($this->debugR) {
+			if ($this->debugR && class_exists('Sledgehammer\DebugR')) {
 				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
 				} else {

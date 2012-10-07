@@ -37,18 +37,6 @@ class ServerEnvironmentTest extends TestCase {
 		$this->assertTrue(in_array(ENVIRONMENT, $allowedEnvironments), 'ENVIRONMENT moet een van de volgende waarden zijn: "'.human_implode('" of "', $allowedEnvironments, '", "').'"');
 	}
 
-	function test_module_ini() {
-		$modules = Framework::getModules();
-		foreach ($modules as $index => $module) {
-			if ($index == 'application') {
-				continue;
-			}
-			$module_ini = parse_ini_file($module['path'].'module.ini', true);
-			$this->assertTrue(isset($module_ini['name']), 'A module.ini should contain a "name" value');
-			$this->assertTrue(isset($module_ini['version']), 'Module: "'.$module['name'].'" zou een "version" moeten hebben');
-		}
-	}
-
 }
 
 ?>
