@@ -43,9 +43,10 @@ class Dump extends Object {
 	 * @var int
 	 */
 	private $offset;
+
 	/**
-	 *
-	 * @var type
+	 * Output of the var_dump()
+	 * @var string
 	 */
 	private $vardump;
 

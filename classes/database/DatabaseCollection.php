@@ -291,7 +291,7 @@ class DatabaseCollection extends Collection {
 	 * @return int
 	 */
 	function count() {
-		if ($this->data === null && $this->sql instanceof SQL) {
+		if ($this->data === null && $this->sql instanceof SQL && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
 			$sql = $this->sql->select('COUNT(*)');
 			return intval(getDatabase($this->dbLink)->fetchValue($sql));
 		}
@@ -300,7 +300,7 @@ class DatabaseCollection extends Collection {
 	}
 
 	/**
-	 * Converts $this->data to an array.
+	 * Converts $this->data into an array.
 	 *
 	 * @return void
 	 */
@@ -366,6 +366,7 @@ class DatabaseCollection extends Collection {
 		}
 		return false;
 	}
+
 }
 
 ?>

@@ -4,14 +4,18 @@
  */
 namespace Sledgehammer;
 /**
- * Een object waar een complexe SQL query mee kunt samenstellen & bewerken.
- * Has a fluent interface where the methods won't modify the object but will return a new object.
+ * Query object to mutate and generate (complex) SQL queries.
+ * @link http://martinfowler.com/eaaCatalog/queryObject.html
+ *
+ * Doesn't have a "fluent" interface: Methods won't modify the object (and return $this) but will return a new object.
  *
  *   $sql = select('*')->from('customers'); // uses the select shorthand
  *
  *   $sql2 = $sql->where('id = 1');
  *   echo $sql; // "SELECT * FROM customers"
  *   echo $sql2; // "SELECT * FROM customers WHERE id = 1"
+ *
+ * More on method chaining: http://stackoverflow.com/questions/1103985/method-chaining-why-is-it-a-good-practice-or-not#7215149
  *
  * @package Core
  */
@@ -47,10 +51,11 @@ class SQL extends Object {
 	public $where = '';
 
 	/**
-	 * array met group by info, wordt verbonden met ', '
-	 * @var type
+	 * Array met group by info, wordt verbonden met ', '
+	 * @var array|string
 	 */
-	public $groupBy = array(); //
+	public $groupBy = array();
+
 	/**
 	 * Similar to $where, but for the HAVING clause.
 	 * @var string|array
@@ -59,7 +64,7 @@ class SQL extends Object {
 
 	/**
 	 * index is naam, waarde is DESC of ASC
-	 * @var type
+	 * @var array|string
 	 */
 	public $orderBy = array();
 
