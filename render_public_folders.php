@@ -22,7 +22,7 @@ $uriPath = rawurldecode(parse_url((isset($_SERVER['REDIRECT_URL']) ? $_SERVER['R
 $relativeWebpath = substr($uriPath, strlen($webpath)); // Bestandsnaam is het gedeelte van de uriPath zonder de WEBPATH
 $modulePath = dirname(dirname(__FILE__));
 $files = array(
-	dirname($modulePath).'/application/public/'.$relativeWebpath,
+	dirname($modulePath).'/app/public/'.$relativeWebpath,
 );
 
 $firstSlashPos = strpos($relativeWebpath, '/');

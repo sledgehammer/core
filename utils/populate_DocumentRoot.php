@@ -28,7 +28,7 @@ $folders = array();
 foreach ($modules as $folder => $info) {
 	$modulePath = $info['path'];
 	if (is_dir($modulePath.'public')) {
-		if (array_value($info, 'application')) {
+		if (array_value($info, 'app')) {
 			$folders[$modulePath.'public'] = '';
 		} else {
 			$folders[$modulePath.'public'] = '/'.$folder;

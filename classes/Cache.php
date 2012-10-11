@@ -28,7 +28,7 @@ class Cache extends Object implements \ArrayAccess {
 	private $_guid;
 
 	/**
-	 * Relative identifier for this application.
+	 * Relative identifier for this app.
 	 * @var string
 	 */
 	private $_identifier;
@@ -52,7 +52,7 @@ class Cache extends Object implements \ArrayAccess {
 	private $_locked = false;
 
 	/**
-	 * The application root node.
+	 * The app root node.
 	 * @var Cache
 	 */
 	private static $instance;
@@ -82,7 +82,7 @@ class Cache extends Object implements \ArrayAccess {
 	}
 
 	/**
-	 * Return the rootnode for the application.
+	 * Return the rootnode for the app.
 	 * @return Cache
 	 */
 	static function rootNode() {

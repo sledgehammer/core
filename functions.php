@@ -211,8 +211,7 @@ namespace Sledgehammer {
 
 	/**
 	 * Detect mimetype based on file-extention
-	 * @see core/settings/mime_types.ini for "extention to mimetype" translations
-
+	 *
 	 * @param string $filename
 	 * @param bool $allow_unknown_types Bij False zal er een foutmelding gegenereerd worden als het bestandstype onbekend is.
 	 * @param string $default De mimetype die wordt geretourneerd als er geen mimetype bekend is.
@@ -933,7 +932,7 @@ namespace Sledgehammer {
 
 	/**
 	 * Get the database instance.
-	 * Will autoconnect to the database configured in "/application/settings/database.ini"
+	 * Will autoconnect to a database configured in "/app/database.ini"
 	 *
 	 * @param string $link The link/connection identifier
 	 * @return \Sledgehammer\Database
@@ -951,10 +950,10 @@ namespace Sledgehammer {
 		static $settings = null;
 		if ($settings === null) {
 			$settings = array();
-			if (file_exists(APPLICATION_DIR.'settings/database.ini') === false) {
-				throw new InfoException('Database connection: "'.$link.'" is not configured', 'No database configuration file found at "'.APPLICATION_DIR.'settings/database.ini"');
+			if (file_exists(APP_DIR.'database.ini') === false) {
+				throw new InfoException('Database connection: "'.$link.'" is not configured', 'No database configuration file found at "'.APP_DIR.'database.ini"');
 			}
-			$all_settings = parse_ini_file(APPLICATION_DIR.'settings/database.ini', true);
+			$all_settings = parse_ini_file(APP_DIR.'database.ini', true);
 			if (array_key_exists(ENVIRONMENT, $all_settings) == false) {
 				throw new \Exception('No databases are configured for environment: "'.ENVIRONMENT.'"');
 			}

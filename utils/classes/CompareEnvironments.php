@@ -90,7 +90,7 @@ class CompareEnvironments extends Util {
 		// Vergelijk database instellingen
 		$database_diff = array();
 		$db_links_compared = array();
-		$database_ini = $this->paths['project'].'application/settings/database.ini';
+		$database_ini = $this->paths['project'].'app/database.ini';
 		if (file_exists($database_ini)) {
 			$database_settings = parse_ini_file($database_ini, true);
 			foreach ($database_settings as $env_and_link => $settings) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Install a PEAR package into the /application/pear/ folder
+ * Install a PEAR package into the /verdor/pear/ folder
  *
  * @package Core
  */
@@ -24,7 +24,7 @@ $targets = array(
 	'script' => PATH.'vendor/pear/script',
 	'bin' => PATH.'vendor/pear/bin',
 	'doc' => PATH.'vendor/pear/docs',
-	'www' => APPLICATION_DIR.'vendor/pear/www'
+	'www' => APP_DIR.'vendor/pear/www'
 //	'test' => ? // Skip tests
 //	'src' => ?,
 //	'ext' => ?,

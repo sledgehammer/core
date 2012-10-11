@@ -40,9 +40,9 @@ class Framework {
 	static function getModules($modulesPath = null) {
 		if ($modulesPath === null) {
 			$modulesPath = MODULES_DIR;
-			$applicationPath = APPLICATION_DIR;
+			$appPath = APP_DIR;
 		} else {
-			$applicationPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR;
+			$appPath = dirname($modulesPath).DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR;
 		}
 		static $cache = array();
 		if (isset($cache[$modulesPath])) {
@@ -50,18 +50,18 @@ class Framework {
 		}
 		$required_modules = array();
 		$module_info = array(
-			'application' => array(
-				'name' => 'Application',
-				'path' => $applicationPath,
+			'app' => array(
+				'name' => 'app',
+				'path' => $appPath,
 				'required_modules' => self::detectModules($modulesPath),
 				'optional_modules' => array(),
-				'application' => true
+				'app' => true
 			)
 		);
 		// Fetch all required_modules
-		self::appendModules($modulesPath, $required_modules, $module_info, 'application', 'detectModules()');
-		if (!file_exists($applicationPath)) {
-			unset($required_modules[array_search('application', $required_modules)]); // De application is zelf niet required
+		self::appendModules($modulesPath, $required_modules, $module_info, 'app', 'detectModules()');
+		if (!file_exists($appPath)) {
+			unset($required_modules[array_search('app', $required_modules)]); // De app is zelf niet required
 		}
 		// Sort by dependancy
 		$sorted_modules = array();
@@ -130,8 +130,8 @@ class Framework {
 		}
 		$required_modules[] = $module;
 		if (!isset($module_info[$module])) {
-			if ($module === 'application') {
-				throw new \Exception('Info for the application "module" must be configured');
+			if ($module === 'app') {
+				throw new \Exception('Info for the app "module" must be configured');
 			} else {
 				$module_path = $modulesPath.$module.DIRECTORY_SEPARATOR;
 				if (file_exists($module_path) == false) {

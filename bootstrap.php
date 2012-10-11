@@ -42,11 +42,11 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	 * Directory of the project.
 	 */
 	define('Sledgehammer\PATH', dirname(MODULES_DIR).DIRECTORY_SEPARATOR);
-	if (!defined('Sledgehammer\APPLICATION_DIR')) {
+	if (!defined('Sledgehammer\APP_DIR')) {
 		/**
-		 * Directory of the application specific files.
+		 * Directory for the app.
 		 */
-		define('Sledgehammer\APPLICATION_DIR', PATH.'application'.DIRECTORY_SEPARATOR);
+		define('Sledgehammer\APP_DIR', PATH.'app'.DIRECTORY_SEPARATOR);
 	}
 
 	if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
@@ -182,7 +182,7 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 		}
 	}
 
-	if (file_exists(PATH.'vendor/')) { // Does the application have vendor packages?
+	if (file_exists(PATH.'vendor/')) { // Does the app have vendor packages?
 		extend_include_path(PATH.'vendor/');
 		// Add classes to the AutoLoader
 		Framework::$autoLoader->importFolder(PATH.'vendor/', array(
