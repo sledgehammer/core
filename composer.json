@@ -1,6 +1,5 @@
 {
 	"name": "sledgehammer/core",
-	"type": "library",
 	"description": "The foundation of the Sledgehammer Framework",
 	"keywords": ["sledgehammer", "framework", "core"],
 	"homepage": "http://sledgehammer.github.com/",

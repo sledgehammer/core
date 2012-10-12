@@ -31,6 +31,182 @@ class Framework {
 	static $errorHandler;
 
 	/**
+	 * Define constants
+	 */
+	static function defineConstants() {
+		if (defined('Sledgehammer\ENVIRONMENT') === false) {
+			if (defined('ENVIRONMENT') === false) {
+				/**
+				 * The configured environment. Uses $_SERVER['APPLICATION_ENV'] or uses 'production' as fallback.
+				 */
+				define('Sledgehammer\ENVIRONMENT', isset($_SERVER['APPLICATION_ENV']) ? $_SERVER['APPLICATION_ENV'] : 'production');
+			} else {
+				define('Sledgehammer\ENVIRONMENT', ENVIRONMENT);
+			}
+		}
+
+		/**
+		 * Directory of the installed Sledgehammer modules. Usually the "sledgehammer/" folder
+		 */
+		define('Sledgehammer\MODULES_DIR', dirname(CORE_DIR).DIRECTORY_SEPARATOR);
+		/**
+		 * Directory of the project.
+		 */
+		define('Sledgehammer\PATH', dirname(dirname(MODULES_DIR)).DIRECTORY_SEPARATOR);
+		if (!defined('Sledgehammer\APP_DIR')) {
+			/**
+			 * Directory for the app.
+			 */
+			define('Sledgehammer\APP_DIR', PATH.'app'.DIRECTORY_SEPARATOR);
+		}
+
+		if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+			/**
+			 * Errorlevel for all errors messages.
+			 */
+			define('Sledgehammer\E_MAX', E_ALL);
+		} else {
+			// Declare constans missing in PHP 5.3
+			define('Sledgehammer\SORT_NATURAL', 6); // "natural order" sorting method for Collection->orderBy()
+			define('Sledgehammer\E_MAX', (E_ALL | E_STRICT)); // E_MAX an error_reporing level that includes all message types (E_ALL doesn't include E_STRICT)
+			define('T_TRAIT', -1); // Used in the AutoLoader
+		}
+
+		/**
+		 * Case insensitive "natural order" sorting method for Collection->orderBy()
+		 * Uses natcasesort()
+		*/
+		define('Sledgehammer\SORT_NATURAL_CI', -2);
+
+		// Detect & create a writable tmp folder
+		if (defined('Sledgehammer\TMP_DIR') === false) {
+			$tmpDir = PATH.'tmp'.DIRECTORY_SEPARATOR;
+			if (is_dir($tmpDir) && is_writable($tmpDir)) { // A writable local tmp folder exist?
+				if (function_exists('posix_getpwuid')) {
+					$tmpDir .= array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+				}
+			} else {
+				$tmpDir = '/tmp/sledgehammer-'.md5(PATH);
+				if (function_exists('posix_getpwuid')) {
+					$tmpDir .= '-'.array_value(posix_getpwuid(posix_geteuid()), 'name').'/';
+				}
+			}
+			/**
+			 * Directory for temporary files.
+			 */
+			define('Sledgehammer\TMP_DIR', $tmpDir);
+		}
+		if (!defined('DEBUG_VAR') && !defined('Sledgehammer\DEBUG_VAR')) {
+			/**
+			 * Configure the "?debug=1" to use another $_GET variable.
+			 */
+			define('Sledgehammer\DEBUG_VAR', 'debug'); // Use de default DEBUG_VAR "debug"
+		}
+	}
+
+	static function configureErrorhandler() {
+		error_reporting(E_MAX); // Activate the maximum error_level
+		
+		self::$errorHandler = new ErrorHandler;
+		self::$errorHandler->init();
+
+		if (ENVIRONMENT === 'development' || ENVIRONMENT === 'phpunit') {
+			ini_set('display_errors', true);
+			self::$errorHandler->html = true;
+			self::$errorHandler->debugR = true;
+			self::$errorHandler->emails_per_request = 10;
+		} else {
+			ini_set('display_errors', false);
+			self::$errorHandler->emails_per_request = 2;
+			self::$errorHandler->emails_per_minute = 6;
+			self::$errorHandler->emails_per_day = 100;
+			$_email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
+			if (preg_match('/^.+@.+\..+$/', $_email) && !in_array($_email, array('you@example.com'))) { // Is het geen emailadres, of het standaard apache emailadres?
+				self::$errorHandler->email = $_email;
+			} elseif ($_email != '') { // Is het email niet leeg of false?
+				error_log('Invalid $_SERVER["SERVER_ADMIN"]: "'.$_email.'", expecting an valid emailaddress');
+			}
+		}
+
+		if (DEBUG_VAR != false) { // Is the DEBUG_VAR enabled?
+			$overrideDebugOutput = null;
+			if (isset($_GET[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_GET parameters?
+				$overrideDebugOutput = $_GET[DEBUG_VAR];
+				switch ($overrideDebugOutput) {
+
+					case 'cookie':
+						setcookie(DEBUG_VAR, true);
+						break;
+
+					case 'nocookie':
+						setcookie(DEBUG_VAR, false, 0);
+						break;
+				}
+			} elseif (isset($_COOKIE[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_COOKIE?
+				$overrideDebugOutput = $_COOKIE[DEBUG_VAR];
+			}
+			if ($overrideDebugOutput !== null) {
+				ini_set('display_errors', (bool) $overrideDebugOutput);
+				self::$errorHandler->html = (bool) $overrideDebugOutput;
+			}
+		}
+	}
+
+	static function configureAutoloader() {
+		// Dectect modules
+		$modules = self::getModules();
+
+		// Register the AutoLoader
+		self::$autoLoader = new AutoLoader(PATH);
+		spl_autoload_register(array(self::$autoLoader, 'define'));
+
+		// Initialize the AutoLoader
+		if (file_exists(PATH.'AutoLoader.db.php')) {
+			self::$autoLoader->loadDatabase(PATH.'AutoLoader.db.php');
+		} else {
+			// Import definitions inside the modules.
+			foreach ($modules as $module) {
+				$path = $module['path'];
+				if (file_exists($module['path'].'classes')) { // A sledgehammer folder layout?
+					$path = $path.'classes'; // Only import the classes folder
+					$settings = array(); // Use the strict default settings
+				} else {
+					// Disable validations
+					$settings = array(
+						'matching_filename' => false,
+						'mandatory_definition' => false,
+						'mandatory_superclass' => false,
+						'one_definition_per_file' => false,
+						'revalidate_cache_delay' => 20,
+						'detect_accidental_output' => false,
+					);
+				}
+				self::$autoLoader->importFolder($path, $settings);
+			}
+		}
+
+		/*  Disable AutoLoader for other vendor packages (Probable no longer needed with composer)
+		if (file_exists(PATH.'vendor/')) { // Does the app have vendor packages?
+			extend_include_path(PATH.'vendor/');
+			// Add classes to the AutoLoader
+			self::$autoLoader->importFolder(PATH.'vendor/', array(
+				'matching_filename' => false,
+				'mandatory_definition' => false,
+				'mandatory_superclass' => false,
+				'one_definition_per_file' => false,
+				'revalidate_cache_delay' => 30,
+				'detect_accidental_output' => false,
+				'ignore_folders' => array('data'),
+				'cache_level' => 3,
+			));
+			if (file_exists(PATH.'vendor/pear/php/')) { // Add pear classes the include path.
+				extend_include_path(PATH.'vendor/pear/php/');
+			}
+		}
+		*/
+	}
+
+	/**
 	 * List required sledgehammer modules and sort on depedency.
 	 * (The module without depedency comes first.)
 	 *

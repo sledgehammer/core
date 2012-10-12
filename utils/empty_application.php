@@ -44,8 +44,9 @@ file_not_exist_put_contents(PATH.'public/rewrite.php', <<<END
 /**
  * rewrite.php
  */
-include(dirname(__FILE__).'/../sledgehammer/core/render_public_folders.php');
-require(dirname(__FILE__).'/../sledgehammer/core/bootstrap.php');
+define('Sledgehammer\STARTED', microtime(true));
+include(dirname(__FILE__).'/../vendor/sledgehammer/core/render_public_folders.php');
+require(dirname(__FILE__).'/../vendor/autoload.php');
 
 \$app = new Sledgehammer\App();
 \$app->handleRequest();
