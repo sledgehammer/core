@@ -18,6 +18,7 @@ namespace Sledgehammer;
  *     return $outcome;
  *   });
  *
+ * @package Core
  */
 class Cache extends Object implements \ArrayAccess {
 

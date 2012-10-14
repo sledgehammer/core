@@ -1,12 +1,13 @@
 <?php
 /**
  * DebugR
- *
- * @link http://debugr.net/
  */
 namespace Sledgehammer;
 /**
- * DebugR
+ * DebugR, send additional debugging information via HTTP heders.
+ * @link http://debugr.net/
+ *
+ * @package Core
  */
 class DebugR extends Object {
 

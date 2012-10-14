@@ -12,6 +12,8 @@ namespace Sledgehammer;
  * - Limits for the detailed log
  * - Customizable columns and renderer.
  * - Ability to add a backtrace per log message.
+ *
+ * @package Core
  */
 class Logger extends Object {
 

@@ -5,6 +5,8 @@
 namespace Sledgehammer;
 /**
  * Wrap an object inside a CacheWrapper to cache all method calls and properties.
+ *
+ * @package Core
  */
 class CacheWrapper extends Object implements \ArrayAccess, \Iterator {
 
