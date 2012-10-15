@@ -130,11 +130,7 @@ class cURL extends Observable {
 	 */
 	static function get($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
-		$defaults = array(
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_FAILONERROR => true,
-			CURLOPT_FOLLOWLOCATION => true,
-		);
+		$defaults = self::defaults();
 		$response = new cURL($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
@@ -153,12 +149,53 @@ class cURL extends Observable {
 	 */
 	static function post($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
-		$defaults = array(
+		$defaults = self::defaults(array(
 			CURLOPT_POST => true,
 			CURLOPT_POSTFIELDS => $data,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_FAILONERROR => true,
-		);
+		));
+		$response = new cURL($options + $defaults);
+		if ($callback !== null) {
+			$response->on('load', $callback);
+		}
+		return $response;
+	}
+
+	/**
+	 * Preform an asynchonous PUT request
+	 *
+	 * @param string $url
+	 * @param array|string $data
+	 * @param array $options Additional CURLOPT_* options
+	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
+	 * @return \Sledgehammer\cURL  cURL response
+	 */
+	static function put($url, $data = array(), $options = array(), $callback = null) {
+		$options[CURLOPT_URL] = $url;
+		$defaults = self::defaults(array(
+			CURLOPT_PUT => true,
+			CURLOPT_POSTFIELDS => $data,
+		));
+		$response = new cURL($options + $defaults);
+		if ($callback !== null) {
+			$response->on('load', $callback);
+		}
+		return $response;
+	}
+
+	/**
+	 * Preform an asynchonous DELETE request
+	 *
+	 * @param string $url
+	 * @param array|string $data
+	 * @param array $options Additional CURLOPT_* options
+	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
+	 * @return \Sledgehammer\cURL  cURL response
+	 */
+	static function delete($url, $options = array(), $callback = null) {
+		$options[CURLOPT_URL] = $url;
+		$defaults = self::defaults(array(
+			CURLOPT_CUSTOMREQUEST => 'DELETE',
+		));
 		$response = new cURL($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
@@ -181,11 +218,11 @@ class cURL extends Observable {
 		if ($fp === false) {
 			throw new \Exception('Unable to write to "'.$filename.'"');
 		}
-		$defaults = array(
+		$defaults = self::defaults(array(
 			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => false,
 			CURLOPT_FILE => $fp,
-			CURLOPT_FAILONERROR => true,
-		);
+		));
 		$response = new cURL($options + $defaults);
 		$response->on('closed', function () use ($fp) {
 				fclose($fp);
@@ -376,9 +413,7 @@ class cURL extends Observable {
 			if (curl_setopt($this->handle, $option, $value) === false) {
 				throw new \Exception('Setting option:'.self::optionName($option).' failed');
 			}
-			if (ENVIRONMENT === 'development') {
-				$option = self::optionName($option);
-			}
+			$option = self::optionName($option);
 			$this->options[$option] = $value;
 		}
 
@@ -449,6 +484,27 @@ class cURL extends Observable {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
 		}
+	}
+
+	/**
+	 * Defaults for the static get, post, put, delete and download methods.
+	 *
+	 * @param array $options Additional defaults
+	 */
+	private static function defaults($options = array()) {
+		$defaults = array(
+			CURLOPT_FAILONERROR => true, // Report an error when the HTTP status >= 400.
+			CURLOPT_RETURNTRANSFER => true, // Don't stream the contents to the output buffer.
+		);
+		if (ini_get('max_execution_time')) {
+			$defaults[CURLOPT_TIMEOUT] = floor(ini_get('max_execution_time') - (microtime(true) - STARTED)) - 1; // Prevent a fatal PHP timeout (allow ~1 sec for exception handling)
+		}
+
+		if (ini_get('safe_mode') == false) {
+			$defaults[CURLOPT_FOLLOWLOCATION] = true; // When allowed follow 301 and 302 redirects.
+			$defaults[CURLOPT_MAXREDIRS] = 25; // Prevent infinite redirection loops.
+		}
+		return $options + $defaults;
 	}
 
 	/**

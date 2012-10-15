@@ -8,6 +8,8 @@ namespace Sledgehammer;
 
 class CurlTest extends TestCase {
 
+	// @todo Test version >= 7.19.4 (which has CURLOPT_REDIR_PROTOCOLS)
+
 	function test_single_get() {
 		$this->assertEmptyPool();
 		$response = cURL::get('http://www.bfanger.nl/');

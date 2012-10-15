@@ -152,11 +152,11 @@ class Logger extends Object {
 	 * @return void
 	 */
 	function statusbar($name) {
-		if ($this->count === 0) {
+		$popup = count($this->entries) > 0;
+		if ($this->count === 0 && $popup === false) {
 			echo $name;
 			return;
 		}
-		$popup = count($this->entries) > 0;
 		if ($popup) {
 			$id = 'logger_C'.$this->count.'_R'.uniqid(); // Generate unique ID
 			echo '<div id="'.$id.'" class="statusbar-log" tabindex="-1" style="display:none;">';
