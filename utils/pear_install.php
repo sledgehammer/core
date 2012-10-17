@@ -8,7 +8,7 @@ namespace Sledgehammer;
 require (dirname(__FILE__).'/../bootstrap.php');
 Framework::$errorHandler->html = false;
 Framework::$errorHandler->cli = true;
-Framework::$autoLoader->importFolder(dirname(__FILE__).'/classes');
+Framework::$autoloader->importFolder(dirname(__FILE__).'/classes');
 if ($argc < 2) {
 	echo "  Usage: php ".$argv[0]." [channel] [channel/]package[-version] ...\n ";
 	echo "  Examples:\n";

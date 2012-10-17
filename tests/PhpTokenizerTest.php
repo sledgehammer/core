@@ -13,7 +13,7 @@ class PhpTokenizerTest extends TestCase {
 	}
 
 	function donttest_tokenizer() {
-		$filename = Framework::$autoLoader->getFilename('App');
+		$filename = Framework::$autoloader->getFilename('App');
 		$this->assertEqualTokenizer($filename);
 
 		try {
@@ -60,10 +60,10 @@ class PhpTokenizerTest extends TestCase {
 	}
 
 	private function getDefinitionFiles() {
-		$definitions = Framework::$autoLoader->getDefinitions();
+		$definitions = Framework::$autoloader->getDefinitions();
 		$files = array();
 		foreach ($definitions as $definition) {
-			$files[] = Framework::$autoLoader->getFilename($definition);
+			$files[] = Framework::$autoloader->getFilename($definition);
 		}
 		return array_unique($files);
 	}

@@ -362,7 +362,7 @@ class PhpAnalyzer extends Object {
 	 */
 	private function getAutoLoader() {
 		if ($this->autoLoader === null) {
-			return Framework::$autoLoader;
+			return Framework::$autoloader;
 		}
 		return $this->autoLoader;
 	}

@@ -9,7 +9,7 @@ namespace Sledgehammer;
 class PropertyPathTest extends TestCase {
 
 	function test_tokenizer() {
-		Framework::$autoLoader->exposePrivates('Sledgehammer\PropertyPath', 'Sledgehammer\PropertyPathTester');
+		Framework::$autoloader->exposePrivates('Sledgehammer\PropertyPath', 'Sledgehammer\PropertyPathTester');
 
 		$string = PropertyPath::T_STRING;
 		$dot = PropertyPath::T_DOT;

@@ -19,10 +19,10 @@ class Framework {
 	static $charset = 'UTF-8';
 
 	/**
-	 * The AutoLoader instance.
+	 * The Autoloader instance.
 	 * @var Autoloader
 	 */
-	static $autoLoader;
+	static $autoloader;
 
 	/**
 	 * The ErrorHandler instance.
@@ -58,6 +58,12 @@ class Framework {
 			 * Directory for the app.
 			 */
 			define('Sledgehammer\APP_DIR', PATH.'app'.DIRECTORY_SEPARATOR);
+		}
+		if (!defined('Sledgehammer\VENDOR_DIR')) {
+			/**
+			 * Directory for the app.
+			 */
+			define('Sledgehammer\VENDOR_DIR', PATH.'vendor'.DIRECTORY_SEPARATOR);
 		}
 
 		if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
@@ -157,12 +163,12 @@ class Framework {
 		$modules = self::getModules();
 
 		// Register the AutoLoader
-		self::$autoLoader = new Autoloader(PATH);
-		spl_autoload_register(array(self::$autoLoader, 'define'));
+		self::$autoloader = new Autoloader(PATH);
+		spl_autoload_register(array(self::$autoloader, 'define'));
 
 		// Initialize the AutoLoader
 		if (file_exists(PATH.'AutoLoader.db.php')) {
-			self::$autoLoader->loadDatabase(PATH.'AutoLoader.db.php');
+			self::$autoloader->loadDatabase(PATH.'AutoLoader.db.php');
 		} else {
 			// Import definitions inside the modules.
 			foreach ($modules as $module) {
@@ -181,29 +187,24 @@ class Framework {
 						'detect_accidental_output' => false,
 					);
 				}
-				self::$autoLoader->importFolder($path, $settings);
+				self::$autoloader->importFolder($path, $settings);
 			}
 		}
 
-		/*  Disable AutoLoader for other vendor packages (Probable no longer needed with composer)
-		if (file_exists(PATH.'vendor/')) { // Does the app have vendor packages?
-			extend_include_path(PATH.'vendor/');
-			// Add classes to the AutoLoader
-			self::$autoLoader->importFolder(PATH.'vendor/', array(
+		// Add Autoloader support for the other vendor packages.
+		// Fixes cASe issues, repair namespaces, etc.
+		if (file_exists(VENDOR_DIR)) { // Does the app have vendor packages?
+			self::$autoloader->importFolder(VENDOR_DIR, array(
 				'matching_filename' => false,
 				'mandatory_definition' => false,
 				'mandatory_superclass' => false,
 				'one_definition_per_file' => false,
 				'revalidate_cache_delay' => 30,
 				'detect_accidental_output' => false,
-				'ignore_folders' => array('data'),
+				'ignore_folders' => array(VENDOR_DIR.'sledgehammer'),
 				'cache_level' => 3,
 			));
-			if (file_exists(PATH.'vendor/pear/php/')) { // Add pear classes the include path.
-				extend_include_path(PATH.'vendor/pear/php/');
-			}
 		}
-		*/
 	}
 
 	/**

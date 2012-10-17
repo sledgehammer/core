@@ -11,7 +11,7 @@ require(dirname(__FILE__).'/bootstrap.php');
 $modules = Framework::getModules();
 foreach ($modules as $module) {
 	if (is_dir($module['path'].'tests')) {
-		Framework::$autoLoader->importFolder($module['path'].'tests', array(
+		Framework::$autoloader->importFolder($module['path'].'tests', array(
 			'mandatory_definition' => false,
 		));
 	}
