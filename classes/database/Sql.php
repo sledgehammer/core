@@ -1,6 +1,6 @@
 <?php
 /**
- * SQL
+ * Sql
  */
 namespace Sledgehammer;
 /**
@@ -19,7 +19,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class SQL extends Object {
+class Sql extends Object {
 
 	/**
 	 * Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
@@ -177,7 +177,7 @@ class SQL extends Object {
 	 *
 	 * @param array|string $columns ('AS value' => 'column name')
 	 * param string ...
-	 * @return SQL
+	 * @return Sql
 	 */
 	function select($columns) {
 		$sql = clone $this;
@@ -195,7 +195,7 @@ class SQL extends Object {
 	 *
 	 * @param string $column
 	 * @param string $alias
-	 * @return SQL
+	 * @return Sql
 	 */
 	function column($column, $alias = null) {
 		if ($alias === null) {
@@ -212,7 +212,7 @@ class SQL extends Object {
 	 *
 	 * @param array|string $columns
 	 * param string ...
-	 * @return SQL
+	 * @return Sql
 	 */
 	function columns($columns) {
 		$sql = clone $this;
@@ -229,7 +229,7 @@ class SQL extends Object {
 	 *   from('table1 AS t1', 'table2 t2') of from(array('t1' => 'table1', 'table2 AS t2'))
 	 *
 	 * @param string|array $table
-	 * @return SQL
+	 * @return Sql
 	 */
 	function from($table) {
 		$sql = clone $this;
@@ -242,7 +242,7 @@ class SQL extends Object {
 	 *
 	 * @param string $table
 	 * @param string $on
-	 * @return SQL
+	 * @return Sql
 	 */
 	function innerJoin($table, $on) {
 		return $this->join('INNER JOIN', $table, $on);
@@ -253,7 +253,7 @@ class SQL extends Object {
 	 *
 	 * @param string $table
 	 * @param string $on
-	 * @return SQL
+	 * @return Sql
 	 */
 	function leftJoin($table, $on) {
 		return $this->join('LEFT JOIN', $table, $on);
@@ -264,7 +264,7 @@ class SQL extends Object {
 	 *
 	 * @param string $table
 	 * @param string $on
-	 * @return SQL
+	 * @return Sql
 	 */
 	function rightJoin($table, $on) {
 		return $this->join('RIGHT JOIN', $table, $on);
@@ -274,7 +274,7 @@ class SQL extends Object {
 	 * Returns a new SQL with the $sql->where set to the given $where.
 	 *
 	 * @param string|array $where
-	 * @return SQL
+	 * @return Sql
 	 */
 	function where($where) {
 		$sql = clone $this;
@@ -289,7 +289,7 @@ class SQL extends Object {
 	 * Returns a new SQL with the where modified to include the "AND" restriction.
 	 *
 	 * @param mixed $restriction
-	 * @return SQL
+	 * @return Sql
 	 */
 	function andWhere($restriction) {
 		$sql = clone $this;
@@ -309,7 +309,7 @@ class SQL extends Object {
 	 * Returns a new SQL with the where modified to include the "OR" restriction.
 	 *
 	 * @param mixed $restriction
-	 * @return SQL
+	 * @return Sql
 	 */
 	function orWhere($restriction) {
 		$sql = clone $this;
@@ -329,7 +329,7 @@ class SQL extends Object {
 	 * Returns a new SQL with $this->groupBy set to the given $columns.
 	 *
 	 * @param string|array $columns
-	 * @return SQL
+	 * @return Sql
 	 */
 	function groupBy($columns) {
 		$sql = clone $this;
@@ -342,7 +342,7 @@ class SQL extends Object {
 	 *
 	 * @param string $column
 	 * @param string $direction "ASC" or "DESC"
-	 * @return SQL
+	 * @return Sql
 	 */
 	function orderBy($column, $direction = 'ASC') {
 		$sql = clone $this;
@@ -358,7 +358,7 @@ class SQL extends Object {
 	 * Return a new SQL with $this->limit set to the given $limit.
 	 *
 	 * @param int $limit The maximum number of records
-	 * @return SQL
+	 * @return Sql
 	 */
 	function limit($limit) {
 		$sql = clone $this;
@@ -370,7 +370,7 @@ class SQL extends Object {
 	 * Return a new SQL with $this->offset set to the given $limit.
 	 *
 	 * @param int $offset Skip x records.
-	 * @return SQL
+	 * @return Sql
 	 */
 	function offset($offset) {
 		$sql = clone $this;
@@ -539,7 +539,7 @@ class SQL extends Object {
 	 * @param string $type "INNER JOIN", "LEFT JOIN", or "RIGHT JOIN"
 	 * @param string $table Name of the table.
 	 * @param string $on The ON conditions.
-	 * @return \Sledgehammer\SQL
+	 * @return \Sledgehammer\Sql
 	 */
 	private function join($type, $table, $on) {
 		$sql = clone $this;

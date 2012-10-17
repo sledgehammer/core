@@ -20,7 +20,7 @@ class Framework {
 
 	/**
 	 * The AutoLoader instance.
-	 * @var AutoLoader
+	 * @var Autoloader
 	 */
 	static $autoLoader;
 
@@ -106,7 +106,7 @@ class Framework {
 
 	static function configureErrorhandler() {
 		error_reporting(E_MAX); // Activate the maximum error_level
-		
+
 		self::$errorHandler = new ErrorHandler;
 		self::$errorHandler->init();
 
@@ -157,7 +157,7 @@ class Framework {
 		$modules = self::getModules();
 
 		// Register the AutoLoader
-		self::$autoLoader = new AutoLoader(PATH);
+		self::$autoLoader = new Autoloader(PATH);
 		spl_autoload_register(array(self::$autoLoader, 'define'));
 
 		// Initialize the AutoLoader

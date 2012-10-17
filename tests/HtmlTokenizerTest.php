@@ -1,10 +1,12 @@
 <?php
 /**
- * Controleer diverse Sledgehammer vereisten
+ * HtmlTokenizerTest
  */
 namespace Sledgehammer;
-
-class HTMLTokenizerTest extends TestCase {
+/**
+ * @package Core
+ */
+class HtmlTokenizerTest extends TestCase {
 
 	function test_skipped() {
 		$this->markTestSkipped('Not really unittests (No assertions on the output)');
@@ -22,37 +24,37 @@ alert(document.getElementById("test").innerHTML );
 alert(document.getElementById("test").firstChild.data);
 </script>
 EOD;
-		$tokens = new HTMLTokenizer($html);
+		$tokens = new HtmlTokenizer($html);
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
 
 	function dont_test_plainText() {
-		$tokenizer = new HTMLTokenizer('Een plain tekst voorbeeld');
+		$tokenizer = new HtmlTokenizer('Een plain tekst voorbeeld');
 		$this->prettyPrint($tokenizer);
 		$this->assertNoWarnings($tokenizer);
 	}
 
 	function dont_test_link() {
-		$tokens = new HTMLTokenizer('<a href="http://www.google.nl">Zoeken</a>');
+		$tokens = new HtmlTokenizer('<a href="http://www.google.nl">Zoeken</a>');
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
 
 	function dont_test_comment() {
-		$tokens = new HTMLTokenizer('text<!-- Comment --> <!---->text');
+		$tokens = new HtmlTokenizer('text<!-- Comment --> <!---->text');
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
 
 	function dont_test_before_after() {
-		$tokens = new HTMLTokenizer('before<br />middle<a href="test.html" empty="">TEST</a>after');
+		$tokens = new HtmlTokenizer('before<br />middle<a href="test.html" empty="">TEST</a>after');
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
 
 	function dont_test_inline_dtd() {
-		$tokens = new HTMLTokenizer('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		$tokens = new HtmlTokenizer('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
@@ -75,14 +77,14 @@ EOD;
 
 ]>tekst
 EOD;
-		$tokens = new HTMLTokenizer($html);
+		$tokens = new HtmlTokenizer($html);
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
 
 	function dont_test_value_delimiters() {
 		$html = '<a onclick="alert(\'Hi\')" target = _blank>';
-		$tokens = new HTMLTokenizer($html);
+		$tokens = new HtmlTokenizer($html);
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
@@ -100,7 +102,7 @@ EOD;
 			dit niet<! dit is volgens firefox commentaar<weird> -->hmm
 			<a href="#">link</ a> ook link
 EOD;
-		$tokens = new HTMLTokenizer($html);
+		$tokens = new HtmlTokenizer($html);
 		$this->prettyPrint($tokens);
 		$this->assertNoWarnings($tokens);
 	}
@@ -115,7 +117,7 @@ EOD;
 		}
 		//dump(strlen($html))
 		//$html = substr($html, 0, 25450);
-		$tokenizer = new HTMLTokenizer($html);
+		$tokenizer = new HtmlTokenizer($html);
 		$this->prettyPrint($tokenizer);
 		$this->assertNoWarnings($tokenizer);
 

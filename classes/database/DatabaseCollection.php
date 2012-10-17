@@ -14,7 +14,7 @@ class DatabaseCollection extends Collection {
 
 	/**
 	 * The SQL object  or string fetches the items in this collection.
-	 * @var SQL|string
+	 * @var Sql|string
 	 */
 	private $sql;
 
@@ -26,7 +26,7 @@ class DatabaseCollection extends Collection {
 
 	/**
 	 * Constructor
-	 * @param SQL|string $sql  The SELECT query.
+	 * @param Sql|string $sql  The SELECT query.
 	 * @param string $dbLink  The database identifier.
 	 */
 	function __construct($sql, $dbLink = 'default') {
@@ -255,7 +255,7 @@ class DatabaseCollection extends Collection {
 
 	/**
 	 * Inspect the SQL query.
-	 * @return string|SQL
+	 * @return string|Sql
 	 */
 	function getQuery() {
 		if (is_object($this->sql)) {
@@ -267,7 +267,7 @@ class DatabaseCollection extends Collection {
 
 	/**
 	 * Override the SQL query.
-	 * @param string|SQL $sql
+	 * @param string|Sql $sql
 	 */
 	function setQuery($sql) {
 		$this->sql = $sql;
@@ -291,7 +291,7 @@ class DatabaseCollection extends Collection {
 	 * @return int
 	 */
 	function count() {
-		if ($this->data === null && $this->sql instanceof SQL && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
+		if ($this->data === null && $this->sql instanceof Sql && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
 			$sql = $this->sql->select('COUNT(*)');
 			return intval(getDatabase($this->dbLink)->fetchValue($sql));
 		}

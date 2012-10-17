@@ -1,6 +1,6 @@
 <?php
 /**
- * PDOStatement
+ * Statement
  */
 namespace Sledgehammer;
 /**
@@ -8,7 +8,7 @@ namespace Sledgehammer;
  * Adds Countable to the Database results.
  * @package Core
  */
-class PDOStatement extends \PDOStatement implements \Countable {
+class Statement extends \PDOStatement implements \Countable {
 
 	/**
 	 * Return the number of rows in the result

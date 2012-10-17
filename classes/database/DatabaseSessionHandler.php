@@ -35,7 +35,7 @@ class DatabaseSessionHandler extends Object {
 				notice('Invalid option "'.$property.'"', 'Use: '.human_implode(' or ', $availableOptions));
 			}
 		}
-		if ($this->table === NULL) {
+		if ($this->table === null) {
 			$this->table = session_name();
 		}
 	}

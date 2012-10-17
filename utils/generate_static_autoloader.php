@@ -20,7 +20,7 @@ foreach ($modules as $module) {
 
 echo "Scanning classes and interfaces...\n";
 ini_set('memory_limit', '128M'); // Bij grote hoeveelheden classes (1000+) gebruikt php token_get_all() onnodig veel geheugen
-$loader = new AutoLoader(PATH);
+$loader = new Autoloader(PATH);
 $loader->enableCache = false;
 foreach ($modules as $module) {
 	$path = $module['path'];

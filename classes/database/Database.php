@@ -60,7 +60,7 @@ class Database extends \PDO {
 		$start = microtime(true);
 		$isUrlStyle = preg_match('/^[a-z]+:\/\//i', $dsn, $match);
 		if ($isUrlStyle) { // url syntax?
-			$url = new URL($dsn);
+			$url = new Url($dsn);
 			$config = $url->query;
 			$config['host'] = $url->host;
 			if ($url->port !== null) {
@@ -149,7 +149,7 @@ class Database extends \PDO {
 			$options[\PDO::ATTR_DEFAULT_FETCH_MODE] = \PDO::FETCH_ASSOC;
 		}
 		if (empty($options[\PDO::ATTR_STATEMENT_CLASS])) {
-			$options[\PDO::ATTR_STATEMENT_CLASS] = array('Sledgehammer\PDOStatement');
+			$options[\PDO::ATTR_STATEMENT_CLASS] = array('Sledgehammer\Statement');
 		}
 		parent::__construct($dsn, $username, $passwd, $options);
 		$this->logger->append('Database connection to '.$dsn, array('duration' => (microtime(true) - $start)));
@@ -186,7 +186,7 @@ class Database extends \PDO {
 	 * @link http://php.net/manual/en/pdo.query.php
 	 *
 	 * @param string $statement  The SQL statement to prepare and execute.
-	 * @return PDOStatement
+	 * @return Statement
 	 */
 	function query($statement) {
 		$start = microtime(true);
@@ -213,7 +213,7 @@ class Database extends \PDO {
 		$start = microtime(true);
 		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PreparedStatement', array($this)));
 		$result = parent::prepare($statement, $driver_options);
-		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\PDOStatement')); // Restore default class
+		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Sledgehammer\Statement')); // Restore default class
 		$this->logger->totalDuration += (microtime(true) - $start);
 		if ($result === false) {
 			$this->reportError($statement);
@@ -402,7 +402,7 @@ class Database extends \PDO {
 	 *
 	 * @param string $sql  The SQL query
 	 * @param bool $allow_empty_results  true: Suppress the notice when no record is found.
-	 * @return string|NULL|false
+	 * @return string|null|false
 	 */
 	function fetchValue($sql, $allow_empty_results = false) {
 		$row = $this->fetchRow($sql, $allow_empty_results);
@@ -549,7 +549,7 @@ class Database extends \PDO {
 		$this->previousInsertId = '0';
 		if ($this->getAttribute(\PDO::ATTR_ERRMODE) == \PDO::ERRMODE_SILENT) { // The error issn't already reported?
 			$info = array();
-			if ($statement instanceof SQL) {
+			if ($statement instanceof Sql) {
 				$info['SQL'] = (string) $statement;
 			}
 			notice('SQL error ['.$error[1].'] '.$error[2], $info);
@@ -559,12 +559,12 @@ class Database extends \PDO {
 	/**
 	 * Report MySQL warnings and notes if any.
 	 *
-	 * @param SQL|string $statement
+	 * @param Sql|string $statement
 	 */
 	function checkWarnings($statement) {
 		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			$info = array();
-			if ($statement instanceof SQL) {
+			if ($statement instanceof Sql) {
 				$info['SQL'] = (string) $statement;
 			}
 			$start = microtime(true);

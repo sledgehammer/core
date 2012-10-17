@@ -1,11 +1,11 @@
 <?php
 /**
  * ServerEnvironmentTest
- * @package Core
  */
 namespace Sledgehammer;
 /**
  * Controleer diverse Sledgehammer vereisten
+ * @package Core
  */
 class ServerEnvironmentTest extends TestCase {
 

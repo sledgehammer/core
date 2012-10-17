@@ -1,12 +1,19 @@
 <?php
 /**
- * Controleer diverse Sledgehammer vereisten
+ * CodeAnalysisTest
  */
 namespace Sledgehammer;
+/**
+ * Scan PHP code for undefined classes.
+ * @todo Convert to an Utility
+ * @todo Allow failures for classes in php extensions.
+ *
+ * @package Core
+ */
 class CodeAnalysisTest extends TestCase {
 
 	function test_definitions() {
-		$loader = new AutoLoader(PATH);
+		$loader = new Autoloader(PATH);
 		$loader->enableCache = false;
 		$modules = Framework::getModules();
 		foreach ($modules as $module) {
@@ -39,7 +46,7 @@ class CodeAnalysisTest extends TestCase {
 	}
 
 	function donttest_single_file() {
-		$phpAnalyzer = new PHPAnalyzer();
+		$phpAnalyzer = new PhpAnalyzer();
 		$info = $phpAnalyzer->getInfo('Sledgehammer\Facebook');
 		dump($info);
 		ob_flush();
@@ -49,7 +56,7 @@ class CodeAnalysisTest extends TestCase {
 	 * Crawl the codebase and validate if all used classes are available
 	 */
 	function test_spider_codebase() {
-		$analyzer = new PHPAnalyzer();
+		$analyzer = new PhpAnalyzer();
 		$modules = Framework::getModules();
 		foreach ($modules as $module) {
 			if (file_exists($module['path'].'init.php')) {
@@ -78,7 +85,6 @@ class CodeAnalysisTest extends TestCase {
 		if ($failed == false) {
 			$this->assertTrue(true, 'The '.count($analyzer->usedDefinitions).' detected definitions are found');
 		}
-//		dump($passes);
 	}
 
 	/**
@@ -90,14 +96,9 @@ class CodeAnalysisTest extends TestCase {
 		foreach ($definitions as $definition) {
 			$files[] = Framework::$autoLoader->getFilename($definition);
 		}
-		$analyzer = new PHPAnalyzer();
+		$analyzer = new PhpAnalyzer();
 		foreach (array_unique($files) as $filename) {
-			try {
-				$analyzer->open($filename);
-			} catch (\Exception $e) {
-				report_exception($e); ob_flush();
-				throw $e;
-			}
+			$analyzer->open($filename);
 		}
 		// Check all used definitions (implements, extends, new, catch, etc)
 		$failed = false;
@@ -112,7 +113,7 @@ class CodeAnalysisTest extends TestCase {
 	}
 
 	function donttest_entire_codebase() {
-		$loader = new AutoLoader(PATH);
+		$loader = new Autoloader(PATH);
 		$loader->importFolder(PATH, array(
 			'matching_filename' => false,
 			'mandatory_definition' => false,
@@ -121,7 +122,7 @@ class CodeAnalysisTest extends TestCase {
 			'detect_accidental_output' => false,
 		)); // Import all
 		//
-		$analyzer = new PHPAnalyzer();
+		$analyzer = new PhpAnalyzer();
 		$this->analyzeDirectory($analyzer, PATH);
 		// Check all used definitions
 		$failed = false;
@@ -158,11 +159,11 @@ class CodeAnalysisTest extends TestCase {
 	}
 
 	/**
-	 * @param PHPAnalyzer $analyzer
+	 * @param PhpAnalyzer $analyzer
 	 * @param string $definition
 	 * @return bool  Success
 	 */
-	private function tryGetInfo(PHPAnalyzer $analyzer, $definition) {
+	private function tryGetInfo(PhpAnalyzer $analyzer, $definition) {
 		if (in_array($definition, array('self', 'AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase', 'PHPUnit_TextUI_ResultPrinter'))) {
 			return true;
 		}

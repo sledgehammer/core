@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPTokenizer
+ * PhpTokenizer
  */
 namespace Sledgehammer;
 /**
@@ -28,7 +28,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class PHPTokenizer extends Object implements \Iterator {
+class PhpTokenizer extends Object implements \Iterator {
 
 	/**
 	 * Current state "INIT", "HTML", "PHP", "USE", "NAMESPACE", etc

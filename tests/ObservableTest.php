@@ -3,6 +3,9 @@
  * ObervableTests
  */
 namespace Sledgehammer;
+/**
+ * @package Core
+ */
 class ObservableTest extends TestCase {
 
 	function test_button() {

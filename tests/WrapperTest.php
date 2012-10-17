@@ -1,10 +1,11 @@
 <?php
 /**
- * WrapperTests
- *
+ * WrapperTest
  */
 namespace Sledgehammer;
-
+/**
+ * @package Core
+ */
 class WrapperTest extends TestCase {
 
 	function test_readonly_array() {

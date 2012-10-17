@@ -57,7 +57,7 @@ class CompareEnvironments extends Util {
 				'environments' => new FieldLabel('Environments', new Fields(array(
 					'source' => new SelectBox('source', $environments, array(), new NotEmptyValidator()),
 					'target' => new SelectBox('target', $environments, array(), new NotEmptyValidator()),
-					new Input('submit', NULL, array('value' => 'Compare')),
+					new Input('submit', null, array('value' => 'Compare')),
 				))),
 			)),
 		));
@@ -151,7 +151,7 @@ class CompareEnvironments extends Util {
 		if ($output == '') {
 			$output .= view_to_string(Alert::info('<h3>No differences found</h3>The environments are identical'));
 		}
-		return new HTML(view_to_string($Form).'<br />'.$output);
+		return new Html(view_to_string($Form).'<br />'.$output);
 	}
 }
 ?>

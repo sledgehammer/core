@@ -1,6 +1,6 @@
 <?php
 /**
- * CSV
+ * Csv
  */
 namespace Sledgehammer;
 /**
@@ -11,7 +11,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class CSV extends Object implements \Iterator {
+class Csv extends Object implements \Iterator {
 
 	/**
 	 * Path van het csv bestand

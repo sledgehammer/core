@@ -1,6 +1,6 @@
 <?php
 /**
- * AutoLoader
+ * Autoloader
  */
 namespace Sledgehammer;
 /**
@@ -12,7 +12,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class AutoLoader extends Object {
+class Autoloader extends Object {
 
 	/**
 	 * Bij true zal define() een fout genereren als de class niet bekend is.

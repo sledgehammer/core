@@ -1,10 +1,11 @@
 <?php
 /**
- * TextTests
- *
+ * TextTest
  */
 namespace Sledgehammer;
-
+/**
+ * @package Core
+ */
 class TextTest extends TestCase {
 
 	function test_length_and_encoding_detection() {
@@ -30,7 +31,7 @@ class TextTest extends TestCase {
 
 		$text = text($italie);
 		$uppercaseText = $text->toUpper();
-		$this->assertEquals((string)$text, $italie, 'toUpper doesn\'t modify the text instance');
+		$this->assertEquals((string) $text, $italie, 'toUpper doesn\'t modify the text instance');
 		$this->assertInstanceOf('Sledgehammer\Text', $uppercaseText, 'Returns a new Text instance');
 		$this->assertEquals($uppercaseText, $uppercaseItalie, 'toUpper convert the characters to uppercase');
 		$this->assertEquals($uppercaseText->toLower(), $italie, 'toLower convert the characters back to lowercase');

@@ -99,6 +99,20 @@ namespace {
 	}
 
 	/**
+	 * Shorthand for sending DebugR messages.
+	 *   debugr()->log($var); instead of \Sledgehammer\DebugR::log($var);
+	 *   debugr($var); instead of \Sledgehammer\DebugR::dump($var)
+	 *
+	 * @param mixed $variable
+	 * @return \Sledgehammer\DebugR
+	 */
+	function debugr($variable = null) {
+		if (func_num_args() != 0) { //
+			\Sledgehammer\DebugR::dump($variable);
+		}
+		return new \Sledgehammer\DebugR();
+	}
+	/**
 	 * Als de variable bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
 	 * Let op! Heeft als side-effect dat de variable wordt ingesteld op null. array_value() heeft hier geen last van, maar is alleen geschikt voor arrays.
 	 *
@@ -1542,13 +1556,13 @@ exit [lindex $result 3]');
 	 *
 	 * @param array|string $columns
 	 * param string ...
-	 * @return SQL
+	 * @return Sql
 	 */
 	function select($columns) {
 		if (func_num_args() > 1) {
 			$columns = func_get_args();
 		}
-		$sql = new SQL();
+		$sql = new Sql();
 		return $sql->select($columns);
 	}
 

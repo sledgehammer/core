@@ -1,12 +1,12 @@
 <?php
 /**
- * cUrl
+ * Curl
  */
 namespace Sledgehammer;
 /**
- * cURL, an HTTP/FTP response object
+ * Curl, an HTTP/FTP response object
  * Simplifies asynchronous requests & paralell downloads.
- * Uses the curl functions and throws exceptions on errors.
+ * Uses the cURL functions and throws exceptions on errors.
  *
  * @property-read string $effective_url  Last effective URL
  * @property-read string $http_code      Last received HTTP code
@@ -27,14 +27,14 @@ namespace Sledgehammer;
  * @property-read mixed $ssl_verifyresult         Result of SSL certification verification requested by setting CURLOPT_SSL_VERIFYPEER
  * @property-read mixed $content_length_download  content-length of download, read from Content-Length: field
  * @property-read mixed $content_length_upload    Specified size of upload
- * @property-read mixed $content_type    Content-Type: of the requested document, NULL indicates server did not send valid Content-Type: header
+ * @property-read mixed $content_type    Content-Type: of the requested document, null: indicates server did not send valid Content-Type: header
  *
  * @property-write Closure $onLoad  Event fires when the request has successfully completed.
  * @property-write Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
  *
  * @package Core
  */
-class cURL extends Observable {
+class Curl extends Observable {
 
 	/**
 	 * Allow listening to the events: 'load' and 'abort'
@@ -66,7 +66,7 @@ class cURL extends Observable {
 
 	/**
 	 * Global queue of active cURL requests
-	 * @var array|cURL
+	 * @var array|Curl
 	 */
 	static $requests = array();
 
@@ -126,12 +126,12 @@ class cURL extends Observable {
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\cURL  cURL response
+	 * @return \Sledgehammer\Curl  cURL response
 	 */
 	static function get($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
 		$defaults = self::defaults();
-		$response = new cURL($options + $defaults);
+		$response = new Curl($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
 		}
@@ -145,7 +145,7 @@ class cURL extends Observable {
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\cURL  cURL response
+	 * @return \Sledgehammer\Curl  cURL response
 	 */
 	static function post($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
@@ -153,7 +153,7 @@ class cURL extends Observable {
 			CURLOPT_POST => true,
 			CURLOPT_POSTFIELDS => $data,
 		));
-		$response = new cURL($options + $defaults);
+		$response = new Curl($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
 		}
@@ -167,7 +167,7 @@ class cURL extends Observable {
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\cURL  cURL response
+	 * @return \Sledgehammer\Curl  cURL response
 	 */
 	static function put($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
@@ -175,7 +175,7 @@ class cURL extends Observable {
 			CURLOPT_PUT => true,
 			CURLOPT_POSTFIELDS => $data,
 		));
-		$response = new cURL($options + $defaults);
+		$response = new Curl($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
 		}
@@ -189,14 +189,14 @@ class cURL extends Observable {
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
 	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\cURL  cURL response
+	 * @return \Sledgehammer\Curl  cURL response
 	 */
 	static function delete($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
 		$defaults = self::defaults(array(
 			CURLOPT_CUSTOMREQUEST => 'DELETE',
 		));
-		$response = new cURL($options + $defaults);
+		$response = new Curl($options + $defaults);
 		if ($callback !== null) {
 			$response->on('load', $callback);
 		}
@@ -211,7 +211,7 @@ class cURL extends Observable {
 	 * @param array $options
 	 * @param bool $async
 	 * @throws \Exception
-	 * @return cURL
+	 * @return Curl
 	 */
 	static function download($url, $filename, $options = array(), $async = false) {
 		$fp = fopen($filename, 'w');
@@ -223,7 +223,7 @@ class cURL extends Observable {
 			CURLOPT_RETURNTRANSFER => false,
 			CURLOPT_FILE => $fp,
 		));
-		$response = new cURL($options + $defaults);
+		$response = new Curl($options + $defaults);
 		$response->on('closed', function () use ($fp) {
 				fclose($fp);
 			});
@@ -248,7 +248,7 @@ class cURL extends Observable {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
 			$wait = false;
-			foreach (cURL::$requests as $curl) {
+			foreach (Curl::$requests as $curl) {
 				if ($curl->isComplete() == false) {
 					$wait = true;
 				}
@@ -343,9 +343,9 @@ class cURL extends Observable {
 			$message = curl_multi_info_read(self::$pool, $queued);
 			if ($message !== false) {
 				// Scan the (global) curl pool for curl handle specified in the handle
-				foreach (cURL::$requests as $index => $curl) {
+				foreach (Curl::$requests as $index => $curl) {
 					if ($curl->handle === $message['handle']) {
-						unset(cURL::$requests[$index]); // Cleanup global curl pool
+						unset(Curl::$requests[$index]); // Cleanup global curl pool
 						$curl->state = 'COMPLETED';
 						$error = $message['result'];
 						if ($error !== CURLE_OK) {
@@ -375,9 +375,9 @@ class cURL extends Observable {
 		if ($this->state !== 'ABORTED') {
 			$this->abort();
 		}
-		$index = array_search($this, cURL::$requests, true);
+		$index = array_search($this, Curl::$requests, true);
 		if ($index !== false) {
-			unset(cURL::$requests[$index]);
+			unset(Curl::$requests[$index]);
 		}
 		$this->start($options);
 	}
@@ -407,7 +407,7 @@ class cURL extends Observable {
 	 */
 	private function start($options) {
 		$this->state = 'ERROR';
-		cURL::$requests[] = $this; // Watch changes
+		Curl::$requests[] = $this; // Watch changes
 		// Setting options
 		foreach ($options as $option => $value) {
 			if (curl_setopt($this->handle, $option, $value) === false) {
@@ -425,8 +425,8 @@ class cURL extends Observable {
 			}
 			if (self::$keepalive) {
 				register_shutdown_function(function () {
-					cURL::$keepalive = false; // Close the multi handle when all requests are completed.
-					cURL::synchronize();
+					Curl::$keepalive = false; // Close the multi handle when all requests are completed.
+					Curl::synchronize();
 				});
 			}
 		}

@@ -9,7 +9,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class HTML extends Object {
+class Html extends Object {
 
 	/**
 	 * The output string.
@@ -64,11 +64,11 @@ class HTML extends Object {
 	 * @param string $name  Name of the element. Example "div", "img", "script", etc
 	 * @param array $attributes
 	 * @param bool|string|array $contents  true: Only generate the opentag, string html, array with sub elements
-	 * @return HTML
+	 * @return Html
 	 */
 	static function element($name, $attributes, $contents = '') {
 		$name = strtolower($name);
-		$element = new HTML('<'.$name);
+		$element = new Html('<'.$name);
 		foreach ($attributes as $key => $value) {
 			$element->html .= ' '.strtolower($key).'="'.self::escape($value).'"';
 		}
@@ -103,7 +103,7 @@ class HTML extends Object {
 	 *
 	 * @link http://twitter.github.com/bootstrap/base-css.html#icons
 	 * @param string Name or URL of the icon
-	 * @return HTML
+	 * @return Html
 	 */
 	static function icon($icon) {
 		if (preg_match('/^[a-z-]+\-white$/', $icon, $match)) {

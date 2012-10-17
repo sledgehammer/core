@@ -9,6 +9,7 @@ namespace Sledgehammer;
  * Untested: Caching with concurrency (blocking locks)
  * Untested: Max age
  *
+ * @package Core
  */
 class CacheTest extends TestCase {
 

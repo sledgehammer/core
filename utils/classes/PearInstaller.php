@@ -63,11 +63,11 @@ class PearInstaller extends Observable {
 			$url = $category->attributes('http://www.w3.org/1999/xlink');
 			$category = (string) $category;
 			$this->channels[$domain]['categories'][] = $category;
-			cURL::get('http://'.$domain.dirname($url['href']).'/packages.xml', array(), function ($data) use ($pear, $domain, $category) {
+			Curl::get('http://'.$domain.dirname($url['href']).'/packages.xml', array(), function ($data) use ($pear, $domain, $category) {
 						$pear->registerCategory($domain, $category, simplexml_load_string($data)->p);
 					});
 		}
-		cURL::synchronize();
+		Curl::synchronize();
 		$this->trigger('channelAdded', $this, $domain, $this->channels[$domain]);
 	}
 
@@ -153,7 +153,7 @@ class PearInstaller extends Observable {
 		$tarFile = $tmpFolder.$folderName.'/package.tar';
 		mkdirs(dirname($tarFile));
 		if (file_exists($tarFile) === false) { // Is this package already in the tmp folder
-			cURL::download($release->g.'.tar', $tarFile);
+			Curl::download($release->g.'.tar', $tarFile);
 		}
 		chdir(dirname($tarFile));
 		system('tar xf '.escapeshellarg($tarFile), $exit);

@@ -1,12 +1,12 @@
 <?php
 /**
- * PHPTokenizerTest
+ * PhpTokenizerTest
  */
 namespace Sledgehammer;
 /**
- *
+ * @package Core
  */
-class PHPTokenizerTest extends TestCase {
+class PhpTokenizerTest extends TestCase {
 
 	function test_skipped() {
 		$this->markTestSkipped('Not really unittests (No assertions on the output)');
@@ -17,7 +17,7 @@ class PHPTokenizerTest extends TestCase {
 		$this->assertEqualTokenizer($filename);
 
 		try {
-			$tokenizer = new PHPTokenizer(file_get_contents($filename));
+			$tokenizer = new PhpTokenizer(file_get_contents($filename));
 			$tokens = iterator_to_array($tokenizer);
 			foreach ($tokens as $token) {
 				if (strpos($token[1], '{') !== false) {
@@ -44,7 +44,7 @@ class PHPTokenizerTest extends TestCase {
 	private function assertEqualTokenizer($filename) {
 		$content = file_get_contents($filename); //Framework::$autoLoader->getFilename('Sledgehammer\GoogleAnalytics');
 		try {
-			$tokenIterator = new PHPTokenizer($content);
+			$tokenIterator = new PhpTokenizer($content);
 			$mergedTokens = '';
 			$tokens = array();
 			foreach ($tokenIterator as $token) {

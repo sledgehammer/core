@@ -1,9 +1,11 @@
 <?php
 /**
- * Controleer diverse Sledgehammer vereisten
+ * TagIteratorTest
  */
 namespace Sledgehammer;
-
+/**
+ * @package Core
+ */
 class TagIteratorTest extends TestCase {
 
 	function setUp() {
@@ -149,7 +151,7 @@ EOD;
 		}
 		//dump(strlen($html))
 		//$html = substr($html, 0, 25450);
-		$tokenizer = new HTMLTokenizer($html);
+		$tokenizer = new HtmlTokenizer($html);
 		$this->prettyPrint($tokenizer);
 		$this->assertNoWarnings($tokenizer);
 

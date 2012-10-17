@@ -1,8 +1,11 @@
 <?php
 /**
- * PropertyPathTests
+ * PropertyPathTest
  */
 namespace Sledgehammer;
+/**
+ * @package Core
+ */
 class PropertyPathTest extends TestCase {
 
 	function test_tokenizer() {
@@ -129,7 +132,6 @@ class PropertyPathTest extends TestCase {
 
 //		$this->assertEquals(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
 //		$this->assertEquals(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
-
 		// @todo Add UnitTest for method notation "getFilename()"
 
 		$sequence = array(
@@ -179,7 +181,7 @@ class PropertyPathTest extends TestCase {
 	function test_compile() {
 		$closure = PropertyPath::compile('id');
 		$item = array('id' => 8);
-		$this->assertTrue(is_closure($closure), 'compile() should return a closure' );
+		$this->assertTrue(is_closure($closure), 'compile() should return a closure');
 		$this->assertEquals(8, $closure($item));
 	}
 
@@ -188,7 +190,7 @@ class PropertyPathTest extends TestCase {
 			'deep' => array(
 				'nested' => 1,
 			),
-			'value'=> 2
+			'value' => 2
 		);
 		$target = array();
 		$mapping = array(
@@ -198,6 +200,7 @@ class PropertyPathTest extends TestCase {
 		PropertyPath::map($source, $target, $mapping);
 		$this->assertEquals(array('dn' => 1, 'meta' => array('value' => 2)), $target, '');
 	}
+
 }
 
 ?>

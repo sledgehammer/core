@@ -1,9 +1,11 @@
 <?php
 /**
- * CollectionTests
- *
+ * DatabaseCollectionTest
  */
 namespace Sledgehammer;
+/**
+ * @package Core
+ */
 class DatabaseCollectionTest extends DatabaseTestCase {
 
 	protected $skipRebuildDatabase = true;
@@ -88,7 +90,7 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$this->assertQueryCount(6, 'select() doesn\'t excute the generated query directly and can be reduced futher');
 	}
 
-		function test_collection() {
+	function test_collection() {
 		$collection = $this->getDatabaseCollection();
 		$this->assertEquals(4, count($collection));
 		$this->assertLastQuery("SELECT COUNT(*) FROM fruits");
@@ -122,8 +124,6 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 	private function getDatabaseCollection() {
 		return new DatabaseCollection(select('*')->from('fruits'), $this->dbLink);
 	}
-
-
 
 }
 

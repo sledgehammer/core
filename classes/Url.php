@@ -1,6 +1,6 @@
 <?php
 /**
- * URL
+ * Url
  */
 namespace Sledgehammer;
 /**
@@ -8,7 +8,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class URL extends Object {
+class Url extends Object {
 
 	/**
 	 * The protocol schema.
@@ -60,13 +60,13 @@ class URL extends Object {
 
 	/**
 	 * The url of the current page.
-	 * @var URL
+	 * @var Url
 	 */
 	private static $current;
 
 	/**
 	 * Constructor
-	 * @param null|string $url  De url om te parsen, bij NULL wordt de huidige url gebruikt
+	 * @param string $url  De url om te parsen
 	 */
 	function __construct($url) {
 		$info = parse_url($url);
@@ -154,7 +154,7 @@ class URL extends Object {
 	/**
 	 * Gets the current url based on the information in the $_SERVER array.
 	 *
-	 * @return URL
+	 * @return Url
 	 */
 	static function getCurrentURL() {
 		if (self::$current === null) {
@@ -165,7 +165,7 @@ class URL extends Object {
 				$scheme = 'http';
 				$port = ($_SERVER['SERVER_PORT'] == '80') ? '' : ':'.$_SERVER['SERVER_PORT'];
 			}
-			self::$current = new URL($scheme.'://'.$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI']);
+			self::$current = new Url($scheme.'://'.$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI']);
 		}
 		return clone self::$current;
 	}
@@ -173,11 +173,11 @@ class URL extends Object {
 	/**
 	 * Set the current url (Mock a request)
 	 *
-	 * @param string|URL $url
+	 * @param string|Url $url
 	 */
 	static function setCurrentURL($url) {
 		if (is_string($url)) {
-			$url = new URL($url);
+			$url = new Url($url);
 		}
 		self::$current = $url;
 	}
@@ -190,12 +190,12 @@ class URL extends Object {
 	 * URL:parameter("bla=true", 'x=y'); voegt 2 parameter 'arrays' samen
 	 *
 	 * @param array $append  De parameter die toegevoegd moet worden
-	 * @param mixed $stack   De url of array waarde parameters waaraan toegevoegd moet worden, bij NULL worden de huidige $_GET parameters gebruikt
+	 * @param mixed $stack   De url of array waarde parameters waaraan toegevoegd moet worden, bij null worden de huidige $_GET parameters gebruikt
 	 * @return array
 	 */
-	static function parameters($append = array(), $stack = NULL) {
+	static function parameters($append = array(), $stack = null) {
 		deprecated('Maar nog geen alternatief beschikbaar');
-		if ($stack === NULL) { // Huidige parameters opvragen
+		if ($stack === null) { // Huidige parameters opvragen
 			$stack = $_GET;
 		} elseif (is_string($stack)) { // Is er geen array, maar een query string meegegeven?
 			parse_str($stack, $stack);
@@ -210,14 +210,14 @@ class URL extends Object {
 	 * Een sub-domein opvragen van een domein
 	 *
 	 * @param int $index Bepaald welke subdomein van de subdomeinen er wordt opgevraagd. 0 = eerste subdomein van links, -1 =  eerste subdomein van rechts
-	 * @param NULL|string $uri de uri waarvan het subdomein opgevraagd moet worden
+	 * @param null|string $uri de uri waarvan het subdomein opgevraagd moet worden
 	 * @return string
 	 */
-	static function subdomain($index = -1, $uri = NULL) {
+	static function subdomain($index = -1, $uri = null) {
 		deprecated('Maar nog geen alternatief beschikbaar');
 
-		if ($uri === NULL) {
-			$uri = URL::info('host');
+		if ($uri === null) {
+			$uri = Url::info('host');
 		}
 		$parts = explode('.', $uri);
 		$count = count($parts);
@@ -227,7 +227,7 @@ class URL extends Object {
 			return '';
 		}
 		$subdomain = @$parts[$index];
-		return ($subdomain === NULL) ? '' : $subdomain;
+		return ($subdomain === null) ? '' : $subdomain;
 	}
 
 	/**

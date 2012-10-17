@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPAnalyzer
+ * PhpAnalyzer
  */
 namespace Sledgehammer;
 /**
@@ -8,7 +8,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class PHPAnalyzer extends Object {
+class PhpAnalyzer extends Object {
 
 	/**
 	 * Deflared classes.
@@ -75,7 +75,7 @@ class PHPAnalyzer extends Object {
 	/**
 	 * The AutoLoader used to lookup the corresponding filename for the definitions.
 	 * Uses the Framework::$autoLoader by default.
-	 * @var AutoLoader
+	 * @var Autoloader
 	 */
 	private $autoLoader;
 
@@ -85,7 +85,7 @@ class PHPAnalyzer extends Object {
 	 * @param string $filename Fullpath to the php-file.
 	 */
 	function open($filename) {
-		$tokens = new PHPTokenizer(file_get_contents($filename));
+		$tokens = new PhpTokenizer(file_get_contents($filename));
 
 		$namespace = '';
 		$uses = array();
@@ -349,16 +349,16 @@ class PHPAnalyzer extends Object {
 	/**
 	 * Use the given $autoloader for resolving filenames.
 	 *
-	 * @param AutoLoader $autoLoader
+	 * @param Autoloader $autoLoader
 	 */
-	function setAutoLoader(AutoLoader $autoLoader) {
+	function setAutoLoader(Autoloader $autoLoader) {
 		$this->autoLoader = $autoLoader;
 	}
 
 	/**
 	 * Get the configured autoloader instance.
 	 *
-	 * @return AutoLoader
+	 * @return Autoloader
 	 */
 	private function getAutoLoader() {
 		if ($this->autoLoader === null) {

@@ -1,8 +1,13 @@
 <?php
 /**
- * Controleer of alle benodige php extenties geinstalleerd zijn
+ * RequiredPhpExtensionsTest
  */
 namespace Sledgehammer;
+/**
+ * Controleer of alle benodige php extenties geinstalleerd zijn.
+ *
+ * @todo Convert to an utility
+ */
 class RequiredPhpExtensionsTest extends TestCase {
 
 	/**
@@ -93,7 +98,7 @@ class RequiredPhpExtensionsTest extends TestCase {
 	 * @param string $filename
 	 */
 	private function checkFile($filename) {
-		$analyser = new PHPAnalyzer();
+		$analyser = new PhpAnalyzer();
 		$analyser->open($filename);
 		$definitions = array_merge(array_keys($analyser->usedDefinitions), array_keys($analyser->usedFunctions));
 		$extentions = array();

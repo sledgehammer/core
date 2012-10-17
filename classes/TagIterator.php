@@ -23,7 +23,7 @@ class TagIterator extends Object implements \Iterator {
 
 	/**
 	 * The tokenizer which proceesses the HTML.
-	 * @var HTMLTokenizer
+	 * @var HtmlTokenizer
 	 */
 	private $tokenizer;
 
@@ -57,7 +57,7 @@ class TagIterator extends Object implements \Iterator {
 	 * @param bool $toLowercase  Bij true worden alle tags en attributen omgezet naar lowercase. '<ImG SrC="TeSt">' wordt array('<img', array('src' => 'TeSt'),'>', 'html' => <ImG SrC='TeSt'>)
 	 */
 	function __construct($html, $toLowercase = true) {
-		$this->tokenizer = new HTMLTokenizer($html);
+		$this->tokenizer = new HtmlTokenizer($html);
 		$this->toLowercase = $toLowercase;
 		$this->warnings = & $this->tokenizer->warnings;
 	}

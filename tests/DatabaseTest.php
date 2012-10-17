@@ -1,11 +1,13 @@
 <?php
 /**
+ * DatabaseTest
+ */
+namespace Sledgehammer;
+/**
  * Test Database behaviour
  *
  * @package Core
  */
-namespace Sledgehammer;
-
 class DatabaseTest extends DatabaseTestCase {
 
 	function __construct() {

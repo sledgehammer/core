@@ -18,6 +18,8 @@ namespace Sledgehammer;
  *     return $outcome;
  *   });
  *
+ * @todo Implement dependancies (clearing a node should clear all childnodes, a expirationdate should not extend beyond the parents expirationdate)
+ *
  * @package Core
  */
 class Cache extends Object implements \ArrayAccess {

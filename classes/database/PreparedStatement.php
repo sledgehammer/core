@@ -8,7 +8,7 @@ namespace Sledgehammer;
  * Logs the execution time and executed query to the connected Database.
  * @package Core
  */
-class PreparedStatement extends PDOStatement {
+class PreparedStatement extends Statement {
 
 	/**
 	 * Direct link to the Database object that created the prepared statement.

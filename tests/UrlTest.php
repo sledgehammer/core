@@ -1,16 +1,18 @@
 <?php
 /**
- * Controleer de werking van het URL object
+ * UrlTest
+ */
+namespace Sledgehammer;
+/**
+ * Controleer de werking van het Url object.
  *
  * @package Core
  */
-namespace Sledgehammer;
-
-class URLTest extends TestCase {
+class UrlTest extends TestCase {
 
 	function test_url_parts() {
 		$urlString = 'http://me:mypass@example.com:8080/path/file?name=value#top';
-		$url = new URL($urlString);
+		$url = new Url($urlString);
 		$this->assertEquals($url->user, 'me');
 		$this->assertEquals($url->pass, 'mypass');
 		$this->assertEquals($url->host, 'example.com');
@@ -23,29 +25,29 @@ class URLTest extends TestCase {
 
 	function test_path() {
 		// escape (invalid url)
-		$url = new URL('/filename with spaces.html');
+		$url = new Url('/filename with spaces.html');
 		$this->assertEquals($url->__toString(), '/filename%20with%20spaces.html');
 
 		// decode urlpath
-		$url = new URL('/path%20with%20spaces.html');
+		$url = new Url('/path%20with%20spaces.html');
 		$this->assertEquals($url->path, '/path with spaces.html');
 		$this->assertEquals($url->__toString(), '/path%20with%20spaces.html');
 	}
 
 	function test_query() {
 		// querystring notation
-		$url = new URL('/');
+		$url = new Url('/');
 		$url->query = 'name=value';
 		$this->assertEquals($url->__toString(), '/?name=value');
 
 		// query/parameter array notation
-		$url = new URL('/');
+		$url = new Url('/');
 		$url->query['name'] = 'value';
 		$this->assertEquals($url->__toString(), '/?name=value');
 	}
 
 	function test_folders() {
-		$url = new URL('http://example.com');
+		$url = new Url('http://example.com');
 		$this->assertEquals($url->getFolders(), array(), 'The root should have no folders');
 		$url->path = '/test.html';
 		$this->assertEquals($url->getFolders(), array(), 'a file in the root should have no folders');
@@ -64,7 +66,7 @@ class URLTest extends TestCase {
 	}
 
 	function test_filename() {
-		$url = new URL('http://example.com');
+		$url = new Url('http://example.com');
 		$this->assertEquals($url->getFilename(), 'index.html');
 		$url->path = '/test1.html';
 		$this->assertEquals($url->getFilename(), 'test1.html');

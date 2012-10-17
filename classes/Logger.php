@@ -213,7 +213,7 @@ class Logger extends Object {
 					foreach ($backtrace as $call) {
 						$tooltip .= ' '.$call['file'].' on line '.$call['line']."\n";
 					}
-					echo ' <td class="log-backtrace" title="'.HTML::escape($tooltip).'">'.$trace.'</td>';
+					echo ' <td class="log-backtrace" title="'.Html::escape($tooltip).'">'.$trace.'</td>';
 				} else {
 					echo '<td></td>';
 				}

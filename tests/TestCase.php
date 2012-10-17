@@ -17,7 +17,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase {
 	 * @param array $data
 	 * @param string $dataName
 	 */
-	function __construct($name = NULL, array $data = array(), $dataName = '') {
+	function __construct($name = null, array $data = array(), $dataName = '') {
 		parent::__construct($name, $data, $dataName);
 	}
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * HTMLTokenizer
+ * HtmlTokenizer
  */
 namespace Sledgehammer;
 /**
@@ -44,7 +44,7 @@ namespace Sledgehammer;
  * @link http://en.wikipedia.org/wiki/HTML_element#Syntax
  * @package Core
  */
-class HTMLTokenizer extends Object implements \Iterator {
+class HtmlTokenizer extends Object implements \Iterator {
 
 	/**
 	 * Generated parser warnings. (The tokenizer doesn't report warnings it just stores them in this array)
