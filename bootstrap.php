@@ -24,7 +24,7 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	require_once(CORE_DIR.'classes/Framework.php'); // Helper class for extracting and loading Sledgehammer modules
 	require_once(CORE_DIR.'classes/InfoException.php');
 	require_once(CORE_DIR.'classes/ErrorHandler.php');
-	require_once(CORE_DIR.'classes/AutoLoader.php');
+	require_once(CORE_DIR.'classes/Autoloader.php');
 
 	Framework::defineConstants();
 	
