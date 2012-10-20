@@ -133,7 +133,7 @@ class Cache extends Object implements \ArrayAccess {
 		);
 		$options = array_merge($default, $options);
 		if (count($options) !== count($default)) {
-			notice('Option: '.quoted_human_implode(' and ', array_keys(array_diff($options, $default))).' is invalid');
+			notice('Option: '.quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
 		}
 		if ($options['expires'] === false && $options['forever'] === false && $options['max_age'] === false) {
 			throw new InfoException('Invalid options: "expires",  "max_age" or "forever" must be set', $options);
