@@ -83,6 +83,12 @@ class Curl extends Observable {
 	static $keepalive = true;
 
 	/**
+	 * The maximum number of concurrent downloads.
+	 * @var int
+	 */
+	static $maxConcurrent = 64;
+
+	/**
 	 * Number of tranfers in the pool
 	 * @var int
 	 */
@@ -234,30 +240,48 @@ class Curl extends Observable {
 	}
 
 	/**
-	 * Wait for all requests to complete
+	 * Wait for all requests to complete.
 	 *
 	 * @throws \Exception
 	 */
 	static function synchronize() {
+		self::throttle(0);
+		if (self::$keepalive === false && self::$tranferCount === 0) {
+			curl_multi_close(self::$pool);
+			self::$pool = null;
+		}
+	}
+
+	/**
+	 * Limit the number of active transfers.
+	 *
+	 * @param int $max  The allowed number of active connections.
+	 * @throws \Exception
+	 */
+	private static function throttle($max) {
 		if (self::$pool === null) {
-			return 0;
+			return;
+		}
+		$max = intval($max);
+		if ($max < 0) {
+			notice('Invalid throttle value: '.$max);
+			$max = 0;
+		}
+		if (count(self::$requests) <= $max) {
+			return;
 		}
 		do {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool, 0.2) === -1) {
 				throw new \Exception('Failed to detect changes in the cURL multi handle');
 			}
-			$wait = false;
+			$activeTransfers = 0;
 			foreach (Curl::$requests as $curl) {
 				if ($curl->isComplete() == false) {
-					$wait = true;
+					$activeTransfers++;
 				}
 			}
-		} while ($wait);
-		if (self::$keepalive === false && self::$tranferCount === 0) {
-			curl_multi_close(self::$pool);
-			self::$pool = null;
-		}
+		} while ($activeTransfers > $max);
 	}
 
 	/**
@@ -430,6 +454,9 @@ class Curl extends Observable {
 				});
 			}
 		}
+		// Wait until a new tranfer can be added.
+		self::throttle(self::$maxConcurrent - 1);
+
 		// Add request
 		$error = curl_multi_add_handle(self::$pool, $this->handle);
 		while ($error === CURLM_CALL_MULTI_PERFORM) {
