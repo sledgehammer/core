@@ -570,23 +570,48 @@ namespace Sledgehammer {
 	}
 
 	/**
-	 * Bestand downloaden(naar het geheugen) en opslaan.
-	 * retourneert de groote van het bestand (in karakters)
+	 * Filter a variable using a callable.
 	 *
-	 * @param string $url
-	 * @param string $filename
-	 * @return int|false
+	 * Usages:
+	 *
+	 * // Filter via a global function
+	 * $encoded = filter($rawData, 'urlencode');
+	 *
+	 * // Filter via an existing class
+	 * $db = new PDO('sqlite::memory:');
+	 * $quoted = filter($rawData, array($db, 'quote'));
+	 *
+	 * // Filter via a class with an __invoke() method.
+	 * $slug = filter($title, new SlugFilter());
+	 *
+	 * // Filter via a closure.
+	 * $filter = function ($data) { return substr($data, 0, 10); };
+	 * $truncated = filter($myData, $filter);
+	 *
+	 * @param mixed $value Input
+	 * @param callable $filter The filter
+	 * @return mixed Output
 	 */
-	function wget($url, $filename) {
-		deprecated('Use cURL::download() instead');
-		$contents = file_get_contents($url);
-		if ($contents) {
-			if (file_put_contents($filename, $contents)) {
-				return strlen($contents);
-			}
-		}
-		return false;
-	}
+   function filter($value, $filter) {
+	   if (is_callable($filter) === false) {
+		   throw new InfoException('The $filter parameter isn\'t a valid callable', $filter);
+	   }
+	   return call_user_func($filter, $value);
+   }
+
+   	/**
+	 * Validate a variable using a callable.
+	 *
+	 * @param mixed $value Input
+	 * @param callable $validator The filter
+	 * @return bool Output
+	 */
+   function is_valid($value, $validator) {
+	   if (is_callable($validator) === false) {
+		   throw new InfoException('The $validator parameter isn\'t a valid callable', $validator);
+	   }
+	   return call_user_func($validator, $value);
+   }
 
 	/**
 	 * Het path creeren

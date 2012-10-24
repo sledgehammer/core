@@ -209,7 +209,7 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator {
 	}
 
 	/**
-	 * Iterator: Returns false when theend of the iterator is reached.
+	 * Iterator: Returns false when the end of the iterator is reached.
 	 * @return bool
 	 */
 	function valid() {
