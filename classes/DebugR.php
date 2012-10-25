@@ -14,6 +14,13 @@ class DebugR extends Object {
 	static $increments = array();
 
 	/**
+	 * Monitor the number of bytes sent, to prevent sending more than 240KiB in DebugR headers. (Leaving 16KiB for normal headers)
+	 * @link http://stackoverflow.com/questions/3326210/can-http-headers-be-too-big-for-browsers
+	 * @var int
+	 */
+	static $bytesSent;
+
+	/**
 	 * Callback for sending a HTTP header.
 	 * @var callable
 	 */
@@ -101,15 +108,29 @@ class DebugR extends Object {
 			return;
 		}
 		$value = base64_encode($message);
-		if (strlen($value) <= (4 * 1024)) { // Under 4KiB?
-			call_user_func(self::$headerAdd, 'DebugR-'.$label.': '.$value);
+		$length = strlen($value);
+		// Prevent 325 net::ERR_RESPONSE_HEADERS_TOO_BIG in Google Chrome.
+		if (self::$bytesSent + $length >= 240000) { // >= 235KiB?
+			if (self::$bytesSent < 239950) {
+				call_user_func(self::$headerAdd, 'DebugR-'.$label.': '.base64_encode('DebugR: TOO_MUCH_DATA'));
+			}
+			return;
+		}
+
+		if ($length <= (4 * 1024)) { // Under 4KiB?
+			$header = 'DebugR-'.$label.': ';
+			call_user_func(self::$headerAdd, $header.$value);
+			self::$bytesSent += strlen($header) + $length;
 		} else {
 			// Send in 4KB chunks.
 			call_user_func(self::$headerRemove, 'DebugR-'.$label);
 			$chunks = str_split($value, (4 * 1024));
 			foreach ($chunks as $index => $chunk) {
-				call_user_func(self::$headerAdd, 'DebugR-'.$label.'.chunk'.$index.': '.$chunk);
+				$header = 'DebugR-'.$label.'.chunk'.$index.': ';
+				call_user_func(self::$headerAdd, $header.$chunk);
+				self::$bytesSent += strlen($header);
 			}
+			self::$bytesSent += $length;
 		}
 	}
 
