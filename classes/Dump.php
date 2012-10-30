@@ -82,10 +82,10 @@ class Dump extends Object {
 		if ($backtrace === null) {
 			$backtrace = debug_backtrace();
 		}
-		if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && $backtrace[1]['function'] === 'dump') {
-			// call via the global dump() function.
+		if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && ($backtrace[1]['function'] === 'dump' || $backtrace[1]['function'] === 'debugr')) {
+			// call via the global dump() or debugr() function.
 			$this->trace = array(
-				'invocation' => 'dump',
+				'invocation' => $backtrace[1]['function'],
 				'file' => $backtrace[1]['file'],
 				'line' => $backtrace[1]['line'],
 			);
@@ -463,7 +463,7 @@ class Dump extends Object {
 		if (substr($this->trace['file'], -14) !== ' eval()\'d code') {
 			$file = file($this->trace['file']);
 			$line = $file[($this->trace['line'] - 1)];
-			$line = preg_replace('/.*dump\(/i', '', $line); // Alles voor de dump aanroep weghalen
+			$line = preg_replace('/.*(dump|DebugR::dump|debugr)\(/i', '', $line); // Alles voor de dump aanroep weghalen
 			$argument = preg_replace('/\);.*/', '', $line); // Alles na de dump aanroep weghalen
 			$argument = trim($argument);
 			if (preg_match('/^\$[a-z_]+[a-z_0-9]*$/i', $argument)) { // $var?
