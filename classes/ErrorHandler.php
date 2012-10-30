@@ -405,9 +405,6 @@ class ErrorHandler {
 			if ($this->log) {
 				error_log($error_message);
 			}
-			if ($this->cli) {
-				echo '[', date('Y-m-d H:i:s'), '] ', $error_message, "\n";
-			}
 			if ($this->debugR && class_exists('Sledgehammer\DebugR')) {
 				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
@@ -427,36 +424,50 @@ class ErrorHandler {
 			$this->isProcessing = false;
 			return; // Stoppen met het bouwen van een foutrapport
 		}
-		if ($this->email) { // De limiet is niet niet bereikt.
-			ob_start(); // bouw de html van de foutmelding eerst op in een buffer.
+		$buffer = ($this->email || $this->debugR);
+		if ($buffer) { // store the html of the error-report in a buffer
+			ob_start();
 		}
 		self::render($type, $message, $information);
-		if ($this->email) { // email versturen?
-			// Headers voor de email met HTML indeling
-			$headers = "MIME-Version: 1.0\n";
-			$headers .= "Content-type: text/html; charset=iso-8859-1\n";
-			$headers .= 'From: '.$this->fromEmail()."\n";
-
-			if ($type instanceof \Exception) {
-				$subject = get_class($type).': '.$type->getMessage();
-				if ($message === '__UNCAUGHT_EXCEPTION__') {
-					$subject = ' Uncaught '.$subject;
-				}
-			} else {
-				$subject = $this->error_types[$type].': '.$message;
+		if ($buffer) {
+			$html = ob_get_clean();
+			if ($this->debugR) {
+				DebugR::html($html);
 			}
+			if ($this->email) { // email versturen?
+				// Headers voor de email met HTML indeling
+				$headers = "MIME-Version: 1.0\n";
+				$headers .= "Content-type: text/html; charset=".Framework::$charset."\n";
+				$headers .= 'From: '.$this->fromEmail()."\n";
 
-			if (function_exists('mail') && !mail($this->email, $subject, '<html><body style="background-color: #fcf8e3">'.ob_get_contents()."</body></html>\n", $headers)) {
-				error_log('The Sledgehammer\ErrorHandler was unable to email the report.');
+				if ($type instanceof \Exception) {
+					$subject = get_class($type).': '.$type->getMessage();
+					if ($message === '__UNCAUGHT_EXCEPTION__') {
+						$subject = ' Uncaught '.$subject;
+					}
+				} else {
+					$subject = $this->error_types[$type].': '.$message;
+				}
+
+				if (function_exists('mail') && !mail($this->email, $subject, '<html><body style="background-color: #fcf8e3">'.$html."</body></html>\n", $headers)) {
+					error_log('The Sledgehammer\ErrorHandler was unable to email the report.');
+				}
 			}
 			if ($this->html) {
-				ob_end_flush(); // buffer weergeven
-			} else {
-				ob_end_clean(); // buffer niet weergeven
+				if  (headers_sent() === false) {
+					header('Content-Type: text/html; charset='.Framework::$charset);
+				}
+				echo $html; // buffer weergeven
+				if (ob_get_level() === 0) {
+					flush();
+				}
 			}
-		} elseif (ob_get_level() === 0) {
-			flush();
 		}
+
+		if ($this->cli) {
+			echo '[', date('Y-m-d H:i:s'), '] ', $error_message, "\n";
+		}
+
 		$this->isProcessing = false;
 	}
 

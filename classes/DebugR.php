@@ -65,7 +65,33 @@ class DebugR extends Object {
 		$dump = new Dump($variable, $backtrace);
 		ob_start();
 		$dump->render();
-		return self::send('html', ob_get_clean());
+		return self::html(ob_get_clean());
+	}
+
+	/**
+	 * Send html prefixed with a DebugR header showning the request.
+	 * @param string $html
+	 */
+	static function html($html) {
+		$style = array(
+			'display: inline-block',
+			'padding: 8px 15px',
+			'background-color: #7a3964',
+			'background-image: -webkit-linear-gradient(-80deg,#7a3964,#2c1440)',
+			'background-image: -moz-linear-gradient(-80deg,#7a3964,#2c1440)',
+			'color: #fff',
+			'font: bold 12px/1.25 \'Helvetica Neue\', Helvetica, sans-serif',
+			'margin: 10px 5px -5px 5px',
+			'border-radius: 4px',
+			// reset styling
+			'text-shadow: 0 -1px 0 black',
+			'-webkit-font-smoothing: antialiased',
+			'font-smoothing: antialiased',
+			'text-align: left',
+			'overflow-x: auto',
+			'white-space: normal',
+		);
+		DebugR::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.$_SERVER['REQUEST_URI'].'</div>'.$html);
 	}
 
 	/**
