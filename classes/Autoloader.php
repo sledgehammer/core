@@ -268,6 +268,46 @@ class Autoloader extends Object {
 	 */
 	function importFolder($path, $settings = array()) {
 		$settings = $this->loadSettings($path, $settings);
+		if (file_exists($path.'/composer.json')) {
+			if (substr($path, -1) !== '/') {
+				$path .= '/';
+			}
+			$composer =	json_decode(file_get_contents($path.'composer.json'), true);
+			$locations = array();
+			$preventDefault = true;
+			if (isset($composer['autoload']['classmap'])) {
+				foreach ($composer['autoload']['classmap'] as $entry) {
+					if (empty($entry) || $entry === '.') {
+						notice('Empty autoload.classmap in "composer.json" isn\'t supported');
+						$preventDefault = false;
+						break;
+					} elseif (is_dir($path.$entry)) {
+						$locations[] = $entry;
+					}
+				}
+			}
+			if (isset($composer['autoload']['psr-0'])) {
+				foreach ($composer['autoload']['psr-0'] as $entry) {
+					if ($entry === '') {
+						$preventDefault = false;
+						break;
+					}
+					$locations[] = $entry;
+				}
+			}
+			if ($preventDefault && count($locations) > 0) {
+				foreach ($locations as $entry) {
+					if (is_dir($path.$entry)) {
+						$this->importFolder($path.$entry, $settings);
+					} elseif (is_file($path.$entry)) {
+						$this->importFile($path.$entry, $settings);
+					} else {
+						notice('autoload entry "'.$entry.'" in "composer.json" isn\'t supported');
+					}
+				}
+				return;
+			}
+		}
 		$useCache = ($this->enableCache && $settings['cache_level'] > 0);
 		if ($useCache) {
 			$settings['cache_level']--;
