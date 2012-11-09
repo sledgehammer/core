@@ -112,6 +112,7 @@ namespace {
 		}
 		return new \Sledgehammer\DebugR();
 	}
+
 	/**
 	 * Als de variable bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
 	 * Let op! Heeft als side-effect dat de variable wordt ingesteld op null. array_value() heeft hier geen last van, maar is alleen geschikt voor arrays.
@@ -592,26 +593,26 @@ namespace Sledgehammer {
 	 * @param callable $filter The filter
 	 * @return mixed Output
 	 */
-   function filter($value, $filter) {
-	   if (is_callable($filter) === false) {
-		   throw new InfoException('The $filter parameter isn\'t a valid callable', $filter);
-	   }
-	   return call_user_func($filter, $value);
-   }
+	function filter($value, $filter) {
+		if (is_callable($filter) === false) {
+			throw new InfoException('The $filter parameter isn\'t a valid callable', $filter);
+		}
+		return call_user_func($filter, $value);
+	}
 
-   	/**
+	/**
 	 * Validate a variable using a callable.
 	 *
 	 * @param mixed $value Input
 	 * @param callable $validator The filter
 	 * @return bool Output
 	 */
-   function is_valid($value, $validator) {
-	   if (is_callable($validator) === false) {
-		   throw new InfoException('The $validator parameter isn\'t a valid callable', $validator);
-	   }
-	   return call_user_func($validator, $value);
-   }
+	function is_valid($value, $validator) {
+		if (is_callable($validator) === false) {
+			throw new InfoException('The $validator parameter isn\'t a valid callable', $validator);
+		}
+		return call_user_func($validator, $value);
+	}
 
 	/**
 	 * Het path creeren
@@ -733,15 +734,29 @@ namespace Sledgehammer {
 	 * Get the timestamp for the latest change in the directory.
 	 *
 	 * @param string $path
+	 * @param array|string|false $extensions  Only check timestamp for files that match one of the extensions in the array or match against a regex.
 	 * @return int
 	 */
-	function mtime_folders($path) {
+	function mtime_folders($path, $extensions = null) {
 		$max_ts = filemtime($path); // Vraag de mtime op van de map
 		if ($max_ts === false) { // Bestaat het $path niet?
 			return false;
 		}
 		if (substr($path, -1) != '/') {
 			$path .= '/';
+		}
+		if (is_array($extensions)) {
+			// Convert $extensions array into a regex.
+			$regex = array();
+			foreach ($extensions as $extension) {
+				$regex[] = preg_quote($extension, '/');
+			}
+			$regex = '/\.('.implode('|', $extensions).')$/';
+		} else {
+			$regex = $extensions;
+		}
+		if ($regex) {
+			$max_ts = false; // Don't count the folder changes when extensions are given.
 		}
 		// Controleer of een van de bestanden of submappen een nieuwere mtime heeft.
 		$dir = opendir($path);
@@ -752,8 +767,11 @@ namespace Sledgehammer {
 				}
 				$filepath = $path.$filename;
 				if (is_dir($filepath)) {
-					$ts = mtime_folders($filepath.'/');
+					$ts = mtime_folders($filepath.'/', $regex);
 				} else {
+					if ($regex && preg_match($regex, $filename) === 0) { // Does't match any of the extensions?
+						continue;
+					}
 					$ts = filemtime($filepath);
 				}
 				if ($ts > $max_ts) { // Heeft de submap een nieuwere timestamp?
@@ -1003,7 +1021,7 @@ namespace Sledgehammer {
 			$db = new Database($settings[$link]);
 			foreach (Logger::$instances as $name => $logger) {
 				if ($db->logger === $logger) {
-					$loggerName  = ($link === 'default') ? 'Database' : 'Database[<b>'.$link.'</b>]';
+					$loggerName = ($link === 'default') ? 'Database' : 'Database[<b>'.$link.'</b>]';
 					if (empty(Logger::$instances[$loggerName])) {
 						Logger::$instances[$loggerName] = $logger;
 						unset(Logger::$instances[$name]);

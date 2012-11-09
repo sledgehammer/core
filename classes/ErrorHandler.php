@@ -405,7 +405,10 @@ class ErrorHandler {
 			if ($this->log) {
 				error_log($error_message);
 			}
-			if ($this->debugR && class_exists('Sledgehammer\DebugR')) {
+			if ($this->debugR) {
+				if (class_exists('Sledgehammer\DebugR', false) === false) {
+					require_once(__DIR__.'/DebugR.php');
+				}
 				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
 				} else {

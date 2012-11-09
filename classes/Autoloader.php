@@ -322,7 +322,7 @@ class Autoloader extends Object {
 			} elseif (file_exists($cacheFile)) {
 				$mtimeCache = filemtime($cacheFile);
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-				$mtimeFolder = ($revalidateCache ? mtime_folders($path) : 0);
+				$mtimeFolder = ($revalidateCache ? mtime_folders($path, array('php')) : 0);
 				if ($mtimeFolder !== false && $mtimeCache > $mtimeFolder) { // Is het cache bestand niet verouderd?
 					$this->loadDatabase($cacheFile, true);
 					if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
