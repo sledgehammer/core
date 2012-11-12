@@ -4,7 +4,7 @@
  */
 namespace Sledgehammer;
 /**
- * Test Database behaviour
+ * Test Database behavior
  *
  * @package Core
  */

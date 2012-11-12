@@ -5,7 +5,7 @@
 namespace Sledgehammer;
 /**
  * A PDO Database class with additional debugging functions.
- * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behaviour to FECTH_ASSOC
+ * By default will report clean sql-errors as notices, sets the encoding to UTF8 and sets the default fetch behavior to FECTH_ASSOC
  *
  * @package Core
  */

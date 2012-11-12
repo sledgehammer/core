@@ -10,7 +10,7 @@ namespace Sledgehammer;
  *   When accessing non-existing properties show a list show a list of available properties.
  *   When calling a non-existing method show a list show a list of available methods.
  *
- * Changes compared to PHP's stdClass behaviour:
+ * Changes compared to PHP's stdClass behavior:
  *   Generates a warning when setting a non-yet-existing property (instead of silently adding the property)
  *   Throws an Exception when calling a non-existing method (instead of a fatal error)
  *   Generates a notice when the object is used as a string (instead of throwing an exception)
@@ -59,7 +59,7 @@ abstract class Object {
 	 */
 	function __set($property, $value) {
 		Object::__get($property); // Report error
-		$this->$property = $value; // Add the property to the object. (PHP's default behaviour)
+		$this->$property = $value; // Add the property to the object. (PHP's default behavior)
 	}
 
 	/**

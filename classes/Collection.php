@@ -113,7 +113,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @see PropertyPath::get() & compare() for supported paths and operators
 	 *
 	 * NOTE: The Collection class uses Sledgehammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
-	 *       this may cause different behaviour. For example "ABC" == "abc" might evalute to in MySQL (depends on the chosen collation)
+	 *       this may cause different behavior. For example "ABC" == "abc" might evalute to in MySQL (depends on the chosen collation)
 	 *
 	 * @param mixed $conditions array|Closure|expression
 	 * @return Collection
