@@ -125,7 +125,7 @@ class Framework {
 			ini_set('display_errors', false);
 			self::$errorHandler->emails_per_request = 2;
 			self::$errorHandler->emails_per_minute = 6;
-			self::$errorHandler->emails_per_day = 100;
+			self::$errorHandler->emails_per_day = 25;
 			$_email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
 			if (preg_match('/^.+@.+\..+$/', $_email) && !in_array($_email, array('you@example.com'))) { // Is het geen emailadres, of het standaard apache emailadres?
 				self::$errorHandler->email = $_email;
