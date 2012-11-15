@@ -273,7 +273,7 @@ class Curl extends Observable {
 		do {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool, 0.2) === -1) {
-				throw new \Exception('Failed to detect changes in the cURL multi handle');
+				usleep(100000); // wait 0.1 second
 			}
 			$activeTransfers = 0;
 			foreach (Curl::$requests as $curl) {
@@ -360,7 +360,7 @@ class Curl extends Observable {
 			$error = curl_multi_exec(self::$pool, $active);
 		} while ($error === CURLM_CALL_MULTI_PERFORM);
 		if ($error !== CURLM_OK) {
-			throw new \Exception('['.self::multiErrorName($error).'Failed to execute cURL multi handle');
+			throw new \Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
 		}
 		$queued = 0;
 		do {
@@ -508,7 +508,7 @@ class Curl extends Observable {
 		while ($this->isComplete() === false) {
 			// Wait for (incomming) data
 			if (curl_multi_select(self::$pool, 0.1) === -1) {
-				throw new \Exception('Failed to detect changes in the cURL multi handle');
+				usleep(100000); // wait 0.1 second
 			}
 		}
 	}

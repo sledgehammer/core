@@ -31,6 +31,9 @@ namespace {
 		if ($export) {
 			return ob_get_clean();
 		}
+		if (Sledgehammer\ENVIRONMENT === 'phpunit') {
+			ob_flush();
+		}
 	}
 
 	/**
