@@ -160,6 +160,9 @@ class Database extends \PDO {
 		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
 			parent::exec('SET sql_warnings = ON');
 		}
+		if ($driver === 'sqlite') {
+			parent::exec('PRAGMA foreign_keys = ON');
+		}
 	}
 
 	/**

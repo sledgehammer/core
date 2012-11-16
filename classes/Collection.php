@@ -119,55 +119,13 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return Collection
 	 */
 	function where($conditions) {
-		$isClosure = is_closure($conditions);
-		if ($isClosure === false) {
-			if (is_array($conditions)) {
-				$operators = array();
-				foreach ($conditions as $path => $expectation) {
-					if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
-						unset($conditions[$path]);
-						$conditions[$matches[1]] = $expectation;
-						$operators[$matches[1]] = $matches[2];
-					} else {
-						$operators[$path] = false;
-					}
-				}
-			} else { //'<= 5' or '10'
-				// Compare the items directly (1D)
-				if (preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
-					$operator = $matches[1];
-					$expectation = $matches[2];
-				} else {
-					$expectation = $conditions;
-					$operator = '==';
-				}
-				$conditions = function ($value) use ($expectation, $operator) {
-					return compare($value, $operator, $expectation);
-				};
-				$isClosure = true;
-			}
-		}
-
+		$filter = $this->buildFilter($conditions);
 		$data = array();
 		$counter = -1;
 		foreach ($this as $key => $item) {
 			$counter++;
-			if ($isClosure) {
-				if ($conditions($item, $key) === false) {
-					continue;
-				}
-			} else {
-				foreach ($conditions as $path => $expectation) {
-					$actual = PropertyPath::get($path, $item);
-					$operator = $operators[$path];
-					if ($operator) {
-						if (compare($actual, $operator, $expectation) === false) {
-							continue 2; // Skip this entry
-						}
-					} elseif (equals($actual, $expectation) === false) {
-						continue 2; // Skip this entry
-					}
-				}
+			if ($filter($item, $key) === false) {
+				continue;
 			}
 			if ($key != $counter) { // Is this an array?
 				$data[$key] = $item;
@@ -176,6 +134,92 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			}
 		}
 		return new Collection($data);
+	}
+
+	/**
+	 * Returns the first item that matches the conditions.
+	 *
+	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
+	 * @return mixed
+	 */
+	function find($conditions) {
+		$filter = $this->buildFilter($conditions);
+		foreach ($this as $key => $item) {
+			if ($filter($item, $key) !== false) {
+				return $item;
+			}
+		}
+		throw new \Exception('No item found that matches the conditions');
+	}
+
+	/**
+	 * Returns the the key of first item that matches the conditions.
+	 *
+	 * Returns null when nothing matched the conditions.
+	 *
+	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
+	 * @return mixed|null
+	 */
+	function indexOf($conditions) {
+		$this->dataToArray(); // Array-access is expected, convert data to array.
+		$filter = $this->buildFilter($conditions);
+		foreach ($this as $key => $item) {
+			if ($filter($item, $key) !== false) {
+				return $key;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Build a closure which validates an item with the gives $conditions
+	 *
+	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
+	 * @return callable
+	 */
+	protected function buildFilter($conditions) {
+		if (is_closure($conditions)) {
+			return $conditions;
+		}
+		if (is_array($conditions)) {
+			// Create filter that checks all conditions
+			$operators = array();
+			foreach ($conditions as $path => $expectation) {
+				if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
+					unset($conditions[$path]);
+					$conditions[$matches[1]] = $expectation;
+					$operators[$matches[1]] = $matches[2];
+				} else {
+					$operators[$path] = false;
+				}
+			}
+			return function ($item) use ($conditions, $operators) {
+				foreach ($conditions as $path => $expectation) {
+					$actual = PropertyPath::get($path, $item);
+					$operator = $operators[$path];
+					if ($operator) {
+						if (compare($actual, $operator, $expectation) === false) {
+							return false;
+						}
+					} elseif (equals($actual, $expectation) === false) {
+						return false;
+					}
+				}
+				return true; // All conditions are met.
+			};
+		}
+		//'<= 5' or '10'
+		// Compare the item directly with value given as $condition.
+		if (is_string($conditions) && preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
+			$operator = $matches[1];
+			$expectation = $matches[2];
+		} else {
+			$expectation = $conditions;
+			$operator = '==';
+		}
+		return function ($value) use ($expectation, $operator) {
+			return compare($value, $operator, $expectation);
+		};
 	}
 
 	/**

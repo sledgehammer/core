@@ -65,7 +65,7 @@ abstract class DatabaseTestCase extends TestCase {
 				case 'mysql':
 					$this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
 					;
-					$db = new Database('mysql://root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+					$db = new Database('mysql://root:root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
 					$db->reportWarnings = false;
 					$db->query('DROP DATABASE IF EXISTS '.$this->dbName);
 					$db->query('CREATE DATABASE '.$this->dbName);
@@ -156,11 +156,10 @@ abstract class DatabaseTestCase extends TestCase {
 				return true;
 			}
 		}
-		$this->fail($message);
 		if ($this->debug) {
 			dump($queries);
 		}
-		return false;
+		$this->fail($message);
 	}
 
 	/**
