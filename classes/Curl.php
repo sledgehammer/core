@@ -328,7 +328,9 @@ class Curl extends Observable {
 			$this->waitForCompletion();
 			return curl_getinfo($this->handle, $option);
 		}
-		return parent::__get($property);
+		$properties = reflect_properties($this);
+		$properties['public'] = array_merge($properties['public'], curl_getinfo($this->handle));
+		warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint($properties));
 	}
 
 	/**

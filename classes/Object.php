@@ -26,28 +26,7 @@ abstract class Object {
 	 * @return void
 	 */
 	function __get($property) {
-		$rObject = new \ReflectionObject($this);
-		$values = get_object_vars($this);
-		$properties = array();
-		foreach ($rObject->getProperties() as $rProperty) {
-			if ($rProperty->isPublic()) {
-				if (array_key_exists($rProperty->name, $values) === false) {
-					continue; // skip properties that are unset()
-				}
-				$scope = 'public';
-			} elseif ($rProperty->isProtected()) {
-				$scope = 'protected';
-			} elseif ($rProperty->isPrivate()) {
-				$scope = 'private';
-			}
-			$properties[$scope][] = $rProperty->name;
-		}
-		$propertiesText = '';
-		$glue = '<br />&nbsp;&nbsp;$';
-		foreach ($properties as $scope => $props) {
-			$propertiesText .= '<b>'.$scope.' properties</b>'.$glue.implode($glue, $props).'<br /><br />';
-		}
-		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.', $propertiesText);
+		warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint(reflect_properties($this)));
 	}
 
 	/**
@@ -58,7 +37,7 @@ abstract class Object {
 	 * @return void
 	 */
 	function __set($property, $value) {
-		Object::__get($property); // Report error
+		warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint(reflect_properties($this)));
 		$this->$property = $value; // Add the property to the object. (PHP's default behavior)
 	}
 

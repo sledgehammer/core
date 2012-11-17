@@ -65,7 +65,9 @@ class Text extends Object implements \ArrayAccess {
 		if ($property == 'length') {
 			return mb_strlen($this->text, 'UTF-8');
 		}
-		parent::__get($property);
+		$properties = reflect_properties($this);
+		$properties['public']['length'] = -1;
+		warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.', build_properties_hint($properties));
 	}
 
 	// Mutations

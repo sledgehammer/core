@@ -526,6 +526,67 @@ namespace Sledgehammer {
 	}
 
 	/**
+	 * Use Reflection to extract all properties.
+	 *
+	 * @param object $object
+	 * @return array array(
+	 *    'public' => array(  // Public properties
+	 *       $property => $value,
+	 *    ),
+	 *    'protected' => array(), // protected properties
+	 *    'private' => array(), // private properties
+	 * )
+	 */
+	function reflect_properties($object) {
+		$reflection = new \ReflectionObject($object);
+		$values = get_object_vars($object);
+		$properties = array(
+			'public' => array(),
+			'protected' => array(),
+			'private' => array(),
+		);
+		foreach ($reflection->getProperties() as $property) {
+			if ($property->isPublic()) {
+				if (array_key_exists($property->name, $values) === false) {
+					continue; // skip properties that are unset()
+				}
+				$scope = 'public';
+			} elseif ($property->isProtected()) {
+				$scope = 'protected';
+			} elseif ($property->isPrivate()) {
+				$scope = 'private';
+			}
+			$property->setAccessible(true);
+			$properties[$scope][$property->name] = $property->getValue($object);
+		}
+		return $properties;
+	}
+
+	/**
+	 * Helper function for the showing the existing properties in an errorreport.
+	 * @param array $scopedProperties
+	 * @return string
+	 */
+	function build_properties_hint($scopedProperties) {
+		$hint = '';
+		foreach ($scopedProperties as $scope => $properties) {
+			if (count($properties)) {
+				$hint .= '<div style="margin-top: 7px">'.$scope.'</b></div>';
+				foreach ($properties as $property => $value) {
+					$type = gettype($value);
+					if ($type === 'object') {
+						$type = get_class($value);
+					} else {
+						$type = strtolower($type);
+					}
+					$hint .= '&nbsp;&nbsp;'.syntax_highlight($property, 'attribute').' '.syntax_highlight(':'.$type, 'comment').'<br />';
+				}
+			}
+		}
+		return $hint;//
+	}
+
+	/**
 	 * Call a static method on a specific class without Late Static Binding.
 	 * Using "call_user_func" will bind the get_called_class() to subclass when the method is inside the parent class.
 	 *
