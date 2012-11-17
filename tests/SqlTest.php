@@ -26,7 +26,7 @@ class SqlTest extends TestCase {
 		$sql->setFrom('customers AS c');
 		$sql->setJoin('orders', 'inner join', 'c.id = customer_id');
 		$sql->where = array(
-			'operator' => 'AND',
+			'AND',
 			'c.id = 1',
 			'orders.id = 1',
 		);

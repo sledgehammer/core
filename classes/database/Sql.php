@@ -45,7 +45,7 @@ class Sql extends Object {
 	public $tables = array();
 
 	/**
-	 * Tree-structure with conditions. array('operator' => 'AND', 'col1 = 23', array('operator' => 'OR', 'col2 = 1', 'col2 = 56'))
+	 * Tree-structure with conditions. array('AND', 'col1 = 23', array('OR', 'col2 = 1', 'col2 = 56'))
 	 * @var string|array
 	 */
 	public $where = '';
@@ -293,14 +293,12 @@ class Sql extends Object {
 	 */
 	function andWhere($restriction) {
 		$sql = clone $this;
-		if (is_array($sql->where) && $sql->where['operator'] == 'AND') {
+		if ($sql->where === '') {
+			$sql->where = array('AND', $restriction);
+		} elseif (extract_logical_operator($sql->where) === 'AND') {
 			$sql->where[] = $restriction;
 		} else {
-			$sql->where = array(
-				$sql->where,
-				'operator' => 'AND',
-				$restriction
-			);
+			$sql->where = array('AND', $sql->where, $restriction);
 		}
 		return $sql;
 	}
@@ -313,14 +311,12 @@ class Sql extends Object {
 	 */
 	function orWhere($restriction) {
 		$sql = clone $this;
-		if (is_array($sql->where) && $sql->where['operator'] == 'OR') {
+		if ($sql->where === '') {
+			$sql->where = array('OR', $restriction);
+		} elseif (extract_logical_operator($sql->where) === 'OR') {
 			$sql->where[] = $restriction;
 		} else {
-			$sql->where = array(
-				$sql->where,
-				'operator' => 'OR',
-				$restriction
-			);
+			$sql->where = array('OR', $sql->where, $restriction);
 		}
 		return $sql;
 	}
@@ -474,60 +470,46 @@ class Sql extends Object {
 	 * De inhoud van de WHERE or HAVING samenstellen
 	 *
 	 * @param array $restrictions
-	 * @param bool $haakjes
+	 * @param bool $addBraces
 	 * @return string
 	 */
-	private function composeRestrictions($restrictions, $haakjes = false) { // [string]
-		if (is_string($restrictions)) { // Is de restrictionsTree al geparst?
-			if ($haakjes) { // moeten er haakjes omheen?
-				$restrictions = '('.$restrictions.')';
+	private function composeRestrictions($restrictions, $addBraces = false) { // [string]
+		if (is_string($restrictions)) { // Is the restrictionsTree already parsed?
+			if ($addBraces) {
+				return '('.$restrictions.')';
 			}
 			return $restrictions;
 		}
 		$prefix = '';
-		if (empty($restrictions['operator'])) {
-			throw new \Exception('where[] statements require an operator, Example: array("operator" => "AND", "x = 1", "y = 2")');
+		$logicalOperator = extract_logical_operator($restrictions);
+		if ($logicalOperator === false) {
+			throw new \Exception('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")');
 		}
-		$operator = strtoupper($restrictions['operator']);
-		switch ($operator) {
+		switch ($logicalOperator) {
 
 			case 'AND':
 			case 'OR':
-			case 'XOR':
-				$glue = ' '.$operator.' ';
-				break;
-
-			case 'IN':
-			case 'NOT IN':
-				if (empty($restrictions['column'])) {
-					warning('operator "'.$restrictions['operator'].'" requires a "column"', 'array("operator" => "'.$restrictions['operator'].'", "column" => [column name], 1, 2, n)');
-					return;
-				}
-				$prefix = $restrictions['column'].' '.$operator.' ';
-				unset($restrictions['column']);
-				$glue = ', ';
-				$haakjes = true;
 				break;
 
 			default:
-				throw new \Exception('Onbekende operator: "'.$operator.'"');
+				throw new \Exception('Unknown logical operator: "'.$logicalOperator.'"');
 		}
-		unset($restrictions['operator']); // De operator uit de array halen
+		unset($restrictions[0]); // Remove the operator from the array.
 		$sql_statements = array();
 		foreach ($restrictions as $restriction) {
 			if (is_array($restriction)) { // Is het geen sql maar nog een 'restriction'?
-				$haakjes_voor_node = ($restriction['operator'] !== $operator); // Als de subnode dezelde verbinding heeft, dan geen haakjes. "x = 1 AND (y = 5 AND z = 8)" == "x = 1 AND y = 5 AND z = 8"
-				$restriction = $this->composeRestrictions($restriction, $haakjes_voor_node); // recursief
+				$operatorSwitch = (extract_logical_operator($restriction) !== $logicalOperator); // If the subnode has the same logical operator, don't add braces. "x = 1 AND (y = 5 AND z = 8)" has same meaning as "x = 1 AND y = 5 AND z = 8"
+				$restriction = $this->composeRestrictions($restriction, $operatorSwitch);
 			}
-			if ($restriction != '') { // lege sql statements negeren.
-				$sql_statements[] = $restriction; // stukje sql aan de statement toevoegen
+			if ($restriction != '') { // ignore empty statements.
+				$sql_statements[] = $restriction;
 			}
 		}
-		if (count($sql_statements) == 0) { // Het was een restriction met alleen een operator "array('operator'=>'AND')", maar geen eisen.
+		if (count($sql_statements) == 0) { // No statements (a restriction with just the operator "array(AND')" but no restrictions).
 			return '';
 		}
-		$restriction = implode($glue, $sql_statements); // De sql statements met elkaar verbinden met de operator.
-		if ($haakjes) { // moeten er haakjes omheen?
+		$restriction = implode(' '.$logicalOperator.' ', $sql_statements); // Join the sql statements with the logical operator.
+		if ($addBraces) { // moeten er haakjes omheen?
 			$restriction = '('.$restriction.')';
 		}
 		return $prefix.$restriction;

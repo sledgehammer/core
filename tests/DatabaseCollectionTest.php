@@ -55,6 +55,14 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$this->assertQueryCount(2);
 		$this->assertEquals($lowIds->count(), 2);
 		$this->assertEquals((string) $lowIds->getQuery(), "SELECT * FROM fruits WHERE id <= 6");
+
+		$appleIsNotAVegatable = $this->getDatabaseCollection()->where(array('AND', 'name' => 'apple', 'type' => 'vegetable'));
+		$this->assertCount(0, $appleIsNotAVegatable->toArray());
+		$this->assertLastQuery("SELECT * FROM fruits WHERE name = 'apple' AND type = 'vegetable'");
+
+		$appleOrVegatables = $this->getDatabaseCollection()->where(array('OR', 'name' => 'apple', 'type' => 'vegetable'));
+		$this->assertCount(2, $appleOrVegatables->toArray());
+		$this->assertLastQuery("SELECT * FROM fruits WHERE name = 'apple' OR type = 'vegetable'");
 	}
 
 	function test_select() {
@@ -90,7 +98,7 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$this->assertQueryCount(6, 'select() doesn\'t excute the generated query directly and can be reduced futher');
 	}
 
-	function test_collection() {
+	function test_count() {
 		$collection = $this->getDatabaseCollection();
 		$this->assertEquals(4, count($collection));
 		$this->assertLastQuery("SELECT COUNT(*) FROM fruits");

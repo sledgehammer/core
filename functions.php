@@ -403,6 +403,28 @@ namespace Sledgehammer {
 	}
 
 	/**
+	 * Extract and return the logical operator of a $conditions array.
+	 *
+	 * @param array $conditions
+	 * @return string|false operator 'AND' or 'OR' or false when no operator was found.
+	 */
+	function extract_logical_operator($conditions) {
+		if (is_array($conditions) === false) {
+			return false;
+		}
+		reset($conditions);
+		if (key($conditions) !== 0) {
+			return false;
+		}
+		$operators = array('AND', 'OR');
+		$operator = current($conditions);
+		if (in_array($operator, $operators)) {
+			return $operator;
+		}
+		return false;
+	}
+
+	/**
 	 * Controleerd of 2 variabelen gelijk of bijna gelijk aan elkaar zijn.
 	 * equals((float) 1.000, (int) 1) == true
 	 * equals("1.1", 1.1) == true

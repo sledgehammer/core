@@ -103,17 +103,18 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	/**
 	 * Return a new Collection with a subsection of the collection based on the conditions.
 	 *
-	 * @example
+	 * @examples
 	 * where('apple') returns the items with the value is "apple" (1D array)
 	 * where('> 5')   returns the items where the value is greater-than 5
 	 * where(array('id' => 4))  returns the items where the element or property 'id' is 4
 	 * where(array('user->id <' => 4))  returns the items where the property 'id' of element/property 'user' is smaller-than 4
+	 * where(array('id IN' => array(2, 3, 5)))  returns the items where the property 'id' is 2, 3 or 5
 	 * where(function ($item) { return (strpos($item, 'needle') !== false); })  return the items which contain the text 'needle'
 	 *
 	 * @see PropertyPath::get() & compare() for supported paths and operators
 	 *
 	 * NOTE: The Collection class uses Sledgehammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
-	 *       this may cause different behavior. For example "ABC" == "abc" might evalute to in MySQL (depends on the chosen collation)
+	 *       this may cause different behavior. For example "ABC" == "abc" might evalute to true in MySQL (depends on the chosen collation)
 	 *
 	 * @param mixed $conditions array|Closure|expression
 	 * @return Collection
@@ -183,6 +184,15 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		}
 		if (is_array($conditions)) {
 			// Create filter that checks all conditions
+			$logicalOperator = extract_logical_operator($conditions);
+			if ($logicalOperator === false) {
+				if (count($conditions) > 1) {
+					notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
+				}
+				$logicalOperator = 'AND';
+			} else {
+				unset($conditions[0]);
+			}
 			$operators = array();
 			foreach ($conditions as $path => $expectation) {
 				if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
@@ -193,20 +203,40 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 					$operators[$path] = false;
 				}
 			}
-			return function ($item) use ($conditions, $operators) {
-				foreach ($conditions as $path => $expectation) {
-					$actual = PropertyPath::get($path, $item);
-					$operator = $operators[$path];
-					if ($operator) {
-						if (compare($actual, $operator, $expectation) === false) {
+			// @todo Build an optimized closure for when a single conditions is given.
+			if ($logicalOperator === 'AND') {
+				return function ($item) use ($conditions, $operators) {
+					foreach ($conditions as $path => $expectation) {
+						$actual = PropertyPath::get($path, $item);
+						$operator = $operators[$path];
+						if ($operator) {
+							if (compare($actual, $operator, $expectation) === false) {
+								return false;
+							}
+						} elseif (equals($actual, $expectation) === false) {
 							return false;
 						}
-					} elseif (equals($actual, $expectation) === false) {
-						return false;
 					}
-				}
-				return true; // All conditions are met.
-			};
+					return true; // All conditions are met.
+				};
+			} elseif ($logicalOperator === 'OR') {
+				return function ($item) use ($conditions, $operators) {
+					foreach ($conditions as $path => $expectation) {
+						$actual = PropertyPath::get($path, $item);
+						$operator = $operators[$path];
+						if ($operator) {
+							if (compare($actual, $operator, $expectation) !== false) {
+								return true;
+							}
+						} elseif (equals($actual, $expectation) !== false) {
+							return true;
+						}
+					}
+					return false; // None of conditions are met.
+				};
+			} else {
+				throw new \Exception('Unsupported logical operator "'.$logicalOperator.'", expecting "AND" or "OR"');
+			}
 		}
 		//'<= 5' or '10'
 		// Compare the item directly with value given as $condition.

@@ -40,6 +40,11 @@ class CollectionTest extends TestCase {
 				'type' => 'fruit',
 			),
 		));
+		$andWhere = $fruitsAndVegetables->where(array('AND', 'type' => 'fruit', 'id <=' => 4));
+		$this->assertCount(1, $andWhere);
+
+		$orWhere = $fruitsAndVegetables->where(array('OR', 'type' => 'fruit', 'id' => 8));
+		$this->assertCount(4, $orWhere);
 	}
 
 	function test_select() {
@@ -136,11 +141,11 @@ class CollectionTest extends TestCase {
 	 */
 	private function getFruitsAndVegetables() {
 		return new Collection(array(
-				array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
-				array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
-				array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
-				array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
-			));
+			array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
+			array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
+			array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
+			array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
+		));
 	}
 
 }

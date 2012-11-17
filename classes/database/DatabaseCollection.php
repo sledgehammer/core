@@ -122,6 +122,23 @@ class DatabaseCollection extends Collection {
 		}
 		$db = getDatabase($this->dbLink);
 		$sql = $this->sql;
+		$logicalOperator = extract_logical_operator($conditions);
+		if ($logicalOperator === false) {
+			if (count($conditions) > 1) {
+				notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
+			}
+			$logicalOperator = 'AND';
+		} else {
+			unset($conditions[0]);
+		}
+		if ($logicalOperator === 'AND') {
+			$method = 'andWhere';
+		} elseif ($logicalOperator === 'OR') {
+			$method = 'orWhere';
+		} else {
+			throw new \Exception('Unsupported logical operator "'.$logicalOperator.'", expecting "AND" or "OR"');
+		}
+
 		// The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
 		foreach ($conditions as $path => $value) {
 			if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
@@ -132,6 +149,7 @@ class DatabaseCollection extends Collection {
 				$operator = '==';
 			}
 			if ($column === false) { // Converting to path failed?
+				array_key_unshift($conditions, 0, $logicalOperator);
 				return parent::where($conditions);
 			}
 			if ($value === null) {
@@ -158,10 +176,10 @@ class DatabaseCollection extends Collection {
 						$expectation = $db->quote($expectation);
 						break;
 				}
-				$sql = $sql->andWhere($column.' '.$operator.' '.$expectation);
+				$sql = $sql->$method($column.' '.$operator.' '.$expectation);
 			} else {
 				if ($operator === '!=') {
-					$sql = $sql->andWhere('('.$column.' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$column.' IS NULL)');
+					$sql = $sql->$method('('.$column.' != '.$db->quote($value, \PDO::PARAM_STR).' OR '.$column.' IS NULL)');
 				} elseif ($operator === 'IN') {
 					if ((is_array($value) || $value instanceof \Traversable) === false) {
 						notice('Operator IN expects an array or Traversable', $value);
@@ -171,12 +189,12 @@ class DatabaseCollection extends Collection {
 					foreach ($value as $val) {
 						$quoted[] = $this->quote($db, $column, $val);
 					}
-					$sql = $sql->andWhere($column.' '.$operator.' ('.implode(', ', $quoted).')');
+					$sql = $sql->$method($column.' '.$operator.' ('.implode(', ', $quoted).')');
 				} else {
 					if ($operator === '==') {
 						$operator = '=';
 					}
-					$sql = $sql->andWhere($column.' '.$operator.' '.$this->quote($db, $column, $value));
+					$sql = $sql->$method($column.' '.$operator.' '.$this->quote($db, $column, $value));
 				}
 			}
 		}
