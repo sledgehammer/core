@@ -480,11 +480,15 @@ class Sql extends Object {
 			}
 			return $restrictions;
 		}
-		$prefix = '';
 		$logicalOperator = extract_logical_operator($restrictions);
 		if ($logicalOperator === false) {
-			throw new \Exception('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")');
+			if (count($restrictions) !== 1) {
+					throw new InfoException('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")', $restrictions);
+			}
+			reset($restrictions);
+			return $this->composeRestrictions(current($restrictions), false);
 		}
+
 		switch ($logicalOperator) {
 
 			case 'AND':
@@ -495,24 +499,24 @@ class Sql extends Object {
 				throw new \Exception('Unknown logical operator: "'.$logicalOperator.'"');
 		}
 		unset($restrictions[0]); // Remove the operator from the array.
-		$sql_statements = array();
+		$expressions = array();
 		foreach ($restrictions as $restriction) {
 			if (is_array($restriction)) { // Is het geen sql maar nog een 'restriction'?
 				$operatorSwitch = (extract_logical_operator($restriction) !== $logicalOperator); // If the subnode has the same logical operator, don't add braces. "x = 1 AND (y = 5 AND z = 8)" has same meaning as "x = 1 AND y = 5 AND z = 8"
 				$restriction = $this->composeRestrictions($restriction, $operatorSwitch);
 			}
 			if ($restriction != '') { // ignore empty statements.
-				$sql_statements[] = $restriction;
+				$expressions[] = $restriction;
 			}
 		}
-		if (count($sql_statements) == 0) { // No statements (a restriction with just the operator "array(AND')" but no restrictions).
+		if (count($expressions) == 0) { // No statements (a restriction with just the operator "array(AND')" but no restrictions).
 			return '';
 		}
-		$restriction = implode(' '.$logicalOperator.' ', $sql_statements); // Join the sql statements with the logical operator.
+		$sql = implode(' '.$logicalOperator.' ', $expressions); // Join the sql statements with the logical operator.
 		if ($addBraces) { // moeten er haakjes omheen?
-			$restriction = '('.$restriction.')';
+			return '('.$sql.')';
 		}
-		return $prefix.$restriction;
+		return $sql;
 	}
 
 	/**
