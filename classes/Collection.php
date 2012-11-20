@@ -141,14 +141,18 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * Returns the first item that matches the conditions.
 	 *
 	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
+	 * @param bool $allowNone  When no match is found, return null instead of throwing an Exception.
 	 * @return mixed
 	 */
-	function find($conditions) {
+	function find($conditions, $allowNone = false) {
 		$filter = $this->buildFilter($conditions);
 		foreach ($this as $key => $item) {
 			if ($filter($item, $key) !== false) {
 				return $item;
 			}
+		}
+		if ($allowNone) {
+			return null;
 		}
 		throw new \Exception('No item found that matches the conditions');
 	}
