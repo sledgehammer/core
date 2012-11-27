@@ -1739,5 +1739,30 @@ exit [lindex $result 3]');
 		return $cache->value($options, $closure);
 	}
 
+	/**
+	 * Creates a version of the function that can only be called one time.
+	 * Repeated calls to the returned closure will have no effect, returning the value from the original call.
+	 *
+	 * @link http://underscorejs.org/#once
+	 *
+	 * @param callable $callback
+	 * @return \Closure
+	 */
+	function once($callback) {
+		if (is_callable($callback) == false) {
+			throw new \Exception('Unexpected value for $callback, expecting a callable');
+		}
+		$called = false;
+		$retval = null;
+		return function () use ($callback, &$called, &$retval) {
+			if ($called) {
+				return $retval;
+			}
+			$retval = call_user_func_array($callback, func_get_args());
+			$called = true;
+			return $retval;
+		};
+	}
+
 }
 ?>
