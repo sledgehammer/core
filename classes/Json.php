@@ -90,20 +90,12 @@ class Json extends Object {
 	 * Returns a string containing the JSON representation of value.
 	 *
 	 * @param mixed $data
-	 * @param array|int $options
+	 * @param int $options  Optional bitmask, with flags: JSON_HEX_QUOT, JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS, JSON_NUMERIC_CHECK, JSON_PRETTY_PRINT, JSON_UNESCAPED_SLASHES, JSON_FORCE_OBJECT and/or JSON_UNESCAPED_UNICODE.
 	 * @throws \Exception
 	 * @return string JSON formatted string
 	 */
-	static function encode($data, $options = array()) {
-		if (is_int($options)) {
-			$optionMask = $options;
-		} else {
-			$optionMask = 0;
-			foreach ($options as $option) {
-				$optionMask += $option;
-			}
-		}
-		$json = json_encode($data, $optionMask);
+	static function encode($data, $options = 0) {
+		$json = json_encode($data, $options);
 		$error = json_last_error();
 		if ($error !== JSON_ERROR_NONE) {
 			throw new \Exception(self::errorMessage($error), $error);
@@ -117,23 +109,15 @@ class Json extends Object {
 	 * @param string $json JSON formatted string
 	 * @param bool $assoc
 	 * @param int $depth
-	 * @param array|int $options
+	 * @param int $options Optional bitmask, with flags: JSON_BIGINT_AS_STRING
 	 * @throws \Exception
 	 * @return mixed data
 	 */
-	static function decode($json, $assoc = false, $depth = 512, $options = array()) {
-		if (is_int($options)) {
-			$optionMask = $options;
-		} else {
-			$optionMask = 0;
-			foreach ($options as $option) {
-				$optionMask += $option;
-			}
-		}
-		if ($optionMask === 0) {
+	static function decode($json, $assoc = false, $depth = 512, $options = 0) {
+		if ($options === 0) {
 			$data = json_decode($json, $assoc, $depth);
 		} else {
-			$data = json_decode($json, $assoc, $depth, $optionMask); //Opstions available since php 5.4.0
+			$data = json_decode($json, $assoc, $depth, $options); // Options available since php 5.4.0
 		}
 		$error = json_last_error();
 		if ($error !== JSON_ERROR_NONE) {
