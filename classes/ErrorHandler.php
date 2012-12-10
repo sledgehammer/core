@@ -423,13 +423,12 @@ class ErrorHandler {
 				$this->email = false; // Niet emailen
 			}
 		}
-		if (!$this->email && !$this->html) { // Geen email en geen html uitvoer
-			$this->isProcessing = false;
-			return; // Stoppen met het bouwen van een foutrapport
-		}
 		$buffer = ($this->email || $this->debugR);
 		if ($buffer) { // store the html of the error-report in a buffer
 			ob_start();
+		} elseif (!$this->html) { // No html version required?
+			$this->isProcessing = false;
+			return; // Processing is complete
 		}
 		self::render($type, $message, $information);
 		if ($buffer) {
