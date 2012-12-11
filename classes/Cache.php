@@ -141,22 +141,24 @@ class Cache extends Object implements \ArrayAccess {
 		if ($options['forever']  && $options['expires'] !== false) {
 			throw new InfoException('Invalid options: "expires" and "forever" can\'t both be set', $options);
 		}
-		// Read cache
+		// Read value from cache (without lock)
+		$hit = $this->read($value, $options['max_age']);
+		if ($hit) {
+			return $value;
+		}
+		// Miss, obtain lock and try again.
 		if ($options['lock']) {
 			$this->lock();
-		}
-		// Read value from cache
-		try {
-			$hit = $this->read($value, $options['max_age']);
-		} catch (\Exception $e) {
-			// Reading cache failed
-			if ($options['lock']) {
+
+			// Read value from cache
+			try {
+				$hit = $this->read($value, $options['max_age']);
+			} catch (\Exception $e) {
+				// Reading cache failed
 				$this->release();
+				throw $e;
 			}
-			throw $e;
-		}
-		if ($hit) {
-			if ($options['lock']) {
+			if ($hit) {
 				$this->release();
 				return $value;
 			}
@@ -373,16 +375,31 @@ class Cache extends Object implements \ArrayAccess {
 	}
 
 	private function file_read(&$output) {
-		$expires = stream_get_line($this->_file, 1024, "\n");
+		if ($this->_file === null) { // unlocked read?
+			$filename = TMP_DIR.'Cache/'.$this->_guid;
+			if (file_exists($filename) === false) {
+				return false;
+			}
+			$file = fopen(TMP_DIR.'Cache/'.$this->_guid, 'r');
+		} else {
+			$file = $this->_file;
+		}
+		$expires = stream_get_line($file, 1024, "\n");
 		if ($expires == false) { // Entry is empty?
+			if ($this->_file === null) {
+				fclose($file);
+			}
 			return false;
 		}
-		$updated = stream_get_line($this->_file, 1024, "\n");
+		$updated = stream_get_line($file, 1024, "\n");
 		$output = array(
 			'expires' => intval(substr($expires, 9)), // "Expires: " = 9
 			'updated' => intval(substr($updated, 9)), // "Updated: " = 9
-			'data' => unserialize(stream_get_contents($this->_file)),
+			'data' => unserialize(stream_get_contents($file)),
 		);
+		if ($this->_file === null) {
+			fclose($file);
+		}
 		return true;
 	}
 
