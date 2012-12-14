@@ -529,7 +529,7 @@ class Curl extends Observable {
 			$defaults[CURLOPT_TIMEOUT] = floor(ini_get('max_execution_time') - (microtime(true) - STARTED)) - 1; // Prevent a fatal PHP timeout (allow ~1 sec for exception handling)
 		}
 
-		if (ini_get('safe_mode') == false) {
+		if (ini_get('safe_mode') == false && ini_get('open_basedir') == false) {
 			$defaults[CURLOPT_FOLLOWLOCATION] = true; // When allowed follow 301 and 302 redirects.
 			$defaults[CURLOPT_MAXREDIRS] = 25; // Prevent infinite redirection loops.
 		}
