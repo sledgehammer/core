@@ -165,7 +165,11 @@ class Url extends Object {
 				$scheme = 'http';
 				$port = ($_SERVER['SERVER_PORT'] == '80') ? '' : ':'.$_SERVER['SERVER_PORT'];
 			}
-			self::$current = new Url($scheme.'://'.$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI']);
+			$domain = $_SERVER['SERVER_NAME'];
+			if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) { // An IP6 address?
+				$domain = '['.$domain.']'; // Enclose IP in brackets
+			}
+			self::$current = new Url($scheme.'://'.$domain.$port.$_SERVER['REQUEST_URI']);
 		}
 		return clone self::$current;
 	}
