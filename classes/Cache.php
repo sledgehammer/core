@@ -184,7 +184,7 @@ class Cache extends Object implements \ArrayAccess {
 	 * Retrieve the value from the cache and set it to the $output value.
 	 * Returns true if the cache entry was valid.
 	 *
-	 * @param array $node Cached data + metadata
+	 * @param array $output  The cached value
 	 * @param string|int|null $maxAge (optional) The entry must be newer than the $maxAge. Example: "-5min", "2012-01-01"
 	 * @return bool
 	 */

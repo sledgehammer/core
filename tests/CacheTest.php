@@ -46,6 +46,7 @@ class CacheTest extends TestCase {
 	}
 
 	function test_invalid_max_age() {
+		cache(__FILE__.__FUNCTION__, array('expires' => '+1 min'), array($this, 'incrementCounter')); // create a cache entry. (no entry == no max_age validation)
 		try {
 			cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
 			$this->fail('An max_age in the future should generate a notice');
