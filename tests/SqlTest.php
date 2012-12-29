@@ -50,6 +50,30 @@ class SqlTest extends TestCase {
 
 		$sql = select('*')->from('customers')->where(array('bonus = 1'))->orWhere('special = 1')->andWhere('age < 12');
 		$this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE (bonus = 1 OR special = 1) AND age < 12');
+
+		$sql = select('*')->from('customers');
+		$sql->where = array(
+			'AND', // ignored (only 1 condition)
+			array(
+				'OR',
+				array(
+					'OR', 'a = 1', 'b = 2', // a nested OR inside an OR wouldn't be placed inside () because (a || b) || c == a || b || c  
+				),
+				'c = 3',
+				array(
+					'AND',
+					'd = 4',
+					array(
+						'AND', 'e = 5', 'f = 6', // a nested AND inside an AND wouldn't be placed inside () because  d && (e && f) == d && e && f
+					),
+					array('OR'), // nodes with only a logical operator are skipped.
+					array('g = 7'), // nodes without logical operator, but containing only 1 condition are treated as a that condition.
+					array('OR', 'h = 8'), // nodes with only 1 condition are treated as a that condition. The swap between AND -> OR doesn't cause ()
+					array('OR', 'i = 9', 'j = 10')
+				)
+			)
+		);
+		$this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE a = 1 OR b = 2 OR c = 3 OR (d = 4 AND e = 5 AND f = 6 AND g = 7 AND h = 8 AND (i = 9 OR j = 10))');
 	}
 
 }

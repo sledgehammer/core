@@ -483,12 +483,15 @@ class Sql extends Object {
 		$logicalOperator = extract_logical_operator($restrictions);
 		if ($logicalOperator === false) {
 			if (count($restrictions) !== 1) {
-					throw new InfoException('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")', $restrictions);
+				throw new InfoException('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")', $restrictions);
 			}
-			reset($restrictions);
-			return $this->composeRestrictions(current($restrictions), false);
+		} else {
+			unset($restrictions[0]); // Remove the operator from the array.
 		}
-
+		if (count($restrictions) === 1) {
+			reset($restrictions);
+			return $this->composeRestrictions(current($restrictions));
+		}
 		switch ($logicalOperator) {
 
 			case 'AND':
@@ -498,7 +501,7 @@ class Sql extends Object {
 			default:
 				throw new \Exception('Unknown logical operator: "'.$logicalOperator.'"');
 		}
-		unset($restrictions[0]); // Remove the operator from the array.
+
 		$expressions = array();
 		foreach ($restrictions as $restriction) {
 			if (is_array($restriction)) { // Is het geen sql maar nog een 'restriction'?
