@@ -131,8 +131,8 @@ class Curl extends Observable {
 	 *
 	 * @param string $url
 	 * @param array $options Additional CURLOPT_* options
-	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\Curl  cURL response
+	 * @param Closure|callback $callback  The callback for the load event.
+	 * @return \Sledgehammer\Curl  Response
 	 */
 	static function get($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
@@ -150,8 +150,8 @@ class Curl extends Observable {
 	 * @param string $url
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
-	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\Curl  cURL response
+	 * @param Closure|callback $callback  The callback for the load event.
+	 * @return \Sledgehammer\Curl  Response
 	 */
 	static function post($url, $data = array(), $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
@@ -170,15 +170,15 @@ class Curl extends Observable {
 	 * Preform an asynchonous PUT request
 	 *
 	 * @param string $url
-	 * @param array|string $data
+	 * @param string|array $data
 	 * @param array $options Additional CURLOPT_* options
-	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\Curl  cURL response
+	 * @param Closure|callback $callback  The callback for the load event.
+	 * @return \Sledgehammer\Curl  Response
 	 */
-	static function put($url, $data = array(), $options = array(), $callback = null) {
+	static function put($url, $data = '', $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
 		$defaults = self::defaults(array(
-			CURLOPT_PUT => true,
+			CURLOPT_CUSTOMREQUEST => 'PUT',
 			CURLOPT_POSTFIELDS => $data,
 		));
 		$response = new Curl($options + $defaults);
@@ -194,8 +194,8 @@ class Curl extends Observable {
 	 * @param string $url
 	 * @param array|string $data
 	 * @param array $options Additional CURLOPT_* options
-	 * @param Closure|callback $callback  The callback that will e triggered on the load event.
-	 * @return \Sledgehammer\Curl  cURL response
+	 * @param Closure|callback $callback  The callback for the load event.
+	 * @return \Sledgehammer\Curl  Response
 	 */
 	static function delete($url, $options = array(), $callback = null) {
 		$options[CURLOPT_URL] = $url;
