@@ -130,6 +130,7 @@ class Dump extends Object {
 			'text-shadow: none',
 			'text-align: left',
 			'box-shadow: none',
+			'border: none',
 		);
 		$id = uniqid('dump');
 		echo "<pre id=\"".$id."\" style=\"".implode(';', $style)."\">\n";
