@@ -148,6 +148,29 @@ class CollectionTest extends TestCase {
 		));
 	}
 
+	function test_events() {
+		$removedCount = 0;
+		$collection = $this->getFruitsAndVegetables();
+		$collection->on('removed', function ($item, $index) use (&$removedCount){
+			$removedCount++;
+		});
+
+		unset($collection[3]);
+		$this->assertEquals(1, $removedCount, 'Removing an item should trigger a "removed" event');
+		unset($collection[3]);
+		$this->assertEquals(1, $removedCount, 'An unset that wasn\'t set should NOT trigger a "removed" event');
+
+		$addedCount = 0;
+		$collection->on('added', function ($item, $index) use (&$addedCount){
+			$addedCount++;
+		});
+		$collection['Hi'] = 'New value';
+		$this->assertEquals(1, $addedCount, 'Adding an item should trigger a "added" event');
+		$collection['Hi'] = 'Another value';
+		$this->assertEquals(2, $removedCount, 'Replacing an item should trigger a "removed" event');
+		$this->assertEquals(2, $addedCount, 'Replacing an item should trigger a "added" event');
+	}
+
 }
 
 ?>

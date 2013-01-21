@@ -24,8 +24,10 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @var array
 	 */
 	protected $events = array(
-		'changing' => array(),
-		'changed' => array(),
+		'adding' => array(),
+		'added' => array(),
+		'removing' => array(),
+		'removed' => array(),
 	);
 
 	/**
@@ -497,13 +499,27 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 */
 	function offsetSet($offset, $value) {
 		$this->dataToArray();
-		$this->trigger('changing', $this);
 		if ($offset === null) {
+			$this->trigger('adding', $value, null, $this);
 			$this->data[] = $value;
+			$this->trigger('added', $value, null, $this);
 		} else {
+			$replacing = false;
+			if (array_key_exists($offset, $this->data)) {
+				$old = $this->data[$offset];
+				if ($old === $value) { // No change?
+					return;
+				}
+				$this->trigger('removing', $old, $offset, $this);
+				$replacing = true;
+			}
+			$this->trigger('adding', $value, $offset, $this);
 			$this->data[$offset] = $value;
+			if ($replacing) {
+				$this->trigger('removed', $old, $offset, $this);
+			}
+			$this->trigger('added', $value, $offset, $this);
 		}
-		$this->trigger('changed', $this);
 	}
 
 	/**
@@ -514,9 +530,14 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 */
 	function offsetUnset($offset) {
 		$this->dataToArray();
-		$this->trigger('changing', $this);
-		unset($this->data[$offset]);
-		$this->trigger('changed', $this);
+		if (array_key_exists($offset, $this->data)) {
+			$old = $this->data[$offset];
+			$this->trigger('removing', $old, $offset, $this);
+			unset($this->data[$offset]);
+			$this->trigger('removed', $old, $offset, $this);
+		} else {
+			unset($this->data[$offset]);
+		}
 	}
 
 	/**
