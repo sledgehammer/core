@@ -43,7 +43,8 @@ class Curl extends Observable {
 	protected $events = array(
 		'load' => array(), // Fires when the request has completed
 		'abort' => array(), // Fires when the request was aborted
-		'closed' => array(), // Fires when the curl handle is closed
+		'closed' => array(), // Fires when the curl handle is closed,
+		'error' => array(), // Fires when the curl handle encounters an error CURLOPT_FAILONERROR.
 	);
 
 	/**
@@ -105,6 +106,19 @@ class Curl extends Observable {
 		if ($this->handle === false) {
 			throw new \Exception('Failed to create cURL handle');
 		}
+		$this->on('error', function ($message, $options) {
+			// Handle a curl_error by throwing the message as an Exception
+			throw new InfoException($message, $options);
+		});
+		/**
+		*
+		* @param string $message
+		* @throws InfoException
+		*/
+	   function onError($message) {
+
+	   }
+
 		$this->start($options);
 	}
 
@@ -231,8 +245,14 @@ class Curl extends Observable {
 		));
 		$response = new Curl($options + $defaults);
 		$response->on('closed', function () use ($fp) {
-				fclose($fp);
-			});
+			fclose($fp);
+		});
+		// Overwite default error handle
+		$response->onError = function ($message, $options) use ($filename, $fp) {
+			fclose($fp);
+			unlink($filename);
+			throw new InfoException($message, $options);
+		};
 		if ($async == false) {
 			$response->waitForCompletion();
 		}
@@ -374,12 +394,13 @@ class Curl extends Observable {
 						unset(Curl::$requests[$index]); // Cleanup global curl pool
 						$curl->state = 'COMPLETED';
 						$error = $message['result'];
+						$tranferCount = self::$tranferCount;
 						if ($error !== CURLE_OK) {
 							$curl->state = 'ERROR';
-							throw new InfoException('['.self::errorName($error).'] '.curl_error($curl->handle), $curl->options);
+							$curl->trigger('error', '['.self::errorName($error).'] '.curl_error($curl->handle), $curl->options, $curl);
+						} else {
+							$curl->trigger('load', $curl);
 						}
-						$tranferCount = self::$tranferCount;
-						$curl->trigger('load', $curl);
 						if ($curl === $this) {
 							return true;
 						}
