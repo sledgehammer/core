@@ -150,27 +150,30 @@ class Dump extends Object {
 		if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
 			$webroot = defined('Sledgehammer\WEBPATH') ? WEBPATH : WEBROOT;
 			echo "<script type=\"text/javascript\">window.$ || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
-			echo "<script type=\"text/javascript\">\n";
-			echo "(function () {\n";
-			echo "	var dump = $('#".$id."');\n";
-			echo "	$('[data-dump=container]', dump).each(function () {\n";
-			echo "		var contents = $(this);\n";
-			echo "		var toggle = $(this).prev();\n";
-			echo "		toggle.css('cursor', 'pointer');\n";
-			echo "		toggle.click(function () {\n";
-			echo "			contents.toggle();\n";
-			echo "			if (contents.is(':visible')) {\n";
-			echo "				contents.prev('[data-dump=placeholder]').remove();\n";
-			echo "			} else {\n";
-			echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
-			echo "				contents.before(hellip);\n";
-			echo "				hellip.click(function () { toggle.trigger('click');});\n";
-			echo "			}\n";
-			echo "		});\n";
-			echo "	});\n";
-			echo "})();\n";
-			echo "</script>";
 		}
+		echo "<script type=\"text/javascript\">\n";
+		echo "(function ($) {\n";
+		echo "	if (typeof $ === 'undefined') {\n";
+		echo "		return;'n";
+		echo "	}\n";
+		echo "	var dump = $('#".$id."');\n";
+		echo "	$('[data-dump=container]', dump).each(function () {\n";
+		echo "		var contents = $(this);\n";
+		echo "		var toggle = $(this).prev();\n";
+		echo "		toggle.css('cursor', 'pointer');\n";
+		echo "		toggle.click(function () {\n";
+		echo "			contents.toggle();\n";
+		echo "			if (contents.is(':visible')) {\n";
+		echo "				contents.prev('[data-dump=placeholder]').remove();\n";
+		echo "			} else {\n";
+		echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
+		echo "				contents.before(hellip);\n";
+		echo "				hellip.click(function () { toggle.trigger('click');});\n";
+		echo "			}\n";
+		echo "		});\n";
+		echo "	});\n";
+		echo "})(jQuery);\n";
+		echo "</script>";
 		ini_set('html_errors', $old_value);
 	}
 
