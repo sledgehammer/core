@@ -106,19 +106,16 @@ class Curl extends Observable {
 		if ($this->handle === false) {
 			throw new \Exception('Failed to create cURL handle');
 		}
-		$this->on('error', function ($message, $options) {
-			// Handle a curl_error by throwing the message as an Exception
-			throw new InfoException($message, $options);
-		});
 		/**
-		*
-		* @param string $message
-		* @throws InfoException
-		*/
-	   function onError($message) {
-
-	   }
-
+		 * Handle a curl_error by throwing the message as an Exception
+		 *
+		 * @param string $message
+		 * @throws InfoException
+		 */
+		$onError = function ($message, $options) {
+			throw new InfoException($message, $options);
+		};
+		$this->on('error', $onError);
 		$this->start($options);
 	}
 
