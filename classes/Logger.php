@@ -94,7 +94,12 @@ class Logger extends Object {
 	 * @param array $options
 	 */
 	function __construct($options = array()) {
-		$identifier =(isset($options['identifier'])) ? $options['identifier'] : 'Log';
+		if (is_string($options)) {
+			$identifier = $options;
+			$options = array();
+		} else {
+			$identifier = (isset($options['identifier'])) ? $options['identifier'] : 'Log';
+		}
 		if (isset(self::$instances[$identifier])) {
 			$suffix = 2;
 			while (isset(self::$instances[$identifier.'('.$suffix.')'])) {
