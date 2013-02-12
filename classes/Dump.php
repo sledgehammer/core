@@ -154,7 +154,7 @@ class Dump extends Object {
 		echo "<script type=\"text/javascript\">\n";
 		echo "(function ($) {\n";
 		echo "	if (typeof $ === 'undefined') {\n";
-		echo "		return;'n";
+		echo "		return;\n";
 		echo "	}\n";
 		echo "	var dump = $('#".$id."');\n";
 		echo "	$('[data-dump=container]', dump).each(function () {\n";
