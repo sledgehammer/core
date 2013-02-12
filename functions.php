@@ -504,10 +504,10 @@ namespace Sledgehammer {
 	/**
 	 * Werkt als get_object_vars() maar i.p.v. de waardes op te vragen worden deze ingesteld
 	 *
-	 * @param stdClass $object Het (doel) object waar de eigenschappen worden aangepast
-	 * @param array $values Een assoc array met als key de eigenschap. bv: array('id' => 1)
-	 * @param bool $check_for_property Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
-	 * @return void
+	 * @param stdClass $object  Het (doel) object waar de eigenschappen worden aangepast
+	 * @param array $values  Een assoc array met als key de eigenschap. bv: array('id' => 1)
+	 * @param bool $check_for_property  Bij false zal de functie alle array-elementen proberen in het object te zetten, Bij true zullen alleen bestaande elementen ingesteld worden
+	 * @return mixed  the $object
 	 */
 	function set_object_vars($object, $values, $check_for_property = false) {
 		if ($check_for_property) {
@@ -521,6 +521,7 @@ namespace Sledgehammer {
 				$object->$property = $value;
 			}
 		}
+		return $object;
 	}
 
 	/**
