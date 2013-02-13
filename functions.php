@@ -284,6 +284,8 @@ namespace Sledgehammer {
 				'mp4' => 'video/mp4',
 				'mkv' => 'video/x-matroska',
 				'3gp' => 'video/3gpp',
+				'wav' => 'audio/wav',
+				'mid' => 'audio/mid',
 				// Adobe
 				'pdf' => 'application/pdf',
 				'psd' => 'image/vnd.adobe.photoshop',
@@ -303,6 +305,30 @@ namespace Sledgehammer {
 			);
 			$mimetype = value($mimetypes[strtolower($extension)]);
 		}
+		if ($mimetype !== null) {
+			return $mimetype;
+		}
+		static $globalMimetypes = null;
+		if ($globalMimetypes === null) {
+			// Import global mime.types.
+			$globalMimetypes = array();
+			foreach (array('/etc/mime.types', '/etc/apache2/mime.types') as $mimeFile) {
+				if (is_readable($mimeFile)) {
+					foreach(file($mimeFile) as $line) {
+						if (substr($line, 0, 1) == '#') {  // skip comments
+							continue;
+						}
+						$extensions = preg_split('/[\s\t]+/', rtrim($line));
+						$mime = array_shift($extensions);
+						foreach ($extensions as $ext) {
+							$globalMimetypes[$ext] = $mime;
+						}
+					 }
+					break;
+				}
+			}
+		}
+		$mimetype = value($globalMimetypes[strtolower($extension)]);
 		if ($mimetype === null) {
 			if (!$allow_unknown_types) {
 				trigger_error('Unknown mime type for :"'.$extension.'", E_USER_WARNING');
