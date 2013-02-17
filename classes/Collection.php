@@ -179,6 +179,56 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
+	 * Return the highest value.
+	 * @param string|Closure $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name"
+	 * @return mixed
+	 */
+	function max($selector = '.') {
+		if (is_closure($selector)) {
+			$closure = $selector;
+		} else {
+			$closure = PropertyPath::compile($selector);
+		}
+		$max = null;
+		$first = true;
+		foreach ($this as $item) {
+			$value = $closure($item);
+			if ($first) {
+				$first = false;
+				$max = $value;
+			} elseif ($value > $max ) {
+				$max = $value;
+			}
+		}
+		return $max;
+	}
+
+	/**
+	 * Return the lowest value.
+	 * @param string|Closure $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name"
+	 * @return mixed
+	 */
+	function min($selector = '.') {
+		if (is_closure($selector)) {
+			$closure = $selector;
+		} else {
+			$closure = PropertyPath::compile($selector);
+		}
+		$min = null;
+		$first = true;
+		foreach ($this as $item) {
+			$value = $closure($item);
+			if ($first) {
+				$first = false;
+				$min = $value;
+			} elseif ($value < $min ) {
+				$min = $value;
+			}
+		}
+		return $min;
+	}
+
+	/**
 	 * Build a closure which validates an item with the gives $conditions
 	 *
 	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
