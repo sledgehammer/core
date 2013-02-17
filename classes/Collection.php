@@ -34,7 +34,7 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * Contructor
 	 * @param \Traversable|array $data
 	 */
-	function __construct($data) {
+	function __construct($data = array()) {
 		$this->data = $data;
 	}
 
