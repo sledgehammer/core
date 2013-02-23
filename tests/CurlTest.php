@@ -81,7 +81,9 @@ class CurlTest extends TestCase {
 		$this->assertEquals($response->http_code, 200);
 		rewind($fp);
 		$log = stream_get_contents($fp);
-		fclose($fp);
+		$response->on('closed', function () use ($fp) {
+			fclose($fp);
+		});
 		$this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
 	}
 
