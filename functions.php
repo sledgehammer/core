@@ -1587,6 +1587,32 @@ namespace Sledgehammer {
 	}
 
 	/**
+	 * Convert all applicable characters to XML entities
+	 * Similar to htmlentities() but also converts "☂" (umbrella) to "&#9730;"
+	 *
+	 * @param string $string UTF8 string
+	 * @return string
+	 */
+	function xmlentities($string) {
+		// get rid of existing entities else double-escape
+		$string = html_entity_decode(stripslashes($string), ENT_QUOTES, 'UTF-8');
+		$ar = preg_split('/(?<!^)(?!$)/u', $string);  // return array of every multi-byte character
+		$output = '';
+		foreach ($ar as $c) {
+			$o = ord($c);
+			if ((strlen($c) > 1) || /* multi-byte [unicode] */
+				($o < 32 || $o > 126) || /* <- control / latin weirdos -> */
+				($o > 33 && $o < 40) || /* quotes + ambersand */
+				($o > 59 && $o < 63) /* html */
+			) {
+				// convert to numeric entity
+				$c = mb_encode_numericentity($c, array(0x0, 0xffff, 0, 0xffff), 'UTF-8');
+			}
+			$output .= $c;
+		}
+		return $output;
+	}
+	/**
 	 * Genereer aan de hand van de $identifier een (meestal) uniek id
 	 *
 	 * @param string $identifier
