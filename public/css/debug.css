@@ -198,6 +198,7 @@
 	font-smoothing: antialiased;
 	border: 1px solid #999999;
 	background: white;
+	tab-size: 4;
 }
 .logentry > td {
 	border-left: 1px solid #b3b3b3;
