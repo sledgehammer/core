@@ -99,6 +99,14 @@ class CurlTest extends TestCase {
 		}
 	}
 
+	function test_put() {
+		$filename = TMP_DIR.basename(__CLASS__).'.txt';
+		file_put_contents($filename, 'Curl TEST');
+		$request = Curl::putFile('http://bfanger.nl/', $filename);
+		$this->assertEquals(200,  $request->http_code);
+
+	}
+
 	private function assertEmptyPool() {
 		$this->assertFalse(isset(Curl::$requests) && count(Curl::$requests) > 0, 'Global cURL pool should be emtpy');
 	}

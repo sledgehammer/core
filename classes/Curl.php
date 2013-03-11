@@ -37,6 +37,24 @@ namespace Sledgehammer;
 class Curl extends Observable {
 
 	/**
+	 * Sane defaults for Curl requests. Only used in the static helper methods like Curl::get(), Curl::post(), etc.
+	 *
+	 * Only set options you need on EVERY request. A (Charles) proxy for example.
+	 *   Curl::$defaults[CURLOPT_PROXY] = "127.0.0.1";
+	 *   Curl::$defaults[CURLOPT_PROXYPORT] = 8888;
+	 * @var array
+	 */
+	public static $defaults = array(
+		CURLOPT_FAILONERROR => true, // Report an error when the HTTP status >= 400.
+		CURLOPT_RETURNTRANSFER => true, // Don't stream the contents to the output buffer.
+		// Automaticly disabled in safe mode
+		CURLOPT_FOLLOWLOCATION => true, // When allowed follow 301 and 302 redirects.
+		CURLOPT_MAXREDIRS => 25, // Prevent infinite redirection loops.
+		// Dynamic options
+//		CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
+	);
+
+	/**
 	 * Allow listening to the events: 'load' and 'abort'
 	 * @var array
 	 */
@@ -165,8 +183,8 @@ class Curl extends Observable {
 	 * @return \Sledgehammer\Curl  Response
 	 */
 	static function post($url, $data = array(), $options = array(), $callback = null) {
-		$options[CURLOPT_URL] = $url;
 		$defaults = self::defaults(array(
+			CURLOPT_URL => $url,
 			CURLOPT_POST => true,
 			CURLOPT_POSTFIELDS => $data,
 		));
@@ -187,8 +205,8 @@ class Curl extends Observable {
 	 * @return \Sledgehammer\Curl  Response
 	 */
 	static function put($url, $data = '', $options = array(), $callback = null) {
-		$options[CURLOPT_URL] = $url;
 		$defaults = self::defaults(array(
+			CURLOPT_URL => $url,
 			CURLOPT_CUSTOMREQUEST => 'PUT',
 			CURLOPT_POSTFIELDS => $data,
 		));
@@ -196,6 +214,36 @@ class Curl extends Observable {
 		if ($callback !== null) {
 			$response->on('load', $callback);
 		}
+		return $response;
+	}
+
+	/**
+	 * Preform an asynchonous PUT request.
+	 *
+	 * Override the CURLOPT_INFILESIZE when dealing with large files.
+	 * filesize() has issues in PHP 32bit with files bigger than 2GiB.
+	 *
+	 * @param string $url
+	 * @param string $filename
+	 * @param array $options  Additional CURLOPT_* options
+	 * @param callable $callback  The callback for the load event.
+	 * @return Curl
+	 */
+	static function putFile($url, $filename, $options = array(), $callback = null) {
+		$fp = fopen($filename, 'r');
+		$defaults = self::defaults(array(
+			CURLOPT_URL => $url,
+			CURLOPT_PUT => true,
+			CURLOPT_INFILE => $fp,
+			CURLOPT_INFILESIZE => filesize($filename)
+		));
+		$response = new Curl($options + $defaults);
+		if ($callback !== null) {
+			$response->on('load', $callback);
+		}
+		$response->on('load', function () use ($fp) {
+			fclose($fp);
+		});
 		return $response;
 	}
 
@@ -235,17 +283,23 @@ class Curl extends Observable {
 		if ($fp === false) {
 			throw new \Exception('Unable to write to "'.$filename.'"');
 		}
+		flock($fp, LOCK_EX);
 		$defaults = self::defaults(array(
 			CURLOPT_URL => $url,
 			CURLOPT_RETURNTRANSFER => false,
 			CURLOPT_FILE => $fp,
 		));
 		$response = new Curl($options + $defaults);
+		$response->on('load', function () use ($fp) {
+			fflush($fp);
+			flock($fp, LOCK_UN);
+		});
 		$response->on('closed', function () use ($fp) {
 			fclose($fp);
 		});
-		// Overwite default error handle
+		// Override default error handle
 		$response->onError = function ($message, $options) use ($filename, $fp) {
+			flock($fp, LOCK_UN);
 			fclose($fp);
 			unlink($filename);
 			throw new InfoException($message, $options);
@@ -534,22 +588,20 @@ class Curl extends Observable {
 	}
 
 	/**
-	 * Defaults for the static get, post, put, delete and download methods.
+	 * Merge options with the default options.
+	 * Used in the static get, post, put, delete and download methods.
 	 *
 	 * @param array $options Additional defaults
+	 * @return array
 	 */
 	private static function defaults($options = array()) {
-		$defaults = array(
-			CURLOPT_FAILONERROR => true, // Report an error when the HTTP status >= 400.
-			CURLOPT_RETURNTRANSFER => true, // Don't stream the contents to the output buffer.
-		);
+		$defaults = self::$defaults;
 		if (ini_get('max_execution_time')) {
 			$defaults[CURLOPT_TIMEOUT] = floor(ini_get('max_execution_time') - (microtime(true) - STARTED)) - 1; // Prevent a fatal PHP timeout (allow ~1 sec for exception handling)
 		}
-
-		if (ini_get('safe_mode') == false && ini_get('open_basedir') == false) {
-			$defaults[CURLOPT_FOLLOWLOCATION] = true; // When allowed follow 301 and 302 redirects.
-			$defaults[CURLOPT_MAXREDIRS] = 25; // Prevent infinite redirection loops.
+		if (ini_get('safe_mode') || ini_get('open_basedir')) { // Is CURLOPT_FOLLOWLOCATION not allowed. Although this issn't a
+			unset($defaults[CURLOPT_FOLLOWLOCATION]);
+			unset($defaults[CURLOPT_MAXREDIRS]);
 		}
 		return $options + $defaults;
 	}
