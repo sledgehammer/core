@@ -53,6 +53,7 @@ class Autoloader extends Object {
 		'revalidate_cache_delay' => 10, // Check/detect changes every x seconds.
 		'detect_accidental_output' => true, // Check if the php-file contains html parts (which would send the http headers)
 		'cache_level' => 1, // Number of (sub)folders to create caches for
+		'filesize_limit' => 524288, // Skip files larger than 512KiB (to prevent out of memory issues)
 	);
 
 	/**
@@ -370,6 +371,13 @@ class Autoloader extends Object {
 	function importFile($filename, $settings = array()) {
 		$setttings = $this->mergeSettings($settings);
 		$previousError = error_get_last();
+		if (filesize($filename) > $settings['filesize_limit']) {
+			notice('File '.$filename.' too big, skipping...', array(
+				'allowed size' => $settings['filesize_limit'],
+				'actual size' => filesize($filename),
+			));
+			return;
+		}
 		$tokens = token_get_all(file_get_contents($filename));
 		$error = error_get_last();
 		if ($error !== $previousError) {
