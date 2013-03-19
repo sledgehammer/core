@@ -91,7 +91,7 @@ class DebugR extends Object {
 			'overflow-x: auto',
 			'white-space: normal',
 		);
-		DebugR::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.$_SERVER['REQUEST_METHOD'].'&nbsp;&nbsp;'.$_SERVER['REQUEST_URI'].'</div>'.$html);
+		DebugR::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.array_value($_SERVER, 'REQUEST_METHOD').'&nbsp;&nbsp;'.array_value($_SERVER, 'REQUEST_URI').'</div>'.$html);
 	}
 
 	/**

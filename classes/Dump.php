@@ -149,7 +149,9 @@ class Dump extends Object {
 		echo "\n</pre>\n";
 		if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
 			$webroot = defined('Sledgehammer\WEBPATH') ? WEBPATH : WEBROOT;
-			echo "<script type=\"text/javascript\">window.$ || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
+			echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
+		} else {
+			echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js\"><\/sc' + 'ript>')</script>";
 		}
 		echo "<script type=\"text/javascript\">\n";
 		echo "(function ($) {\n";
