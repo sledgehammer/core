@@ -209,7 +209,7 @@ class Csv extends Object implements \Iterator {
 	 * @return bool
 	 */
 	function valid() {
-		return !feof($this->fp); // Is het einde van het bestand NIET bereikt?
+		return !feof($this->fp) || $this->index !== null; // Is het einde van het bestand NIET bereikt?
 	}
 
 	/**

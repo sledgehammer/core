@@ -8,7 +8,16 @@ namespace Sledgehammer;
  */
 class CsvTest extends TestCase {
 
-	function test_csv() {
+	function test_read() {
+		// Read a file (where the last line is not an EOL)
+		$csv = new Csv(__DIR__.'/data/noeol.csv');
+		$this->assertEquals(array(
+			array('department' => 'it', 'name' => 'Govert'),
+			array('department' => 'health', 'name' => 'G. Verschuur'),
+		), iterator_to_array($csv));
+	}
+
+	function test_write() {
 		$data = array(array('id' => '1', 'name' => 'John'), array('id' => '2', 'name' => 'Doe'));
 		$filename = TMP_DIR.'CsvTests_testfile.csv';
 		Csv::write($filename, $data);
