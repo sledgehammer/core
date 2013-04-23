@@ -160,6 +160,42 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
+	 * Remove one or more items from the this collection.
+	 *
+	 * @param mixed $conditions array|Closure|expression  See Collection::where() for condition options
+	 * @return bool
+	 */
+	function remove($conditions, $allowNone = false) {
+		$this->dataToArray();
+		$filter = $this->buildFilter($conditions);
+		$removeKeys = array();
+		$isIndexed = true;
+		$index = 0;
+		foreach ($this as $key => $item) {
+			if ($index !== $key) {
+				$isIndexed = false;
+			}
+			$index++;
+			if ($filter($item, $key) !== false) {
+				$removeKeys[] = $key;
+			}
+		}
+		foreach ($removeKeys as $key) {
+			$this->offsetUnset($key);
+		}
+		if (count($removeKeys) === 0) {
+			if ($allowNone) {
+				return false;
+			}
+			throw new \Exception('Unable to remove the entry, No item found that matches the conditions');
+		}
+		if ($isIndexed) {
+			$this->data = array_values($this->data);
+		}
+		return true;
+	}
+
+	/**
 	 * Returns the the key of first item that matches the conditions.
 	 *
 	 * Returns null when nothing matched the conditions.

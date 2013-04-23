@@ -135,19 +135,6 @@ class CollectionTest extends TestCase {
 		$this->assertFalse(compare(4, 'IN', array(1, 2, 3)));
 	}
 
-	/**
-	 * A collection containing fruit entries and a vegetable entry
-	 * @return Collection
-	 */
-	private function getFruitsAndVegetables() {
-		return new Collection(array(
-			array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
-			array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
-			array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
-			array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
-		));
-	}
-
 	function test_events() {
 		$removedCount = 0;
 		$collection = $this->getFruitsAndVegetables();
@@ -171,6 +158,40 @@ class CollectionTest extends TestCase {
 		$this->assertEquals(2, $addedCount, 'Replacing an item should trigger a "added" event');
 	}
 
+	function test_indexof() {
+		$object1 = new \stdClass();
+		$object2 = new \stdClass();
+		$collection = new Collection(array(10, 20, array('id' => 30), $object1, $object2));
+		$this->assertEquals(1, $collection->indexOf(20));
+		$this->assertEquals(2, $collection->indexOf(array('id?' => 30)));
+		$this->assertEquals(4, $collection->indexOf($object2));
+	}
+
+	function test_remove() {
+		$object = new \stdClass();
+		$collection = new Collection(array(10, array('id' => 20), $object));
+		$collection->remove($object);
+		$this->assertEquals(array(10, array('id' => 20)), $collection->toArray());
+		$collection->remove(function ($item) {
+			return ($item == 10);
+		});
+		$this->assertEquals(array(array('id' => 20)), $collection->toArray());
+//		$this->assertEquals(2, $collection->indexOf(array('id?' => 30)));
+	}
+
+
+	/**
+	 * A collection containing fruit entries and a vegetable entry
+	 * @return Collection
+	 */
+	private function getFruitsAndVegetables() {
+		return new Collection(array(
+			array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
+			array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
+			array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
+			array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
+		));
+	}
 }
 
 ?>

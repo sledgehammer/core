@@ -122,8 +122,7 @@ class PropertyPath extends Object {
 							return null;
 						}
 					} else {
-						notice('Unexpected type: '.gettype($data).', expecting an object or array');
-						return;
+						return null;
 					}
 					break;
 
