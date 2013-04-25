@@ -467,6 +467,12 @@ namespace Sledgehammer {
 		if (is_numeric($var1) && is_numeric($var2) && $var1 == $var2) { // Zijn het allebij getallen en hebben ze dezelde waarde?
 			return true;
 		}
+		if (is_bool($var1) && is_numeric($var2) || is_bool($var2) && is_numeric($var1)) { // Boolean? Allow "1", 1, true as true and "0", 0, false as false
+			$int1 = intval($var1);
+			if ($int1 === intval($var2) && ($int1 === 1 || $int1 === 0)) {
+				return true;
+			}
+		}
 		return false;
 	}
 
