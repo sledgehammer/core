@@ -31,6 +31,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	);
 
 	/**
+	 * Ignore 1 next() call. Used to restore the iterator to the new first element when the other first element has been removed.
+	 * @var bool
+	 */
+	private $ignoreOneNext = false;
+
+	/**
 	 * Contructor
 	 * @param \Traversable|array $data
 	 */
@@ -166,11 +172,13 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return bool
 	 */
 	function remove($conditions, $allowNone = false) {
+		$iteratorPosition = $this->key();
 		$this->dataToArray();
 		$filter = $this->buildFilter($conditions);
 		$removeKeys = array();
 		$isIndexed = true;
 		$index = 0;
+		$previousKey = false;
 		foreach ($this as $key => $item) {
 			if ($index !== $key) {
 				$isIndexed = false;
@@ -178,7 +186,11 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			$index++;
 			if ($filter($item, $key) !== false) {
 				$removeKeys[] = $key;
+				if ($key === $iteratorPosition && count($removeKeys) === 1) {
+					$iteratorPosition = $previousKey;  // Restore to the previous entry
+				}
 			}
+			$previousKey = $key;
 		}
 		foreach ($removeKeys as $key) {
 			$this->offsetUnset($key);
@@ -191,6 +203,12 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		}
 		if ($isIndexed) {
 			$this->data = array_values($this->data);
+		}
+		if ($iteratorPosition === false) {
+			$this->rewind();
+			$this->ignoreOneNext = true;
+		} else {
+			$this->restoreIterator($iteratorPosition);
 		}
 		return true;
 	}
@@ -514,6 +532,9 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return void
 	 */
 	function next() {
+		if ($this->ignoreOneNext) {
+			return $this->ignoreOneNext = false;
+		}
 		if (is_array($this->data)) {
 			return next($this->data);
 		}
@@ -645,6 +666,22 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				$items[$key] = $item;
 			}
 			$this->data = $items;
+		}
+	}
+
+	/**
+	 *
+	 * @param int|string $position The iterator key.
+	 * @return type
+	 */
+	protected function restoreIterator($position) {
+		if ($this->key() === $position) {
+			return;
+		}
+		for($this->rewind(); $this->valid(); $this->next()) {
+			if ($this->key() === $position) {
+				return;
+			}
 		}
 	}
 

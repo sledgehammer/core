@@ -179,6 +179,33 @@ class CollectionTest extends TestCase {
 //		$this->assertEquals(2, $collection->indexOf(array('id?' => 30)));
 	}
 
+	function test_remove_odd_in_foreach() {
+		$collection = new Collection(array(1,2,3,4));
+		$i = 0;
+		foreach ($collection as $entry) {
+			if ($i % 2 === 1) {
+				$collection->remove($entry); // remove odd rows inside a foreach
+			}
+			$i++;
+		}
+		$this->assertCount(2, $collection, 'Should be halved');
+		$this->assertEquals(array(1,3), $collection->toArray());
+	}
+
+	function test_remove_even_in_foreach() {
+		$collection = new Collection(array(1,2,3,4));
+		$i = 0;
+		foreach ($collection as $entry) {
+			if ($i % 2 === 0) {
+				$collection->remove($entry); // remove even rows inside a foreach
+			}
+			$i++;
+		}
+		$this->assertCount(2, $collection, 'Should be halved');
+		$this->assertEquals(array(2,4), $collection->toArray());
+	}
+
+
 
 	/**
 	 * A collection containing fruit entries and a vegetable entry
