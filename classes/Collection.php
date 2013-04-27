@@ -11,7 +11,7 @@ namespace Sledgehammer;
  *
  * @package Core
  */
-class Collection extends Observable implements \Iterator, \Countable, \ArrayAccess {
+class Collection extends Observable implements \IteratorAggregate, \Countable, \ArrayAccess {
 
 	/**
 	 * The traversable the Collection class operates on.
@@ -29,12 +29,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		'removing' => array(),
 		'removed' => array(),
 	);
-
-	/**
-	 * Ignore 1 next() call. Used to restore the iterator to the new first element when the other first element has been removed.
-	 * @var bool
-	 */
-	private $ignoreOneNext = false;
 
 	/**
 	 * Contructor
@@ -172,7 +166,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	 * @return bool
 	 */
 	function remove($conditions, $allowNone = false) {
-		$iteratorPosition = $this->key();
 		$this->dataToArray();
 		$filter = $this->buildFilter($conditions);
 		$removeKeys = array();
@@ -186,9 +179,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 			$index++;
 			if ($filter($item, $key) !== false) {
 				$removeKeys[] = $key;
-				if ($key === $iteratorPosition && count($removeKeys) === 1) {
-					$iteratorPosition = $previousKey;  // Restore to the previous entry
-				}
 			}
 			$previousKey = $key;
 		}
@@ -203,12 +193,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 		}
 		if ($isIndexed) {
 			$this->data = array_values($this->data);
-		}
-		if ($iteratorPosition === false) {
-			$this->rewind();
-			$this->ignoreOneNext = true;
-		} else {
-			$this->restoreIterator($iteratorPosition);
 		}
 		return true;
 	}
@@ -503,79 +487,6 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 	}
 
 	/**
-	 * Return the current element
-	 * @link http://php.net/manual/en/iterator.current.php
-	 * @return mixed
-	 */
-	function current() {
-		if (is_array($this->data)) {
-			return current($this->data);
-		}
-		return $this->data->current();
-	}
-
-	/**
-	 * Return the current key/index.
-	 * @link http://php.net/manual/en/iterator.key.php
-	 * @return int|string
-	 */
-	function key() {
-		if (is_array($this->data)) {
-			return key($this->data);
-		}
-		return $this->data->key();
-	}
-
-	/**
-	 * Move forward to next element.
-	 * @link http://php.net/manual/en/iterator.next.php
-	 * @return void
-	 */
-	function next() {
-		if ($this->ignoreOneNext) {
-			return $this->ignoreOneNext = false;
-		}
-		if (is_array($this->data)) {
-			return next($this->data);
-		}
-		return $this->data->next();
-	}
-
-	/**
-	 * Rewind the Iterator to the first element.
-	 * @link http://php.net/manual/en/iterator.rewind.php
-	 * @return void
-	 */
-	function rewind() {
-		if (is_array($this->data)) {
-			reset($this->data);
-			return;
-		}
-		if ($this->data instanceof \Iterator) {
-			return $this->data->rewind();
-		}
-		if ($this->data instanceof \Traversable) {
-			$this->dataToArray();
-			return;
-		}
-		$type = gettype($this->data);
-		$typeOrClass = ($type === 'object') ? get_class($this->data) : $type;
-		throw new \Exception(''.$typeOrClass.' is not an Traversable');
-	}
-
-	/**
-	 * Checks if current position is valid.
-	 * @link http://php.net/manual/en/iterator.valid.php
-	 * @return bool
-	 */
-	function valid() {
-		if (is_array($this->data)) {
-			return (key($this->data) !== null);
-		}
-		return $this->data->valid();
-	}
-
-	/**
 	 * Whether a offset exists.
 	 * @link http://php.net/manual/en/arrayaccess.offsetexists.php
 	 * @param int|string $offset
@@ -666,23 +577,26 @@ class Collection extends Observable implements \Iterator, \Countable, \ArrayAcce
 				$items[$key] = $item;
 			}
 			$this->data = $items;
+			return;
 		}
+		$type = gettype($this->data);
+		$typeOrClass = ($type === 'object') ? get_class($this->data) : $type;
+		throw new \Exception(''.$typeOrClass.' is not an Traversable');
 	}
 
 	/**
-	 *
-	 * @param int|string $position The iterator key.
-	 * @return type
+	 * 
+	 * @return \Iterator
 	 */
-	protected function restoreIterator($position) {
-		if ($this->key() === $position) {
-			return;
+	public function getIterator() {
+		if ($this->data instanceof \IteratorAggregate) {
+			return $this->data->getIterator();
 		}
-		for($this->rewind(); $this->valid(); $this->next()) {
-			if ($this->key() === $position) {
-				return;
-			}
+		$this->dataToArray();
+		if (is_array($this->data) === false) {
+			throw new \Exception('Failed to convert data to an array');
 		}
+		return new \ArrayIterator($this->data);
 	}
 
 }
