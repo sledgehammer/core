@@ -895,9 +895,10 @@ namespace Sledgehammer {
 	 *
 	 * @param string $path
 	 * @param array|string|false $extensions  Only check timestamp for files that match one of the extensions in the array or match against a regex.
+	 * @param int $count out Set to the number of files checked. Used to detect deleted files.
 	 * @return int
 	 */
-	function mtime_folders($path, $extensions = null) {
+	function mtime_folders($path, $extensions = null, &$count = null) {
 		$max_ts = filemtime($path); // Vraag de mtime op van de map
 		if ($max_ts === false) { // Bestaat het $path niet?
 			return false;
@@ -921,18 +922,21 @@ namespace Sledgehammer {
 		// Controleer of een van de bestanden of submappen een nieuwere mtime heeft.
 		$dir = opendir($path);
 		if ($dir) {
+			$count = 0;
 			while (($filename = readdir($dir)) !== false) {
 				if ($filename === '.' || $filename === '..') {
 					continue;
 				}
 				$filepath = $path.$filename;
 				if (is_dir($filepath)) {
-					$ts = mtime_folders($filepath.'/', $regex);
+					$ts = mtime_folders($filepath.'/', $regex, $subcount);
+					$count += $subcount;
 				} else {
 					if ($regex && preg_match($regex, $filename) === 0) { // Does't match any of the extensions?
 						continue;
 					}
 					$ts = filemtime($filepath);
+					$count++;
 				}
 				if ($ts > $max_ts) { // Heeft de submap een nieuwere timestamp?
 					$max_ts = $ts;

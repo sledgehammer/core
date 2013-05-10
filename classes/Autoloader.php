@@ -75,20 +75,32 @@ class Autoloader extends Object {
 	 *
 	 * @param string $filename Location of the database file.
 	 * @param bool $merge  Merge the definitions with the existing definitions. (false: overwrite all definitions)
-	 * @return void
+	 * @param int $expectedScanCount  The expected scanCount in the database.
+	 * @return bool
 	 */
-	function loadDatabase($filename, $merge = false) {
+	function loadDatabase($filename, $merge = false, $expectedScanCount = false) {
 		$definitions = '__NONE__';
+		$scanCount = '__NONE__';
 		include($filename);
 		if ($definitions === '__NONE__') {
-			warning('Invalid database file: "'.$filename.'"', 'No $definitions where found');
-			return;
+			warning('Invalid database file: "'.$filename.'"', 'No $definitions where defined');
+			return false;
+		}
+		if ($expectedScanCount) {
+			if ($scanCount === '__NONE__') {
+				warning('Invalid database file: "'.$filename.'"', 'No $scanCount was defined');
+				return false;
+			}
+			if ($scanCount !== $expectedScanCount && $scanCount !== false) { // Number of files didn't match.
+				return false; // file deletion detected
+			}
 		}
 		if ($merge) {
 			$this->definitions += $definitions;
 		} else {
 			$this->definitions = $definitions;
 		}
+		return true;
 	}
 
 	/**
@@ -312,6 +324,7 @@ class Autoloader extends Object {
 		$useCache = ($this->enableCache && $settings['cache_level'] > 0);
 		if ($useCache) {
 			$settings['cache_level']--;
+			$scanCount = false;
 			$folder = basename($path);
 			if ($folder == 'classes') {
 				$folder = basename(dirname($path));
@@ -323,13 +336,14 @@ class Autoloader extends Object {
 			} elseif (file_exists($cacheFile)) {
 				$mtimeCache = filemtime($cacheFile);
 				$revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-				$mtimeFolder = ($revalidateCache ? mtime_folders($path, array('php')) : 0);
+				$mtimeFolder = ($revalidateCache ? mtime_folders($path, array('php'), $scanCount) : 0);
 				if ($mtimeFolder !== false && $mtimeCache > $mtimeFolder) { // Is het cache bestand niet verouderd?
-					$this->loadDatabase($cacheFile, true);
-					if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
-						touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
+					if ($this->loadDatabase($cacheFile, true, $scanCount)) {
+						if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
+							touch($cacheFile); // de mtime van het cache-bestand aanpassen, (voor het bepalen of de delay is vertreken)
+						}
+						return;
 					}
-					return;
 				}
 			}
 		}
@@ -357,7 +371,7 @@ class Autoloader extends Object {
 			}
 		}
 		if ($useCache) {
-			$this->saveDatabase($cacheFile, $this->relativePath($path));
+			$this->saveDatabase($cacheFile, $this->relativePath($path), $scanCount);
 		}
 	}
 
@@ -578,9 +592,10 @@ class Autoloader extends Object {
 	 *
 	 * @param string $filename  The location of the database file.
 	 * @param null|string $pathFilter  Only save definition in this path. null: saves all imported definitions.
+	 * @param int $scanCount The number of files scanned (for delete detection)
 	 * @return void
 	 */
-	function saveDatabase($filename, $pathFilter = null) {
+	function saveDatabase($filename, $pathFilter = null, $scanCount = false) {
 		$definitions = array();
 		if ($pathFilter === null) {
 			$definitions = $this->definitions;
@@ -593,11 +608,14 @@ class Autoloader extends Object {
 			}
 		}
 		ksort($definitions);
-		$php = "<?php\n/**\n * AutoLoader database\n */\n\$definitions = array(\n";
+		$php = "<?php\n/**\n * AutoLoader database\n */\n";
+		$php .= '$scanCount = '.($scanCount === false ? 'false' : intval($scanCount)).";\n";
+		$php .= "\$definitions = array(\n";
 		foreach ($definitions as $definition => $file) {
 			$php .= "\t'".addslashes($definition)."' => '".addslashes($file)."',\n";
 		}
 		$php .= ");\n?>";
+
 		file_put_contents($filename, $php);
 	}
 
