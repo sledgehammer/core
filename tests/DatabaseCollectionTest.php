@@ -53,8 +53,8 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 
 		$lowIds = $this->getDatabaseCollection()->where(array('id <=' => 6));
 		$this->assertQueryCount(2);
-		$this->assertEquals($lowIds->count(), 2);
-		$this->assertEquals((string) $lowIds->getQuery(), "SELECT * FROM fruits WHERE id <= 6");
+		$this->assertCount(2, $lowIds);
+		$this->assertEquals("SELECT * FROM fruits WHERE id <= 6", (string) $lowIds->getQuery());
 
 		$appleIsNotAVegatable = $this->getDatabaseCollection()->where(array('AND', 'name' => 'apple', 'type' => 'vegetable'));
 		$this->assertCount(0, $appleIsNotAVegatable->toArray());
@@ -63,6 +63,10 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$appleOrVegatables = $this->getDatabaseCollection()->where(array('OR', 'name' => 'apple', 'type' => 'vegetable'));
 		$this->assertCount(2, $appleOrVegatables->toArray());
 		$this->assertLastQuery("SELECT * FROM fruits WHERE name = 'apple' OR type = 'vegetable'");
+
+		$startingWithA = $this->getDatabaseCollection()->where(array('name LIKE' => 'a%'));
+		$this->assertCount(1, $startingWithA->toArray());
+		$this->assertLastQuery("SELECT * FROM fruits WHERE name LIKE 'a%'");
 	}
 
 	function test_select() {

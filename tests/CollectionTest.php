@@ -109,30 +109,16 @@ class CollectionTest extends TestCase {
 
 	function test_where_operators() {
 		$numbers = new Collection(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-		$this->assertEquals(count($numbers->where('2')), 1);
-		$this->assertEquals(count($numbers->where('<= 2')), 2);
-		$this->assertEquals(count($numbers->where('> 5')), 5);
-		$vehicels = new Collection(array(
+		$this->assertCount(1, $numbers->where('2'));
+		$this->assertCount(2, $numbers->where('<= 2'));
+		$this->assertCount(5, $numbers->where('> 5'));
+		$vehicles = new Collection(array(
 			array('name' => 'car', 'wheels' => 4),
 			array('name' => 'trike', 'wheels' => 3),
 			array('name' => 'bike', 'wheels' => 2),
 		));
-		$this->assertEquals(count($vehicels->where(array('wheels >' => 3))), 1);
-//		dump($vehicels->where(array('wheels >' => 3))->select('name')->offsetGet(0));
-	}
-
-	function test_compare() {
-		$this->assertTrue(compare('asd', '==', 'asd'));
-		$this->assertTrue(compare(2, '==', 2));
-		$this->assertFalse(compare('asd', '==', 'AsD')); // But MySQL will evalutate this to true, depending on the collation
-		$this->assertTrue(compare('1', '==', 1));
-		$this->assertTrue(compare(null, '==', null));
-		$this->assertTrue(compare(1, '>', null));
-		$this->assertTrue(compare(0, '>=', null));
-		$this->assertFalse(compare('', '==', 0));
-		$this->assertFalse(compare(0, '>', null));
-		$this->assertTrue(compare(2, 'IN', array(1, 2, 3)));
-		$this->assertFalse(compare(4, 'IN', array(1, 2, 3)));
+		$this->assertCount(1, $vehicles->where(array('wheels >' => 3)));
+		$this->assertCount(2, $vehicles->where(array('name LIKE' => '%ke')));
 	}
 
 	function test_events() {

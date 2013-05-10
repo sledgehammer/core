@@ -503,7 +503,7 @@ class Collection extends Observable implements \IteratorAggregate, \Countable, \
 	 * @param int|string $offset
 	 * @return mixed
 	 */
-	function offsetGet($offset) {
+	function &offsetGet($offset) {
 		$this->dataToArray();
 		return $this->data[$offset];
 	}
@@ -585,7 +585,7 @@ class Collection extends Observable implements \IteratorAggregate, \Countable, \
 	}
 
 	/**
-	 * 
+	 *
 	 * @return \Iterator
 	 */
 	public function getIterator() {

@@ -67,9 +67,9 @@ class CacheTest extends TestCase {
 		$this->counter = 0;
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);
 		$counter1 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss/store
-		$this->assertEquals($counter1, 1, 'Sanity check');
+		$this->assertEquals(1, $counter1, 'Sanity check');
 		$counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit
-		$this->assertEquals($counter2, 1, 'The counter should only be incremented once');
+		$this->assertEquals(1, $counter2, 'The counter should only be incremented once');
 		$cache->clear();
 	}
 
@@ -77,13 +77,13 @@ class CacheTest extends TestCase {
 		$this->counter = 0;
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);
 		$counter1 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss/store
-		$this->assertEquals($counter1, 1, 'Sanity check');
+		$this->assertEquals(1, $counter1, 'Sanity check');
 		usleep(100000); // 0.1 sec
 		$counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit
-		$this->assertEquals($counter2, 1, 'Should not be expired just yet');
+		$this->assertEquals(1, $counter2, 'Should not be expired just yet');
 		sleep(2); // Wait 2 sec for the cache to expire.
 		$counter3 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss (expired)
-		$this->assertEquals($counter3, 2, 'Should be expired (and incremented again)');
+		$this->assertEquals(2, $counter3, 'Should be expired (and incremented again)');
 		$cache->clear();
 	}
 
