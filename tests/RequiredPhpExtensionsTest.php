@@ -57,6 +57,10 @@ class RequiredPhpExtensionsTest extends TestCase {
 			$this->fail('PHP extention "tokenizer" is required for this UnitTest');
 			return;
 		}
+		$whitelist = array(
+			'apc' => array( realpath(CORE_DIR.'classes/Cache.php') ) // Sledgehammer\Cache doesn't require apc, only uses apc when available
+		);
+
 		if ($this->onlyClassesFolder) { // Alleen de classes mappen van de modules inlezen
 			$modules = Framework::getModules();
 			foreach ($modules as $module) {
@@ -66,7 +70,15 @@ class RequiredPhpExtensionsTest extends TestCase {
 			$this->checkFolder(PATH);
 		}
 		foreach ($this->missingExtensions as $extension => $definition) {
-			$this->fail('Missing php extension "'.$extension.'". Function or class "'.$definition.'" is used in '.quoted_human_implode(' and', $this->extensionUsedIn[$extension]));
+			$files = $this->extensionUsedIn[$extension];
+			foreach ($files as $i => $filename) {
+				if (isset($whitelist[$extension]) && in_array($filename, $whitelist[$extension])) {
+					unset($files[$i]);
+				}
+			}
+			if (count($files) > 0) {
+				$this->fail('Missing php extension "'.$extension.'". Function or class "'.$definition.'" is used in '.quoted_human_implode(' and', $files));
+			}
 		}
 		$this->assertTrue(true, 'All required extenstion are installed');
 	}

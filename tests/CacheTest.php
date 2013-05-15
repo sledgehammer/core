@@ -13,27 +13,45 @@ namespace Sledgehammer;
  */
 class CacheTest extends TestCase {
 
+	/**
+	 * var int Counter which increments when the cache expired.
+	 */
 	private $counter = 0;
+
+	/**
+	 * @var bool true: when apc extension is installed
+	 */
+	private $apcSupported;
 
 	function test_startup() {
 		mkdirs(TMP_DIR.'Cache');
 		$cache = Cache::rootNode();
 		$this->assertInstanceOf('Sledgehammer\Cache', $cache);
+		$this->apcSupported = function_exists('apc_fetch');
+		if ($this->apcSupported === false) {
+			$this->markTestSkipped('Skipping tests for "apc" backend, the php-extension "apc" is not installed.');
+		}
 	}
 
 	function test_cache_miss() {
 		$this->cache_miss_test('file');
-		$this->cache_miss_test('apc');
+		if ($this->apcSupported) {
+			$this->cache_miss_test('apc');
+		}
 	}
 
 	function test_cache_hit() {
 		$this->cache_hit_test('file');
-		$this->cache_hit_test('apc');
+		if ($this->apcSupported) {
+			$this->cache_hit_test('apc');
+		}
 	}
 
 	function test_cache_expires() {
 		$this->cache_expires_test('file');
-		$this->cache_expires_test('apc');
+		if ($this->apcSupported) {
+			$this->cache_expires_test('apc');
+		}
 	}
 
 	function test_invalid_option() {
