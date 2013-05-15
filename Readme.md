@@ -2,6 +2,8 @@
 
 Sledgehammer Core facilitates the foundation of the [Sledgehammer Framework](http://github.com/sledgehammer/sledgehammer).
 
+[![Build Status](https://travis-ci.org/sledgehammer/core.png)](https://travis-ci.org/sledgehammer/core)
+
 ## Resources
 
 * [API Documentation](http://sledgehammer.github.com/api/)
