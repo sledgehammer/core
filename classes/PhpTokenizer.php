@@ -329,14 +329,14 @@ class PhpTokenizer extends Object implements \Iterator {
 				'state' => 'HTML',
 			);
 		}
-		if ($token == '{') {
+		if ($token === '{') {
 			return array(
 				'action' => 'SINGLE_TOKEN',
 				'token' => 'T_OPEN_BRACKET',
 				'tokenBefore' => 'T_PHP',
 			);
 		}
-		if ($token == '}') {
+		if ($token === '}') {
 			return array(
 				'action' => 'SINGLE_TOKEN',
 				'token' => 'T_CLOSE_BRACKET',
@@ -401,21 +401,28 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_USE($token, $nextToken) {
-		if ($nextToken == ';') {
+		if ($nextToken === ';') {
 			return array(
 				'action' => 'LAST_TOKEN',
 				'token' => 'T_USE',
 				'state' => 'PHP',
 			);
 		}
-		if ($nextToken[0] == T_WHITESPACE) {
+		if ($nextToken === ',') {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_USE',
+				'state' => 'USE_COMMA',
+			);
+		}
+		if ($nextToken[0] === T_WHITESPACE) {
 			return array(
 				'action' => 'LAST_TOKEN',
 				'token' => 'T_USE',
 				'state' => 'USE_AS',
 			);
 		}
-		if ($token == '(') { // ( followed by a T_VARIABLE? This is a closure use, not a namespace use
+		if ($token === '(') { // ( followed by a T_VARIABLE? This is a closure use, not a namespace use
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
 		}
 		$this->expectTokens($token, array(T_STRING, T_NS_SEPARATOR));
@@ -451,6 +458,25 @@ class PhpTokenizer extends Object implements \Iterator {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_USE_ALIAS', 'state' => 'PHP');
 		}
+		return array('action' => 'CONTINUE');
+	}
+
+	/**
+	 * Collect the comma, between classnames in a USE statement.
+	 *
+	 * @param array|string $token
+	 * @param array $nextToken
+	 * @return array
+	 */
+	private function parse_USE_COMMA($token, $nextToken) {
+		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR))) {
+			return array(
+				'action' => 'LAST_TOKEN',
+				'token' => 'T_PHP',
+				'state' => 'USE',
+			);
+		}
+		$this->expectTokens($token, array(T_WHITESPACE, ','));
 		return array('action' => 'CONTINUE');
 	}
 
@@ -537,7 +563,7 @@ class PhpTokenizer extends Object implements \Iterator {
 				'state' => 'IMPLEMENTS'
 			);
 		}
-		if ($token == '{') {
+		if ($token === '{') {
 			return array(
 				'action' => 'RESCAN',
 				'state' => 'PHP',
@@ -557,7 +583,7 @@ class PhpTokenizer extends Object implements \Iterator {
 		if ($token[0] == T_STRING) {
 			return array('action' => 'SINGLE_TOKEN', 'token' => 'T_FUNCTION', 'tokenBefore' => 'T_PHP');
 		}
-		if ($token == '(') {
+		if ($token === '(') {
 			return array('action' => 'RESCAN', 'state' => 'PARAMETERS');
 		}
 		$this->expectTokens($token, array(T_WHITESPACE, '&'));
@@ -572,10 +598,10 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_PARAMETERS($token, $nextToken) {
-		if ($token == ')') {
+		if ($token === ')') {
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
 		}
-		if ($token == '=') { // A default value?
+		if ($token === '=') { // A default value?
 			return array('action' => 'OPERATOR', 'state' => 'PARAMETER_VALUE', 'token' => 'T_PHP');
 		}
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR, T_ARRAY))) { // Type hint?
@@ -623,7 +649,7 @@ class PhpTokenizer extends Object implements \Iterator {
 			$this->arrayDepth = 0;
 			return array('action' => 'RESCAN', 'state' => 'PARAMETER_ARRAY_VALUE');
 		}
-		if ($token == '-') {
+		if ($token === '-') {
 			return array('action' => 'CONTINUE');
 		}
 		$this->failure('Unknown default value');
@@ -638,9 +664,9 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_PARAMETER_ARRAY_VALUE($token, $nextToken) {
-		if ($token == '(') {
+		if ($token === '(') {
 			$this->arrayDepth++;
-		} elseif ($token == ')') {
+		} elseif ($token === ')') {
 			$this->arrayDepth--;
 			if ($this->arrayDepth == 0) { // end of array literal?
 				return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
@@ -663,7 +689,7 @@ class PhpTokenizer extends Object implements \Iterator {
 		if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
 			return array('action' => 'SWITCH', 'state' => 'OBJECT', 'token' => 'T_PHP');
 		}
-		$this->expectToken($token, T_VARIABLE);
+		$this->expectTokens($token, array(T_VARIABLE, T_STATIC));
 		return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
 	}
 
@@ -676,6 +702,9 @@ class PhpTokenizer extends Object implements \Iterator {
 	 */
 	private function parse_OBJECT($token, $nextToken) {
 		if (in_array($nextToken[0], array(T_STRING, T_NS_SEPARATOR)) == false) {
+			if (strtolower($token[1]) === 'self') {
+				return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+			}
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_OBJECT', 'state' => 'PHP');
 		}
 		return array('action' => 'CONTINUE');
@@ -689,10 +718,10 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_COMPLEX_VARIABLE($token, $nextToken) {
-		if ($token == '}') { // end of complex var
+		if ($token === '}') { // end of complex var
 			return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
 		}
-		if ($token == '$') { // A variable inside a variable?
+		if ($token === '$') { // A variable inside a variable?
 			// echo "123 {${$varname}[$index]} 456";
 			return array('action' => 'CONTINUE_AS', 'state' => 'INNER_COMPLEX_VARIABLE');
 		}
@@ -708,7 +737,7 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_INNER_COMPLEX_VARIABLE($token, $nextToken) {
-		if ($token == '}') { // end of the inner complex var
+		if ($token === '}') { // end of the inner complex var
 			return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
 		}
 		$this->expectTokens($token, array('{', T_VARIABLE));

@@ -114,7 +114,7 @@ class PhpAnalyzer extends Object {
 
 				case 'T_USE':
 					$pos = strrpos($value, '\\');
-					$namespaceAlias = substr($value, $pos + 1);
+					$namespaceAlias = ($pos === false) ? $value : substr($value, $pos + 1);
 					$uses[$namespaceAlias] = $value;
 					break;
 
@@ -383,10 +383,11 @@ class PhpAnalyzer extends Object {
 				return substr($identifier, 1);
 			}
 			// Qualified name (Foo\Bar)
-			foreach ($uses as $alias => $namespace) {
+			foreach ($uses as $alias => $aliasedNamespace) {
 				$alias .= '\\';
 				if (substr($identifier, 0, strlen($alias)) === $alias) {
-					return $namespace.substr($identifier, strlen($alias) - 1);
+					// Aliased namespace (use \Long\Namespace as Foo)
+					return $aliasedNamespace.substr($identifier, strlen($alias) - 1);
 				}
 			}
 		} else {
