@@ -117,7 +117,7 @@ class DatabaseCollection extends Collection {
 	 * @return Collection
 	 */
 	function where($conditions) {
-		if ($this->data !== null || is_string($this->sql) || (is_object($conditions) && is_callable($conditions))) {
+		if ($this->data !== null || is_string($this->sql) || (is_object($conditions) && is_callable($conditions)) || $this->sql->limit !== false || $this->sql->offset !== false) {
 			return parent::where($conditions);
 		}
 		$db = getDatabase($this->dbLink);
