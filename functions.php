@@ -489,7 +489,7 @@ namespace Sledgehammer {
 	/**
 	 * Regex for supported operators for the compare() function
 	 */
-	define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|LIKE');
+	define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|NOT IN|LIKE|NOT LIKE');
 
 	/**
 	 * Compare two values with the given operator.
@@ -553,6 +553,11 @@ namespace Sledgehammer {
 					$patternCache[$expectation] = $pattern;
 				}
 				return preg_match($pattern, $value) !== 0;
+
+			case 'NOT IN':
+				return compare($value, 'IN', $expectation) == false;
+			case 'NOT LIKE':
+				return compare($value, 'LIKE', $expectation) == false;
 		}
 		throw new \Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', explode('|', COMPARE_OPERATORS)));
 	}

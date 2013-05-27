@@ -29,6 +29,8 @@ class CoreFunctionsTest extends TestCase {
 		$this->assertFalse(compare(0, '>', null));
 		$this->assertTrue(compare(2, 'IN', array(1, 2, 3)));
 		$this->assertFalse(compare(4, 'IN', array(1, 2, 3)));
+		$this->assertTrue(compare(4, 'NOT IN', array(1, 2, 3)));
+		$this->assertFalse(compare(2, 'NOT IN', array(1, 2, 3)));
 		$this->assertTrue(compare(1, '==', true));
 		$this->assertTrue(compare('1', '==', true));
 		$this->assertTrue(compare(0, '==', false));
@@ -45,6 +47,8 @@ class CoreFunctionsTest extends TestCase {
 		$this->assertTrue(compare('car', 'LIKE', 'c_r'));
 		$this->assertTrue(compare('cartoon', 'LIKE', 'ca%'));
 		$this->assertTrue(compare('\\a%b_c\\', 'LIKE', '\\a\%b\_c\\'), 'escape %, _ with \ ');
+		$this->assertTrue(compare('car', 'NOT LIKE', 'bar'));
+		$this->assertFalse(compare('car', 'NOT LIKE', 'car'));
 	}
 
 }
