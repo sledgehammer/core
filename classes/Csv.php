@@ -142,6 +142,7 @@ class Csv extends Object implements \Iterator {
 		if ($this->fp) {
 			fclose($this->fp);
 		}
+		ini_set('auto_detect_line_endings', true); // Add support for "CSV for Macintosh"
 		$this->fp = fopen($this->filename, 'r');
 		if (!$this->fp) {
 			throw new \Exception('Couldn\'t open file "'.$this->filename.'"');
@@ -188,14 +189,18 @@ class Csv extends Object implements \Iterator {
 	function next() {
 		$this->values = array();
 		$row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
+
 		if ($row) { // Is het einde (eof) nog niet bereikt?
+			if ($row === array(null)) { // Empty row?
+				return $this->next(); // Skip row
+			}
 			$this->index++;
 			foreach ($this->keys as $index => $key) {
 				if (isset($row[$index])) { // Is er voor deze kolom een waarde?
 					$this->values[$key] = $row[$index];
 				} else {
 					$filename = (strpos($this->filename, PATH) === 0) ? substr($this->filename, strlen(PATH)) : $this->filename; // Waar mogelijk het PATH er van af halen
-					notice('Row too short, missing column '.$index.'('.$this->columns[$key].') in '.$filename.' on line '.$this->index + 2, $row); // @todo Calculate line offset compared to the index ()
+					notice('Row too short, missing column #'.($index + 1).': "'.$this->keys[$index].'" in '.$filename.' on line '.($this->index + 2), $row); // @todo Calculate line offset compared to the index ()
 				}
 			}
 		} else {
