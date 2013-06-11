@@ -373,6 +373,54 @@ class Curl extends Observable {
 	}
 
 	/**
+	 * Get all response headers.
+	 * Requires the CURLOPT_HEADER option.
+	 *
+	 * @return array
+	 * @throws InfoException
+	 */
+	function getHeaders() {
+		if (empty($this->options['CURLOPT_HEADER'])) {
+			throw new InfoException('Required option CURLOPT_HEADER was not true or 1', $this->options);
+		}
+		$lines = explode("\n", trim(substr($this->getContent(), 0, $this->header_size)));
+		$headers = array();
+		$last = count($lines) - 1;
+		for ($i = 0; $i <= $last; $i++) {
+			$line = $lines[$i];
+			$dividerPos = strpos($line, ':');
+			if ($dividerPos !== false) {
+				$headers[substr($line, 0, $dividerPos)] = trim(substr($line, $dividerPos + 1));
+			}
+		}
+		return $headers;
+	}
+
+	/**
+	 * Get the value of a specific response header.
+	 * Requires the CURLOPT_HEADER option.
+	 *
+	 * @param string $header Name of the header (case-insensitive)
+	 * @return string|null
+	 */
+	function getHeader($header) {
+		$headers = array_change_key_case($this->getHeaders());
+		return array_value($headers, strtolower($header));
+	}
+
+	/**
+	 * Return the response body.
+	 *
+	 * @return string
+	 */
+	function getBody() {
+		if (empty($this->options['CURLOPT_HEADER'])) {
+			return $this->getContent();
+		}
+		return substr($this->getContent(), $this->header_size);
+	}
+
+	/**
 	 * The response body.
 	 * (If the CURLOPT_RETURNTRANSFER option is set)
 	 *
