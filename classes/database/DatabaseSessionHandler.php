@@ -23,7 +23,7 @@ class DatabaseSessionHandler extends Object {
 	private $dbLink = 'default';
 
 	/**
-	 * Contructor
+	 * Constructor
 	 * @param array $options  Hiermee kun je de "table" en "dbLink" overschrijven
 	 */
 	function __construct($options = array()) {

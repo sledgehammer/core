@@ -11,7 +11,7 @@ namespace Sledgehammer;
 class PhpAnalyzer extends Object {
 
 	/**
-	 * Deflared classes.
+	 * Declared classes.
 	 * array(
 	 *   $fullclassname => array(
 	 *     'namespace' => $namespace,
@@ -34,7 +34,7 @@ class PhpAnalyzer extends Object {
 	public $classes = array();
 
 	/**
-	 * Deflared classes.
+	 * Declared classes.
 	 * array(
 	 *   $fullinterfacename => array(
 	 *     'namespace' => $namespace,

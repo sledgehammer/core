@@ -18,39 +18,35 @@ class Json extends Object {
 	private $data;
 
 	/**
+	 * The (HTTP) headers, changes Content-Type to "application/json"
+	 * @var array
+	 */
+	public $headers;
+
+	/**
 	 * Constructor
 	 *
-	 * @param mixed  $data      The data to be sent as json.
-	 * @param string $charset   The encoding used in $data, use null for autodetection. Assume UTF-8 by default.
+	 * @param mixed  $data  The data to be sent as json.
+	 * @param array  $headers  The (HTTP) headers
+	 * @param string $dataCharset  The encoding used in $data, use null for autodetection. Assume UTF-8 by default.
 	 */
-	function __construct($data, $charset = 'UTF-8') {
-		if (strtoupper($charset) !== 'UTF-8') {
-			$this->data = $this->convertToUTF8($data, $charset);
+	function __construct($data, $headers = array(), $dataCharset = 'UTF-8') {
+		if (strtoupper($dataCharset) !== 'UTF-8') {
+			$this->data = $this->convertToUTF8($data, $dataCharset);
 		} else {
 			$this->data = $data;
 		}
+		if (empty($headers['http']['Content-Type'])) {
+			$headers['http']['Content-Type'] = 'application/json';
+		}
+		$this->headers = $headers;
 	}
 
 	/**
-	 * Change Content-Type to "application/json"
+	 * The (HTTP) headers.
 	 */
 	function getHeaders() {
-		if (count($_FILES) == 0) {
-			return array(
-				'http' => array(
-					'Content-Type' => 'application/json',
-				)
-			);
-		} else {
-			// Als er bestanden ge-upload zijn, gaat het *niet* om een XMLHttpRequest, maar waarschijnlijk om een upload naar een hidden iframe via javascript.
-			// Een "application/json" header zal dan een ongewenste download veroorzaken.
-			// (Of als de JSONView extensie is geinstalleerd, wordt de json versmurft als html)
-			return array(
-				'http' => array(
-					'Content-Type' => 'plain/text',
-				)
-			);
-		}
+		return $this->headers;
 	}
 
 	/**
@@ -129,12 +125,16 @@ class Json extends Object {
 	/**
 	 * Reports the error/exception to the ErrorHandler and returns the error as Json object.
 	 * The javascript client should detect and report the error to the user:
-	 *   if (result.succes !== true) { alert(result.error); }
+	 *   if (result.success !== true) { alert(result.error); }
 	 *
 	 * @param string|Exception $error  The error message or Exception
+	 * @param int $http  The HTTP status code (defaults to 400 Bad Request)
 	 * @return Json
 	 */
-	static function error($error) {
+	static function error($error, $http = 400) {
+		if (headers_sent() === false && DebugR::isEnabled()) {
+			Framework::$errorHandler->html = false;
+		}
 		if ($error instanceof \Exception) {
 			report_exception($error);
 			$error = $error->getMessage();
@@ -144,20 +144,25 @@ class Json extends Object {
 		return new Json(array(
 			'success' => false,
 			'error' => $error
+		), array(
+			'http' => array(
+				'Status' => $http.' '.Framework::$statusCodes[$http],
+				'Content-Type' => (Framework::$errorHandler->html ? 'text/html;  charset=utf-8' : 'application/json')
+			)
 		));
 	}
 
 	/**
 	 * Short for "new Json(array('success' => true))"
 	 *
-	 * @param mixed $data [optional] Gegevens die naast de success worden meegestuurd.
+	 * @param mixed $data [optional] The data payload
 	 * @return Json
 	 */
 	static function success($data = null) {
 		if ($data === null) {
 			return new Json(array(
-				'success' => true)
-			);
+				'success' => true
+			));
 		}
 		return new Json(array(
 			'success' => true,

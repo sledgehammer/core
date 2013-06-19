@@ -22,7 +22,7 @@ class InfoException extends \Exception {
 	private $information;
 
 	/**
-	 * Contructor
+	 * Constructor
 	 *
 	 * @param string $message  The Exception message to throw.
 	 * @param mixed $information  The additional information for the ErrorHandler

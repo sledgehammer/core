@@ -31,7 +31,7 @@ class Collection extends Observable implements \IteratorAggregate, \Countable, \
 	);
 
 	/**
-	 * Contructor
+	 * Constructor
 	 * @param \Traversable|array $data
 	 */
 	function __construct($data = array()) {
