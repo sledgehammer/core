@@ -29,6 +29,12 @@ class ErrorHandler {
 	public $html = false;
 
 	/**
+	 * Allow the ErrorHandler to set a "500 Internal Server Error"
+	 * @var bool
+	 */
+	public $headers = false;
+
+	/**
 	 * Email de foutmelding naar dit emailadres.
 	 * @var string
 	 */
@@ -456,7 +462,12 @@ class ErrorHandler {
 				}
 			}
 			if ($this->html) {
-				if  (headers_sent() === false) {
+				if  ($this->headers && headers_sent() === false) {
+					if (function_exists('http_response_code')) { // PHP 5.4
+						if (http_response_code() === 200) {
+							http_response_code(500);
+						}
+					}
 					header('Content-Type: text/html; charset='.Framework::$charset);
 				}
 				echo $html; // buffer weergeven
