@@ -59,10 +59,10 @@ class Html extends Object {
 	}
 
 	/**
-	 * Generate a HTML element
+	 * Generate a HTML element.
 	 *
 	 * @param string $name  Name of the element. Example "div", "img", "script", etc
-	 * @param array $attributes
+	 * @param array $attributes array('type'=> 'checkbox', 'checked' => true, 'disabled')
 	 * @param bool|string|array $contents  true: Only generate the opentag, string html, array with sub elements
 	 * @return Html
 	 */
@@ -70,7 +70,20 @@ class Html extends Object {
 		$name = strtolower($name);
 		$element = new Html('<'.$name);
 		foreach ($attributes as $key => $value) {
-			$element->html .= ' '.strtolower($key).'="'.self::escape($value).'"';
+			if (is_int($key)) {
+				if (preg_match('/^[a-z\\-_:]+$/i', $value)) {
+					$element->html .= ' '.strtolower($value);
+				} else {
+					notice('Invalid attribute: '.$key, $value);
+				}
+			} elseif (is_bool($value)) {
+				if ($value) {
+					$element->html .= ' '.strtolower($key);
+				}
+			} else {
+				$element->html .= ' '.strtolower($key).'="'.self::escape($value).'"';
+			}
+
 		}
 		if ($contents === true) { // Only generate the open tag?
 			$element->html .= '>';
