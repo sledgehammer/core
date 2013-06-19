@@ -77,7 +77,7 @@ class Html extends Object {
 			return $element;
 		}
 		if ($contents === '') { // Close the tag?
-			if (in_array($name, array('img', 'meta', 'link', 'param', 'input', 'br', 'hr', 'div'))) {
+			if (in_array($name, array('area', 'base', 'br', 'hr', 'input', 'img', 'link', 'meta'))) {
 				$element->html .= ' />';
 			} else {
 				$element->html .= '></'.$name.'>';
