@@ -301,7 +301,7 @@ class Autoloader extends Object {
 			}
 			if (isset($composer['autoload']['psr-0'])) {
 				foreach ($composer['autoload']['psr-0'] as $entry) {
-					if ($entry === '' || $entry === '/') {
+					if (in_array($entry, array('', '/', '.'))) {
 						$preventDefault = false;
 						break;
 					}
