@@ -75,7 +75,7 @@ class Json extends Object {
 		try {
 			ob_start();
 			$this->render();
-			return ob_get_contents();
+			return ob_get_clean();
 		} catch (\Exception $e) {
 			report_exception($e);
 			return '';
