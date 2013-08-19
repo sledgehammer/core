@@ -222,14 +222,16 @@ class PhpTokenizer extends Object implements \Iterator {
 
 				case 'KEYWORD': // Switch state and skip whitespace
 					$this->state = $result['state'];
-					$this->expectToken($nextToken, T_WHITESPACE);
-					$value .= $nextToken[1];
+					$this->expectTokens($nextToken, array(T_WHITESPACE, '('));
+					if ($nextToken[0] === T_WHITESPACE) {
+						$value .= $nextToken[1];
+						$this->tokenIndex++;
+					}
 					if (isset($result['token'])) {
 						$this->current = array($result['token'], $value, $line);
-						$this->tokenIndex += 2;
+						$this->tokenIndex++;
 						return;
 					}
-					$this->tokenIndex++;
 					break;
 
 				case 'OPERATOR': // Switch state and optionally skip whitespace
@@ -641,7 +643,7 @@ class PhpTokenizer extends Object implements \Iterator {
 		if (in_array($token[0], $classConstantTokens) || in_array($nextToken[0], $classConstantTokens)) { // A constant value from inside an class?
 			return array('action' => 'CONTINUE');
 		}
-		$valueTokens = array(T_STRING, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING);
+		$valueTokens = array(T_STRING, T_LNUMBER, T_DNUMBER, T_CONSTANT_ENCAPSED_STRING, T_DIR);
 		if (in_array($token[0], $valueTokens)) {
 			return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
 		}
@@ -652,7 +654,11 @@ class PhpTokenizer extends Object implements \Iterator {
 		if ($token === '-') {
 			return array('action' => 'CONTINUE');
 		}
-		$this->failure('Unknown default value');
+		if (in_array($token[0], array(T_COMMENT, T_WHITESPACE))) {
+			return array('action' => 'LAST_TOKEN', 'token' => 'T_PHP', 'state' => 'PARAMETER_VALUE');
+		}
+		$value = is_array($token) ? token_name($token[0]) : $token;
+		$this->failure('Unknown default value: "'.$value.'"');
 	}
 
 	/**
@@ -725,7 +731,7 @@ class PhpTokenizer extends Object implements \Iterator {
 			// echo "123 {${$varname}[$index]} 456";
 			return array('action' => 'CONTINUE_AS', 'state' => 'INNER_COMPLEX_VARIABLE');
 		}
-		$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, '[', T_CONSTANT_ENCAPSED_STRING, ']'));
+		$this->expectTokens($token, array(T_STRING_VARNAME, T_VARIABLE, T_OBJECT_OPERATOR, T_STRING, T_LNUMBER, '[', T_CONSTANT_ENCAPSED_STRING, ']', '+', '-', '*', '/', '(', ')', T_INC));
 		return array('action' => 'CONTINUE');
 	}
 
