@@ -188,6 +188,17 @@ class Dump extends Object {
 		ini_set('html_errors', $old_value);
 	}
 
+	function __toString() {
+		try {
+			ob_start();
+			$this->render();
+			return ob_get_clean();
+		} catch (\Exception $e) {
+			report_exception($e);
+			return '';
+		}
+	}
+
 	/**
 	 * Parse the output from the vardump and render the html version.
 	 *
