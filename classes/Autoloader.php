@@ -287,35 +287,44 @@ class Autoloader extends Object {
 			}
 			$composer =	json_decode(file_get_contents($path.'composer.json'), true);
 			$locations = array();
+			$trace = array();
 			$preventDefault = true;
 			if (isset($composer['autoload']['classmap'])) {
 				foreach ($composer['autoload']['classmap'] as $entry) {
-					if (empty($entry) || $entry === '.') {
-						notice('Empty autoload.classmap in "composer.json" isn\'t supported');
-						$preventDefault = false;
-						break;
-					} elseif (is_dir($path.$entry)) {
-						$locations[] = $entry;
+					$paths = is_array($entry) ? $entry : array($entry);
+					foreach ($paths as $entryPath) {
+						if (empty($entryPath) || $entry === '.') {
+							notice('Empty autoload.classmap in "composer.json" isn\'t supported');
+							$preventDefault = false;
+							break;
+						} elseif (is_dir($path.$entryPath)) {
+							$locations[] = $entryPath;
+							$trace[] = 'classmap';
+						}
 					}
 				}
 			}
 			if (isset($composer['autoload']['psr-0'])) {
-				foreach ($composer['autoload']['psr-0'] as $entry) {
-					if (in_array($entry, array('', '/', '.'))) {
-						$preventDefault = false;
-						break;
+				foreach ($composer['autoload']['psr-0'] as $namespace => $entry) {
+					$paths = is_array($entry) ? $entry : array($entry);
+					foreach ($paths as $entryPath) {
+						if (in_array($entryPath, array('', '/', '.'))) {
+							$preventDefault = false;
+							break 2;
+						}
+						$locations[] = $entryPath;
+						$trace[] = 'psr-0 ('.$namespace.')';
 					}
-					$locations[] = $entry;
 				}
 			}
 			if ($preventDefault && count($locations) > 0) {
-				foreach ($locations as $entry) {
+				foreach ($locations as $i => $entry) {
 					if (is_dir($path.$entry)) {
 						$this->importFolder($path.$entry, $settings);
 					} elseif (is_file($path.$entry)) {
 						$this->importFile($path.$entry, $settings);
 					} else {
-						notice('autoload entry "'.$entry.'" in "composer.json" isn\'t supported');
+						notice('Invalid "composer.json" entry: '.$trace[$i].': "'.$entry.'"', 'file or directory: "'.$path.$entry.'" not found');
 					}
 				}
 				return;
