@@ -2,12 +2,11 @@
 /**
  * Sledgehammer functions
  *
- * Also adds global functions that are missing in php.
+ * Adds global functions that are missing in php.
  *
  * @package Core
  */
-// Functions that are available everywhere (global namespace)
-namespace {
+namespace Sledgehammer {
 
 	/**
 	 * Dumps information about a variable, like var_dump() but with improved syntax and coloring.
@@ -24,14 +23,14 @@ namespace {
 			ob_start();
 		} elseif (headers_sent() === false && class_exists('Sledgehammer\Framework', false)) {
 			// Force Content-Type to text/html.
-			header('Content-Type: text/html; charset='.strtolower(Sledgehammer\Framework::$charset));
+			header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
 		}
-		$dump = new Sledgehammer\Dump($variable);
+		$dump = new Dump($variable);
 		$dump->render();
 		if ($export) {
 			return ob_get_clean();
 		}
-		if (Sledgehammer\ENVIRONMENT === 'phpunit') {
+		if (ENVIRONMENT === 'phpunit') {
 			ob_flush();
 		}
 	}
@@ -47,7 +46,7 @@ namespace {
 	function error($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_ERROR)) { // Report errors?
-			Sledgehammer\Framework::$errorHandler->report(E_USER_ERROR, $message, $information, true);
+			Framework::$errorHandler->report(E_USER_ERROR, $message, $information, true);
 		}
 		exit(1); // Stop script execution with error 1
 	}
@@ -61,7 +60,7 @@ namespace {
 	function warning($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_WARNING)) { // Report warning?
-			Sledgehammer\Framework::$errorHandler->report(E_USER_WARNING, $message, $information, true);
+			Framework::$errorHandler->report(E_USER_WARNING, $message, $information, true);
 		}
 	}
 
@@ -74,20 +73,7 @@ namespace {
 	function notice($message, $information = null) {
 		$errorLevel = error_reporting();
 		if ($errorLevel === ($errorLevel | E_USER_NOTICE)) { // Report notices?
-			Sledgehammer\Framework::$errorHandler->report(E_USER_NOTICE, $message, $information, true);
-		}
-	}
-
-	/**
-	 * Report an exception
-	 *
-	 * @param Exception $exception
-	 */
-	function report_exception($exception) {
-		if ($exception instanceof Exception) {
-			Sledgehammer\Framework::$errorHandler->report($exception);
-		} else {
-			notice('Parameter $exception should be an Exception');
+			Framework::$errorHandler->report(E_USER_NOTICE, $message, $information, true);
 		}
 	}
 
@@ -98,7 +84,20 @@ namespace {
 	 * @param mixed $information  [optional] Additional information
 	 */
 	function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = null) {
-		Sledgehammer\Framework::$errorHandler->report(E_USER_DEPRECATED, $message, $information, true);
+		Framework::$errorHandler->report(E_USER_DEPRECATED, $message, $information, true);
+	}
+
+	/**
+	 * Report an exception
+	 *
+	 * @param Exception $exception
+	 */
+	function report_exception($exception) {
+		if ($exception instanceof \Exception) {
+			Framework::$errorHandler->report($exception);
+		} else {
+			notice('Parameter $exception should be an Exception');
+		}
 	}
 
 	/**
@@ -111,19 +110,21 @@ namespace {
 	 */
 	function debugr($variable = null) {
 		if (func_num_args() != 0) { //
-			\Sledgehammer\DebugR::dump($variable);
+			DebugR::dump($variable);
 		}
-		return new \Sledgehammer\DebugR();
+		return new DebugR();
 	}
 
 	/**
-	 * Als de variable bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
-	 * Let op! Heeft als side-effect dat de variable wordt ingesteld op null. array_value() heeft hier geen last van, maar is alleen geschikt voor arrays.
+	 * Return the value of a variable or return null if the valiable not exist. (Prevents "Undefined variable" notices)
+	 * WARNING! As a side-effect non existing variables are set to null.
+	 * If you pass array element to `value($var['index'])` and $var didn't exist, an array is created: array('index' => null)
+	 * Use array_value() which doesn't have this side effect for array.
 	 *
-	 * i.p.v.
-	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
-	 * Schrijf je:
+	 * Example:
 	 *   if (value($_GET['foo']) == 'bar') {
+	 * instead of
+	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
 	 *
 	 * @param mixed $variable
 	 * @return mixed
@@ -135,12 +136,12 @@ namespace {
 	}
 
 	/**
-	 * Als het element bestaat wordt de waarde gereturnt, anders wordt niks (null) gereturnd. (Zonder foutmeldingen)
+	 * Return the value of the array element or return null if element doesn't exist. (Prevents "Undefined index" notices)
 	 *
-	 * i.p.v.
-	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
-	 * Schrijf je:
+	 * Example:
 	 *   if (array_value($_GET, 'foo') == 'bar') {
+	 * instead of
+	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
 	 *
 	 * @param array $array
 	 * @param string $key
@@ -158,11 +159,6 @@ namespace {
 			return $array[$key];
 		}
 	}
-
-}
-
-// Global functions inside the Sledgehammer namespace
-namespace Sledgehammer {
 
 	/**
 	 * Test of een array een assoc array is. (Als een key NIET van het type integer zijn)

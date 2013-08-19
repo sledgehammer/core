@@ -82,13 +82,22 @@ class Dump extends Object {
 		if ($backtrace === null) {
 			$backtrace = debug_backtrace();
 		}
-		if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && ($backtrace[1]['function'] === 'dump' || $backtrace[1]['function'] === 'debugr')) {
-			// call via the global dump() or debugr() function.
-			$this->trace = array(
-				'invocation' => $backtrace[1]['function'],
-				'file' => $backtrace[1]['file'],
-				'line' => $backtrace[1]['line'],
-			);
+		if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && ($backtrace[1]['function'] === 'Sledgehammer\dump' || $backtrace[1]['function'] === 'Sledgehammer\debugr')) {
+			if (isset($backtrace[1]['file']) && basename($backtrace[1]['file']) == 'helpers.php' && isset($backtrace[2]['function']) && ($backtrace[2]['function'] === 'dump' || $backtrace[2]['function'] === 'debugr')) {
+				// Call via the dump or debugr function
+				$this->trace = array(
+					'invocation' => $backtrace[2]['function'],
+					'file' => $backtrace[2]['file'],
+					'line' => $backtrace[2]['line'],
+				);
+			} else {
+				// Call via the Sledgehammer\dump or Sledgehammer\debugr function
+				$this->trace = array(
+					'invocation' => $backtrace[1]['function'],
+					'file' => $backtrace[1]['file'],
+					'line' => $backtrace[1]['line'],
+				);
+			}
 		} else {
 			// Via constructing this Dump object.
 			$this->trace = array(

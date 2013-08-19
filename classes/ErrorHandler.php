@@ -576,6 +576,9 @@ class ErrorHandler {
 					break;
 				}
 			} else {
+				if (isset($call['file']) && $call['file'] === CORE_DIR.'helpers.php') { // Forwarded via a helper?
+					$call = next($backtrace);
+				}
 				$this->renderBacktraceCall($call);
 				next($backtrace);
 				break;
@@ -607,7 +610,7 @@ class ErrorHandler {
 			}
 			if (isset($call['function'])) {
 				echo syntax_highlight($call['function'], 'method');
-				$errorHandlerInvocations = array('errorCallback', 'trigger_error', 'warning', 'error', 'notice', 'deprecated');
+				$errorHandlerInvocations = array('errorCallback', 'trigger_error',  'error', 'warning', 'notice', 'deprecated', 'Sledgehammer\error', 'Sledgehammer\warning', 'Sledgehammer\notice', 'Sledgehammer\deprecated');
 				$databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli'); // prevent showing/mailing passwords in the backtrace.
 				$databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
 				if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], array('connect', '__construct'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {

@@ -19,7 +19,8 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	 */
 	define('Sledgehammer\CORE_DIR', __DIR__.'/');
 
-	require_once(CORE_DIR.'functions.php'); // Global and namespaced functions
+	require_once(CORE_DIR.'functions.php'); // Namespaced functions
+	require_once(CORE_DIR.'helpers.php'); // Global functions (but not guaranteed)
 	require_once(CORE_DIR.'classes/Object.php'); // The generic superclass
 	require_once(CORE_DIR.'classes/Framework.php'); // Helper class for extracting and loading Sledgehammer modules
 	require_once(CORE_DIR.'classes/InfoException.php');
@@ -27,15 +28,15 @@ if (!defined('Sledgehammer\CORE_DIR')) {
 	require_once(CORE_DIR.'classes/Autoloader.php');
 
 	Framework::defineConstants();
-	
+
 	if (function_exists('mb_internal_encoding')) {
 		mb_internal_encoding(Framework::$charset);
 	}
 
-	// Configure and enable the ErrorHandler	
+	// Configure and enable the ErrorHandler
 	Framework::configureErrorhandler();
 
-	// Configure and enable the AutoLoader	
+	// Configure and enable the AutoLoader
 	Framework::configureAutoloader();
 
 	// Set DebugR statusbar header.
