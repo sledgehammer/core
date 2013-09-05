@@ -19,12 +19,28 @@ if ($webpath != '/') {
 	$webpath .= '/';
 }
 $uriPath = rawurldecode(parse_url((isset($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : $_SERVER['REQUEST_URI']), PHP_URL_PATH)); // Het path gedeelte van de uri
-$relativeWebpath = substr($uriPath, strlen($webpath)); // Bestandsnaam is het gedeelte van de uriPath zonder de WEBPATH
+// Strip the WEBPATH from the uriPath ()
+$relativeWebpath = explode('/', $uriPath);
+foreach (explode('/', $webpath) as $i => $folder) {
+	if (isset($relativeWebpath[$i]) == false) {
+		break;
+	}
+	if ($relativeWebpath[$i] === $folder) {
+		unset($relativeWebpath[$i]);
+	}
+}
+$relativeWebpath = implode('/', $relativeWebpath);
+$files = array();
 $modulePath = dirname(dirname(__FILE__));
-$files = array(
-	dirname(dirname($modulePath)).'/app/public/'.$relativeWebpath,
-);
-
+// Scan for the public app folder.
+$appPath = dirname(dirname(__FILE__));
+while (strlen($appPath) > 3) { // 'C:\' == 3
+	$appPath = dirname($appPath);
+	if (is_dir($appPath.'/app/public')) {
+		$files[] = $appPath.'/app/public/'.$relativeWebpath;
+		break;
+	}
+}
 $firstSlashPos = strpos($relativeWebpath, '/');
 if ($firstSlashPos) { // Gaat het om een submap?
 	$firstSlashPos++;
