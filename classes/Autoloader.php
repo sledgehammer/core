@@ -54,6 +54,7 @@ class Autoloader extends Object {
 		'detect_accidental_output' => true, // Check if the php-file contains html parts (which would send the http headers)
 		'cache_level' => 1, // Number of (sub)folders to create caches for
 		'filesize_limit' => 524288, // Skip files larger than 512KiB (to prevent out of memory issues)
+		'notice_ambiguous' => true, // Show a notice if a definition is ambiguous.
 	);
 
 	/**
@@ -61,6 +62,12 @@ class Autoloader extends Object {
 	 * @var array
 	 */
 	private $definitions = array();
+
+	/**
+	 * Array containing skipped ambiguous definitions.
+	 * @var array
+	 */
+	private $ambiguous = array();
 
 	/**
 	 * Constructor
@@ -79,26 +86,49 @@ class Autoloader extends Object {
 	 * @return bool
 	 */
 	function loadDatabase($filename, $merge = false, $expectedScanCount = false) {
-		$definitions = '__NONE__';
 		$scanCount = '__NONE__';
+		$definitions = '__NONE__';
+		$ambiguous = '__NONE__';
 		include($filename);
 		if ($definitions === '__NONE__') {
-			warning('Invalid database file: "'.$filename.'"', 'No $definitions where defined');
+			warning('Invalid database file: "'.$filename.'"', '$definitions was not defined');
+			return false;
+		}
+		if ($ambiguous === '__NONE__') {
+			warning('Invalid database file: "'.$filename.'"', '$ambiguous was not defined');
 			return false;
 		}
 		if ($expectedScanCount) {
 			if ($scanCount === '__NONE__') {
-				warning('Invalid database file: "'.$filename.'"', 'No $scanCount was defined');
+				warning('Invalid database file: "'.$filename.'"', '$scanCount was not defined');
 				return false;
 			}
 			if ($scanCount !== $expectedScanCount && $scanCount !== false) { // Number of files didn't match.
 				return false; // file deletion detected
 			}
 		}
+
 		if ($merge) {
 			$this->definitions += $definitions;
+			foreach ($ambiguous as $definition => $files) {
+				if (isset($this->ambiguous[$definition])) {
+					$this->ambiguous[$definition] = array_merge($this->ambiguous[$definition], $files);
+				} else {
+					$this->ambiguous[$definition] = $files;
+				}
+			}
 		} else {
 			$this->definitions = $definitions;
+			$this->ambiguous = $ambiguous;
+		}
+		foreach ($this->ambiguous as $definition => $files) {
+			if (isset($this->definitions[$definition])) { // Ignore ambiguos definitions
+				$this->ambiguous[$definition][] = $this->definitions[$definition];
+				unset($this->definitions[$definition]);
+			} elseif (count($files) === 1) { // Only 1 ambigous, the other implementation was removed?
+				$this->definitions[$definition] = array_pop($files);
+				unset($this->ambiguous[$definition]);
+			}
 		}
 		return true;
 	}
@@ -123,7 +153,11 @@ class Autoloader extends Object {
 				return true; // The class/interface is defined by resolving a namespace
 			}
 			if ($this->standalone) {
-				warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+				if (isset($this->ambiguous[$definition])) {
+					warning('Ambiguous definition: "'.$definition.'"', array('Multiple implentations' => $this->ambiguous[$definition]));
+				} else {
+					warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+				}
 			}
 			return false;
 		}
@@ -324,7 +358,8 @@ class Autoloader extends Object {
 					} elseif (is_file($path.$entry)) {
 						$this->importFile($path.$entry, $settings);
 					} else {
-						notice('Invalid "composer.json" entry: '.$trace[$i].': "'.$entry.'"', 'file or directory: "'.$path.$entry.'" not found');
+						// Allow invalid composer.json configurations, not Sledgehammers problem.
+						// notice('Invalid "composer.json" entry: '.$trace[$i].': "'.$entry.'"', 'file or directory: "'.$path.$entry.'" not found');
 					}
 				}
 				return;
@@ -514,16 +549,20 @@ class Autoloader extends Object {
 		}
 		$filename = $this->relativePath($filename);
 		foreach ($definitions as $definition) {
-			if (isset($this->definitions[$definition])) {
-				if ($this->definitions[$definition] != $filename) {
-					notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: "'.$this->definitions[$definition].'" and "'.$filename.'"', array('settings' => $settings));
-				} else {
-					//if ($settings['one_definition_per_file']) {
-					//$this->parserNotice('"'.$identifier.'" is declared multiple times in: "'.$loaderDefinition['filename'].'"');
-					//}
+			if (isset($this->definitions[$definition]) && $this->definitions[$definition] != $filename) {
+				if (empty($this->ambiguous[$definition])) {
+					$this->ambiguous[$definition] = array($this->definitions[$definition]);
 				}
+				unset($this->definitions[$definition]); // Ignore both definitions to prevent autoloading the wrong one.
 			}
-			$this->definitions[$definition] = $filename;
+			if (isset($this->ambiguous[$definition])) {
+				$this->ambiguous[$definition][] = $filename;
+				if ($settings['notice_ambiguous']) {
+					notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: '.quoted_human_implode(' and ', $this->ambiguous[$definition]), array('settings' => $settings));
+				}
+			} else {
+				$this->definitions[$definition] = $filename;
+			}
 		}
 	}
 
@@ -605,23 +644,45 @@ class Autoloader extends Object {
 	 * @return void
 	 */
 	function saveDatabase($filename, $pathFilter = null, $scanCount = false) {
-		$definitions = array();
 		if ($pathFilter === null) {
 			$definitions = $this->definitions;
+			$ambiguous = $this->ambiguous;
 		} else {
+			$definitions = array();
+			$ambiguous = array();
 			$length = strlen($pathFilter);
 			foreach ($this->definitions as $definition => $file) {
 				if (substr($file, 0, $length) == $pathFilter) {
 					$definitions[$definition] = $file;
 				}
 			}
+			foreach ($this->ambiguous as $definition => $files) {
+				foreach ($files as $file) {
+					if (substr($file, 0, $length) == $pathFilter) {
+						if (empty($ambiguous[$definition])) {
+							$ambiguous[$definition] = array();
+						}
+						$ambiguous[$definition][] = $file;
+					}
+				}
+			}
 		}
 		ksort($definitions);
+		ksort($ambiguous);
 		$php = "<?php\n/**\n * AutoLoader database\n */\n";
 		$php .= '$scanCount = '.($scanCount === false ? 'false' : intval($scanCount)).";\n";
 		$php .= "\$definitions = array(\n";
 		foreach ($definitions as $definition => $file) {
 			$php .= "\t'".addslashes($definition)."' => '".addslashes($file)."',\n";
+		}
+		$php .= ");\n";
+		$php .= "\$ambiguous = array(\n";
+		foreach ($ambiguous as $definition => $files) {
+			$php .= "\t'".addslashes($definition)."' => array(";
+			foreach ($files as $file) {
+				$php .= "'".addslashes($file)."',";
+			}
+			$php .= "),\n";
 		}
 		$php .= ");\n?>";
 

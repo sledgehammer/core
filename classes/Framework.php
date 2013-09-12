@@ -300,6 +300,7 @@ class Framework {
 				'detect_accidental_output' => false,
 				'ignore_folders' => array(VENDOR_DIR.'sledgehammer'),
 				'cache_level' => 3,
+				'notice_ambiguous' => false,
 			));
 		}
 	}
