@@ -111,19 +111,15 @@ class Html extends Object {
 	}
 
 	/**
-	 * Build an icon tag <img class="icon" /> or <i class="icon-*"></i>
-	 * Use a "-white" suffix to get the "icon-white" version.
+	 * Build an icon tag <img class="icon" /> or <span class="glyphicon glyphicon-*"></span>
 	 *
-	 * @link http://twitter.github.com/bootstrap/base-css.html#icons
+	 * @link http://getbootstrap.com/components/#glyphicons
 	 * @param string Name or URL of the icon
 	 * @return Html
 	 */
 	static function icon($icon) {
-		if (preg_match('/^[a-z-]+\-white$/', $icon, $match)) {
-			return self::element('i', array('class' => 'icon-'.substr($icon, 0, -6).' icon-white'));
-		}
 		if (preg_match('/^[a-z-]+$/', $icon)) {
-			return self::element('i', array('class' => 'icon-'.$icon));
+			return self::element('span', array('class' => 'glyphicon glyphicon-'.$icon));
 		}
 		if (preg_match('/^http[s]|^\/|^[.]{1,2}\//', $icon) === 0) { // relative url?
 			$icon = WEBROOT.$icon;
