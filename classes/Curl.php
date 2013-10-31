@@ -85,7 +85,7 @@ class Curl extends Observable {
 
 	/**
 	 * Global queue of active cURL requests
-	 * @var array|Curl
+	 * @var Curl[]
 	 */
 	static $requests = array();
 

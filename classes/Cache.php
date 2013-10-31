@@ -38,7 +38,7 @@ class Cache extends Object implements \ArrayAccess {
 
 	/**
 	 * Connected nodes.
-	 * @var array|Cache
+	 * @var Cache[]
 	 */
 	private $_nodes = array();
 

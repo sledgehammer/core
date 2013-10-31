@@ -38,7 +38,7 @@ class Database extends \PDO {
 	/**
 	 * The database instances that are accessible by getDatabase() and the statusbar() functions.
 	 * array('link' => Database)
-	 * @var array|Database
+	 * @var Database[]
 	 */
 	static $instances = array();
 
@@ -499,7 +499,8 @@ class Database extends \PDO {
 	 * @return string
 	 */
 	function lastInsertId($name = null) {
-		if ($name === null && isset($this->reportWarnings) && $this->reportWarnings === true) {
+		if (isset($this->reportWarnings) && $this->reportWarnings === true) {
+			// @todo Add support for $name (PostgreSQL)
 			return $this->previousInsertId;
 		}
 		return parent::lastInsertId($name);
