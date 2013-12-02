@@ -311,6 +311,52 @@ class Curl extends Observable {
 	}
 
 	/**
+	 * Proxy/resend the current request to different url/server.
+	 * @param string $endpoint Url
+	 * @param callback $filter Callback to change the generated Curl options.
+	 */
+	static function proxy($endpoint, $filter = null) {
+		$url = new Url($endpoint);
+		$url->query = $_GET;
+		$options = array(
+			CURLOPT_URL => (string) $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_CUSTOMREQUEST => $_SERVER['REQUEST_METHOD'],
+			CURLOPT_FAILONERROR => false,
+			CURLOPT_HEADER => true,
+			CURLOPT_HTTPHEADER => array()
+		);
+		// Proxy HTTP headers
+		foreach($_SERVER as $name => $value) {
+			if (substr($name, 0, 5) === 'HTTP_' && in_array($name, array('HTTP_HOST', 'HTTP_CONNECTION')) === false) {
+				$options[CURLOPT_HTTPHEADER][] = substr($name, 5).':'.$value;
+			}
+		}
+		// Proxy POST/PUT contents
+		if (in_array($_SERVER['REQUEST_METHOD'], array('POST', 'PUT'))) {
+			if (empty($_POST) === false) {
+				$options[CURLOPT_POSTFIELDS] = $_POST;
+			} elseif (isset($HTTP_RAW_POST_DATA)) {
+				$options[CURLOPT_POSTFIELDS] = $HTTP_RAW_POST_DATA;
+			} else {
+				$options[CURLOPT_POSTFIELDS] = file_get_contents('php://input');
+			}
+		}
+		// Custom curl options
+		if ($filter !== null) {
+			$options = call_user_func($filter, $options);
+		}
+		// Send request
+		$response = new Curl($options);
+		$headers = $response->getHeaders();
+		unset($headers['Transfer-Encoding']);
+		$headers['Status'] = $response->http_code;
+		send_headers($headers);
+		echo $response->getBody();
+		exit();
+	}
+
+	/**
 	 * Wait for all requests to complete.
 	 *
 	 * @throws \Exception
