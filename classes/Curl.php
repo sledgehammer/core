@@ -336,6 +336,8 @@ class Curl extends Observable {
 		if (in_array($_SERVER['REQUEST_METHOD'], array('POST', 'PUT'))) {
 			if (empty($_POST) === false) {
 				$options[CURLOPT_POSTFIELDS] = $_POST;
+			} elseif (empty($_PUT) === false) {
+				$options[CURLOPT_POSTFIELDS] = $_PUT;
 			} elseif (isset($HTTP_RAW_POST_DATA)) {
 				$options[CURLOPT_POSTFIELDS] = $HTTP_RAW_POST_DATA;
 			} else {
