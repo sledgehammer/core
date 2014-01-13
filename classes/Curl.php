@@ -359,6 +359,22 @@ class Curl extends Observable {
 	}
 
 	/**
+	 * Create a file value for use in CURLOPT_POSTFIELDS.
+	 * @link http://php.net/manual/en/class.curlfile.php
+	 *
+	 * @param $filename
+	 * @param $mimetype
+	 * @param $postname
+	 * @return \CURLFile
+	 */
+	static function file($filename, $mimetype = null, $postname = null) {
+		if (function_exists('\curl_file_create')) {
+			return curl_file_create($filename, $mimetype, $postname);
+		}
+		return '@'.$filename; // Old insecure method (PHP before 5.5)
+	}
+
+	/**
 	 * Wait for all requests to complete.
 	 *
 	 * @throws \Exception
