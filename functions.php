@@ -1402,6 +1402,9 @@ namespace Sledgehammer {
 		} elseif (preg_match('/MSIE ([0-9]{1,2}.[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
 			$browser = 'Microsoft Internet Explorer';
 			$version = $match[1];
+		} elseif (preg_match('/Trident\\/[0-9]{1,2}.[0-9]{1,2}; rv:([0-9]{1,2}.[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
+			$browser = 'Microsoft Internet Explorer';
+			$version = $match[1];
 		} elseif (preg_match('/Opera\/([0-9].[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
 			$browser = 'Opera';
 			$version = $match[1];
