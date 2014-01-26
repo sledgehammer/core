@@ -191,7 +191,23 @@ class CollectionTest extends TestCase {
 		$this->assertEquals(array(2,4), $collection->toArray());
 	}
 
+	function test_map() {
+		$collection = new Collection(array(1, 2, 3, 5));
+		$mapped = $collection->map(function ($v) {
+			return $v * 2;
+		});
+		$this->assertEquals(array(2, 4, 6, 10), $mapped->toArray(), 'All values should be doubled');
+		$this->assertEquals(array(1, 2, 3, 5), $collection->toArray(), 'Original array should remain intact');
+	}
 
+	function test_reduce() {
+		$collection = new Collection(array(1, 2, 3, 4));
+		$result = $collection->reduce(function ($result, $v) {
+			return $result + $v;
+		});
+		$this->assertEquals(10, $result, '1 + 2 + 3 + 4 = 10');
+		$this->assertEquals(array(1, 2, 3, 4), $collection->toArray(), 'Original array should remain intact');
+	}
 
 	/**
 	 * A collection containing fruit entries and a vegetable entry

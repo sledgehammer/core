@@ -436,6 +436,28 @@ class Collection extends Observable implements \IteratorAggregate, \Countable, \
 	}
 
 	/**
+	 * Creates a new collection with all values converted by the callback.
+	 * @link http://php.net/manual/function.array-map.php
+	 * @param \Closure $callback  The callback is called per item and the return value is stored in the new collection.
+	 * @return Collection
+	 */
+	function map($callback) {
+		return new self(array_map($callback, $this->toArray()));
+	}
+
+	/**
+	 * Iteratively reduce the collection to a single value using a callback function.
+	 * @link http://php.net/manual/function.array-reduce.php
+	 *
+	 * @param Closure $callback The callback is called per item and the return value is given as result to the next callback.
+	 * @param mixed $initial The inital value of the result.
+	 * @return mixed
+	 */
+	function reduce($callback, $initial = null) {
+		return array_reduce($this->toArray(), $callback, $initial);
+	}
+
+	/**
 	 * Return the collection as an array
 	 *
 	 * @return array
