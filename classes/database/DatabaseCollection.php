@@ -272,6 +272,34 @@ class DatabaseCollection extends Collection {
 	}
 
 	/**
+	 * @inherit
+	 */
+	function min($selector = '.') {
+		if (is_string($selector) && $selector !== '.' && $this->data === null && is_string($this->sql) === false) {
+			if ($this->sql->limit === false && $this->sql->offset === false && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
+				$db = getDatabase($this->dbLink);
+				$sql = $this->sql->select('MIN('.$db->quoteIdentifier($selector).')');
+				return $db->fetchValue($sql);
+			}
+		}
+		return parent::min($selector);
+	}
+
+	/**
+	 * @inherit
+	 */
+	function max($selector = '.') {
+		if (is_string($selector) && $selector !== '.' && $this->data === null && is_string($this->sql) === false) {
+			if ($this->sql->limit === false && $this->sql->offset === false && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
+				$db = getDatabase($this->dbLink);
+				$sql = $this->sql->select('MAX('.$db->quoteIdentifier($selector).')');
+				return $db->fetchValue($sql);
+			}
+		}
+		return parent::max($selector);
+	}
+
+	/**
 	 * Inspect the SQL query.
 	 * @return string|Sql
 	 */

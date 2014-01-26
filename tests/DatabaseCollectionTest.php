@@ -129,6 +129,18 @@ class DatabaseCollectionTest extends DatabaseTestCase {
 		$this->assertLastQuery("SELECT * FROM fruits WHERE name LIKE 'B%'");
 	}
 
+	function test_min() {
+		$collection = $this->getDatabaseCollection();
+		$this->assertEquals(4, $collection->min('id'));
+		$this->assertLastQuery("SELECT MIN(id) FROM fruits");
+	}
+
+	function test_max() {
+		$collection = $this->getDatabaseCollection();
+		$this->assertEquals(7, $collection->where(array('type' => 'fruit'))->max('id'));
+		$this->assertLastQuery("SELECT MAX(id) FROM fruits WHERE type = 'fruit'");
+	}
+
 	/**
 	 * A collection containing fruit entries and a vegetable entry
 	 * @return DatabaseCollection
