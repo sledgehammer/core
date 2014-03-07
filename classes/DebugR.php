@@ -41,11 +41,19 @@ class DebugR extends Object {
 	}
 
 	/**
+	 * Send an message to console.info()
+	 * @param string $message
+	 */
+	static function info($message) {
+		return self::send('info', Json::encode($message));
+	}
+
+	/**
 	 * Send an message to console.warning()
 	 * @param string $message  The warning message
 	 */
 	static function warning($message) {
-		return self::send('warning', $message);
+		return self::send('warning', Json::encode($message));
 	}
 
 	/**
@@ -53,7 +61,7 @@ class DebugR extends Object {
 	 * @param string $message  The error message
 	 */
 	static function error($message) {
-		return self::send('error', $message);
+		return self::send('error', Json::encode($message));
 	}
 
 	/**
@@ -143,14 +151,14 @@ class DebugR extends Object {
 			return;
 		}
 
-		if ($length <= (4 * 1024)) { // Under 4KiB?
+		if ($length <= 4000) { // Under 4KB? (96B for the label)
 			$header = 'DebugR-'.$label.': ';
 			call_user_func(self::$headerAdd, $header.$value);
 			self::$bytesSent += strlen($header) + $length;
 		} else {
 			// Send in 4KB chunks.
 			call_user_func(self::$headerRemove, 'DebugR-'.$label);
-			$chunks = str_split($value, (4 * 1024));
+			$chunks = str_split($value, 4000);
 			foreach ($chunks as $index => $chunk) {
 				$header = 'DebugR-'.$label.'.chunk'.$index.': ';
 				call_user_func(self::$headerAdd, $header.$chunk);
