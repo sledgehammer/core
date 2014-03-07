@@ -194,22 +194,23 @@ class Cache extends Object implements \ArrayAccess {
 		if ($success === false) {
 			return false;
 		}
+		$now = time();
 		if ($maxAge !== false) {
 			if (is_string($maxAge)) {
 				$maxAge = strtotime($maxAge);
 			}
 			if ($maxAge <= 3600) { // Is maxAge a ttl?
-				$maxAge = time() - $maxAge;
+				$maxAge = $now - $maxAge;
 			}
-			if ($maxAge > time()) {
-				notice('maxAge is '.($maxAge - time()).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
+			if ($maxAge > $now) {
+				notice('maxAge is '.($maxAge - $now).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
 				return false;
 			}
 			if ($node['updated'] < $maxAge) { // Older than the maximum age?
 				return false;
 			}
 		}
-		if ($node['expires'] != 0 && $node['expires'] <= time()) { // Is expired?
+		if ($node['expires'] != 0 && $node['expires'] <= $now) { // Is expired?
 			return false;
 		}
 		$output = $node['data'];

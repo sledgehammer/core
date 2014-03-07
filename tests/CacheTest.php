@@ -94,14 +94,22 @@ class CacheTest extends TestCase {
 	private function cache_expires_test($type) {
 		$this->counter = 0;
 		$cache = new CacheTester(__FILE__.__FUNCTION__, $type);
+		$start = time();
 		$counter1 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss/store
 		$this->assertEquals(1, $counter1, 'Sanity check');
 		usleep(100000); // 0.1 sec
-		$counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit
-		$this->assertEquals(1, $counter2, 'Should not be expired just yet');
-		sleep(2); // Wait 2 sec for the cache to expire.
+		$counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit (or missed by a milisecond)
+		if ($counter2 === 1) { // hit
+			$this->assertEquals(1, $counter2, 'Should not be expired just yet');
+			$nextExpectation = 2;
+		} else {
+			$this->assertNotEquals($start, time(), 'Should be missed by a milisecond'); // stored at 1.9999
+			$start = time();
+			$nextExpectation = 3;
+		}
+		sleep(2); // Wait 2s for the cache to expire.
 		$counter3 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss (expired)
-		$this->assertEquals(2, $counter3, 'Should be expired (and incremented again)');
+		$this->assertEquals($nextExpectation, $counter3, 'Should be expired (and incremented again)');
 		$cache->clear();
 	}
 
