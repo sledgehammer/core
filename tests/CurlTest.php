@@ -14,7 +14,7 @@ class CurlTest extends TestCase {
 		$this->assertEmptyPool();
 		$response = Curl::get('http://www.bfanger.nl/');
 		$this->assertEquals($response->http_code, 200);
-		$this->assertEquals($response->effective_url, 'http://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
+		$this->assertEquals($response->effective_url, 'https://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
 	}
 
 	function test_async() {
