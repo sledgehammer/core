@@ -286,22 +286,22 @@ class Framework {
 				}
 				self::$autoloader->importFolder($path, $settings);
 			}
-		}
 
-		// Add Autoloader support for the other vendor packages.
-		// Fixes cASe issues, repair namespaces, etc.
-		if (file_exists(VENDOR_DIR)) { // Does the app have vendor packages?
-			self::$autoloader->importFolder(VENDOR_DIR, array(
-				'matching_filename' => false,
-				'mandatory_definition' => false,
-				'mandatory_superclass' => false,
-				'one_definition_per_file' => false,
-				'revalidate_cache_delay' => 30,
-				'detect_accidental_output' => false,
-				'ignore_folders' => array(VENDOR_DIR.'sledgehammer'),
-				'cache_level' => 3,
-				'notice_ambiguous' => false,
-			));
+			// Add Autoloader support for the other vendor packages.
+			// Fixes cASe issues, repair namespaces, etc.
+			if (file_exists(VENDOR_DIR)) { // Does the app have vendor packages?
+				self::$autoloader->importFolder(VENDOR_DIR, array(
+					'matching_filename' => false,
+					'mandatory_definition' => false,
+					'mandatory_superclass' => false,
+					'one_definition_per_file' => false,
+					'revalidate_cache_delay' => 30,
+					'detect_accidental_output' => false,
+					'ignore_folders' => array(VENDOR_DIR.'sledgehammer'),
+					'cache_level' => 3,
+					'notice_ambiguous' => false,
+				));
+			}
 		}
 	}
 
