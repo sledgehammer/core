@@ -14,7 +14,12 @@ if (!defined('Sledgehammer\STARTED')) {
 	 */
 	define('Sledgehammer\STARTED', microtime(true));
 }
-$webpath = dirname((isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME']));
+if (isset($_SERVER['CONTEXT_DOCUMENT_ROOT'])) {
+	$scriptname = substr($_SERVER['SCRIPT_FILENAME'], strlen($_SERVER['CONTEXT_DOCUMENT_ROOT']));
+} else {
+	$scriptname = isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME'];
+}
+$webpath = dirname($scriptname);
 if ($webpath != '/') {
 	$webpath .= '/';
 }
