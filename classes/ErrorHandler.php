@@ -415,6 +415,9 @@ class ErrorHandler {
 				if (class_exists('Sledgehammer\DebugR', false) === false) {
 					require_once(__DIR__.'/DebugR.php');
 				}
+                if (class_exists('Sledgehammer\Json', false) === false) {
+					require_once(__DIR__.'/Json.php');
+				}
 				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
 				} else {

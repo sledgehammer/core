@@ -469,6 +469,10 @@ class Autoloader extends Object {
 						case T_TRAIT:
 							$state = 'INTERFACE';
 							break;
+
+                        case T_DOUBLE_COLON:
+							$state = 'SKIP_ONE';
+							break;
 					}
 					break;
 
@@ -530,6 +534,10 @@ class Autoloader extends Object {
 					$state = 'DETECT';
 					break;
 
+				case 'SKIP_ONE':
+					$state = 'DETECT';
+					break;
+                
 				default:
 					throw new \Exception('Unexpected state: "'.$state.'"');
 			}
