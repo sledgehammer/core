@@ -3,6 +3,10 @@
  * ErrorHandler
  */
 namespace Sledgehammer;
+
+use Exception;
+use Throwable;
+
 /**
  * Verzorgt de afhandeling van php fouten.
  * Deze kan een uitgebreide foutmelding in html-formaat tonen en/of emailen
@@ -149,7 +153,7 @@ class ErrorHandler {
 	 * @param Exception $exception
 	 */
 	function exceptionCallback($exception) {
-		if ($exception instanceof \Exception) {
+		if (self::isThrowable($exception)) {
 			if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
 				Framework::$errorHandler->report($exception, '__UNCAUGHT_EXCEPTION__');
 			} else {
@@ -174,14 +178,14 @@ class ErrorHandler {
 	/**
 	 * Functie die wordt aangeroepen door de functies notice() / warning() / error() en de error handler functie
 	 *
-	 * @param int|\Exception $type
+	 * @param int|Exception $type
 	 * @param string $message
 	 * @param mixed $information
 	 * @param bool $check_for_alternate_error_handler Controleert of de error door een andere error_handler moet worden afgehandeld (Bv: SimpleTestErrorHandler)
 	 * @return void
 	 */
 	function report($type, $message = '__EMPTY_ERROR_MESSAGE__', $information = null, $check_for_alternate_error_handler = false) {
-		if ($type instanceof \Exception) {
+		if (self::isThrowable($type)) {
 			// @todo check the exception handler is this instance.
 		} elseif ($check_for_alternate_error_handler) {
 			$callback = set_error_handler(array($this, 'errorCallback'));
@@ -212,7 +216,7 @@ class ErrorHandler {
 	 */
 	private function render($type, $message = null, $information = null) {
 		echo "<!-- \"'> -->\n"; // break out of the tag/attribute
-		if ($type instanceof \Exception) {
+		if (self::isThrowable($type)) {
 			$exception = $type;
 			$type = ($message === '__UNCAUGHT_EXCEPTION__' ? E_ERROR : E_WARNING);
 			if ($exception instanceof InfoException) {
@@ -399,7 +403,7 @@ class ErrorHandler {
 			$this->debugR = (headers_sent() === false); // Update debugr setting.
 		}
 		if ($this->log || $this->cli || $this->debugR) {
-			if ($type instanceof \Exception) {
+			if (self::isThrowable($type)) {
 				$error_message = get_class($type).': '.$type->getMessage();
 			} else {
 				$error_message = $this->error_types[$type].': '.$message;
@@ -418,7 +422,7 @@ class ErrorHandler {
                 if (class_exists('Sledgehammer\Json', false) === false) {
 					require_once(__DIR__.'/Json.php');
 				}
-				if ($type instanceof \Exception || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
+				if (self::isThrowable($type) || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
 					DebugR::error($error_message);
 				} else {
 					DebugR::warning($error_message);
@@ -451,7 +455,7 @@ class ErrorHandler {
 				$headers .= "Content-type: text/html; charset=".Framework::$charset."\n";
 				$headers .= 'From: '.$this->fromEmail()."\n";
 
-				if ($type instanceof \Exception) {
+				if (self::isThrowable($type)) {
 					$subject = get_class($type).': '.$type->getMessage();
 					if ($message === '__UNCAUGHT_EXCEPTION__') {
 						$subject = ' Uncaught '.$subject;
@@ -533,7 +537,7 @@ class ErrorHandler {
 					$this->renderBacktraceCall($error);
 					next($backtrace);
 					break;
-				} elseif ($call['function'] == 'report' && $call['args'][0] instanceof \Exception) { // Gaat het om een Exception
+				} elseif ($call['function'] == 'report' && self::isThrowable($call['args'][0])) { // Gaat het om een Exception
 					$exception = $call['args'][0];
 					$reported = false;
 					$viaExceptionCallback = next($backtrace);
@@ -867,6 +871,14 @@ class ErrorHandler {
 		}
 		return '"ErrorHandler ('.$hostname.')" <errorhandler@'.$domain.'>';
 	}
+    
+    /**
+     * Return true for Exceptions & PHP7 Error and other objects that implement Throwable.
+     * @param Throwable $throwable
+     */
+    private static function isThrowable($throwable) {
+        return ($throwable instanceof Exception || $throwable instanceof Throwable);
+    }
 
 	/**
 	 * Deprecated, use report()
