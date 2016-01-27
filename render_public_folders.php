@@ -35,7 +35,7 @@ foreach (explode('/', $webpath) as $i => $folder) {
 	}
 }
 $relativeWebpath = implode('/', $relativeWebpath);
-$files = array();
+$files = [];
 $modulePath = dirname(dirname(__FILE__));
 // Scan for the public app folder.
 $appPath = dirname(dirname(__FILE__));
@@ -54,7 +54,7 @@ if ($firstSlashPos) { // Gaat het om een submap?
 	$files[] = $modulePath.'/'.$firstFolder.'public/'.$filepath; // Dan kan het bestand ook in een module staan
 }
 if ($relativeWebpath == '' || substr($relativeWebpath, -1) == '/') { // Gaat de request om een map?
-	$indexFiles = array();
+	$indexFiles = [];
 	$files[] = dirname($_SERVER['SCRIPT_FILENAME']).'/'.$relativeWebpath;
 	foreach ($files as $filename) {
 		// Zoek naar index bestanden in de public/ mappen. Ala DirectoryIndex

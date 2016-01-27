@@ -79,7 +79,7 @@ class DatabaseCollection extends Collection {
             return parent::select($selector, $selectKey);
         }
 
-        $columns = array();
+        $columns = [];
         foreach ($selectorPaths as $to => $from) {
             $column = $this->convertPathToColumn($from);
             $alias = $this->convertPathToColumn($to);
@@ -188,7 +188,7 @@ class DatabaseCollection extends Collection {
                         notice('Operator IN expects an array or Traversable', $value);
                         $value = explode(',', $value);
                     }
-                    $quoted = array();
+                    $quoted = [];
                     foreach ($value as $val) {
                         $quoted[] = $this->quote($db, $column, $val);
                     }
@@ -338,7 +338,7 @@ class DatabaseCollection extends Collection {
                 if ($count < 0) {
                     return 0;
                 }
-            } 
+            }
             if ($count < $this->sql->limit) {
                 $count = $this->sql->limit;
             }

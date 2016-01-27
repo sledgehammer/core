@@ -1,5 +1,7 @@
 <?php
+
 namespace Sledgehammer;
+
 /**
  * TestButton, An class for testing an Observable
  *
@@ -9,9 +11,9 @@ namespace Sledgehammer;
  */
 class CacheTester extends Cache {
 
-	public function __construct($identifier, $backend) {
-		parent::__construct($identifier, $backend);
-	}
+    public function __construct($identifier, $backend) {
+        parent::__construct($identifier, $backend);
+    }
 
 }
 

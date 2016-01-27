@@ -307,7 +307,7 @@ namespace Sledgehammer {
 		static $globalMimetypes = null;
 		if ($globalMimetypes === null) {
 			// Import global mime.types.
-			$globalMimetypes = array();
+			$globalMimetypes = [];
 			foreach (array('/etc/mime.types', '/etc/apache2/mime.types') as $mimeFile) {
 				if (is_readable($mimeFile)) {
 					foreach(file($mimeFile) as $line) {
@@ -520,7 +520,7 @@ namespace Sledgehammer {
 				return false;
 
 			case 'LIKE':
-				static $patternCache = array();
+				static $patternCache = [];
 				$pattern = array_value($patternCache, $expectation);
 				if ($pattern === null) {
 					// Build the regular expression.
@@ -630,17 +630,17 @@ namespace Sledgehammer {
 	 *    'public' => array(  // Public properties
 	 *       $property => $value,
 	 *    ),
-	 *    'protected' => array(), // protected properties
-	 *    'private' => array(), // private properties
+	 *    'protected' => [], // protected properties
+	 *    'private' => [], // private properties
 	 * )
 	 */
 	function reflect_properties($object) {
 		$reflection = new \ReflectionObject($object);
 		$values = get_object_vars($object);
 		$properties = array(
-			'public' => array(),
-			'protected' => array(),
-			'private' => array(),
+			'public' => [],
+			'protected' => [],
+			'private' => [],
 		);
 		foreach ($reflection->getProperties() as $property) {
 			if ($property->isPublic()) {
@@ -909,7 +909,7 @@ namespace Sledgehammer {
 		}
 		if (is_array($extensions)) {
 			// Convert $extensions array into a regex.
-			$regex = array();
+			$regex = [];
 			foreach ($extensions as $extension) {
 				$regex[] = preg_quote($extension, '/');
 			}
@@ -957,7 +957,7 @@ namespace Sledgehammer {
 	 * @param array $exclude  Een array met bestand en/of mapnamen die niet gekopieerd zullen.
 	 * @return int
 	 */
-	function copydir($source, $destination, $exclude = array()) {
+	function copydir($source, $destination, $exclude = []) {
 		if (!is_dir($destination) && !mkdirs($destination)) {
 			return false;
 		}
@@ -1091,7 +1091,7 @@ namespace Sledgehammer {
 	 * @return string
 	 */
 	function partial_var_export($variable, $maxLenght, $maxDepth = false, $depth = 0) {
-		$end = array();
+		$end = [];
 		$title = '';
 		$hellip = html_entity_decode('&hellip;', ENT_NOQUOTES, Framework::$charset); // aka the '...' character
 		if (is_array($variable)) {
@@ -1171,7 +1171,7 @@ namespace Sledgehammer {
 		}
 		static $settings = null;
 		if ($settings === null) {
-			$settings = array();
+			$settings = [];
 			if (file_exists(APP_DIR.'database.ini') === false) {
 				throw new InfoException('Database connection: "'.$link.'" is not configured', 'No database configuration file found at "'.APP_DIR.'database.ini"');
 			}
@@ -1288,7 +1288,7 @@ namespace Sledgehammer {
 			}
 		}
 		// dan is het een array.
-		$array = array();
+		$array = [];
 		foreach ($data as $key => $value) {
 			$array[$key] = iterators_to_arrays($value); // Alle elementen (mogelijk) omzetten
 		}
@@ -1312,7 +1312,7 @@ namespace Sledgehammer {
 		if (!is_object($iterator) || !($iterator instanceof \Iterator)) {
 			warning('The first argument should be an Iterator object');
 		}
-		$keys = array();
+		$keys = [];
 		for ($iterator->rewind(); $iterator->valid(); $iterator->next()) {
 			$keys[] = $iterator->key();
 		}
@@ -1469,7 +1469,7 @@ namespace Sledgehammer {
 	 */
 	function getClientIp() {
 		$fields = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR');
-		$ips = array();
+		$ips = [];
 		foreach ($fields as $key) {
 			if (array_key_exists($key, $_SERVER) === true) {
 				foreach (explode(',', $_SERVER[$key]) as $ip) {
@@ -1519,7 +1519,7 @@ namespace Sledgehammer {
 			return;
 		}
 		// Send headers.
-		$notices = array();
+		$notices = [];
 		foreach ($headers as $header => $value) {
 			if ($header == 'Status') { // and != fastcgi?
 				header($_SERVER['SERVER_PROTOCOL'].' '.$value);
@@ -1554,7 +1554,7 @@ namespace Sledgehammer {
 				exit();
 			}
 		}
-		$headers = array();
+		$headers = [];
 		/*
 		  $resume_support = false; // @todo Bestanden in tmp/ geen resume_support geven.
 		  if ($resume_support) {

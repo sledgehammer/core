@@ -1,8 +1,11 @@
 <?php
+
 /**
  * InfoException
  */
+
 namespace Sledgehammer;
+
 /**
  * An exception with additonal information for the ErrorHander.
  *
@@ -15,33 +18,33 @@ namespace Sledgehammer;
  */
 class InfoException extends \Exception {
 
-	/**
-	 * The additional information for the ErrorHandler.
-	 * @var mixed
-	 */
-	private $information;
+    /**
+     * The additional information for the ErrorHandler.
+     * @var mixed
+     */
+    private $information;
 
-	/**
-	 * Constructor
-	 *
-	 * @param string $message  The Exception message to throw.
-	 * @param mixed $information  The additional information for the ErrorHandler
-	 * @param int $code  The Exception code.
-	 * @param Exception $previous  The previous exception used for the exception chaining.
-	 */
-	function __construct($message, $information, $code = 0, $previous = null) {
-		parent::__construct($message, $code, $previous);
-		$this->information = $information;
-	}
+    /**
+     * Constructor
+     *
+     * @param string $message  The Exception message to throw.
+     * @param mixed $information  The additional information for the ErrorHandler
+     * @param int $code  The Exception code.
+     * @param Exception $previous  The previous exception used for the exception chaining.
+     */
+    function __construct($message, $information, $code = 0, $previous = null) {
+        parent::__construct($message, $code, $previous);
+        $this->information = $information;
+    }
 
-	/**
-	 * Returns the additional error information.
-	 *
-	 * @return mixed
-	 */
-	function getInformation() {
-		return $this->information;
-	}
+    /**
+     * Returns the additional error information.
+     *
+     * @return mixed
+     */
+    function getInformation() {
+        return $this->information;
+    }
 
 }
 

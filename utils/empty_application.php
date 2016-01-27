@@ -1,12 +1,15 @@
 <?php
+
 /**
  * empty_application.php
  */
+
 namespace Sledgehammer;
+
 /**
  * Generate a application skeleton, to quickstart an application
  */
-include(dirname(__FILE__).'/../bootstrap.php');
+include(dirname(__FILE__) . '/../bootstrap.php');
 
 /**
  * A variation of file_put_contents that won't override existing files.
@@ -16,21 +19,21 @@ include(dirname(__FILE__).'/../bootstrap.php');
  * @return boolean
  */
 function file_not_exist_put_contents($filename, $data) {
-	if (file_exists($filename)) {
-		return false;
-	}
-	return file_put_contents($filename, $data);
+    if (file_exists($filename)) {
+        return false;
+    }
+    return file_put_contents($filename, $data);
 }
+
 // Create a writable tmp folder.
-mkdirs(PATH.'tmp');
-chmod(PATH.'tmp', 0777);
-file_not_exist_put_contents(PATH.'tmp/.gitignore', "*\n!.gitignore");
+mkdirs(PATH . 'tmp');
+chmod(PATH . 'tmp', 0777);
+file_not_exist_put_contents(PATH . 'tmp/.gitignore', "*\n!.gitignore");
 
 // @todo detect mvc
-
 // Create the public folder.
-mkdirs(PATH.'public');
-file_not_exist_put_contents(PATH.'public/.htaccess', <<<END
+mkdirs(PATH . 'public');
+file_not_exist_put_contents(PATH . 'public/.htaccess', <<<END
 Allow from all
 # Redirect everything to rewrite.php except existing files.
 RewriteEngine On
@@ -39,7 +42,7 @@ RewriteRule ^.*$            rewrite.php?%{QUERY_STRING}
 END
 );
 
-file_not_exist_put_contents(PATH.'public/rewrite.php', <<<END
+file_not_exist_put_contents(PATH . 'public/rewrite.php', <<<END
 <?php
 /**
  * rewrite.php
@@ -55,8 +58,8 @@ END
 );
 
 // Create default app
-mkdirs(PATH.'app/classes');
-file_not_exist_put_contents(PATH.'app/classes/App.php', <<<END
+mkdirs(PATH . 'app/classes');
+file_not_exist_put_contents(PATH . 'app/classes/App.php', <<<END
 <?php
 /**
  * Example App
@@ -106,8 +109,8 @@ class App extends Website {
 END
 );
 
-mkdirs(PATH.'app/templates');
-file_not_exist_put_contents(PATH.'app/templates/layout.php', <<<END
+mkdirs(PATH . 'app/templates');
+file_not_exist_put_contents(PATH . 'app/templates/layout.php', <<<END
 <?php
 /**
  * Example Template
@@ -124,13 +127,12 @@ file_not_exist_put_contents(PATH.'app/templates/layout.php', <<<END
 END
 );
 
-file_not_exist_put_contents(PATH.'app/database.ini', <<<END
+file_not_exist_put_contents(PATH . 'app/database.ini', <<<END
 [development]
 default = mysql://root:root@localhost/my_database
 END
 );
-mkdirs(PATH.'app/public/css');
-mkdirs(PATH.'app/public/js');
-mkdirs(PATH.'app/public/img');
-
+mkdirs(PATH . 'app/public/css');
+mkdirs(PATH . 'app/public/js');
+mkdirs(PATH . 'app/public/img');
 ?>
