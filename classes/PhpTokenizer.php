@@ -403,6 +403,12 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_USE($token, $nextToken) {
+        if ($token[0] === T_CONST) { // @todo implement parse_USE_const
+            return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+        }
+        if ($token[0] === T_FUNCTION) { // @todo implement parse_USE_function
+            return array('action' => 'CONTINUE_AS', 'state' => 'PHP');
+        }
 		if ($nextToken === ';') {
 			return array(
 				'action' => 'LAST_TOKEN',
@@ -651,6 +657,10 @@ class PhpTokenizer extends Object implements \Iterator {
 			$this->arrayDepth = 0;
 			return array('action' => 'RESCAN', 'state' => 'PARAMETER_ARRAY_VALUE');
 		}
+        if ($token === '[') {
+            $this->arrayDepth = 0;
+            return array('action' => 'RESCAN', 'state' => 'PARAMETER_ARRAY_VALUE');
+        }
 		if ($token === '-') {
 			return array('action' => 'CONTINUE');
 		}
@@ -670,9 +680,9 @@ class PhpTokenizer extends Object implements \Iterator {
 	 * @return array
 	 */
 	private function parse_PARAMETER_ARRAY_VALUE($token, $nextToken) {
-		if ($token === '(') {
+		if ($token === '(' || $token === '[') {
 			$this->arrayDepth++;
-		} elseif ($token === ')') {
+		} elseif ($token === ')' || $token === ']') {
 			$this->arrayDepth--;
 			if ($this->arrayDepth == 0) { // end of array literal?
 				return array('action' => 'LAST_TOKEN', 'token' => 'T_PARAMETER_VALUE', 'state' => 'PARAMETERS');
