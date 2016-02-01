@@ -423,12 +423,12 @@ class Database extends \PDO {
     }
 
     /**
-     * Een MySQL dump bestand importeren
+     * Import a MySQL dump file
      *
-     * @param string $filepath De bestandsnaam inclisief path van het sql bestand
-     * @param string $error_message return de foutmelding
+     * @param string $filepath  The sql file.
+     * @param string $error_message  Contains the error message if any.
      * @param bool $strip_php_comments Bij true worden de regels met "/*" beginnen en eindingen met  "* /" genegeerd
-     * @param false|callback $progress_callback Deze callback word na elke voltooide query aangeroepen met het regelnummer als parameter.
+     * @param false|callback $progress_callback  Deze callback word na elke voltooide query aangeroepen met het regelnummer als parameter.
      * @return bool
      */
     function import($filepath, &$error_message, $strip_php_comments = false, $progress_callback = false) {
@@ -442,10 +442,7 @@ class Database extends \PDO {
             $error_message = 'File "' . $filepath . '" not found';
             return false;
         }
-        $queries = [];
         $query = '';
-        $concaternated_query = '';
-        $explode_exceptions = array('&euro', '&amp', '&eacute', '&eacute'); // Het einde van een query wordt verkeerd ge-explode bij deze waardes
         $line_nr = 0;
         while (($line = fgets($fp)) !== false) {
             $line_nr++;
@@ -458,20 +455,25 @@ class Database extends \PDO {
             }
             $pieces = explode(';', $line);
             if (count($pieces) == 1) {
-                $concaternated_query .= $line . "\n";
+                $query .= $line . "\n";
                 continue;
             }
+            $mode = false;
             foreach ($pieces as $index => $piece) {
-                $concaternated_query .= $piece;
-                // De query controleren of deze foutief is afgekapt
-                foreach ($explode_exceptions as $tag) {
-                    if (substr($concaternated_query, 1 - strlen($tag)) == $tag) {
-                        $concaternated_query .= $piece . ';';
-                        continue 2; // volgende piece
+                $query .= $piece;
+                if (!$mode) {
+                    $mode = strcasecmp(substr(ltrim($query), 0, 6), 'INSERT') === 0 ? 'INSERT': 'OTHER';
+                }
+                if ($mode === 'INSERT') {
+                    if (substr(rtrim($query), -1) !== ')') { // Assume the INSERT INTO statement end with ")" and ignore all ";" inside values
+                        if ($index !== count($pieces) - 1) {
+                            $query .= ';';
+                        }
+                        continue;
                     }
                 }
-                if ($concaternated_query != '') {
-                    if (!$this->query($concaternated_query)) {
+                if ($query != '') {
+                    if (!$this->query($query)) {
                         $error_message = 'Invalid SQL statement in "' . $filepath . '" on line ' . $line_nr;
                         fclose($fp);
                         return false;
@@ -479,14 +481,18 @@ class Database extends \PDO {
                     if ($progress_callback) {
                         call_user_func($progress_callback, $line_nr);
                     }
-                    $concaternated_query = '';
+                    $query = '';
+                    $mode = false;
                 }
+            }
+            if ($query != '') {
+                $query .= "\n";
             }
         }
         fclose($fp);
-        $concaternated_query = trim($concaternated_query);
-        if ($concaternated_query != '') {
-            if (!$this->query($concaternated_query)) {
+        $query = trim($query);
+        if ($query != '') {
+            if (!$this->query($query)) {
                 $error_message = 'Invalid SQL statement in "' . $filepath . '" on line ' . $line_nr;
                 return false;
             }

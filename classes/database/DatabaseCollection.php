@@ -339,7 +339,7 @@ class DatabaseCollection extends Collection {
                     return 0;
                 }
             }
-            if ($count < $this->sql->limit) {
+            if ($this->sql->limit !== false && $count > $this->sql->limit) {
                 $count = $this->sql->limit;
             }
             return $count;
