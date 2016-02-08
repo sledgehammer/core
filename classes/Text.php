@@ -108,10 +108,13 @@ class Text extends Object implements \ArrayAccess {
      * Removes all leading white-space characters from the current text.
      * @link http://php.net/manual/en/function.ltrim.php
      *
-     * @param $charlist  (optional) The stripped characters can also be specified. list the characters that you want to be stripped.
+     * @param array $charlist  (optional) The stripped characters can also be specified. list the characters that you want to be stripped.
      * @return Text
      */
     function trimStart($charlist = null) {
+        if ($charlist === null) {
+            return new Text(ltrim($this->text), 'UTF-8');
+        }
         return new Text(ltrim($this->text, $charlist), 'UTF-8');
     }
 
@@ -119,10 +122,13 @@ class Text extends Object implements \ArrayAccess {
      * Removes all trailing occurrences white-space characters from the current text.
      * @link http://php.net/manual/en/function.rtrim.php
      *
-     * @param $charlist  (optional) The stripped characters can also be specified. list the characters that you want to be stripped.
+     * @param array $charlist  (optional) The stripped characters can also be specified. list the characters that you want to be stripped.
      * @return Text
      */
     function trimEnd($charlist = null) {
+        if ($charlist === null) {
+            return new Text(rtrim($this->text), 'UTF-8');
+        }
         return new Text(rtrim($this->text, $charlist), 'UTF-8');
     }
 
