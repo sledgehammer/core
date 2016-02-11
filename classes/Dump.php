@@ -58,7 +58,7 @@ class Dump extends Object {
      * @link https://github.com/ChrisKempson/Tomorrow-Theme
      * @var array
      */
-    private static $colors = array(
+    private static $colors = [
         'background' => '#1d1f21',
         'foreground' => '#c5c8c6', // lightgray:  [, {, ( and ,
         'current' => '#282a2e', // darkgray
@@ -73,7 +73,7 @@ class Dump extends Object {
         'symbol' => '#de935f', // Orange: true, null
         'comment' => '#969896', // Gray
         'operator' => '#8abeb7', // Agua: +, ->
-    );
+    ];
 
     /**
      * Constructor
@@ -87,26 +87,26 @@ class Dump extends Object {
         if (isset($backtrace[0]['file']) && basename($backtrace[0]['file']) == 'functions.php' && isset($backtrace[1]['function']) && ($backtrace[1]['function'] === 'Sledgehammer\dump' || $backtrace[1]['function'] === 'Sledgehammer\debugr')) {
             if (isset($backtrace[1]['file']) && basename($backtrace[1]['file']) == 'helpers.php' && isset($backtrace[2]['function']) && ($backtrace[2]['function'] === 'dump' || $backtrace[2]['function'] === 'debugr')) {
                 // Call via the dump or debugr function
-                $this->trace = array(
+                $this->trace = [
                     'invocation' => $backtrace[2]['function'],
                     'file' => $backtrace[2]['file'],
                     'line' => $backtrace[2]['line'],
-                );
+                ];
             } else {
                 // Call via the Sledgehammer\dump or Sledgehammer\debugr function
-                $this->trace = array(
+                $this->trace = [
                     'invocation' => $backtrace[1]['function'],
                     'file' => $backtrace[1]['file'],
                     'line' => $backtrace[1]['line'],
-                );
+                ];
             }
         } else {
             // Via constructing this Dump object.
-            $this->trace = array(
+            $this->trace = [
                 'invocation' => 'new ' . __CLASS__,
                 'file' => $backtrace[0]['file'],
                 'line' => $backtrace[0]['line'],
-            );
+            ];
             if (array_value($backtrace[0], 'class') === 'Sledgehammer\DebugR') {
                 $this->trace['invocation'] = 'DebugR::dump';
             }
@@ -122,11 +122,11 @@ class Dump extends Object {
         if (self::$xdebug === null) {
             // Detect xdebug 2.2 output
             ob_start();
-            var_dump(array('' => null));
+            var_dump(['' => null]);
             self::$xdebug = (strpos(ob_get_clean(), "'' =>") !== false);
         }
         $this->renderTrace();
-        $style = array(
+        $style = [
             'margin: 0 5px 18px 5px',
             'padding: 10px 15px 15px 15px',
             'line-height: 14px',
@@ -142,7 +142,7 @@ class Dump extends Object {
             'text-align: left',
             'box-shadow: none',
             'border: none',
-        );
+        ];
         $id = uniqid('dump');
         echo "<pre id=\"" . $id . "\" style=\"" . implode(';', $style) . "\">\n";
 
@@ -300,7 +300,6 @@ class Dump extends Object {
                 return;
 
             case 'array':
-                $this->renderType('method', 'array');
                 if (self::$xdebug) {
                     if ($this->part(3, $this->position("{\n") + (($indentationLevel + 1) * 2) + 2) === '...') { // Start the next line with "..."
                         echo '( &hellip; )';
@@ -310,16 +309,16 @@ class Dump extends Object {
                 }
                 if ($length == 0) {
                     $this->offset += $this->position("}") + 1; // "}"
-                    echo '()';
+                    echo '[]';
                     return;
                 }
-                echo "(<span data-dump=\"container\">\n";
+                echo "<span>[</span><span data-dump=\"container\">\n";
                 if ($length !== -1) {
                     $this->offset += $this->position("{\n") + 2;
                 }
                 $this->parseArrayContents($length, $indentationLevel + 1);
                 $this->renderIndent($indentationLevel);
-                echo "</span>)";
+                echo "</span>]";
                 $this->assertIndentation($indentationLevel);
                 $this->offset += ($indentationLevel * 2) + 1; // "}"
                 return;
@@ -464,14 +463,14 @@ class Dump extends Object {
         if ($level == 0) {
             return;
         }
-        throw new InfoException('Invalid indentation at offset ' . $this->offset . ', Expecting "' . str_repeat(' ', $level * 2) . '", got "' . $this->part(($level * 2) + 1) . '"', array('Near' => $this->part(100)));
+        throw new InfoException('Invalid indentation at offset ' . $this->offset . ', Expecting "' . str_repeat(' ', $level * 2) . '", got "' . $this->part(($level * 2) + 1) . '"', ['Near' => $this->part(100)]);
     }
 
     /**
      * Resolves the variablename and renders the "dump($x) in filename.php on line X" line.
      */
     private function renderTrace() {
-        $style = array(
+        $style = [
             'font: 13px/22px \'Helvetica Neue\', Helvetica, sans-serif',
             'border-radius: 4px 4px 0 0',
             'background-color: ' . self::$colors['current'],
@@ -480,7 +479,7 @@ class Dump extends Object {
             'color: ' . self::$colors['foreground'],
             // reset styling
             'text-shadow: none',
-        );
+        ];
         echo "<div style=\"" . implode(';', $style) . "\">";
         if (self::$xdebug) {
             echo '<span style="float:right;color:' . self::$colors['comment'] . '" title="Add \'xdebug.overload_var_dump = Off\' to php.ini for complete output.">Limited by xdebug</span>';
@@ -575,7 +574,7 @@ class Dump extends Object {
                 }
                 return;
             } else {
-                throw new InfoException('Invalid attribute', array('attribute' => $attribute));
+                throw new InfoException('Invalid attribute', ['attribute' => $attribute]);
             }
         }
         $parts = explode(':', $attribute);
