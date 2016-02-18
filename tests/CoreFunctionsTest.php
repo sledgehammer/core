@@ -14,10 +14,22 @@ class CoreFunctionsTest extends TestCase {
 
     function test_value_function() {
         $bestaat = 'Wel';
-        $this->assertEquals(value($bestaat), $bestaat, 'value($var) heeft de waarde van $var terug');
+        $this->assertEquals(value($bestaat), $bestaat, 'value($var) geeft de waarde van $var terug');
         $this->assertEquals(value($bestaatNiet), null, 'value() op een niet bestaande $var geeft null terug');
         // Kon ik dit maar voorkomen....
         $this->assertTrue(array_key_exists('bestaatNiet', get_defined_vars()), 'Na de value() bestaat de var $bestaatNiet en heeft de waarde null');
+    }
+
+    function test_value_array_function() {
+        $array = [
+            'bestaat' => 'Wel'
+        ];
+        $array['nested'] = &$array;
+        $this->assertEquals('Wel', array_value($array, 'bestaat'), 'array_value($var, "key") geeft de waarde van $var["key"] terug');
+        $this->assertEquals(null, array_value($array, 'bestaatNiet'), 'array_value() op een niet bestaande index geeft null terug');
+        $this->assertEquals(null, array_value($array, 'bestaat', 'niet'), 'array_value() met een index  geeft null terug');
+        $this->assertEquals('Wel', array_value($array, 'nested', 'nested', 'bestaat'), 'array_value($var, "key1", "key1") heeft de waarde van $var["key1"]["key2] terug');
+        $this->assertEquals(null, array_value($array, 'nested', 'nested', 'bestaatNiet'));
     }
 
     function test_compare() {

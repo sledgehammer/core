@@ -130,6 +130,7 @@
 	text-align: left;
 }
 
+.statusbar span:hover > .statusbar-popout,
 .statusbar *:hover > .statusbar-popout {
 	display: block;
 	bottom: 19px;

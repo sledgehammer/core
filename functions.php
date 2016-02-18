@@ -138,26 +138,45 @@ namespace Sledgehammer {
 	/**
 	 * Return the value of the array element or return null if element doesn't exist. (Prevents "Undefined index" notices)
 	 *
-	 * Example:
+	 * Example 1:
 	 *   if (array_value($_GET, 'foo') == 'bar') {
 	 * instead of
 	 *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
 	 *
+	 * Example 2:
+	 *   if (array_value($_GET, 'foo', 'bar') == 'baz') {
+	 * instead of
+	 *   if (isset($_GET['foo']) && isset($_GET['foo']['bar']) && $_GET['foo']['bar'] == 'baz') {
+	 *
 	 * @param array $array
 	 * @param string $key
+	 * @param string ...
 	 * @return mixed
 	 */
 	function array_value($array, $key) {
-		if (is_string($key) === false && is_int($key) === false) {
-			notice('Unexpected type: "'.gettype($key).'" for paremeter $key, expecting a int or string');
-			return;
+
+		foreach (func_get_args() as $i => $key) {
+			if ($i === 0) {
+				if (isset($array) === false) {
+					return;
+				}
+				$container = $array;
+				continue;
+			}
+			if (is_string($key) === false && is_int($key) === false) {
+				notice('Unexpected type: "'.gettype($key).'" for parameter $key, expecting an int or string');
+				return;
+			}
+			if (is_array($container) == false) {
+				return;
+			}
+			if (array_key_exists($key, $container) == false) {
+				return;
+			}
+			$container =  $container[$key];
 		}
-		if (is_array($array) == false) {
-			return;
-		}
-		if (array_key_exists($key, $array)) {
-			return $array[$key];
-		}
+		return $container;
+
 	}
 
 	/**

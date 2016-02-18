@@ -63,7 +63,7 @@ if (function_exists('value') === false) {
 if (function_exists('array_value') === false) {
 
 	/**
-	 * Return the value of the array element or return null if element doesn't exist. (Prevents "Undefined index" notices)
+	 * Return the value of the array element or return null if the element doesn't exist. (Prevents "Undefined index" notices)
 	 *
 	 * Example:
 	 *   if (array_value($_GET, 'foo') == 'bar') {
@@ -75,9 +75,8 @@ if (function_exists('array_value') === false) {
 	 * @return mixed
 	 */
 	function array_value($array, $key) {
-		return Sledgehammer\array_value($array, $key);
+		return call_user_func_array('Sledgehammer\array_value', func_get_args());
 	}
-
 }
 
 if (function_exists('error') === false) {
