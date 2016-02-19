@@ -1,19 +1,17 @@
 <?php
 
-/**
- * SqlTests
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use Sledgehammer\Core\Database\Sql;
+use function Sledgehammer\select;
 
 /**
  * Unittest for the Sql query generator.
- *
- * @package Core
  */
-class SqlTest extends TestCase {
-
-    function test_method_chaining() {
+class SqlTest extends TestCase
+{
+    public function test_method_chaining()
+    {
         $sql = select('c.id')
                 ->from('customers AS c')
                 ->innerJoin('orders', 'c.id = customer_id')
@@ -23,7 +21,8 @@ class SqlTest extends TestCase {
         $this->assertEquals((string) $sql, 'SELECT c.id, o.amount FROM customers AS c INNER JOIN orders ON (c.id = customer_id) WHERE c.id = 1 AND orders.id = 1');
     }
 
-    function test_property_api() {
+    public function test_property_api()
+    {
         // Creating a structured SQL (Makes adding manipulation the query incode easy)
         $sql = new Sql();
         $sql->columns = array('*');
@@ -44,7 +43,8 @@ class SqlTest extends TestCase {
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE id = 1');
     }
 
-    function test_nested_conditions() {
+    public function test_nested_conditions()
+    {
         $sql = select('*')->from('customers')->where(array('OR', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 OR (special = 1 AND age < 12)');
 
@@ -72,13 +72,10 @@ class SqlTest extends TestCase {
                     array('OR'), // nodes with only a logical operator are skipped.
                     array('g = 7'), // nodes without logical operator, but containing only 1 condition are treated as a that condition.
                     array('OR', 'h = 8'), // nodes with only 1 condition are treated as a that condition. The swap between AND -> OR doesn't cause ()
-                    array('OR', 'i = 9', 'j = 10')
-                )
-            )
+                    array('OR', 'i = 9', 'j = 10'),
+                ),
+            ),
         );
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE a = 1 OR b = 2 OR c = 3 OR (d = 4 AND e = 5 AND f = 6 AND g = 7 AND h = 8 AND (i = 9 OR j = 10))');
     }
-
 }
-
-?>

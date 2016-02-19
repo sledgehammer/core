@@ -1,30 +1,29 @@
 <?php
 
-/**
- * CurlTests
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use Exception;
+use Sledgehammer\Core\Curl;
+use const Sledgehammer\TMP_DIR;
 
-/**
- * @package Core
- */
-class CurlTest extends TestCase {
-
+class CurlTest extends TestCase
+{
     // @todo Test version >= 7.19.4 (which has CURLOPT_REDIR_PROTOCOLS)
 
-    function test_single_get() {
+    public function test_single_get()
+    {
         $this->assertEmptyPool();
         $response = Curl::get('http://www.bfanger.nl/');
         $this->assertEquals($response->http_code, 200);
         $this->assertEquals($response->effective_url, 'https://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
     }
 
-    function test_async() {
+    public function test_async()
+    {
         $this->assertEmptyPool();
         $response = Curl::get('http://bfanger.nl/');
         $this->assertFalse($response->isComplete());
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 50; ++$i) {
             usleep(10000);
             $complete = $response->isComplete();
             if ($complete) {
@@ -34,7 +33,8 @@ class CurlTest extends TestCase {
         $this->assertTrue($complete);
     }
 
-    function test_paralell_get() {
+    public function test_paralell_get()
+    {
         $this->assertEmptyPool();
         $response = Curl::get('http://bfanger.nl/');
         $paralell = Curl::get('http://bfanger.nl/');
@@ -44,24 +44,26 @@ class CurlTest extends TestCase {
         $this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel requests are faster');
     }
 
-    function test_exception_on_error() {
+    public function test_exception_on_error()
+    {
         $this->assertEmptyPool();
         $response = Curl::get('noprotocol://bfanger.nl/');
         try {
             $response->getContent();
             $this->fail('Requests to an invalid protocol should throw an exception');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertTrue(true, 'Requests to an invalid protocol should throw an exception');
         }
         try {
             $response->getInfo();
             $this->fail('Retrieving info on a failed tranfer should throw an exception');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertTrue(true, 'Retrieving info on a failed tranfer should throw an exception');
         }
     }
 
-    function test_events() {
+    public function test_events()
+    {
         $this->assertEmptyPool();
         $response = Curl::get('http://bfanger.nl/');
         $output = false;
@@ -73,7 +75,8 @@ class CurlTest extends TestCase {
         $this->assertEquals($output, 200);
     }
 
-    function test_curl_debugging() {
+    public function test_curl_debugging()
+    {
         $this->assertEmptyPool();
         $fp = fopen('php://memory', 'w+');
         $options = array(
@@ -90,29 +93,29 @@ class CurlTest extends TestCase {
         $this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
     }
 
-    function test_paralell_download() {
+    public function test_paralell_download()
+    {
         $this->assertEmptyPool();
-        for ($i = 0; $i < 2; $i++) {
-            Curl::download('http://bfanger.nl/', TMP_DIR . 'curltest' . $i . '.downoad', [], true);
+        for ($i = 0; $i < 2; ++$i) {
+            Curl::download('http://bfanger.nl/', TMP_DIR.'curltest'.$i.'.downoad', [], true);
         }
         Curl::synchronize();
         $this->assertEmptyPool();
-        for ($i = 0; $i < 2; $i++) {
-            unlink(TMP_DIR . 'curltest' . $i . '.downoad');
+        for ($i = 0; $i < 2; ++$i) {
+            unlink(TMP_DIR.'curltest'.$i.'.downoad');
         }
     }
 
-    function test_put() {
-        $filename = TMP_DIR . basename(__CLASS__) . '.txt';
+    public function test_put()
+    {
+        $filename = TMP_DIR.basename(__CLASS__).'.txt';
         file_put_contents($filename, 'Curl TEST');
         $request = Curl::putFile('http://bfanger.nl/', $filename);
         $this->assertEquals(200, $request->http_code);
     }
 
-    private function assertEmptyPool() {
+    private function assertEmptyPool()
+    {
         $this->assertFalse(isset(Curl::$requests) && count(Curl::$requests) > 0, 'Global cURL pool should be emtpy');
     }
-
 }
-
-?>

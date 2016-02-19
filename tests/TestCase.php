@@ -1,26 +1,21 @@
 <?php
 
-/**
- * TestCase
- */
-
-namespace Sledgehammer;
+namespace SledgehammerTests\Core;
 
 /**
  * A PHPUnit TestCase.
- *
- * @package Core
  */
-abstract class TestCase extends \PHPUnit_Framework_TestCase {
-
+abstract class TestCase extends \PHPUnit_Framework_TestCase
+{
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string $name
-     * @param array $data
+     * @param array  $data
      * @param string $dataName
      */
-    function __construct($name = null, array $data = [], $dataName = '') {
+    public function __construct($name = null, array $data = [], $dataName = '')
+    {
         parent::__construct($name, $data, $dataName);
     }
 
@@ -28,13 +23,12 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase {
      * Trigger an exception instead of a fatal error when using a invalid assert method.
      *
      * @param string $method
-     * @param array $arguments
+     * @param array  $arguments
+     *
      * @throws \BadMethodCallException
      */
-    function __call($method, $arguments) {
-        throw new \BadMethodCallException('Method: PHPUnit_Framework_TestCase->' . $method . '() doesn\'t exist');
+    public function __call($method, $arguments)
+    {
+        throw new \BadMethodCallException('Method: PHPUnit_Framework_TestCase->'.$method.'() doesn\'t exist');
     }
-
 }
-
-?>

@@ -1,18 +1,18 @@
 <?php
 
+namespace SledgehammerTests\Core;
+
+use function Sledgehammer\array_value;
+use function Sledgehammer\compare;
+use function Sledgehammer\value;
+
 /**
- * CoreFunctionsTest
+ * Unittest for the global Sledgehammer functions.
  */
-
-namespace Sledgehammer;
-
-/**
- * Unittest for globale Sledgehammer functions
- * @package Core
- */
-class CoreFunctionsTest extends TestCase {
-
-    function test_value_function() {
+class CoreFunctionsTest extends TestCase
+{
+    public function test_value_function()
+    {
         $bestaat = 'Wel';
         $this->assertEquals(value($bestaat), $bestaat, 'value($var) geeft de waarde van $var terug');
         $this->assertEquals(value($bestaatNiet), null, 'value() op een niet bestaande $var geeft null terug');
@@ -20,9 +20,10 @@ class CoreFunctionsTest extends TestCase {
         $this->assertTrue(array_key_exists('bestaatNiet', get_defined_vars()), 'Na de value() bestaat de var $bestaatNiet en heeft de waarde null');
     }
 
-    function test_value_array_function() {
+    public function test_value_array_function()
+    {
         $array = [
-            'bestaat' => 'Wel'
+            'bestaat' => 'Wel',
         ];
         $array['nested'] = &$array;
         $this->assertEquals('Wel', array_value($array, 'bestaat'), 'array_value($var, "key") geeft de waarde van $var["key"] terug');
@@ -32,7 +33,8 @@ class CoreFunctionsTest extends TestCase {
         $this->assertEquals(null, array_value($array, 'nested', 'nested', 'bestaatNiet'));
     }
 
-    function test_compare() {
+    public function test_compare()
+    {
         $this->assertTrue(compare('asd', '==', 'asd'));
         $this->assertTrue(compare(2, '==', 2));
         $this->assertFalse(compare('asd', '==', 'AsD')); // But MySQL will evalutate this to true, depending on the collation
@@ -65,7 +67,4 @@ class CoreFunctionsTest extends TestCase {
         $this->assertTrue(compare('car', 'NOT LIKE', 'bar'));
         $this->assertFalse(compare('car', 'NOT LIKE', 'car'));
     }
-
 }
-
-?>

@@ -1,21 +1,19 @@
 <?php
 
-/**
- * HtmlTokenizerTest
- */
+use Sledgehammer\Core\HtmlTokenizer;
+use const Sledgehammer\PATH;
 
-namespace Sledgehammer;
+namespace SledgehammerTests\Core;
 
-/**
- * @package Core
- */
-class HtmlTokenizerTest extends TestCase {
-
-    function test_skipped() {
+class HtmlTokenizerTest extends TestCase
+{
+    public function test_skipped()
+    {
         $this->markTestSkipped('Not really unittests (No assertions on the output)');
     }
 
-    function dont_test_cdata() {
+    public function dont_test_cdata()
+    {
         $html = <<<EOD
 <html>
 <body>
@@ -32,31 +30,36 @@ EOD;
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_plainText() {
+    public function dont_test_plainText()
+    {
         $tokenizer = new HtmlTokenizer('Een plain tekst voorbeeld');
         $this->prettyPrint($tokenizer);
         $this->assertNoWarnings($tokenizer);
     }
 
-    function dont_test_link() {
+    public function dont_test_link()
+    {
         $tokens = new HtmlTokenizer('<a href="http://www.google.nl">Zoeken</a>');
         $this->prettyPrint($tokens);
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_comment() {
+    public function dont_test_comment()
+    {
         $tokens = new HtmlTokenizer('text<!-- Comment --> <!---->text');
         $this->prettyPrint($tokens);
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_before_after() {
+    public function dont_test_before_after()
+    {
         $tokens = new HtmlTokenizer('before<br />middle<a href="test.html" empty="">TEST</a>after');
         $this->prettyPrint($tokens);
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_inline_dtd() {
+    public function dont_test_inline_dtd()
+    {
         $tokens = new HtmlTokenizer('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
         $this->prettyPrint($tokens);
@@ -85,14 +88,16 @@ EOD;
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_value_delimiters() {
+    public function dont_test_value_delimiters()
+    {
         $html = '<a onclick="alert(\'Hi\')" target = _blank>';
         $tokens = new HtmlTokenizer($html);
         $this->prettyPrint($tokens);
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_evil_html() {
+    public function dont_test_evil_html()
+    {
         $html = <<<EOD
 			<div href="test" height=1 12=45 bob test=12 /watte=x ditte = 12>This is <> linked</a> this is not.
 			<?php this is een <subtag>hidden<tag> ?>
@@ -110,8 +115,9 @@ EOD;
         $this->assertNoWarnings($tokens);
     }
 
-    function dont_test_unterminated_stuff() {
-        $cacheFile = PATH . 'tmp/www.w3.org_index.html';
+    public function dont_test_unterminated_stuff()
+    {
+        $cacheFile = PATH.'tmp/www.w3.org_index.html';
         if (file_exists($cacheFile)) {
             $html = file_get_contents($cacheFile);
         } else {
@@ -141,7 +147,8 @@ EOD;
          */
     }
 
-    private function prettyPrint($tokenizer) {
+    private function prettyPrint($tokenizer)
+    {
         $errorColor = 'white:background:red';
         $colors = array(
             'T_TAG' => 'purple',
@@ -170,16 +177,14 @@ EOD;
                 echo '<span style="color:green">', htmlentities($token), '</span>';
             }
         }
-        echo "</pre>";
+        echo '</pre>';
     }
 
-    private function assertNoWarnings($tokenizer) {
+    private function assertNoWarnings($tokenizer)
+    {
         foreach ($tokenizer->warnings as $warning) {
             $this->fail($warning);
         }
         $tokenizer->warnings = [];
     }
-
 }
-
-?>

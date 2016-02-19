@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Lijst met functies gegroepeerd per module
+ * Lijst met functies gegroepeerd per module.
  */
 return array(
     'apc' => array(
@@ -840,4 +840,3 @@ return array(
         'xslt_errno',
     ),
 );
-?>

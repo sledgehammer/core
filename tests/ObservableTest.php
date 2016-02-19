@@ -1,17 +1,14 @@
 <?php
 
-/**
- * ObervableTests
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use Exception;
+use SledgehammerTests\Core\Fixtures\TestButton;
 
-/**
- * @package Core
- */
-class ObservableTest extends TestCase {
-
-    function test_button() {
+class ObservableTest extends TestCase
+{
+    public function test_button()
+    {
         $button = new TestButton();
         // Test hasEvent
         $this->assertTrue($button->hasEvent('click'));
@@ -19,13 +16,13 @@ class ObservableTest extends TestCase {
 
         try {
             $button->trigger('won_word_cup', $this);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertEquals('Event: "won_word_cup" not registered', $e->getMessage());
         }
 
         // Test onClick method
         $button->trigger('click', $this);
-        $this->assertEquals($button->lastClickedBy, 'Sledgehammer\ObservableTest');
+        $this->assertEquals($button->lastClickedBy, 'SledgehammerTests\Core\ObservableTest');
         // Test custom event via property
         $tempvar = false;
         $button->onClick = function ($sender) use (&$tempvar) {
@@ -33,7 +30,7 @@ class ObservableTest extends TestCase {
         };
         $button->click();
         $this->assertEquals($tempvar, 'custom event');
-        $this->assertEquals($button->lastClickedBy, 'Sledgehammer\TestButton');
+        $this->assertEquals($button->lastClickedBy, 'SledgehammerTests\Core\Fixtures\TestButton');
 
         $tempvar = 'reset';
         $tempvar2 = false;
@@ -60,7 +57,8 @@ class ObservableTest extends TestCase {
         $this->assertEquals($tempvar3, 'nothing happend');
     }
 
-    function test_kvo() {
+    public function test_kvo()
+    {
         $button = new TestButton();
         $this->assertEquals($button->title, 'Button1');
         $this->assertTrue($this->property_exists($button, 'title'), 'The title propertty is a normal property'); // When no events are bound to a property change
@@ -75,7 +73,7 @@ class ObservableTest extends TestCase {
         $this->assertEquals(array(
             $button,
             'Click me',
-            'Button1'
+            'Button1',
                 ), $eventArguments);
         $this->assertEquals($button->title, 'Click me', 'The property changed to the new value');
 
@@ -88,37 +86,38 @@ class ObservableTest extends TestCase {
         $button->click();
         $this->assertEquals(array(
             'clicked' => array(10, 11),
-            'lastClickedBy' => array('Sledgehammer\TestButton')
+            'lastClickedBy' => array('SledgehammerTests\Core\Fixtures\TestButton'),
                 ), $changeLog);
     }
 
-    function test_invalid_on_parameters() {
+    public function test_invalid_on_parameters()
+    {
         $button = new TestButton();
         try {
             $button->on('click', true);
             $this->fail('Invalid callback should throw an exception');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertTrue(true, 'Invalid callback should throw an exception');
         }
         try {
             $button->on('world_domination', function () {
-                
+
             });
             $this->fail('Non existing events should throw an exception');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertTrue(true, 'Non existing events should throw an exception');
         }
     }
 
-    private function property_exists($object, $property) {
+    private function property_exists($object, $property)
+    {
         if (property_exists($object, $property)) {
             // When property is unset (and doesn't exist) property_exists() still returns true
             $properties = get_object_vars($object);
+
             return array_key_exists($property, $properties);
         }
+
         return false;
     }
-
 }
-
-?>

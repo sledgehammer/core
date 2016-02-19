@@ -4,12 +4,12 @@
  * empty_application.php
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 /**
  * Generate a application skeleton, to quickstart an application
  */
-include(dirname(__FILE__) . '/../bootstrap.php');
+include(__DIR__ . '/../bootstrap.php');
 
 /**
  * A variation of file_put_contents that won't override existing files.
@@ -48,8 +48,8 @@ file_not_exist_put_contents(PATH . 'public/rewrite.php', <<<END
  * rewrite.php
  */
 define('Sledgehammer\STARTED', microtime(true));
-include(dirname(__FILE__).'/../vendor/sledgehammer/core/render_public_folders.php');
-require(dirname(__FILE__).'/../vendor/autoload.php');
+include(__DIR__.'/../vendor/sledgehammer/core/render_public_folders.php');
+require(__DIR__.'/../vendor/autoload.php');
 
 \$app = new Sledgehammer\App();
 \$app->handleRequest();
@@ -64,7 +64,7 @@ file_not_exist_put_contents(PATH . 'app/classes/App.php', <<<END
 /**
  * Example App
  */
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 class App extends Website {
 
 	/**

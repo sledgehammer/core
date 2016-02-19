@@ -1,11 +1,11 @@
 <?php
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 /**
  * Run the generate_static_library.php script from DevUtils.
  *
- * @package Core
+
  */
 class GenerateStaticAutoLoader extends Util {
 

@@ -4,13 +4,13 @@
  * Rebuild the Library database-file based on the installed modules
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
-$projectFolder = realpath(dirname(__FILE__) . '/../../../');
+$projectFolder = realpath(__DIR__ . '/../../../');
 if ($projectFolder == '') {
     trigger_error('Invalid directory structure, expection "$folder/sledgehammer/core/"', E_USER_ERROR);
 }
-require_once(dirname(__FILE__) . '/../bootstrap.php');
+require_once(__DIR__ . '/../bootstrap.php');
 
 echo "Resolving required modules...\n";
 $modules = Framework::getModules();

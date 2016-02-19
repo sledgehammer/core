@@ -5,7 +5,7 @@
  * Denk aan de "docs" & "tests" mappen van de modules.
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 echo "Cleaning modules...\n";
 require_once(__DIR__ . '/../../core/bootstrap.php');

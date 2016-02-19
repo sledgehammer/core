@@ -5,7 +5,7 @@
  *
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 class CompareEnvironments extends Util {
 

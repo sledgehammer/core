@@ -4,7 +4,7 @@
  *
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 return array(
     'flush_cache.html' => new FlushCache(),

@@ -1,20 +1,19 @@
 <?php
 
-/**
- * DatabaseCollectionTest
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use PDO;
+use Sledgehammer\Core\Database\Connection;
+use Sledgehammer\Core\Database\DatabaseCollection;
+use function Sledgehammer\select;
 
-/**
- * @package Core
- */
-class DatabaseCollectionTest extends DatabaseTestCase {
-
+class DatabaseCollectionTest extends DatabaseTestCase
+{
     protected $skipRebuildDatabase = true;
 
     /**
-     * Fixture
+     * Fixture.
+     *
      * @var array
      */
     private $fruitsAndVegetables = array(
@@ -24,18 +23,20 @@ class DatabaseCollectionTest extends DatabaseTestCase {
         array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
     );
 
-    function fillDatabase($db) {
+    public function fillDatabase($db)
+    {
         $db->query('CREATE TABLE fruits (
 			id INTEGER PRIMARY KEY,
 			name TEXT,
 			type TEXT)');
 
         foreach ($this->fruitsAndVegetables as $fruit) {
-            $db->query('INSERT INTO fruits VALUES (' . $fruit['id'] . ', ' . $db->quote($fruit['name']) . ', ' . $db->quote($fruit['type']) . ')');
+            $db->query('INSERT INTO fruits VALUES ('.$fruit['id'].', '.$db->quote($fruit['name']).', '.$db->quote($fruit['type']).')');
         }
     }
 
-    function test_where() {
+    public function test_where()
+    {
         $fruits = $this->getDatabaseCollection();
         $this->assertEquals($fruits->toArray(), $this->fruitsAndVegetables); // The contents of the database collections should identical to array based collection
         $this->assertEquals((string) $fruits->getQuery(), 'SELECT * FROM fruits');
@@ -53,11 +54,10 @@ class DatabaseCollectionTest extends DatabaseTestCase {
         $this->assertLastQuery("SELECT COUNT(*) FROM fruits WHERE name = 'pear'");
         $this->assertEquals((string) $pear->getQuery(), "SELECT * FROM fruits WHERE name = 'pear'");
 
-
         $lowIds = $this->getDatabaseCollection()->where(array('id <=' => 6));
         $this->assertQueryCount(2);
         $this->assertCount(2, $lowIds);
-        $this->assertEquals("SELECT * FROM fruits WHERE id <= 6", (string) $lowIds->getQuery());
+        $this->assertEquals('SELECT * FROM fruits WHERE id <= 6', (string) $lowIds->getQuery());
 
         $appleIsNotAVegatable = $this->getDatabaseCollection()->where(array('AND', 'name' => 'apple', 'type' => 'vegetable'));
         $this->assertCount(0, $appleIsNotAVegatable->toArray());
@@ -72,7 +72,8 @@ class DatabaseCollectionTest extends DatabaseTestCase {
         $this->assertLastQuery("SELECT * FROM fruits WHERE name LIKE 'a%'");
     }
 
-    function test_select() {
+    public function test_select()
+    {
         $fruits = $this->getDatabaseCollection();
         $onlyName = $fruits->take(1)->select('name')->toArray();
         $this->assertEquals(array('apple'), $onlyName);
@@ -105,53 +106,57 @@ class DatabaseCollectionTest extends DatabaseTestCase {
         $this->assertQueryCount(6, 'select() doesn\'t excute the generated query directly and can be reduced futher');
     }
 
-    function test_count() {
+    public function test_count()
+    {
         $collection = $this->getDatabaseCollection();
         $this->assertEquals(4, count($collection));
-        $this->assertLastQuery("SELECT COUNT(*) FROM fruits");
+        $this->assertLastQuery('SELECT COUNT(*) FROM fruits');
         $this->assertEquals(4, count($collection->toArray()));
-        $this->assertLastQuery("SELECT * FROM fruits");
+        $this->assertLastQuery('SELECT * FROM fruits');
     }
 
-    function test_escaped_where() {
+    public function test_escaped_where()
+    {
         $collection = $this->getDatabaseCollection();
         $emptyCollection = $collection->where(array('name' => "'"));
         $this->assertEquals(count($emptyCollection->toArray()), 0);
-        if ($this->getDatabase()->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        if (Connection::instance($this->dbLink)->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
             $this->assertLastQuery("SELECT * FROM fruits WHERE name = ''''");
         } else {
             $this->assertLastQuery("SELECT * FROM fruits WHERE name = '\''");
         }
-        $this->assertEquals((string) $collection->getQuery(), "SELECT * FROM fruits", 'Collection->where() does not	modify the orginal collection');
+        $this->assertEquals((string) $collection->getQuery(), 'SELECT * FROM fruits', 'Collection->where() does not	modify the orginal collection');
     }
 
-    function test_unescaped_where() {
+    public function test_unescaped_where()
+    {
         $collection = $this->getDatabaseCollection();
         $collection->setQuery($collection->getQuery()->andWhere("name LIKE 'B%'")); // Direct modification of the $collection
         $this->assertEquals(count($collection->toArray()), 1);
         $this->assertLastQuery("SELECT * FROM fruits WHERE name LIKE 'B%'");
     }
 
-    function test_min() {
+    public function test_min()
+    {
         $collection = $this->getDatabaseCollection();
         $this->assertEquals(4, $collection->min('id'));
-        $this->assertLastQuery("SELECT MIN(id) FROM fruits");
+        $this->assertLastQuery('SELECT MIN(id) FROM fruits');
     }
 
-    function test_max() {
+    public function test_max()
+    {
         $collection = $this->getDatabaseCollection();
         $this->assertEquals(7, $collection->where(array('type' => 'fruit'))->max('id'));
         $this->assertLastQuery("SELECT MAX(id) FROM fruits WHERE type = 'fruit'");
     }
 
     /**
-     * A collection containing fruit entries and a vegetable entry
+     * A collection containing fruit entries and a vegetable entry.
+     *
      * @return DatabaseCollection
      */
-    private function getDatabaseCollection() {
+    private function getDatabaseCollection()
+    {
         return new DatabaseCollection(select('*')->from('fruits'), $this->dbLink);
     }
-
 }
-
-?>

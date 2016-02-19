@@ -2,10 +2,10 @@
 
 /**
  * FlushCache
- * @package Core
+
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 /**
  * Delete the contents of the $project/tmp/ or /tmp/sledgehammer-$hash/ folder.
@@ -17,7 +17,7 @@ class FlushCache extends Util {
     }
 
     function generateContent() {
-        $script = realpath(dirname(__FILE__) . '/../flush_cache.php');
+        $script = realpath(__DIR__ . '/../flush_cache.php');
         $output = shell_exec('php ' . $script);
         $output .= '<br />';
         $output .= DevUtilsWebsite::suExec('php ' . escapeshellarg($script));

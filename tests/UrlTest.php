@@ -1,19 +1,14 @@
 <?php
+namespace SledgehammerTests\Core;
 
-/**
- * UrlTest
- */
+use Sledgehammer\Core\Url;
+use SledgehammerTests\Core\TestCase;
 
-namespace Sledgehammer;
 
-/**
- * Controleer de werking van het Url object.
- *
- * @package Core
- */
-class UrlTest extends TestCase {
-
-    function test_url_parts() {
+class UrlTest extends TestCase
+{
+    public function test_url_parts()
+    {
         $urlString = 'http://me:mypass@example.com:8080/path/file?name=value#top';
         $url = new Url($urlString);
         $this->assertEquals($url->user, 'me');
@@ -26,7 +21,8 @@ class UrlTest extends TestCase {
         $this->assertEquals($url->__toString(), $urlString, 'Generated string should contain all the parts');
     }
 
-    function test_path() {
+    public function test_path()
+    {
         // escape (invalid url)
         $url = new Url('/filename with spaces.html');
         $this->assertEquals($url->__toString(), '/filename%20with%20spaces.html');
@@ -37,7 +33,8 @@ class UrlTest extends TestCase {
         $this->assertEquals($url->__toString(), '/path%20with%20spaces.html');
     }
 
-    function test_query() {
+    public function test_query()
+    {
         // querystring notation
         $url = new Url('/');
         $url->query = 'name=value';
@@ -49,7 +46,8 @@ class UrlTest extends TestCase {
         $this->assertEquals($url->__toString(), '/?name=value');
     }
 
-    function test_folders() {
+    public function test_folders()
+    {
         $url = new Url('http://example.com');
         $this->assertEquals($url->getFolders(), [], 'The root should have no folders');
         $url->path = '/test.html';
@@ -68,7 +66,8 @@ class UrlTest extends TestCase {
         $this->assertEquals($url->getFolders(), array('folder1', 'folder2'));
     }
 
-    function test_filename() {
+    public function test_filename()
+    {
         $url = new Url('http://example.com');
         $this->assertEquals($url->getFilename(), 'index.html');
         $url->path = '/test1.html';
@@ -80,5 +79,4 @@ class UrlTest extends TestCase {
         $url->path = '/folder1/test2.html';
         $this->assertEquals($url->getFilename(), 'test2.html');
     }
-
 }

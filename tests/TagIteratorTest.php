@@ -1,22 +1,21 @@
 <?php
 
-/**
- * TagIteratorTest
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use Sledgehammer\Core\HtmlTokenizer;
+use Sledgehammer\Core\TagIterator;
+use const Sledgehammer\PATH;
 
-/**
- * @package Core
- */
-class TagIteratorTest extends TestCase {
-
-    function setUp() {
+class TagIteratorTest extends TestCase
+{
+    public function setUp()
+    {
         ini_set('display_errors', true);
         //restore_error_handler();
     }
 
-    function test_cdata() {
+    public function test_cdata()
+    {
         $this->compare('<div id="test"><![CDATA[<ignore me="ok">]]></div>', array(
             0 => array(
                 0 => '<div',
@@ -36,12 +35,14 @@ class TagIteratorTest extends TestCase {
         ));
     }
 
-    function test_plainText() {
+    public function test_plainText()
+    {
         $html = 'Een plain tekst voorbeeld';
         $this->compare($html, array($html));
     }
 
-    function test_link() {
+    public function test_link()
+    {
         $this->compare('<a href="http://www.google.nl">Zoeken</a>', array(
             0 => array(
                 0 => '<a',
@@ -61,7 +62,8 @@ class TagIteratorTest extends TestCase {
         ));
     }
 
-    function test_before_after() {
+    public function test_before_after()
+    {
         $this->compare('before<br />middle<a href="test.html">TEST</a>after', array(
             0 => 'before',
             1 => array(
@@ -90,7 +92,8 @@ class TagIteratorTest extends TestCase {
         ));
     }
 
-    function test_inline_dtd() {
+    public function test_inline_dtd()
+    {
         $html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
         $this->compare($html, array(
@@ -103,7 +106,7 @@ class TagIteratorTest extends TestCase {
                 2 => '>',
                 'html' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
-            )
+            ),
         ));
 //		$html = <<<END
 //<!DOCTYPE NEWSPAPER [
@@ -128,7 +131,8 @@ class TagIteratorTest extends TestCase {
 //		));
     }
 
-    function test_evil_html() {
+    public function test_evil_html()
+    {
         $html = <<<EOD
 			<div href="test" height=1 12=45 bob test=12 /watte=x ditte = 12>This is <> linked</a> this is not.
 			<?php this is een <subtag>hidden<tag> ?>
@@ -144,8 +148,9 @@ EOD;
         $this->compare($html, '__SKIP_OUTPUT_CHECK__');
     }
 
-    function dont_test_unterminated_stuff() {
-        $cacheFile = PATH . 'tmp/www.w3.org_index.html';
+    public function dont_test_unterminated_stuff()
+    {
+        $cacheFile = PATH.'tmp/www.w3.org_index.html';
         if (file_exists($cacheFile)) {
             $html = file_get_contents($cacheFile);
         } else {
@@ -175,7 +180,8 @@ EOD;
          */
     }
 
-    private function assertNoWarnings($tokenizer) {
+    private function assertNoWarnings($tokenizer)
+    {
         $noWarnings = true;
         foreach ($tokenizer->warnings as $warning) {
             $this->fail($warning);
@@ -186,12 +192,11 @@ EOD;
     }
 
     /**
-     *
      * @param $html
      * @param array $expectedOutput
-     * @return void
      */
-    private function compare($html, $expectedOutput) {
+    private function compare($html, $expectedOutput)
+    {
         $tags = new TagIterator($html);
         $output = iterator_to_array($tags);
         $reconstructedHtml = '';
@@ -204,7 +209,4 @@ EOD;
         }
         //$this->assertWarnings($tags, $warnings);
     }
-
 }
-
-?>

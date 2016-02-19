@@ -4,14 +4,14 @@
  * Generic deploy script for deploying sledgehammer websites to different environments
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
 if ($argc < 2) {
     echo "Usage: php core/utils/" . basename(__FILE__) . " [environment]\n\n  environment: \"development\", \"production\", etc\n";
     exit(1);
 }
 define('ENVIRONMENT', 'development');
-require_once(dirname(dirname(__FILE__)) . '/bootstrap.php');
+require_once(dirname(__DIR__) . '/bootstrap.php');
 
 if (strlen(PATH) <= 4) { // De PATH constante controleren. strlen("PATH") == 4
     error("Invalid PATH");
@@ -52,12 +52,12 @@ $argc = 1;
 unset($argv[1]);
 
 // Optimize the AutoLoader
-require (dirname(__FILE__) . '/generate_static_autoloader.php');
+require (__DIR__ . '/generate_static_autoloader.php');
 
 // Bestanden & mappen verwijderen die niet in productie nodig zijn.
-//require (dirname(__FILE__).'/cleanup_svn_export.php');
+//require (__DIR__.'/cleanup_svn_export.php');
 // Populate de public map
-$populateSuccess = require (dirname(__FILE__) . '/populate_DocumentRoot.php');
+$populateSuccess = require (__DIR__ . '/populate_DocumentRoot.php');
 
 // Herstel cli parameters
 //$argv[1] = $environment;

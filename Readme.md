@@ -1,8 +1,12 @@
 # Sledgehammer Core
 
-Sledgehammer Core facilitates the foundation of the [Sledgehammer Framework](http://github.com/sledgehammer/sledgehammer).
-
 [![Build Status](https://travis-ci.org/sledgehammer/core.png)](https://travis-ci.org/sledgehammer/core)
+
+A general purpose PHP toolkit, with a focus on debugging.
+
+- Improved error reporting with Sledgehammer\Core\Debug\ErrorHandler.
+- Improved var_dump() with dump().
+- Improved PDO compatible database connection with Sledgehammer\Core\Database\Connection.
 
 ## Resources
 
@@ -13,15 +17,9 @@ Sledgehammer Core facilitates the foundation of the [Sledgehammer Framework](htt
 
 ## Scope
 
-* Framework initialisation (+ Module detection & initialisation)
-* Debugging, error-reporting and profiling functionality.
+* Debugging, error-reporting, loggin and profiling functionality.
 * A collection of global functions (that should be included in PHP, imho)
-* 
-
-### Outside the scope
-* MVC & Helpers focussed on html generation.
-* ORM
-
+* Generic utility classes 
 
 ## Classes
 
@@ -62,9 +60,6 @@ Just `include('vendor/autoload.php');` and the Sledgehammer Framework (and other
 
 You can try the [dump](http://sledgehammer.github.com/api/function-dump.html) function: `dump($var);` to check if the installation is successful.
 
-As an added bonus, all errors, warnings and notices are now handled by the Sledgehammer ErrorHandler.
-
-
 ## Configuration
 
 If no `ENVIRONMENT` constant has been defined, Sledgehammer will look at the value of `$_SERVER['APPLICATION_ENV']`. If this isn't found either, the default fallback is "production"
@@ -73,18 +68,20 @@ You can set the `APPLICATION_ENV` by adding `SetEnv APPLICATION_ENV development`
 
 You can force an environment by defining the ENVIRONMENT constant before including "vendor/autoload.php"
 
-The errorhandler sends error reports per email to the address configured in `\Sledgehammer\Framework::$errorHandler->email`.
+## ErrorHandler
+
+Add `\Sledgehammer\Core\Debug\ErrorHandler::enable();` to allow the Sledgehammer ErrorHandler to handle the errors, warnings, notices and uncaught exceptions.
+
+The errorhandler sends error reports per email to the address configured in `ErrorHandler::instance()->email`.
 By default the emailaddress specified in `$_SERVER['SERVER_ADMIN']` is used.
 
 ### Static files
 Serve static files from modules by adding a line to your rewrite/index.php.
 ```
-include("sledgehammer/core/render_public_folders.php");
+require("vendor/sledgehammer/core/src/render_public_folders.php");
 ```
 
 ### Autoloader
 
-If your application already uses an autoloader, you can configure the AutoLoader to suppress warnings when a class isn't found.
-```
-\Sledgehammer\Framework::$autoloader->standalone = false;
-```
+The Autoloader Kicks in when the Composer Autoloader was unable to load the class.
+The Sledgehammer\Core\Autoloader tries to diagnose the issue and loads the class when it can.

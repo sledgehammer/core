@@ -3,12 +3,12 @@
 /**
  * Delete the contents of the $project/tmp/ or /tmp/sledgehammer-$hash/$user/ folder.
  *
- * @package Core
+
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
-include(dirname(__FILE__) . '/../bootstrap.php');
+include(__DIR__ . '/../bootstrap.php');
 
 $gitignoreFile = TMP_DIR . '.gitignore';
 if (file_exists($gitignoreFile)) {

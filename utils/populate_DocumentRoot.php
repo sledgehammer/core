@@ -4,9 +4,9 @@
  * De echte public/ map (apache's documentroot) vullen met de bestanden uit de diverse public/ mappen
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
-require_once(dirname(__FILE__) . '/../../core/bootstrap.php');
+require_once(__DIR__ . '/../../core/bootstrap.php');
 if ($argc > 1) {
     $targetFolders = array_slice($argv, 1);
 } else {

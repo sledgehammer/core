@@ -1,34 +1,31 @@
 <?php
 
-/**
- * WrapperTest
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use Exception;
+use Sledgehammer\Core\Readonly;
 
-/**
- * @package Core
- */
-class WrapperTest extends TestCase {
-
-    function test_readonly_array() {
+class WrapperTest extends TestCase
+{
+    public function test_readonly_array()
+    {
         $data = array(
             'greeting' => 'Hello',
             'subarray' => array('element' => 'value'),
         );
         $wrapped = new Readonly($data);
         $this->assertEquals($wrapped['greeting'], 'Hello');
-        $this->assertInstanceOf('Sledgehammer\Readonly', $wrapped['subarray']);
+        $this->assertInstanceOf(Readonly::class, $wrapped['subarray']);
 
         try {
             $wrapped['greeting'] = 'new value';
             $this->fail('Readonly should not allow a new value');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertEquals($e->getMessage(), 'The array is marked readonly');
         }
         $counter = 0;
         foreach ($wrapped as $key => $value) {
-            $counter++;
+            ++$counter;
             if ($counter == 1) {
                 $this->assertEquals($key, 'greeting');
                 $this->assertEquals($value, 'Hello');
@@ -39,7 +36,4 @@ class WrapperTest extends TestCase {
         }
         $this->assertEquals($counter, 2, '$data has 2 elements');
     }
-
 }
-
-?>

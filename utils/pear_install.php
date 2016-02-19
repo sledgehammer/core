@@ -3,15 +3,20 @@
 /**
  * Install a PEAR package into the /verdor/pear/ folder
  *
- * @package Core
+
  */
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
 
-require (dirname(__FILE__) . '/../bootstrap.php');
-Framework::$errorHandler->html = false;
-Framework::$errorHandler->cli = true;
-Framework::$autoloader->importFolder(dirname(__FILE__) . '/classes');
+use Sledgehammer\Core\Debug\Autoloader;
+use Sledgehammer\Core\Debug\ErrorHandler;
+use const Sledgehammer\PATH;
+use function Sledgehammer\notice;
+
+require (__DIR__ . '/../bootstrap.php');
+ErrorHandler::instance()->html = false;
+ErrorHandler::instance()->cli = true;
+Autoloader::instance()->importFolder(__DIR__ . '/classes');
 if ($argc < 2) {
     echo "  Usage: php " . $argv[0] . " [channel] [channel/]package[-version] ...\n ";
     echo "  Examples:\n";

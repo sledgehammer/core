@@ -1,13 +1,22 @@
 {
-	"name": "sledgehammer/core",
-	"description": "The foundation of the Sledgehammer Framework",
-	"keywords": ["sledgehammer", "framework", "core"],
-	"homepage": "http://sledgehammer.github.com/",
-	"license": "CC-BY-SA-3.0",
+    "name": "sledgehammer/core",
+    "description": "Sledgehammer - A general purpose PHP toolkit",
+    "keywords": ["sledgehammer", "toolkit", "core"],
+    "homepage": "http://sledgehammer.github.com/",
+    "license": "MIT",
+    "sledgehammer": true,
     "autoload": {
-        "files": ["bootstrap.php"]
+        "psr-4": {
+            "Sledgehammer\\Core\\": "src/Core"
+        },
+        "files": ["src/bootstrap.php"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SledgehammerTests\\Core\\": "tests"
+        }
     },
     "require": {
-		"php": ">=5.3.0"
-	}
+        "php": ">=5.6"
+    }
 }

@@ -1,6 +1,16 @@
 <?php
 
-namespace Sledgehammer;
+namespace Sledgehammer\Core;
+
+use Exception;
+use SimpleXMLElement;
+use const Sledgehammer\TMP_DIR;
+use function Sledgehammer\array_value;
+use function Sledgehammer\mkdirs;
+use function Sledgehammer\notice;
+use function Sledgehammer\quoted_human_implode;
+use function Sledgehammer\rmdir_recursive;
+use function Sledgehammer\text;
 
 /**
  * PearInstaller, installs PEAR packages into your project folder.
@@ -8,7 +18,7 @@ namespace Sledgehammer;
  * @link http://pear.php.net/manual/en/core.rest.php
  * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
  *
- * @package Core
+
  */
 class PearInstaller extends Observable {
 
@@ -79,7 +89,7 @@ class PearInstaller extends Observable {
      *
      * @param string $channel
      * @param string $category
-     * @param \SimpleXMLElement $packages
+     * @param SimpleXMLElement $packages
      */
     function registerCategory($channel, $category, $packages) {
         foreach ($packages as $package) {
@@ -160,7 +170,7 @@ class PearInstaller extends Observable {
         chdir(dirname($tarFile));
         system('tar xf ' . escapeshellarg($tarFile), $exit);
         if ($exit !== 0) {
-            throw new \Exception('Unable to untar "' . $tarFile . '"');
+            throw new Exception('Unable to untar "' . $tarFile . '"');
         }
         if (file_exists(dirname($tarFile) . '/package2.xml')) {
             $info = simplexml_load_file(dirname($tarFile) . '/package2.xml');
@@ -196,7 +206,7 @@ class PearInstaller extends Observable {
                 }
                 $target = $this->makePath($dir, $file['to']);
                 if (mkdirs(dirname($target)) == false || is_writable(dirname($target)) == false) {
-                    throw new \Exception('Target "' . $target . '" is not writable');
+                    throw new Exception('Target "' . $target . '" is not writable');
                 }
                 $source = $this->makePath($tmpFolder . $folderName . '/' . $folderName, $file['from']);
                 if (isset($file['tasks'])) {
@@ -249,8 +259,8 @@ class PearInstaller extends Observable {
      *
      * @param array $package
      * @param string $version
-     * @return \SimpleXMLElement
-     * @throws \Exception
+     * @return SimpleXMLElement
+     * @throws Exception
      */
     function findRelease($package, &$version) {
         $info = simplexml_load_file('http://' . $package['channel'] . $package['path'] . '/info.xml')->r->attributes('http://www.w3.org/1999/xlink');
@@ -258,7 +268,7 @@ class PearInstaller extends Observable {
         if (in_array($version, array('stable', 'beta', 'latest'))) {
             $version = file_get_contents($url . $version . '.txt');
             if (preg_match('/^[0-9]+/', $version) == false) {
-                throw new \Exception('Invalid version number: "' . $version . '"');
+                throw new Exception('Invalid version number: "' . $version . '"');
             }
         }
         return simplexml_load_file($url . $version . '.xml');

@@ -1,18 +1,18 @@
 <?php
 
-/**
- * PropertyPathTest
- */
+namespace SledgehammerTests\Core;
 
-namespace Sledgehammer;
+use PHPUnit_Framework_Error_Notice;
+use Sledgehammer\Core\Debug\Autoloader;
+use Sledgehammer\Core\PropertyPath;
+use Sledgehammer\Core\PropertyPath_Tester;
+use function Sledgehammer\is_closure;
 
-/**
- * @package Core
- */
-class PropertyPathTest extends TestCase {
-
-    function test_tokenizer() {
-        Framework::$autoloader->exposePrivates('Sledgehammer\PropertyPath', 'Sledgehammer\PropertyPathTester');
+class PropertyPathTest extends TestCase
+{
+    public function test_tokenizer()
+    {
+        Autoloader::instance()->exposePrivates('Sledgehammer\Core\PropertyPath', 'Sledgehammer\Core\PropertyPath_Tester');
 
         $string = PropertyPath::T_STRING;
         $dot = PropertyPath::T_DOT;
@@ -22,10 +22,10 @@ class PropertyPathTest extends TestCase {
         $parentheses = PropertyPath::T_PARENTHESES;
         $optional = PropertyPath::T_OPTIONAL;
 
-        $this->assertEquals(PropertyPathTester::tokenize('any'), array(array($string, 'any')));
-        $this->assertEquals(PropertyPathTester::tokenize('any?'), array(array($string, 'any'), array($optional, '?')));
-        $this->assertEquals(PropertyPathTester::tokenize('any1.any2'), array(array($string, 'any1'), array($dot, '.'), array($string, 'any2')));
-        $this->assertEquals(PropertyPathTester::tokenize('any->property[element]->method()'), array(
+        $this->assertEquals(PropertyPath_Tester::tokenize('any'), array(array($string, 'any')));
+        $this->assertEquals(PropertyPath_Tester::tokenize('any?'), array(array($string, 'any'), array($optional, '?')));
+        $this->assertEquals(PropertyPath_Tester::tokenize('any1.any2'), array(array($string, 'any1'), array($dot, '.'), array($string, 'any2')));
+        $this->assertEquals(PropertyPath_Tester::tokenize('any->property[element]->method()'), array(
             array($string, 'any'),
             array($arrow, '->'),
             array($string, 'property'),
@@ -38,7 +38,8 @@ class PropertyPathTest extends TestCase {
         ));
     }
 
-    function test_parse() {
+    public function test_parse()
+    {
         $any = PropertyPath::TYPE_ANY;
         $element = PropertyPath::TYPE_ELEMENT;
         $property = PropertyPath::TYPE_PROPERTY;
@@ -66,7 +67,8 @@ class PropertyPathTest extends TestCase {
         $this->assertEquals(PropertyPath::parse(123), array(array($any, '123')), 'Allow integer paths');
     }
 
-    function test_assemble() {
+    public function test_assemble()
+    {
         $path = '[element]->property';
         $this->assertEquals(PropertyPath::assemble(PropertyPath::parse($path)), $path);
         $path = 'any[element]->property';
@@ -75,32 +77,38 @@ class PropertyPathTest extends TestCase {
         $this->assertEquals(PropertyPath::assemble(PropertyPath::parse($path)), $path);
     }
 
-    function test_parser_warning_empty_path() {
+    public function test_parser_warning_empty_path()
+    {
         $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Path is empty');
         $this->assertEquals(PropertyPath::parse(''), []);
     }
 
-    function test_parser_warning_invalid_start() {
+    public function test_parser_warning_invalid_start()
+    {
         $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "." in the path');
         $this->assertEquals(PropertyPath::parse('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
     }
 
-    function test_parser_warning_invalid_chain() {
+    public function test_parser_warning_invalid_chain()
+    {
         $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
         $this->assertEquals(PropertyPath::parse('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
     }
 
-    function test_parser_warning_invalid_arrow() {
+    public function test_parser_warning_invalid_arrow()
+    {
         $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
         $this->assertEquals(PropertyPath::parse('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
     }
 
-    function test_parser_warning_unmatched_brackets() {
+    public function test_parser_warning_unmatched_brackets()
+    {
         $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path after "element"');
         $this->assertEquals(PropertyPath::parse('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
     }
 
-    function test_PropertyPath_get() {
+    public function test_PropertyPath_get()
+    {
         $array = array('id' => '1');
         $object = (object) array('id' => '2');
 
@@ -144,7 +152,7 @@ class PropertyPathTest extends TestCase {
         );
         $this->assertEquals(PropertyPath::get('[*].id', $sequence), array(1, 3, 5));
 
-        \PHPUnit_Framework_Error_Notice::$enabled = false;
+        PHPUnit_Framework_Error_Notice::$enabled = false;
         $error_log = ini_get('error_log');
         ini_set('error_log', '/dev/null');
 
@@ -160,11 +168,12 @@ class PropertyPathTest extends TestCase {
 
 //		PropertyPath::get('->id?', $array)
 //		PropertyPath::get('[id?]', $object)
-        \PHPUnit_Framework_Error_Notice::$enabled = true;
+        PHPUnit_Framework_Error_Notice::$enabled = true;
         ini_set('error_log', $error_log);
     }
 
-    function test_PropertyPath_set() {
+    public function test_PropertyPath_set()
+    {
         $array = array('id' => '1');
         $object = (object) array('id' => '2');
         PropertyPath::set('id', 3, $array);
@@ -185,29 +194,28 @@ class PropertyPathTest extends TestCase {
         $this->assertEquals($array['element']['id'], 10);
     }
 
-    function test_compile() {
+    public function test_compile()
+    {
         $closure = PropertyPath::compile('id');
         $item = array('id' => 8);
         $this->assertTrue(is_closure($closure), 'compile() should return a closure');
         $this->assertEquals(8, $closure($item));
     }
 
-    function test_map() {
+    public function test_map()
+    {
         $source = array(
             'deep' => array(
                 'nested' => 1,
             ),
-            'value' => 2
+            'value' => 2,
         );
         $target = [];
         $mapping = array(
             'dn' => 'deep.nested',
-            'meta[value]' => 'value'
+            'meta[value]' => 'value',
         );
         PropertyPath::map($source, $target, $mapping);
         $this->assertEquals(array('dn' => 1, 'meta' => array('value' => 2)), $target, '');
     }
-
 }
-
-?>
