@@ -3,7 +3,6 @@
 namespace SledgehammerTests\Core;
 
 use Sledgehammer\Core\Text;
-use function Sledgehammer\text;
 
 class TextTest extends TestCase
 {
@@ -18,10 +17,10 @@ class TextTest extends TestCase
         $this->assertEquals(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
         $this->assertEquals(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
 
-        $this->assertEquals(text($latin1, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
-        $this->assertEquals(text($utf8, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
+        $this->assertEquals(\Sledgehammer\text($latin1, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
+        $this->assertEquals(\Sledgehammer\text($utf8, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
 
-        $this->assertEquals(strlen(text($latin1, $detectOrder)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
+        $this->assertEquals(strlen(\Sledgehammer\text($latin1, $detectOrder)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
     }
 
     public function test_toUpper()
@@ -30,7 +29,7 @@ class TextTest extends TestCase
         $uppercaseItalie = html_entity_decode('ITALI&Euml;', ENT_COMPAT, 'UTF-8');
         $this->assertNotEquals(strtoupper($italie), $uppercaseItalie, 'strtoupper() doesn\'t work with UTF-8');
 
-        $text = text($italie);
+        $text = \Sledgehammer\text($italie);
         $uppercaseText = $text->toUpper();
         $this->assertEquals((string) $text, $italie, 'toUpper doesn\'t modify the text instance');
         $this->assertInstanceOf(Text::class, $uppercaseText, 'Returns a new Text instance');
@@ -41,7 +40,7 @@ class TextTest extends TestCase
     public function test_ArrayAcces()
     {
         $utf8 = $this->getString('UTF-8');
-        $text = text($utf8);
+        $text = \Sledgehammer\text($utf8);
 
         $this->assertEquals($utf8[3], 'I', 'php uses index 0 AND 1 for the copyright sign');
         $this->assertEquals($text[2], 'I', 'Text uses index 0 for the copyright sign');
@@ -49,21 +48,21 @@ class TextTest extends TestCase
 
     public function test_endsWith()
     {
-        $this->assertTrue(text('1234')->endsWith('34'));
-        $this->assertFalse(text('1234')->endsWith('12'));
+        $this->assertTrue(\Sledgehammer\text('1234')->endsWith('34'));
+        $this->assertFalse(\Sledgehammer\text('1234')->endsWith('12'));
     }
 
     public function test_startsWith()
     {
-        $this->assertTrue(text('1234')->startsWith('12'));
-        $this->assertFalse(text('1234')->startsWith('34'));
+        $this->assertTrue(\Sledgehammer\text('1234')->startsWith('12'));
+        $this->assertFalse(\Sledgehammer\text('1234')->startsWith('34'));
     }
 
     public function test_ucfirst_and_capitalize()
     {
-        $this->assertEquals(text('bob')->ucfirst(), 'Bob');
-        $this->assertEquals(text('STOP')->ucfirst(), 'STOP', 'ucfirst() should do nothing when the first chararakter already is uppercase');
-        $this->assertEquals(text('STOP')->capitalize(), 'Stop', 'capitalize() should convert the first charakter to uppercase and the rest to lowercase');
+        $this->assertEquals(\Sledgehammer\text('bob')->ucfirst(), 'Bob');
+        $this->assertEquals(\Sledgehammer\text('STOP')->ucfirst(), 'STOP', 'ucfirst() should do nothing when the first chararakter already is uppercase');
+        $this->assertEquals(\Sledgehammer\text('STOP')->capitalize(), 'Stop', 'capitalize() should convert the first charakter to uppercase and the rest to lowercase');
     }
 
     private function getString($charset)

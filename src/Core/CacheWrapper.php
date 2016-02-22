@@ -6,7 +6,6 @@ use ArrayAccess;
 use ArrayIterator;
 use Exception;
 use Iterator;
-use function Sledgehammer\cache;
 
 /**
  * Wrap an object inside a CacheWrapper to cache all method calls and properties.
@@ -47,7 +46,7 @@ class CacheWrapper extends Object implements ArrayAccess, Iterator
     {
         $path = $this->cachePath.'->'.$property;
         $object = $this->object;
-        $value = cache($path, $this->expires, function () use ($object, $property) {
+        $value = \Sledgehammer\cache($path, $this->expires, function () use ($object, $property) {
             return $object->$property;
         });
         if (is_object($value)) {
@@ -75,7 +74,7 @@ class CacheWrapper extends Object implements ArrayAccess, Iterator
         $key .= ')';
         $path = $this->cachePath.'['.PropertyPath::escape($key).']';
         $object = $this->object;
-        $value = cache($path, $this->expires, function () use ($object, $method, $arguments) {
+        $value = \Sledgehammer\cache($path, $this->expires, function () use ($object, $method, $arguments) {
             return call_user_func_array(array($object, $method), $arguments);
         });
         if (is_object($value)) {
@@ -139,7 +138,7 @@ class CacheWrapper extends Object implements ArrayAccess, Iterator
             return $this->iterator;
         }
         $object = $this->object;
-        $value = cache($this->cachePath.':Iterator', $this->expires, function () use ($object) {
+        $value = \Sledgehammer\cache($this->cachePath.':Iterator', $this->expires, function () use ($object) {
             return iterator_to_array($object);
         });
         $this->iterator = new ArrayIterator($array);

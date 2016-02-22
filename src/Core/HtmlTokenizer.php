@@ -421,7 +421,7 @@ class HtmlTokenizer extends Object implements \Iterator
                 return;
             }
             if ($this->position == $pos) {
-                warning('Empty CDATA'); // Required?
+                \Sledgehammer\warning('Empty CDATA'); // Required?
             } else {
                 $this->buildToken($pos - 1, 'T_CDATA');
             }

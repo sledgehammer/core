@@ -7,10 +7,6 @@ use Exception;
 use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\Debug\PhpAnalyzer;
 use Sledgehammer\Core\Framework;
-use const Sledgehammer\PATH;
-use function Sledgehammer\dump;
-use function Sledgehammer\file_extension;
-use function Sledgehammer\human_implode;
 
 /**
  * Scan PHP code for undefined classes.
@@ -22,7 +18,7 @@ class CodeAnalysisTest extends TestCase
 {
     public function test_definitions()
     {
-        $loader = new Autoloader(PATH);
+        $loader = new Autoloader(\Sledgehammer\PATH);
         $loader->enableCache = false;
         $modules = Framework::getModules();
         foreach ($modules as $module) {
@@ -44,8 +40,8 @@ class CodeAnalysisTest extends TestCase
             $loader->importFolder($path, $settings);
         }
         $this->assertTrue(true, 'Importing all modules should not generate any errors');
-        if (file_exists(PATH.'AutoLoader.db.php')) {
-            $php_code = substr(file_get_contents(PATH.'AutoLoader.db.php'), 5, -3); // Strip "<?php"
+        if (file_exists(\Sledgehammer\PATH.'AutoLoader.db.php')) {
+            $php_code = substr(file_get_contents(\Sledgehammer\PATH.'AutoLoader.db.php'), 5, -3); // Strip "<?php"
             $this->assertNull(eval($php_code), 'AutoLoader.db.php zou geen php fouten mogen bevatten');
             $this->assertTrue(isset($definitions), '$definitions zou gedefineerd moeten zijn');
         } else {
@@ -58,7 +54,7 @@ class CodeAnalysisTest extends TestCase
     {
         $phpAnalyzer = new PhpAnalyzer();
         $info = $phpAnalyzer->getInfo('Sledgehammer\Facebook');
-        dump($info);
+        \Sledgehammer\dump($info);
         ob_flush();
     }
 
@@ -77,8 +73,8 @@ class CodeAnalysisTest extends TestCase
                 $analyzer->open($module['path'].'functions.php');
             }
         }
-        if (file_exists(PATH.'public/rewrite.php')) {
-            $analyzer->open(PATH.'public/rewrite.php');
+        if (file_exists(\Sledgehammer\PATH.'public/rewrite.php')) {
+            $analyzer->open(\Sledgehammer\PATH.'public/rewrite.php');
         }
         $definitionCount = 0;
         $passes = [];
@@ -129,8 +125,8 @@ class CodeAnalysisTest extends TestCase
 
     public function donttest_entire_codebase()
     {
-        $loader = new Autoloader(PATH);
-        $loader->importFolder(PATH, array(
+        $loader = new Autoloader(\Sledgehammer\PATH);
+        $loader->importFolder(\Sledgehammer\PATH, array(
             'matching_filename' => false,
             'mandatory_definition' => false,
             'mandatory_superclass' => false,
@@ -139,7 +135,7 @@ class CodeAnalysisTest extends TestCase
         )); // Import all
         //
         $analyzer = new PhpAnalyzer();
-        $this->analyzeDirectory($analyzer, PATH);
+        $this->analyzeDirectory($analyzer, \Sledgehammer\PATH);
         // Check all used definitions
         $failed = false;
         foreach (array_keys($analyzer->usedDefinitions) as $definition) {
@@ -163,12 +159,12 @@ class CodeAnalysisTest extends TestCase
                 $this->analyzeDirectory($analyzer, $entry->getPathname());
                 continue;
             }
-            $ext = file_extension($entry->getFilename());
+            $ext = \Sledgehammer\file_extension($entry->getFilename());
             if (in_array($ext, array('php'))) {
                 try {
                     $analyzer->open($entry->getPathname());
                 } catch (Exception $e) {
-                    //					report_exception($e);
+                    //					\Sledgehammer\report_exception($e);
                     $this->fail($e->getMessage());
                 }
             }
@@ -197,7 +193,7 @@ class CodeAnalysisTest extends TestCase
                 if (count($lines) == 1) {
                     $suffix .= ' '.$lines[0];
                 } else {
-                    $suffix .= 's '.human_implode(' and ', $lines);
+                    $suffix .= 's '.\Sledgehammer\human_implode(' and ', $lines);
                 }
             }
             $suffix .= ')';

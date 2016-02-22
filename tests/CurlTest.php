@@ -4,7 +4,6 @@ namespace SledgehammerTests\Core;
 
 use Exception;
 use Sledgehammer\Core\Curl;
-use const Sledgehammer\TMP_DIR;
 
 class CurlTest extends TestCase
 {
@@ -97,18 +96,18 @@ class CurlTest extends TestCase
     {
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            Curl::download('http://bfanger.nl/', TMP_DIR.'curltest'.$i.'.downoad', [], true);
+            Curl::download('http://bfanger.nl/', \Sledgehammer\TMP_DIR.'curltest'.$i.'.downoad', [], true);
         }
         Curl::synchronize();
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            unlink(TMP_DIR.'curltest'.$i.'.downoad');
+            unlink(\Sledgehammer\TMP_DIR.'curltest'.$i.'.downoad');
         }
     }
 
     public function test_put()
     {
-        $filename = TMP_DIR.basename(__CLASS__).'.txt';
+        $filename = \Sledgehammer\TMP_DIR.basename(__CLASS__).'.txt';
         file_put_contents($filename, 'Curl TEST');
         $request = Curl::putFile('http://bfanger.nl/', $filename);
         $this->assertEquals(200, $request->http_code);

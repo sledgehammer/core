@@ -81,7 +81,7 @@ class Html extends Object
                 if (preg_match('/^[a-z\\-_:]+$/i', $value)) {
                     $element->html .= ' '.strtolower($value);
                 } else {
-                    notice('Invalid attribute: '.$key, $value);
+                    \Sledgehammer\notice('Invalid attribute: '.$key, $value);
                 }
             } elseif (is_bool($value)) {
                 if ($value) {
@@ -134,7 +134,7 @@ class Html extends Object
             return self::element('span', array('class' => 'glyphicon glyphicon-'.$icon));
         }
         if (preg_match('/^http[s]|^\/|^[.]{1,2}\//', $icon) === 0) { // relative url?
-            $icon = WEBROOT.$icon;
+            $icon = \Sledgehammer\WEBROOT.$icon;
         }
 
         return self::element('img', array('src' => $icon, 'class' => 'icon', 'alt' => ''));

@@ -5,8 +5,6 @@ namespace SledgehammerTests\Core;
 use Exception;
 use PDO;
 use Sledgehammer\Core\Database\Connection;
-use const Sledgehammer\ENVIRONMENT;
-use function Sledgehammer\dump;
 
 /**
  * Add database specific assertions to the TestCase class.
@@ -62,7 +60,7 @@ abstract class DatabaseTestCase extends TestCase
             Connection::$instances['default'] = 'INVALID';
         }
 
-        if (ENVIRONMENT !== 'phpunit') {
+        if (\Sledgehammer\ENVIRONMENT !== 'phpunit') {
             return;
         }
 
@@ -107,8 +105,8 @@ abstract class DatabaseTestCase extends TestCase
      */
     public function getTests()
     {
-        if (ENVIRONMENT !== 'phpunit') {
-            $this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
+        if (\Sledgehammer\ENVIRONMENT !== 'phpunit') {
+            $this->fail('Skipping DatabaseTestCases tests in "'.\Sledgehammer\ENVIRONMENT.'"');
 
             return [];
         }
@@ -168,7 +166,7 @@ abstract class DatabaseTestCase extends TestCase
             }
         }
         if ($this->debug) {
-            dump($queries);
+            \Sledgehammer\dump($queries);
         }
         $this->fail($message);
     }

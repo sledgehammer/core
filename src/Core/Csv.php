@@ -4,7 +4,6 @@ namespace Sledgehammer\Core;
 
 use Exception;
 use Iterator;
-use const Sledgehammer\PATH;
 
 /**
  * Een generieke snelle manier om een csv bestand in te lezen.
@@ -214,8 +213,8 @@ class Csv extends Object implements Iterator
                 if (isset($row[$index])) { // Is er voor deze kolom een waarde?
                     $this->values[$key] = $row[$index];
                 } else {
-                    $filename = (strpos($this->filename, PATH) === 0) ? substr($this->filename, strlen(PATH)) : $this->filename; // Waar mogelijk het PATH er van af halen
-                    notice('Row too short, missing column #'.($index + 1).': "'.$this->keys[$index].'" in '.$filename.' on line '.($this->index + 2), $row); // @todo Calculate line offset compared to the index ()
+                    $filename = (strpos($this->filename, \Sledgehammer\PATH) === 0) ? substr($this->filename, strlen(\Sledgehammer\PATH)) : $this->filename; // Waar mogelijk het PATH er van af halen
+                    \Sledgehammer\notice('Row too short, missing column #'.($index + 1).': "'.$this->keys[$index].'" in '.$filename.' on line '.($this->index + 2), $row); // @todo Calculate line offset compared to the index ()
                 }
             }
         } else {

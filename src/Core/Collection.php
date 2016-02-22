@@ -13,14 +13,6 @@ use Countable;
 use Exception;
 use Iterator;
 use IteratorAggregate;
-use const Sledgehammer\COMPARE_OPERATORS;
-use const Sledgehammer\SORT_NATURAL_CI;
-use function Sledgehammer\compare;
-use function Sledgehammer\equals;
-use function Sledgehammer\extract_logical_operator;
-use function Sledgehammer\is_closure;
-use function Sledgehammer\is_indexed;
-use function Sledgehammer\notice;
 
 /**
  * Collection: Array on Steriods
@@ -71,7 +63,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      */
     public function select($selector, $selectKey = false)
     {
-        if (is_closure($selector)) {
+        if (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } elseif (is_array($selector)) {
             $closure = function ($item) use ($selector) {
@@ -119,7 +111,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
             }
 
             return new self($items);
-        } elseif (is_closure($selector)) {
+        } elseif (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } else {
             $closure = PropertyPath::compile($selector);
@@ -143,9 +135,9 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      * where(array('id IN' => array(2, 3, 5)))  returns the items where the property 'id' is 2, 3 or 5
      * where(function ($item) { return (strpos($item, 'needle') !== false); })  return the items which contain the text 'needle'
      *
-     * @see PropertyPath::get() & compare() for supported paths and operators
+     * @see PropertyPath::get() & \Sledgehammer\compare() for supported paths and operators
      *
-     * NOTE: The Collection class uses Sledgehammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
+     * NOTE: The Collection class uses \Sledgehammer\compare() for matching while the DatabaseCollection uses the sql WHERE part.
      *       this may cause different behavior. For example "ABC" == "abc" might evalute to true in MySQL (depends on the chosen collation)
      *
      * @param mixed $conditions array|Closure|expression
@@ -266,7 +258,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      */
     public function max($selector = '.')
     {
-        if (is_closure($selector)) {
+        if (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } else {
             $closure = PropertyPath::compile($selector);
@@ -295,7 +287,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      */
     public function min($selector = '.')
     {
-        if (is_closure($selector)) {
+        if (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } else {
             $closure = PropertyPath::compile($selector);
@@ -324,15 +316,15 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      */
     protected function buildFilter($conditions)
     {
-        if (is_closure($conditions)) {
+        if (\Sledgehammer\is_closure($conditions)) {
             return $conditions;
         }
         if (is_array($conditions)) {
             // Create filter that checks all conditions
-            $logicalOperator = extract_logical_operator($conditions);
+            $logicalOperator = \Sledgehammer\extract_logical_operator($conditions);
             if ($logicalOperator === false) {
                 if (count($conditions) > 1) {
-                    notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
+                    \Sledgehammer\notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
                 }
                 $logicalOperator = 'AND';
             } else {
@@ -340,7 +332,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
             }
             $operators = [];
             foreach ($conditions as $path => $expectation) {
-                if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
+                if (preg_match('/^(.*) ('.\Sledgehammer\COMPARE_OPERATORS.')$/', $path, $matches)) {
                     unset($conditions[$path]);
                     $conditions[$matches[1]] = $expectation;
                     $operators[$matches[1]] = $matches[2];
@@ -355,10 +347,10 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
                         $actual = PropertyPath::get($path, $item);
                         $operator = $operators[$path];
                         if ($operator) {
-                            if (compare($actual, $operator, $expectation) === false) {
+                            if (\Sledgehammer\compare($actual, $operator, $expectation) === false) {
                                 return false;
                             }
-                        } elseif (equals($actual, $expectation) === false) {
+                        } elseif (\Sledgehammer\equals($actual, $expectation) === false) {
                             return false;
                         }
                     }
@@ -371,10 +363,10 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
                         $actual = PropertyPath::get($path, $item);
                         $operator = $operators[$path];
                         if ($operator) {
-                            if (compare($actual, $operator, $expectation) !== false) {
+                            if (\Sledgehammer\compare($actual, $operator, $expectation) !== false) {
                                 return true;
                             }
-                        } elseif (equals($actual, $expectation) !== false) {
+                        } elseif (\Sledgehammer\equals($actual, $expectation) !== false) {
                             return true;
                         }
                     }
@@ -387,7 +379,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
         }
         //'<= 5' or '10'
         // Compare the item directly with value given as $condition.
-        if (is_string($conditions) && preg_match('/^('.COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
+        if (is_string($conditions) && preg_match('/^('.\Sledgehammer\COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
             $operator = $matches[1];
             $expectation = $matches[2];
         } else {
@@ -396,7 +388,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
         }
 
         return function ($value) use ($expectation, $operator) {
-            return compare($value, $operator, $expectation);
+            return \Sledgehammer\compare($value, $operator, $expectation);
         };
     }
 
@@ -414,7 +406,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
         $items = [];
         $indexed = true;
         $counter = 0;
-        if (is_closure($selector)) {
+        if (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } else {
             $closure = PropertyPath::compile($selector);
@@ -431,7 +423,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
         // Sort the values
         if ($method === SORT_NATURAL) {
             natsort($sortOrder);
-        } elseif ($method === SORT_NATURAL_CI) {
+        } elseif ($method === \Sledgehammer\SORT_NATURAL_CI) {
             natcasesort($sortOrder);
         } else {
             asort($sortOrder, $method);
@@ -497,7 +489,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
     public function reverse()
     {
         $this->dataToArray();
-        $preserveKeys = (is_indexed($this->data) === false);
+        $preserveKeys = (\Sledgehammer\is_indexed($this->data) === false);
 
         return new self(array_reverse($this->data, $preserveKeys));
     }

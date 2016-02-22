@@ -5,9 +5,6 @@ namespace Sledgehammer\Core\Database;
 use Exception;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Object;
-use function Sledgehammer\extract_logical_operator;
-use function Sledgehammer\notice;
-use function Sledgehammer\report_exception;
 
 /**
  * Query object to mutate and generate (complex) SQL queries.
@@ -106,11 +103,11 @@ class Sql extends Object
             return $this->compose();
         } catch (Exception $e) {
             // __toString must not throw an exception
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
 
             return '';
         } catch (\Throwable $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
 
             return '';
         }
@@ -135,7 +132,7 @@ class Sql extends Object
                 $this->columns[] = $column;
             } else {
                 if (isset($sql->columns[$alias])) {
-                    notice('Overruling column(alias) "'.$alias.'"');
+                    \Sledgehammer\notice('Overruling column(alias) "'.$alias.'"');
                 }
                 $this->columns[$alias] = $column;
             }
@@ -325,7 +322,7 @@ class Sql extends Object
     {
         $sql = clone $this;
         if ($sql->where !== '') {
-            notice('Overruling where');
+            \Sledgehammer\notice('Overruling where');
         }
         $sql->where = $where;
 
@@ -344,7 +341,7 @@ class Sql extends Object
         $sql = clone $this;
         if ($sql->where === '') {
             $sql->where = array('AND', $restriction);
-        } elseif (extract_logical_operator($sql->where) === 'AND') {
+        } elseif (\Sledgehammer\extract_logical_operator($sql->where) === 'AND') {
             $sql->where[] = $restriction;
         } else {
             $sql->where = array('AND', $sql->where, $restriction);
@@ -365,7 +362,7 @@ class Sql extends Object
         $sql = clone $this;
         if ($sql->where === '') {
             $sql->where = array('OR', $restriction);
-        } elseif (extract_logical_operator($sql->where) === 'OR') {
+        } elseif (\Sledgehammer\extract_logical_operator($sql->where) === 'OR') {
             $sql->where[] = $restriction;
         } else {
             $sql->where = array('OR', $sql->where, $restriction);
@@ -550,7 +547,7 @@ class Sql extends Object
 
             return $restrictions;
         }
-        $logicalOperator = extract_logical_operator($restrictions);
+        $logicalOperator = \Sledgehammer\extract_logical_operator($restrictions);
         if ($logicalOperator === false) {
             if (count($restrictions) !== 1) {
                 throw new InfoException('where[] statements require an logical operator, Example: array("AND", "x = 1", "y = 2")', $restrictions);
@@ -576,7 +573,7 @@ class Sql extends Object
         $expressions = [];
         foreach ($restrictions as $restriction) {
             if (is_array($restriction)) { // Is het geen sql maar nog een 'restriction'?
-                $operatorSwitch = (extract_logical_operator($restriction) !== $logicalOperator); // If the subnode has the same logical operator, don't add braces. "x = 1 AND (y = 5 AND z = 8)" has same meaning as "x = 1 AND y = 5 AND z = 8"
+                $operatorSwitch = (\Sledgehammer\extract_logical_operator($restriction) !== $logicalOperator); // If the subnode has the same logical operator, don't add braces. "x = 1 AND (y = 5 AND z = 8)" has same meaning as "x = 1 AND y = 5 AND z = 8"
                 $restriction = $this->composeRestrictions($restriction, $operatorSwitch);
             }
             if ($restriction != '') { // ignore empty statements.

@@ -1,15 +1,9 @@
 <?php
+
 namespace Sledgehammer\Core;
 
 use ArrayAccess;
 use Exception;
-use Sledgehammer\Core\Framework;
-use Sledgehammer\Core\Object;
-use Sledgehammer\Core\Text;
-use function Sledgehammer\build_properties_hint;
-use function Sledgehammer\notice;
-use function Sledgehammer\reflect_properties;
-use function Sledgehammer\warning;
 
 
 /**
@@ -40,7 +34,7 @@ class Text extends Object implements ArrayAccess
         if ($text instanceof self) {
             $this->text = $text->text;
             if ($charset !== null && $charset !== 'UTF-8') {
-                notice('Invalid charset given, an Text object will alway be UTF-8 encoded');
+                \Sledgehammer\notice('Invalid charset given, an Text object will alway be UTF-8 encoded');
             }
 
             return;
@@ -50,7 +44,7 @@ class Text extends Object implements ArrayAccess
         } elseif (is_array($charset)) {
             $charset = mb_detect_encoding($text, $charset, true);
             if ($charset === false) {
-                notice('Unable to detect charset');
+                \Sledgehammer\notice('Unable to detect charset');
                 $this->text = mb_convert_encoding($text, 'UTF-8');
 
                 return;
@@ -81,9 +75,9 @@ class Text extends Object implements ArrayAccess
         if ($property == 'length') {
             return mb_strlen($this->text, 'UTF-8');
         }
-        $properties = reflect_properties($this);
+        $properties = \Sledgehammer\reflect_properties($this);
         $properties['public']['length'] = -1;
-        warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.', build_properties_hint($properties));
+        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.', \Sledgehammer\build_properties_hint($properties));
     }
 
     // Mutations

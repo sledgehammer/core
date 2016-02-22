@@ -9,10 +9,6 @@ use Sledgehammer\Core\Collection;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\PropertyPath;
 use Traversable;
-use const Sledgehammer\COMPARE_OPERATORS;
-use function Sledgehammer\array_key_unshift;
-use function Sledgehammer\extract_logical_operator;
-use function Sledgehammer\notice;
 
 /**
  * DatabaseCollection a Collection interface to a database result.
@@ -82,7 +78,7 @@ class DatabaseCollection extends Collection
         $selectorPaths = is_string($selector) ? array($selector => $selector) : $selector;
         $hasKeySelector = ($selectKey !== false && $selectKey !== null);
         if ($hasKeySelector) {
-            array_key_unshift($selectorPaths, $selectKey, $selectKey);
+            \Sledgehammer\array_key_unshift($selectorPaths, $selectKey, $selectKey);
         }
         if (count($selectorPaths) === 0) { // empty selector?
             return parent::select($selector, $selectKey);
@@ -142,10 +138,10 @@ class DatabaseCollection extends Collection
         }
         $db = Connection::instance($this->dbLink);
         $sql = $this->sql;
-        $logicalOperator = extract_logical_operator($conditions);
+        $logicalOperator = \Sledgehammer\extract_logical_operator($conditions);
         if ($logicalOperator === false) {
             if (count($conditions) > 1) {
-                notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
+                \Sledgehammer\notice('Conditions with multiple conditions require a logical operator.', "Example: array('AND', 'x' => 1, 'y' => 5)");
             }
             $logicalOperator = 'AND';
         } else {
@@ -161,7 +157,7 @@ class DatabaseCollection extends Collection
 
         // The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
         foreach ($conditions as $path => $value) {
-            if (preg_match('/^(.*) ('.COMPARE_OPERATORS.')$/', $path, $matches)) {
+            if (preg_match('/^(.*) ('.\Sledgehammer\COMPARE_OPERATORS.')$/', $path, $matches)) {
                 $column = $this->convertPathToColumn($matches[1]);
                 $operator = $matches[2];
             } else {
@@ -169,7 +165,7 @@ class DatabaseCollection extends Collection
                 $operator = '==';
             }
             if ($column === false) { // Converting to path failed?
-                array_key_unshift($conditions, 0, $logicalOperator);
+                \Sledgehammer\array_key_unshift($conditions, 0, $logicalOperator);
 
                 return parent::where($conditions);
             }
@@ -193,7 +189,7 @@ class DatabaseCollection extends Collection
                         break;
 
                     default:
-                        warning('Unknown behavior for NULL values with operator "'.$operator.'"');
+                        \Sledgehammer\warning('Unknown behavior for NULL values with operator "'.$operator.'"');
                         $expectation = $db->quote($expectation);
                         break;
                 }
@@ -203,7 +199,7 @@ class DatabaseCollection extends Collection
                     $sql = $sql->$method('('.$column.' != '.$db->quote($value, PDO::PARAM_STR).' OR '.$column.' IS NULL)');
                 } elseif ($operator === 'IN') {
                     if ((is_array($value) || $value instanceof Traversable) === false) {
-                        notice('Operator IN expects an array or Traversable', $value);
+                        \Sledgehammer\notice('Operator IN expects an array or Traversable', $value);
                         $value = explode(',', $value);
                     }
                     $quoted = [];
@@ -235,7 +231,7 @@ class DatabaseCollection extends Collection
     {
         if ($this->data === null && $method == SORT_REGULAR && is_string($selector) && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
             $sql = clone $this->sql;
-            array_key_unshift($sql->orderBy, $selector, 'ASC');
+            \Sledgehammer\array_key_unshift($sql->orderBy, $selector, 'ASC');
 
             return new self($sql, $this->dbLink);
         }
@@ -255,7 +251,7 @@ class DatabaseCollection extends Collection
     {
         if ($this->data === null && $method == SORT_REGULAR && is_string($selector) && is_string($this->sql) === false && is_array($this->sql->orderBy) && $this->sql->limit === false && $this->sql->offset == 0) {
             $sql = clone $this->sql;
-            array_key_unshift($sql->orderBy, $selector, 'DESC');
+            \Sledgehammer\array_key_unshift($sql->orderBy, $selector, 'DESC');
 
             return new self($sql, $this->dbLink);
         }

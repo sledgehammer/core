@@ -11,10 +11,6 @@ use PDOStatement;
 use Sledgehammer\Core\Debug\Logger;
 use Sledgehammer\Core\Framework;
 use Sledgehammer\Core\Url;
-use const Sledgehammer\PATH;
-use function Sledgehammer\format_parsetime;
-use function Sledgehammer\notice;
-use function Sledgehammer\warning;
 
 /**
  * A PDO Database class with additional debugging functions.
@@ -326,7 +322,7 @@ class Connection extends PDO
      */
     public function __get($property)
     {
-        warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
+        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
     }
 
     /**
@@ -337,7 +333,7 @@ class Connection extends PDO
      */
     public function __set($property, $value)
     {
-        warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
+        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
         $this->$property = $value;
     }
 
@@ -420,7 +416,7 @@ class Connection extends PDO
         if ($result == false) {  // Foutieve query
             return false;
         } elseif ($result->columnCount() == 0) { // UPDATE, INSERT query
-            warning('Resultset has no columns, expecting 1 or more columns');
+            \Sledgehammer\warning('Resultset has no columns, expecting 1 or more columns');
 
             return false;
         }
@@ -430,9 +426,9 @@ class Connection extends PDO
             return $results[0];
         }
         if (count($results) > 1) {
-            notice('Unexpected '.count($results).' rows, expecting 1 row');
+            \Sledgehammer\notice('Unexpected '.count($results).' rows, expecting 1 row');
         } elseif (!$allow_empty_results) {
-            notice('Row not found');
+            \Sledgehammer\notice('Row not found');
         }
 
         return false;
@@ -455,7 +451,7 @@ class Connection extends PDO
             return false;
         }
         if (count($row) > 1) {
-            notice('Unexpected number of columns('.count($row).'), expecting 1 column');
+            \Sledgehammer\notice('Unexpected number of columns('.count($row).'), expecting 1 column');
 
             return false;
         }
@@ -476,11 +472,11 @@ class Connection extends PDO
     public function import($filepath, &$error_message, $strip_php_comments = false, $progress_callback = false)
     {
         if ($progress_callback && !is_callable($progress_callback)) {
-            notice('Invalid $progress_callback', $progress_callback);
+            \Sledgehammer\notice('Invalid $progress_callback', $progress_callback);
             $progress_callback = false;
         }
         $fp = fopen($filepath, 'r');
-        $filepath = (strpos($filepath, PATH) === 0) ? substr($filepath, strlen(PATH)) : $filepath; // Het PATH van de $filepath afhalen zodat eventuele fouten een kort path tonen
+        $filepath = (strpos($filepath, \Sledgehammer\PATH) === 0) ? substr($filepath, strlen(\Sledgehammer\PATH)) : $filepath; // Het PATH van de $filepath afhalen zodat eventuele fouten een kort path tonen
         if (!$fp) { // Kan het bestand niet geopend worden?
             $error_message = 'File "'.$filepath.'" not found';
 
@@ -601,7 +597,7 @@ class Connection extends PDO
         } else {
             $color = 'logentry-debug';
         }
-        echo '<td class="logentry-number ', $color, '"><b>', format_parsetime($duration), '</b>&nbsp;sec</td>';
+        echo '<td class="logentry-number ', $color, '"><b>', \Sledgehammer\format_parsetime($duration), '</b>&nbsp;sec</td>';
     }
 
     /**
@@ -619,7 +615,7 @@ class Connection extends PDO
             if ($statement instanceof Sql) {
                 $info['SQL'] = (string) $statement;
             }
-            notice('SQL error ['.$error[1].'] '.$error[2], $info);
+            \Sledgehammer\notice('SQL error ['.$error[1].'] '.$error[2], $info);
         }
     }
 
@@ -646,7 +642,7 @@ class Connection extends PDO
             $this->logger->totalDuration += (microtime(true) - $start);
             if ($warnings->rowCount()) {
                 foreach ($warnings->fetchAll(PDO::FETCH_ASSOC) as $warning) {
-                    notice('SQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
+                    \Sledgehammer\notice('SQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
                 }
                 // @todo Clear warnings
                 // PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.

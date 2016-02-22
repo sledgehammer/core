@@ -6,8 +6,6 @@ use Closure;
 use Sledgehammer\Core\Html;
 use Sledgehammer\Core\Object;
 use Sledgehammer\Core\Singleton;
-use const Sledgehammer\PATH;
-use function Sledgehammer\format_parsetime;
 
 /**
  * Logging and reporting.
@@ -189,7 +187,7 @@ class Logger extends Object
             echo $this->plural;
         }
         if ($this->totalDuration !== 0) {
-            echo '&nbsp;in&nbsp;<b>', format_parsetime($this->totalDuration), '</b>&nbsp;sec';
+            echo '&nbsp;in&nbsp;<b>', \Sledgehammer\format_parsetime($this->totalDuration), '</b>&nbsp;sec';
         }
         if ($popup) {
             echo '</a></span>';
@@ -287,7 +285,7 @@ class Logger extends Object
             --$depth;
             if (isset($call['file']) && isset($call['line'])) {
                 $trace[] = array(
-                    'file' => str_replace(PATH, '', $call['file']),
+                    'file' => str_replace(\Sledgehammer\PATH, '', $call['file']),
                     'line' => $call['line'],
                 );
             }

@@ -7,16 +7,6 @@ use Sledgehammer\Core\Framework;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Object;
 use Throwable;
-use const Sledgehammer\DEBUG_VAR;
-use const Sledgehammer\ENVIRONMENT;
-use const Sledgehammer\PATH;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\array_value;
-use function Sledgehammer\browser;
-use function Sledgehammer\is_indexed;
-use function Sledgehammer\notice;
-use function Sledgehammer\syntax_highlight;
-use function Sledgehammer\value;
 
 /**
  * Improved errorhandling for php notices, warnings, errors and uncaught exceptions.
@@ -189,7 +179,7 @@ class ErrorHandler extends Object
             if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
                 self::instance()->report($exception, '__UNCAUGHT_EXCEPTION__');
             } else {
-                notice('Only the set_exception_handler() should call ErrorHandler->exceptionCallback. use report_exception()', 'Use the <b>report_exception</b>($exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report($exception) to target a specific instance.');
+                \Sledgehammer\notice('Only the set_exception_handler() should call ErrorHandler->exceptionCallback. use \Sledgehammer\report_exception()', 'Use the <b>report_exception</b>($exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report($exception) to target a specific instance.');
                 self::instance()->report($exception);
             }
         } else {
@@ -209,7 +199,7 @@ class ErrorHandler extends Object
     }
 
     /**
-     * Functie die wordt aangeroepen door de functies notice() / warning() / error() en de error handler functie.
+     * Functie die wordt aangeroepen door de functies \Sledgehammer\notice() / \Sledgehammer\warning() / error() en de error handler functie.
      *
      * @param int|Exception $type
      * @param string        $message
@@ -329,7 +319,7 @@ class ErrorHandler extends Object
         }
         echo '<div style="', implode(';', $style), '">';
         if ($showDetails) {
-            $scheme = (array_value($_SERVER, 'HTTPS') == 'on') ? 'https' : 'http';
+            $scheme = (\Sledgehammer\array_value($_SERVER, 'HTTPS') == 'on') ? 'https' : 'http';
             echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\''.$scheme.'://bfanger.nl/core/img/ErrorHandler.png\')'.$offset.'"></span>';
         }
         echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, '">';
@@ -378,7 +368,7 @@ class ErrorHandler extends Object
                 if (is_array($information)) {
                     $this->renderArray($information);
                 } elseif (is_object($information)) {
-                    echo syntax_highlight($information), ":<br />\n";
+                    echo \Sledgehammer\syntax_highlight($information), ":<br />\n";
                     $this->renderArray($information);
                 } else {
                     echo $information, "<br />\n";
@@ -545,7 +535,7 @@ class ErrorHandler extends Object
         foreach ($backtrace as $call) {
             if (isset($call['file']) && $call['file'] !== __FILE__ && $call['function'] !== 'report') {
                 return array(
-                    'file' => ((strpos($call['file'], PATH) === 0) ? substr($call['file'], strlen(PATH)) : $call['file']),
+                    'file' => ((strpos($call['file'], \Sledgehammer\PATH) === 0) ? substr($call['file'], strlen(\Sledgehammer\PATH)) : $call['file']),
                     'line' => $call['line'],
                 );
             }
@@ -657,14 +647,14 @@ class ErrorHandler extends Object
     {
         if (!$location_only) {
             if (isset($call['object'])) {
-                echo syntax_highlight($call['object'], null, 512);
-                echo syntax_highlight($call['type'], 'operator');
+                echo \Sledgehammer\syntax_highlight($call['object'], null, 512);
+                echo \Sledgehammer\syntax_highlight($call['type'], 'operator');
             } elseif (isset($call['class'])) {
-                echo syntax_highlight($call['class'], 'class');
-                echo syntax_highlight($call['type'], 'operator');
+                echo \Sledgehammer\syntax_highlight($call['class'], 'class');
+                echo \Sledgehammer\syntax_highlight($call['type'], 'operator');
             }
             if (isset($call['function'])) {
-                echo syntax_highlight($call['function'], 'method');
+                echo \Sledgehammer\syntax_highlight($call['function'], 'method');
                 $errorHandlerInvocations = array('errorCallback', 'trigger_error', 'error', 'warning', 'notice', 'deprecated', 'Sledgehammer\error', 'Sledgehammer\warning', 'Sledgehammer\notice', 'Sledgehammer\deprecated');
                 $databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli'); // prevent showing/mailing passwords in the backtrace.
                 $databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
@@ -683,9 +673,9 @@ class ErrorHandler extends Object
                             if (is_string($arg) && strlen($arg) > $this->maxStringLengthBacktrace) {
                                 $kib = round((strlen($arg) - $this->maxStringLengthBacktrace) / 1024);
                                 $arg = substr($arg, 0, $this->maxStringLengthBacktrace);
-                                echo syntax_highlight($arg), '<span style="color:red;">&hellip;', $kib, '&nbsp;KiB&nbsp;truncated</span>';
+                                echo \Sledgehammer\syntax_highlight($arg), '<span style="color:red;">&hellip;', $kib, '&nbsp;KiB&nbsp;truncated</span>';
                             } else {
-                                echo syntax_highlight($arg, null, 1024);
+                                echo \Sledgehammer\syntax_highlight($arg, null, 1024);
                             }
                         }
                     }
@@ -694,8 +684,8 @@ class ErrorHandler extends Object
             }
         }
         if (!empty($call['file'])) {
-            if (strpos($call['file'], PATH) === 0) {
-                echo ' in&nbsp;<b title="', htmlentities($call['file']), '">', substr($call['file'], strlen(PATH)), '</b>'; // De bestandnaam opvragen en filteren.
+            if (strpos($call['file'], \Sledgehammer\PATH) === 0) {
+                echo ' in&nbsp;<b title="', htmlentities($call['file']), '">', substr($call['file'], strlen(\Sledgehammer\PATH)), '</b>'; // De bestandnaam opvragen en filteren.
             } else {
                 echo ' in&nbsp;<b>', $call['file'], '</b>'; // De bestandnaam opvragen en filteren.
             }
@@ -733,11 +723,11 @@ class ErrorHandler extends Object
      */
     private function renderBrowserInfo()
     {
-        $browser = browser();
+        $browser = \Sledgehammer\browser();
         echo "<div>\n";
         echo "<b>Client information</b><br />\n";
         if (isset($_SERVER['REQUEST_URI'])) {
-            $href = (value($_SERVER['HTTPS']) == 'on') ? 'https' : 'http';
+            $href = (\Sledgehammer\value($_SERVER['HTTPS']) == 'on') ? 'https' : 'http';
             $href .= '://'.$_SERVER['SERVER_NAME'];
             if ($_SERVER['SERVER_PORT'] != 80) {
                 $href .= ':'.$_SERVER['SERVER_PORT'];
@@ -751,9 +741,9 @@ class ErrorHandler extends Object
         if (isset($_SERVER['REMOTE_ADDR'])) {
             echo '<b>IP:</b> '.$_SERVER['REMOTE_ADDR']."<br />\n";
         }
-        $browser = browser();
-        echo '<b>Browser:</b> '.$browser['name'].' '.$browser['version'].' for '.$browser['os'].' - <em>'.syntax_highlight(@$_SERVER['HTTP_USER_AGENT'])."</em><br />\n";
-        echo '<b>Cookie:</b> '.syntax_highlight(@count($_COOKIE) != 0)."<br />\n";
+        $browser = \Sledgehammer\browser();
+        echo '<b>Browser:</b> '.$browser['name'].' '.$browser['version'].' for '.$browser['os'].' - <em>'.\Sledgehammer\syntax_highlight(@$_SERVER['HTTP_USER_AGENT'])."</em><br />\n";
+        echo '<b>Cookie:</b> '.\Sledgehammer\syntax_highlight(@count($_COOKIE) != 0)."<br />\n";
         echo '</div>';
     }
 
@@ -765,7 +755,7 @@ class ErrorHandler extends Object
         echo "<div>\n";
         echo "<b>Server information</b><br />\n";
         echo '<b>Hostname:</b> ', php_uname('n'), "<br />\n";
-        echo '<b>Environment:</b> ', ENVIRONMENT, "<br />\n";
+        echo '<b>Environment:</b> ', \Sledgehammer\ENVIRONMENT, "<br />\n";
         if (isset($_SERVER['SERVER_SOFTWARE'])) {
             echo '<b>Software:</b> ', $_SERVER['SERVER_SOFTWARE'], "<br />\n";
         }
@@ -782,18 +772,18 @@ class ErrorHandler extends Object
         foreach ($array as $key => $value) {
             if (is_array($value) && count($value) != 0) {
                 echo '<b>'.$key.':</b> array('."<br />\n";
-                if (is_indexed($value)) {
+                if (\Sledgehammer\is_indexed($value)) {
                     foreach ($value as $value2) {
-                        echo '&nbsp;&nbsp;', syntax_highlight($value2), "<br />\n";
+                        echo '&nbsp;&nbsp;', \Sledgehammer\syntax_highlight($value2), "<br />\n";
                     }
                 } else {
                     foreach ($value as $key2 => $value2) {
-                        echo '&nbsp;&nbsp;'.syntax_highlight($key2).' => ', syntax_highlight($value2, null, 2048), "<br />\n";
+                        echo '&nbsp;&nbsp;'.\Sledgehammer\syntax_highlight($key2).' => ', \Sledgehammer\syntax_highlight($value2, null, 2048), "<br />\n";
                     }
                 }
                 echo ")<br />\n";
             } else {
-                echo '<b>'.$key.':</b> ', syntax_highlight($value, null, 2048), "<br />\n";
+                echo '<b>'.$key.':</b> ', \Sledgehammer\syntax_highlight($value, null, 2048), "<br />\n";
             }
         }
     }
@@ -819,7 +809,7 @@ class ErrorHandler extends Object
                 return 0;
             }
         }
-        $filename = TMP_DIR.'error_handler_email_limit.txt';
+        $filename = \Sledgehammer\TMP_DIR.'error_handler_email_limit.txt';
         if (!@file_exists($filename)) {
             error_log('File "'.$filename.'" doesn\'t exist (yet)');
             // nieuwe voorraad.
@@ -951,7 +941,7 @@ class ErrorHandler extends Object
         }
         $errorHandler = new self();
 
-        if (defined('Sledgehammer\ENVIRONMENT') === false || ENVIRONMENT === 'development' || ENVIRONMENT === 'phpunit') {
+        if (defined('Sledgehammer\ENVIRONMENT') === false || \Sledgehammer\ENVIRONMENT === 'development' || \Sledgehammer\ENVIRONMENT === 'phpunit') {
             ini_set('display_errors', true);
             $errorHandler->html = true;
             $errorHandler->debugR = true;
@@ -969,22 +959,22 @@ class ErrorHandler extends Object
             }
         }
 
-        if (defined('Sledgehammer\ENVIRONMENT') && DEBUG_VAR != false) { // Is the DEBUG_VAR enabled?
+        if (defined('Sledgehammer\ENVIRONMENT') && \Sledgehammer\DEBUG_VAR != false) { // Is the \Sledgehammer\DEBUG_VAR enabled?
             $overrideDebugOutput = null;
-            if (isset($_GET[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_GET parameters?
-                $overrideDebugOutput = $_GET[DEBUG_VAR];
+            if (isset($_GET[\Sledgehammer\DEBUG_VAR])) { // Is the \Sledgehammer\DEBUG_VAR present in the $_GET parameters?
+                $overrideDebugOutput = $_GET[\Sledgehammer\DEBUG_VAR];
                 switch ($overrideDebugOutput) {
 
                     case 'cookie':
-                        setcookie(DEBUG_VAR, true);
+                        setcookie(\Sledgehammer\DEBUG_VAR, true);
                         break;
 
                     case 'nocookie':
-                        setcookie(DEBUG_VAR, false, 0);
+                        setcookie(\Sledgehammer\DEBUG_VAR, false, 0);
                         break;
                 }
-            } elseif (isset($_COOKIE[DEBUG_VAR])) { // Is the DEBUG_VAR present in the $_COOKIE?
-                $overrideDebugOutput = $_COOKIE[DEBUG_VAR];
+            } elseif (isset($_COOKIE[\Sledgehammer\DEBUG_VAR])) { // Is the \Sledgehammer\DEBUG_VAR present in the $_COOKIE?
+                $overrideDebugOutput = $_COOKIE[\Sledgehammer\DEBUG_VAR];
             }
             if ($overrideDebugOutput !== null) {
                 ini_set('display_errors', (bool) $overrideDebugOutput);

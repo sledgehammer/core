@@ -1,39 +1,42 @@
 <?php
 
 /**
- * empty_application.php
+ * empty_application.php.
  */
 
 namespace Sledgehammer\Core;
 
 /**
- * Generate a application skeleton, to quickstart an application
+ * Generate a application skeleton, to quickstart an application.
  */
-include(__DIR__ . '/../bootstrap.php');
+include __DIR__.'/../bootstrap.php';
 
 /**
  * A variation of file_put_contents that won't override existing files.
  *
  * @param string $filename
  * @param string $data
- * @return boolean
+ *
+ * @return bool
  */
-function file_not_exist_put_contents($filename, $data) {
+function file_not_exist_put_contents($filename, $data)
+{
     if (file_exists($filename)) {
         return false;
     }
+
     return file_put_contents($filename, $data);
 }
 
 // Create a writable tmp folder.
-mkdirs(PATH . 'tmp');
-chmod(PATH . 'tmp', 0777);
-file_not_exist_put_contents(PATH . 'tmp/.gitignore', "*\n!.gitignore");
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'tmp');
+chmod(\Sledgehammer\PATH.'tmp', 0777);
+file_not_exist_put_contents(\Sledgehammer\PATH.'tmp/.gitignore', "*\n!.gitignore");
 
 // @todo detect mvc
 // Create the public folder.
-mkdirs(PATH . 'public');
-file_not_exist_put_contents(PATH . 'public/.htaccess', <<<END
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'public');
+file_not_exist_put_contents(\Sledgehammer\PATH.'public/.htaccess', <<<END
 Allow from all
 # Redirect everything to rewrite.php except existing files.
 RewriteEngine On
@@ -42,7 +45,7 @@ RewriteRule ^.*$            rewrite.php?%{QUERY_STRING}
 END
 );
 
-file_not_exist_put_contents(PATH . 'public/rewrite.php', <<<END
+file_not_exist_put_contents(\Sledgehammer\PATH.'public/rewrite.php', <<<END
 <?php
 /**
  * rewrite.php
@@ -58,8 +61,8 @@ END
 );
 
 // Create default app
-mkdirs(PATH . 'app/classes');
-file_not_exist_put_contents(PATH . 'app/classes/App.php', <<<END
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'app/classes');
+file_not_exist_put_contents(\Sledgehammer\PATH.'app/classes/App.php', <<<END
 <?php
 /**
  * Example App
@@ -75,8 +78,8 @@ class App extends Website {
 	function index() {
 		return new Nav(array(
 			'Welcome',
-			WEBROOT.'example/item1.html' => 'Item 1',
-			WEBROOT.'service.json' => 'Item 2',
+			\Sledgehammer\WEBROOT.'example/item1.html' => 'Item 1',
+			\Sledgehammer\WEBROOT.'service.json' => 'Item 2',
 		), array(
 			'class' => 'nav nav-list'
 		));
@@ -99,7 +102,7 @@ class App extends Website {
 	protected function wrapContent(\$view) {
 		\$headers = array(
 			'title' => 'Sledgehammer App',
-			'css' => WEBROOT.'mvc/css/bootstrap.css',
+			'css' => \Sledgehammer\WEBROOT.'mvc/css/bootstrap.css',
 		);
 		return new Template('layout.php', array('content' => \$view), \$headers);
 	}
@@ -109,8 +112,8 @@ class App extends Website {
 END
 );
 
-mkdirs(PATH . 'app/templates');
-file_not_exist_put_contents(PATH . 'app/templates/layout.php', <<<END
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'app/templates');
+file_not_exist_put_contents(\Sledgehammer\PATH.'app/templates/layout.php', <<<END
 <?php
 /**
  * Example Template
@@ -127,12 +130,11 @@ file_not_exist_put_contents(PATH . 'app/templates/layout.php', <<<END
 END
 );
 
-file_not_exist_put_contents(PATH . 'app/database.ini', <<<END
+file_not_exist_put_contents(\Sledgehammer\PATH.'app/database.ini', <<<END
 [development]
 default = mysql://root:root@localhost/my_database
 END
 );
-mkdirs(PATH . 'app/public/css');
-mkdirs(PATH . 'app/public/js');
-mkdirs(PATH . 'app/public/img');
-?>
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'app/public/css');
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'app/public/js');
+\Sledgehammer\mkdirs(\Sledgehammer\PATH.'app/public/img');

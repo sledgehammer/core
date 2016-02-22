@@ -1,9 +1,8 @@
 <?php
+
 namespace SledgehammerTests\Core;
 
 use Sledgehammer\Core\Url;
-use SledgehammerTests\Core\TestCase;
-
 
 class UrlTest extends TestCase
 {

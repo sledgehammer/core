@@ -4,7 +4,6 @@ namespace SledgehammerTests\Core;
 
 use Sledgehammer\Core\HtmlTokenizer;
 use Sledgehammer\Core\TagIterator;
-use const Sledgehammer\PATH;
 
 class TagIteratorTest extends TestCase
 {
@@ -150,7 +149,7 @@ EOD;
 
     public function dont_test_unterminated_stuff()
     {
-        $cacheFile = PATH.'tmp/www.w3.org_index.html';
+        $cacheFile = \Sledgehammer\PATH.'tmp/www.w3.org_index.html';
         if (file_exists($cacheFile)) {
             $html = file_get_contents($cacheFile);
         } else {

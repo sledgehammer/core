@@ -5,7 +5,6 @@ namespace Sledgehammer\Core\Debug;
 use Exception;
 use ReflectionClass;
 use Sledgehammer\Core\Object;
-use function Sledgehammer\notice;
 
 /**
  * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
@@ -108,7 +107,7 @@ class PhpAnalyzer extends Object
             $type = $token[0];
             $value = $token[1];
             if ($value == '' && $type != 'T_NAMESPACE') {
-                notice('Empty token', $token);
+                \Sledgehammer\notice('Empty token', $token);
             }
             if ($type == 'T_PHP' || $type == 'T_HTML') {
                 continue;
@@ -220,12 +219,12 @@ class PhpAnalyzer extends Object
                     break;
 
                 default:
-                    notice('Unexpected tokenType: "'.$type.'"');
+                    \Sledgehammer\notice('Unexpected tokenType: "'.$type.'"');
                     break;
             }
         }
         if ($level != 0) {
-            notice('Level: '.$level.' Number of "{" doesn\'t match the number of "}"');
+            \Sledgehammer\notice('Level: '.$level.' Number of "{" doesn\'t match the number of "}"');
         }
         unset($definition);
         // Add definitions to de loader
@@ -247,7 +246,7 @@ class PhpAnalyzer extends Object
                 case 'CLASS':
                     unset($definition['type']);
                     if (count($definition['extends']) > 1) {
-                        notice('Class: "'.$definition['class'].'" Multiple inheritance is not allowed for classes');
+                        \Sledgehammer\notice('Class: "'.$definition['class'].'" Multiple inheritance is not allowed for classes');
                         $definition['extends'] = $definition['extends'][0];
                     } elseif (count($definition['extends']) == 1) {
                         $definition['extends'] = $definition['extends'][0];

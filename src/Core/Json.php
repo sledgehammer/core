@@ -86,7 +86,7 @@ class Json extends Object
 
             return ob_get_clean();
         } catch (Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
 
             return '';
         }
@@ -156,10 +156,10 @@ class Json extends Object
             ErrorHandler::instance()->html = false;
         }
         if ($error instanceof Exception) {
-            report_exception($error);
+            \Sledgehammer\report_exception($error);
             $error = $error->getMessage();
         } else {
-            warning($error);
+            \Sledgehammer\warning($error);
         }
 
         return new self(array(

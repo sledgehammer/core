@@ -1,20 +1,9 @@
 <?php
+
 namespace Sledgehammer\Core;
 
 use Closure;
 use CURLFile;
-use Sledgehammer\Core\Curl;
-use Sledgehammer\Core\InfoException;
-use Sledgehammer\Core\Object;
-use Sledgehammer\Core\Url;
-use const Sledgehammer\STARTED;
-use function Sledgehammer\array_value;
-use function Sledgehammer\build_properties_hint;
-use function Sledgehammer\notice;
-use function Sledgehammer\reflect_properties;
-use function Sledgehammer\report_exception;
-use function Sledgehammer\send_headers;
-use function Sledgehammer\warning;
 
 /**
  * Curl, an HTTP/FTP response object
@@ -396,7 +385,7 @@ class Curl extends Object
         $headers = $response->getHeaders();
         unset($headers['Transfer-Encoding']);
         $headers['Status'] = $response->http_code;
-        send_headers($headers);
+        \Sledgehammer\send_headers($headers);
         echo $response->getBody();
         exit();
     }
@@ -449,7 +438,7 @@ class Curl extends Object
         }
         $max = intval($max);
         if ($max < 0) {
-            notice('Invalid throttle value: '.$max);
+            \Sledgehammer\notice('Invalid throttle value: '.$max);
             $max = 0;
         }
         if (count(self::$requests) <= $max) {
@@ -528,7 +517,7 @@ class Curl extends Object
     {
         $headers = array_change_key_case($this->getHeaders());
 
-        return array_value($headers, strtolower($header));
+        return \Sledgehammer\array_value($headers, strtolower($header));
     }
 
     /**
@@ -577,9 +566,9 @@ class Curl extends Object
 
             return curl_getinfo($this->handle, $option);
         }
-        $properties = reflect_properties($this);
+        $properties = \Sledgehammer\reflect_properties($this);
         $properties['public'] = array_merge($properties['public'], curl_getinfo($this->handle));
-        warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint($properties));
+        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint($properties));
     }
 
     /**
@@ -592,7 +581,7 @@ class Curl extends Object
         try {
             return $this->getContent();
         } catch (Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
 
             return '';
         }
@@ -788,7 +777,7 @@ class Curl extends Object
     {
         $defaults = self::$defaults;
         if (ini_get('max_execution_time')) {
-            $defaults[CURLOPT_TIMEOUT] = floor(ini_get('max_execution_time') - (microtime(true) - STARTED)) - 1; // Prevent a fatal PHP timeout (allow ~1 sec for exception handling)
+            $defaults[CURLOPT_TIMEOUT] = floor(ini_get('max_execution_time') - (microtime(true) - \Sledgehammer\STARTED)) - 1; // Prevent a fatal PHP timeout (allow ~1 sec for exception handling)
         }
         if (ini_get('safe_mode') || ini_get('open_basedir')) { // Is CURLOPT_FOLLOWLOCATION not allowed. Although this issn't a
             unset($defaults[CURLOPT_FOLLOWLOCATION]);

@@ -2,10 +2,6 @@
 
 namespace SledgehammerTests\Core;
 
-use const Sledgehammer\ENVIRONMENT;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\human_implode;
-
 /**
  * Controleer diverse Sledgehammer vereisten.
  */
@@ -34,12 +30,12 @@ class ServerEnvironmentTest extends TestCase
      */
     public function test_tmp_folder()
     {
-        $this->assertTrue(is_writable(TMP_DIR), 'De tmp map zou beschrijfbaar moeten zijn');
+        $this->assertTrue(is_writable(\Sledgehammer\TMP_DIR), 'De tmp map zou beschrijfbaar moeten zijn');
     }
 
     public function test_environment()
     {
         $allowedEnvironments = array('development', 'testing', 'acceptation', 'production', 'phpunit');
-        $this->assertTrue(in_array(ENVIRONMENT, $allowedEnvironments), 'ENVIRONMENT moet een van de volgende waarden zijn: "'.human_implode('" of "', $allowedEnvironments, '", "').'"');
+        $this->assertTrue(in_array(\Sledgehammer\ENVIRONMENT, $allowedEnvironments), '\Sledgehammer\ENVIRONMENT moet een van de volgende waarden zijn: "'.\Sledgehammer\human_implode('" of "', $allowedEnvironments, '", "').'"');
     }
 }

@@ -8,14 +8,13 @@
 namespace Sledgehammer\Core;
 
 echo "Cleaning modules...\n";
-require_once(__DIR__ . '/../../core/bootstrap.php');
+require_once __DIR__.'/../../core/bootstrap.php';
 
 $fileCount = 0;
 foreach ($modules as $module) {
-    $fileCount += rmdir_recursive($module['path'] . 'docs/', true);
-    $fileCount += rmdir_recursive($module['path'] . 'tests/', true);
+    $fileCount += \Sledgehammer\rmdir_recursive($module['path'].'docs/', true);
+    $fileCount += \Sledgehammer\rmdir_recursive($module['path'].'tests/', true);
 }
-$fileCount += rmdir_recursive(PATH . 'docs/', true);
+$fileCount += \Sledgehammer\rmdir_recursive(\Sledgehammer\PATH.'docs/', true);
 
-echo "  done. " . $fileCount . " files removed.\n";
-?>
+echo '  done. '.$fileCount." files removed.\n";

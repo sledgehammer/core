@@ -5,8 +5,6 @@ namespace SledgehammerTests\Core;
 use DirectoryIterator;
 use Sledgehammer\Core\Debug\PhpAnalyzer;
 use Sledgehammer\Core\Framework;
-use const Sledgehammer\PATH;
-use function Sledgehammer\quoted_human_implode;
 
 /**
  * Controleer of alle benodige php extenties geinstalleerd zijn.
@@ -16,7 +14,7 @@ use function Sledgehammer\quoted_human_implode;
 class RequiredPhpExtensionsTest extends TestCase
 {
     /**
-     * Switch off to scan all files in the PATH.
+     * Switch off to scan all files in the \Sledgehammer\PATH.
      *
      * @var bool
      */
@@ -77,7 +75,7 @@ class RequiredPhpExtensionsTest extends TestCase
                 $this->checkFolder($module['path'].'classes/');
             }
         } else { // check all php files within $path
-            $this->checkFolder(PATH);
+            $this->checkFolder(\Sledgehammer\PATH);
         }
         foreach ($this->missingExtensions as $extension => $definition) {
             $files = $this->extensionUsedIn[$extension];
@@ -87,7 +85,7 @@ class RequiredPhpExtensionsTest extends TestCase
                 }
             }
             if (count($files) > 0) {
-                $this->fail('Missing php extension "'.$extension.'". Function or class "'.$definition.'" is used in '.quoted_human_implode(' and', $files));
+                $this->fail('Missing php extension "'.$extension.'". Function or class "'.$definition.'" is used in '.\Sledgehammer\quoted_human_implode(' and', $files));
             }
         }
         $this->assertTrue(true, 'All required extenstion are installed');

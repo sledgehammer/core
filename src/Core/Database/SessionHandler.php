@@ -38,7 +38,7 @@ class SessionHandler extends Object
             if (in_array($property, $availableOptions)) {
                 $this->$property = $value;
             } else {
-                notice('Invalid option "'.$property.'"', 'Use: '.human_implode(' or ', $availableOptions));
+                \Sledgehammer\notice('Invalid option "'.$property.'"', 'Use: '.\Sledgehammer\human_implode(' or ', $availableOptions));
             }
         }
         if ($this->table === null) {
@@ -78,7 +78,7 @@ class SessionHandler extends Object
         try {
             $gegevens = $db->fetch_value('SELECT session_data FROM '.$db->quoteIdentifier($this->table).' WHERE id = '.$db->quote($id), true);
         } catch (\Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
             $gegevens = false;
         }
         if ($gegevens == false) {
@@ -109,7 +109,7 @@ class SessionHandler extends Object
                 return true;
             }
         } catch (\Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
         }
 
         return false;

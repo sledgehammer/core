@@ -4,24 +4,15 @@ namespace Sledgehammer\Core;
 
 use Exception;
 use SimpleXMLElement;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\array_value;
-use function Sledgehammer\mkdirs;
-use function Sledgehammer\notice;
-use function Sledgehammer\quoted_human_implode;
-use function Sledgehammer\rmdir_recursive;
-use function Sledgehammer\text;
 
 /**
  * PearInstaller, installs PEAR packages into your project folder.
  *
  * @link http://pear.php.net/manual/en/core.rest.php
  * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
- *
-
  */
-class PearInstaller extends Observable {
-
+class PearInstaller extends Observable
+{
     /**
      * @var array The events/listeners
      */
@@ -49,20 +40,22 @@ class PearInstaller extends Observable {
     /**
      * @param array $targets The target directories per role. array("php" => PATH.'pear/classes', 'doc' => ...)
      */
-    function __construct($targets) {
+    public function __construct($targets)
+    {
         $this->targets = $targets;
     }
 
     /**
-     * Discovers all packages inside the given domain/channel
+     * Discovers all packages inside the given domain/channel.
      *
-     * @param string $domain  Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
+     * @param string $domain Channel/Domain. Example: 'pear.php.net', 'pear.phpunit.de', 'pear.doctrine-project.org'
      */
-    function addChannel($domain) {
+    public function addChannel($domain)
+    {
         if (isset($this->channels[$domain])) {
             return false;
         }
-        $data = simplexml_load_file('http://' . $domain . '/channel.xml');
+        $data = simplexml_load_file('http://'.$domain.'/channel.xml');
         $baseurl = (string) $data->servers->primary->rest->baseurl[0];
         $this->channels[$domain] = array(
             'baseurl' => $baseurl,
@@ -71,12 +64,12 @@ class PearInstaller extends Observable {
         );
         $pear = $this;
 
-        $xml = simplexml_load_file($baseurl . 'c/categories.xml');
+        $xml = simplexml_load_file($baseurl.'c/categories.xml');
         foreach ($xml->c as $category) {
             $url = $category->attributes('http://www.w3.org/1999/xlink');
             $category = (string) $category;
             $this->channels[$domain]['categories'][] = $category;
-            Curl::get('http://' . $domain . dirname($url['href']) . '/packages.xml', [], function ($data) use ($pear, $domain, $category) {
+            Curl::get('http://'.$domain.dirname($url['href']).'/packages.xml', [], function ($data) use ($pear, $domain, $category) {
                 $pear->registerCategory($domain, $category, simplexml_load_string($data)->p);
             });
         }
@@ -85,13 +78,14 @@ class PearInstaller extends Observable {
     }
 
     /**
-     * Registers the packages from the associated channel & category
+     * Registers the packages from the associated channel & category.
      *
-     * @param string $channel
-     * @param string $category
+     * @param string           $channel
+     * @param string           $category
      * @param SimpleXMLElement $packages
      */
-    function registerCategory($channel, $category, $packages) {
+    public function registerCategory($channel, $category, $packages)
+    {
         foreach ($packages as $package) {
             $url = $package->attributes('http://www.w3.org/1999/xlink');
             $package = (string) $package;
@@ -99,7 +93,7 @@ class PearInstaller extends Observable {
             $this->channels[$channel]['packages'][$package] = array(
                 'channel' => $channel,
                 'category' => $category,
-                'path' => (string) $url['href']
+                'path' => (string) $url['href'],
             );
         }
     }
@@ -109,7 +103,8 @@ class PearInstaller extends Observable {
      *
      * @return array
      */
-    function getPackages() {
+    public function getPackages()
+    {
         return array_keys($this->packages);
     }
 
@@ -117,16 +112,18 @@ class PearInstaller extends Observable {
      * Download and install a PEAR package.
      *
      * @throws Exceptions on failure
+     *
      * @param string $package
      * @param string $version
-     * @param array $options array(
-     *   'version' = Install a specific version
-     *   'target' => alternative target directory
-     *   'channel' => specifiy the channel
-     * )
+     * @param array  $options array(
+     *                        'version' = Install a specific version
+     *                        'target' => alternative target directory
+     *                        'channel' => specifiy the channel
+     *                        )
      */
-    function install($package, $options = []) {
-        $version = array_value($options, 'version') ?: 'stable';
+    public function install($package, $options = [])
+    {
+        $version = \Sledgehammer\array_value($options, 'version') ?: 'stable';
         if (isset($options['channel'])) {
             $channel = $options['channel'];
             $this->addChannel($channel);
@@ -138,7 +135,7 @@ class PearInstaller extends Observable {
                         }
                     }
                 }
-                throw new InfoException('Package "' . $package . '" not found in channel: ' . $channel, quoted_human_implode(' and ', array_keys($this->channels[$channel]['packages'])));
+                throw new InfoException('Package "'.$package.'" not found in channel: '.$channel, \Sledgehammer\quoted_human_implode(' and ', array_keys($this->channels[$channel]['packages'])));
             }
             $packageLocation = &$this->channels[$channel]['packages'][$package];
         } else {
@@ -151,36 +148,36 @@ class PearInstaller extends Observable {
                         return $this->install($name, $options);
                     }
                 }
-                throw new InfoException('Package "' . $package . '" not found in channels: ' . quoted_human_implode(' and ', array_keys($this->channels)), 'Available packages: ' . quoted_human_implode(' and ', array_keys($this->packages)));
+                throw new InfoException('Package "'.$package.'" not found in channels: '.\Sledgehammer\quoted_human_implode(' and ', array_keys($this->channels)), 'Available packages: '.\Sledgehammer\quoted_human_implode(' and ', array_keys($this->packages)));
             }
             $packageLocation = &$this->channels[$this->packages[$package]]['packages'][$package];
         }
         $release = $this->findRelease($packageLocation, $version);
-        if (array_value($packageLocation, 'installed') === $version) {
+        if (\Sledgehammer\array_value($packageLocation, 'installed') === $version) {
             return;
         }
         $this->trigger('installing', $this, $package, $version);
-        $tmpFolder = TMP_DIR . 'PearInstaller/';
-        $folderName = $package . '-' . $version;
-        $tarFile = $tmpFolder . $folderName . '/package.tar';
-        mkdirs(dirname($tarFile));
+        $tmpFolder = \Sledgehammer\TMP_DIR.'PearInstaller/';
+        $folderName = $package.'-'.$version;
+        $tarFile = $tmpFolder.$folderName.'/package.tar';
+        \Sledgehammer\mkdirs(dirname($tarFile));
         if (file_exists($tarFile) === false) { // Is this package already in the tmp folder
-            Curl::download($release->g . '.tar', $tarFile);
+            Curl::download($release->g.'.tar', $tarFile);
         }
         chdir(dirname($tarFile));
-        system('tar xf ' . escapeshellarg($tarFile), $exit);
+        system('tar xf '.escapeshellarg($tarFile), $exit);
         if ($exit !== 0) {
-            throw new Exception('Unable to untar "' . $tarFile . '"');
+            throw new Exception('Unable to untar "'.$tarFile.'"');
         }
-        if (file_exists(dirname($tarFile) . '/package2.xml')) {
-            $info = simplexml_load_file(dirname($tarFile) . '/package2.xml');
+        if (file_exists(dirname($tarFile).'/package2.xml')) {
+            $info = simplexml_load_file(dirname($tarFile).'/package2.xml');
         } else {
-            $info = simplexml_load_file(dirname($tarFile) . '/package.xml');
+            $info = simplexml_load_file(dirname($tarFile).'/package.xml');
         }
         // Install dependencies first
         foreach ($info->dependencies->required->package as $dependancy) {
             if ($dependancy->conflicts) {
-//				notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
+                //				\Sledgehammer\notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
                 continue;
             }
             $this->install((string) $dependancy->name, array(
@@ -200,15 +197,15 @@ class PearInstaller extends Observable {
             if (isset($this->targets[$file['role']])) {
                 $dir = $this->targets[$file['role']];
                 if (in_array($file['role'], array('doc', 'www'))) {
-                    if (text($file['to'])->startsWith($package) == false) {
+                    if (\Sledgehammer\text($file['to'])->startsWith($package) == false) {
                         $dir = $this->makePath($dir, $package);
                     }
                 }
                 $target = $this->makePath($dir, $file['to']);
-                if (mkdirs(dirname($target)) == false || is_writable(dirname($target)) == false) {
-                    throw new Exception('Target "' . $target . '" is not writable');
+                if (\Sledgehammer\mkdirs(dirname($target)) == false || is_writable(dirname($target)) == false) {
+                    throw new Exception('Target "'.$target.'" is not writable');
                 }
-                $source = $this->makePath($tmpFolder . $folderName . '/' . $folderName, $file['from']);
+                $source = $this->makePath($tmpFolder.$folderName.'/'.$folderName, $file['from']);
                 if (isset($file['tasks'])) {
                     $contents = file_get_contents($source);
                     foreach ($file['tasks'] as $task) {
@@ -225,21 +222,21 @@ class PearInstaller extends Observable {
                                 if (isset($this->targets[$role])) {
                                     $value = $this->targets[$role];
                                     // @todo calculate relative paths
-                                    notice('Harcoding path "' . $value . '" into "' . $file['to'] . '"', $file);
+                                    \Sledgehammer\notice('Harcoding path "'.$value.'" into "'.$file['to'].'"', $file);
                                 }
                             } elseif ($task['to'] == 'php_bin') {
                                 $value = trim(`which php`);
-                                notice('Harcoding path "' . $value . '" into "' . $file['to'] . '"', $file);
+                                \Sledgehammer\notice('Harcoding path "'.$value.'" into "'.$file['to'].'"', $file);
                             }
                         }
                         if ($task['task'] === 'replace') {
                             if ($value != '') {
                                 $contents = str_replace($task['from'], $value, $contents);
                             } else {
-                                notice($task['type'] . ' "' . $task['to'] . '" not yet supported');
+                                \Sledgehammer\notice($task['type'].' "'.$task['to'].'" not yet supported');
                             }
                         } else {
-                            notice('task "' . $task['task'] . '" not implemented');
+                            \Sledgehammer\notice('task "'.$task['task'].'" not implemented');
                         }
                     }
                     file_put_contents($target, $contents);
@@ -248,38 +245,43 @@ class PearInstaller extends Observable {
                 }
             }
         }
-        rmdir_recursive($tmpFolder . $folderName . '/' . $folderName);
+        \Sledgehammer\rmdir_recursive($tmpFolder.$folderName.'/'.$folderName);
         $packageLocation['installed'] = $version;
         $this->trigger('installed', $this, $package, $version);
     }
 
     /**
      * Fetch the release info (download link) of a package
-     * If the version is "stable", "beta" or "latest" the $version will be set the versionnumber
+     * If the version is "stable", "beta" or "latest" the $version will be set the versionnumber.
      *
-     * @param array $package
+     * @param array  $package
      * @param string $version
+     *
      * @return SimpleXMLElement
+     *
      * @throws Exception
      */
-    function findRelease($package, &$version) {
-        $info = simplexml_load_file('http://' . $package['channel'] . $package['path'] . '/info.xml')->r->attributes('http://www.w3.org/1999/xlink');
-        $url = 'http://' . $package['channel'] . $info['href'] . '/';
+    public function findRelease($package, &$version)
+    {
+        $info = simplexml_load_file('http://'.$package['channel'].$package['path'].'/info.xml')->r->attributes('http://www.w3.org/1999/xlink');
+        $url = 'http://'.$package['channel'].$info['href'].'/';
         if (in_array($version, array('stable', 'beta', 'latest'))) {
-            $version = file_get_contents($url . $version . '.txt');
+            $version = file_get_contents($url.$version.'.txt');
             if (preg_match('/^[0-9]+/', $version) == false) {
-                throw new Exception('Invalid version number: "' . $version . '"');
+                throw new Exception('Invalid version number: "'.$version.'"');
             }
         }
-        return simplexml_load_file($url . $version . '.xml');
+
+        return simplexml_load_file($url.$version.'.xml');
     }
 
     /**
-     * Extract files from the <dir> in the package(2).xml
+     * Extract files from the <dir> in the package(2).xml.
      *
      * @return array
      */
-    private function extractFiles($dir, $from = '', $to = '', $renames = []) {
+    private function extractFiles($dir, $from = '', $to = '', $renames = [])
+    {
         $from .= (string) $dir['name'];
         if ($dir['baseinstalldir'] !== null) {
             $to = (string) $dir['baseinstalldir'];
@@ -310,7 +312,7 @@ class PearInstaller extends Observable {
                             'task' => 'replace',
                             'type' => (string) $replace['type'],
                             'from' => (string) $replace['from'],
-                            'to' => (string) $replace['to']
+                            'to' => (string) $replace['to'],
                         );
                     }
                 }
@@ -320,22 +322,23 @@ class PearInstaller extends Observable {
             }
             $files[] = $file;
         }
+
         return $files;
     }
 
-    private function makePath($folder, $filename) {
+    private function makePath($folder, $filename)
+    {
         if (substr($folder, -1) === '/') {
             if (substr($filename, 0, 1) === '/') {
-                return $folder . substr($filename, 1);
+                return $folder.substr($filename, 1);
             }
-            return $folder . $filename;
+
+            return $folder.$filename;
         }
         if (substr($filename, 0, 1) === '/') {
-            return $folder . $filename;
+            return $folder.$filename;
         }
-        return $folder . '/' . $filename;
+
+        return $folder.'/'.$filename;
     }
-
 }
-
-?>

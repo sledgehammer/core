@@ -5,9 +5,6 @@ namespace SledgehammerTests\Core;
 use Exception;
 use Sledgehammer\Core\Cache;
 use SledgehammerTests\Core\Fixtures\CacheTester;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\cache;
-use function Sledgehammer\mkdirs;
 
 /**
  * Unittests for the Cache object.
@@ -29,7 +26,7 @@ class CacheTest extends TestCase
 
     public function test_startup()
     {
-        mkdirs(TMP_DIR.'Cache');
+        \Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR.'Cache');
         $cache = Cache::rootNode();
         $this->assertInstanceOf(Cache::class, $cache);
         $this->apcSupported = function_exists('apc_fetch');
@@ -68,7 +65,7 @@ class CacheTest extends TestCase
     public function test_invalid_option()
     {
         try {
-            cache(__FILE__.__FUNCTION__, array('a invalid option' => 'yes'), array($this, 'incrementCounter'));
+            \Sledgehammer\cache(__FILE__.__FUNCTION__, array('a invalid option' => 'yes'), array($this, 'incrementCounter'));
             $this->fail('An invalid options should generate a notice');
         } catch (Exception $e) {
             $this->assertEquals('Option: "a invalid option" is invalid', $e->getMessage());
@@ -77,9 +74,9 @@ class CacheTest extends TestCase
 
     public function test_invalid_max_age()
     {
-        cache(__FILE__.__FUNCTION__, array('expires' => '+1 min'), array($this, 'incrementCounter')); // create a cache entry. (no entry == no max_age validation)
+        \Sledgehammer\cache(__FILE__.__FUNCTION__, array('expires' => '+1 min'), array($this, 'incrementCounter')); // create a cache entry. (no entry == no max_age validation)
         try {
-            cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
+            \Sledgehammer\cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
             $this->fail('An max_age in the future should generate a notice');
         } catch (\PHPUnit_Framework_Error_Notice $e) {
             $this->assertEquals('maxAge is 60 seconds in the future', $e->getMessage());

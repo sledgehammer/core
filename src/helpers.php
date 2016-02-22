@@ -46,7 +46,7 @@ if (function_exists('value') === false) {
      * Return the value of a variable or return null if the valiable not exist. (Prevents "Undefined variable" notices)
      * WARNING! As a side-effect non existing variables are set to null.
      * If you pass array element to `value($var['index'])` and $var didn't exist, an array is created: array('index' => null)
-     * Use array_value() which doesn't have this side effect for array.
+     * Use \Sledgehammer\array_value() which doesn't have this side effect for array.
      *
      * Example:
      *   if (value($_GET['foo']) == 'bar') {
@@ -71,7 +71,7 @@ if (function_exists('array_value') === false) {
      * Return the value of the array element or return null if the element doesn't exist. (Prevents "Undefined index" notices).
      *
      * Example:
-     *   if (array_value($_GET, 'foo') == 'bar') {
+     *   if (\Sledgehammer\array_value($_GET, 'foo') == 'bar') {
      * instead of
      *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
      *

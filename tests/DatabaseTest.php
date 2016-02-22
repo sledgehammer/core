@@ -5,7 +5,6 @@ namespace SledgehammerTests\Core;
 use PDO;
 use Sledgehammer\Core\Database\Connection;
 use Sledgehammer\Core\Database\Statement;
-use const Sledgehammer\ENVIRONMENT;
 
 /**
  * Test Database behavior.
@@ -112,8 +111,8 @@ class DatabaseTest extends DatabaseTestCase
 
     public function getTests()
     {
-        if (ENVIRONMENT != 'development') {
-            $this->fail('Skipping DatabaseTestCases tests in "'.ENVIRONMENT.'"');
+        if (\Sledgehammer\ENVIRONMENT != 'development') {
+            $this->fail('Skipping DatabaseTestCases tests in "'.\Sledgehammer\ENVIRONMENT.'"');
 
             return [];
         }

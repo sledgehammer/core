@@ -20,9 +20,6 @@ use Sledgehammer\Core\PropertyPath;
 use Sledgehammer\Core\Text;
 use stdClass;
 use Traversable;
-use const Sledgehammer\COMPARE_OPERATORS;
-use const Sledgehammer\INITIALIZED;
-use const Sledgehammer\STARTED;
 
 /**
  * Sledgehammer functions.
@@ -57,7 +54,7 @@ function dump($variable, $export = false)
     if ($export) {
         return ob_get_clean();
     }
-    if (ENVIRONMENT === 'phpunit') {
+    if (\Sledgehammer\ENVIRONMENT === 'phpunit') {
         ob_flush();
     }
 }
@@ -119,7 +116,7 @@ function report_exception($throwable)
     if ($throwable instanceof Exception || $throwable instanceof Throwable) {
         ErrorHandler::instance()->report($throwable);
     } else {
-        notice('Parameter $throwable should be a Throwable (Exception)', $throwable);
+        \Sledgehammer\notice('Parameter $throwable should be a Throwable (Exception)', $throwable);
     }
 }
 
@@ -145,7 +142,7 @@ function debugr($variable = null)
  * Return the value of a variable or return null if the valiable not exist. (Prevents "Undefined variable" notices)
  * WARNING! As a side-effect non existing variables are set to null.
  * If you pass array element to `value($var['index'])` and $var didn't exist, an array is created: array('index' => null)
- * Use array_value() which doesn't have this side effect for array.
+ * Use \Sledgehammer\array_value() which doesn't have this side effect for array.
  *
  * Example:
  *   if (value($_GET['foo']) == 'bar') {
@@ -167,12 +164,12 @@ function value(&$variable)
  * Return the value of the array element or return null if element doesn't exist. (Prevents "Undefined index" notices).
  *
  * Example 1:
- *   if (array_value($_GET, 'foo') == 'bar') {
+ *   if (\Sledgehammer\array_value($_GET, 'foo') == 'bar') {
  * instead of
  *   if (isset($_GET['foo']) && $_GET['foo'] == 'bar') {
  *
  * Example 2:
- *   if (array_value($_GET, 'foo', 'bar') == 'baz') {
+ *   if (\Sledgehammer\array_value($_GET, 'foo', 'bar') == 'baz') {
  * instead of
  *   if (isset($_GET['foo']) && isset($_GET['foo']['bar']) && $_GET['foo']['bar'] == 'baz') {
  *
@@ -193,7 +190,7 @@ function array_value($array, $key)
             continue;
         }
         if (is_string($key) === false && is_int($key) === false) {
-            notice('Unexpected type: "'.gettype($key).'" for parameter $key, expecting an int or string');
+            \Sledgehammer\notice('Unexpected type: "'.gettype($key).'" for parameter $key, expecting an int or string');
 
             return;
         }
@@ -238,7 +235,7 @@ function is_indexed($array)
 {
     if (!is_array($array)) {
         if (!(is_object($array) && in_array('Iterator', class_implements($array)))) {
-            notice('Unexpected '.gettype($array).', expecting array (or Iterator)');
+            \Sledgehammer\notice('Unexpected '.gettype($array).', expecting array (or Iterator)');
 
             return false;
         }
@@ -292,7 +289,7 @@ function array_key_unshift(&$array, $key, $value = null)
  */
 function mimetype($filename, $allow_unknown_types = false, $default = 'application/octet-stream')
 {
-    $extension = file_extension($filename);
+    $extension = \Sledgehammer\file_extension($filename);
     if ($extension === null) {
         $mimetype = null;
     } else {
@@ -359,7 +356,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
             'ott' => 'application/vnd.oasis.opendocument.text-template',
             'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
         );
-        $mimetype = value($mimetypes[strtolower($extension)]);
+        $mimetype = \Sledgehammer\value($mimetypes[strtolower($extension)]);
     }
     if ($mimetype !== null) {
         return $mimetype;
@@ -384,7 +381,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
             }
         }
     }
-    $mimetype = value($globalMimetypes[strtolower($extension)]);
+    $mimetype = \Sledgehammer\value($globalMimetypes[strtolower($extension)]);
     if ($mimetype === null) {
         if (!$allow_unknown_types) {
             trigger_error('Unknown mime type for :"'.$extension.'", E_USER_WARNING');
@@ -435,7 +432,7 @@ function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"')
         return '';
     }
 
-    return $quote.human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
+    return $quote.\Sledgehammer\human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
 }
 
 /**
@@ -477,7 +474,7 @@ function extract_element($array, $identifier, &$value)
     if ($bracket_position === false) { // Gaat het NIET om een array?
         return false;
     } elseif (strpos($identifier, '[]')) {
-        notice('Het identifier bevat een ongeldige combinatie van blokhaken: []', $identifier);
+        \Sledgehammer\notice('Het identifier bevat een ongeldige combinatie van blokhaken: []', $identifier);
 
         return false;
     }
@@ -585,15 +582,15 @@ function equals($var1, $var2)
 function compare($value, $operator, $expectation)
 {
     switch ($operator) {
-        case '==': return equals($value, $expectation);
-        case '!=': return !equals($value, $expectation);
+        case '==': return \Sledgehammer\equals($value, $expectation);
+        case '!=': return !\Sledgehammer\equals($value, $expectation);
         case '<': return $value < $expectation;
         case '>': return $value > $expectation;
         case '<=': return $value <= $expectation;
         case '>=': return $value >= $expectation;
         case 'IN':
             foreach ($expectation as $val) {
-                if (equals($value, $val)) {
+                if (\Sledgehammer\equals($value, $val)) {
                     return true;
                 }
             }
@@ -602,7 +599,7 @@ function compare($value, $operator, $expectation)
 
         case 'LIKE':
             static $patternCache = [];
-            $pattern = array_value($patternCache, $expectation);
+            $pattern = \Sledgehammer\array_value($patternCache, $expectation);
             if ($pattern === null) {
                 // Build the regular expression.
                 $pattern = '';
@@ -633,11 +630,11 @@ function compare($value, $operator, $expectation)
             return preg_match($pattern, $value) !== 0;
 
         case 'NOT IN':
-            return compare($value, 'IN', $expectation) == false;
+            return \Sledgehammer\compare($value, 'IN', $expectation) == false;
         case 'NOT LIKE':
-            return compare($value, 'LIKE', $expectation) == false;
+            return \Sledgehammer\compare($value, 'LIKE', $expectation) == false;
     }
-    throw new Exception('Invalid operator: "'.$operator.'" use '.quoted_human_implode(' or ', explode('|', COMPARE_OPERATORS)));
+    throw new Exception('Invalid operator: "'.$operator.'" use '.\Sledgehammer\quoted_human_implode(' or ', explode('|', \Sledgehammer\COMPARE_OPERATORS)));
 }
 
 /**
@@ -652,7 +649,7 @@ function compare($value, $operator, $expectation)
 function equal_properties($object1, $object2, $properties)
 {
     foreach ($properties as $property) {
-        if (equals($object1->$property, $object2->$property) == false) { // Zijn de eigenschappen verschillend?
+        if (\Sledgehammer\equals($object1->$property, $object2->$property) == false) { // Zijn de eigenschappen verschillend?
             return false;
         }
     }
@@ -774,7 +771,7 @@ function build_properties_hint($scopedProperties)
                 } else {
                     $type = strtolower($type);
                 }
-                $hint .= '&nbsp;&nbsp;'.syntax_highlight($property, 'attribute').' '.syntax_highlight(':'.$type, 'comment').'<br />';
+                $hint .= '&nbsp;&nbsp;'.\Sledgehammer\syntax_highlight($property, 'attribute').' '.\Sledgehammer\syntax_highlight(':'.$type, 'comment').'<br />';
             }
         }
     }
@@ -900,8 +897,8 @@ function mkdirs($path)
     }
     $parent = dirname($path);
     if ($parent == $path) { // Is er geen niveau hoger?
-        warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv null of ""
-    } elseif (mkdirs($parent)) { // Maak (waneer nodig) de boverliggende deze map aan.
+        \Sledgehammer\warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv null of ""
+    } elseif (\Sledgehammer\mkdirs($parent)) { // Maak (waneer nodig) de boverliggende deze map aan.
         return mkdir($path); //  Maakt de map aan.
     }
 
@@ -927,7 +924,7 @@ function rmdir_recursive($path, $allowFailures = false)
             continue;
         }
         if ($entry->isDir()) { // is het een map?
-            $counter += rmdir_recursive($entry->getPathname().'/', $allowFailures);
+            $counter += \Sledgehammer\rmdir_recursive($entry->getPathname().'/', $allowFailures);
             continue;
         }
         if (unlink($entry->getPathname()) == false && $allowFailures == false) {
@@ -961,7 +958,7 @@ function rmdir_contents($path, $allowFailures = false)
             continue;
         }
         if ($entry->isDir()) { // is het een map?
-            $counter += rmdir_recursive($entry->getPathname(), $allowFailures);
+            $counter += \Sledgehammer\rmdir_recursive($entry->getPathname(), $allowFailures);
         } else {
             if (unlink($entry->getPathname()) == false && $allowFailures == false) {
                 throw new Exception('Failed to delete "'.$entry->getPathname().'"');
@@ -1003,7 +1000,7 @@ function safe_unlink($filepath, $basepath, $recursive = false)
         throw new Exception('File "'.$filepath.'" not found');
     }
     if ($recursive) {
-        rmdir_recursive($filepath);
+        \Sledgehammer\rmdir_recursive($filepath);
 
         return;
     }
@@ -1053,7 +1050,7 @@ function mtime_folders($path, $extensions = null, &$count = null)
             }
             $filepath = $path.$filename;
             if (is_dir($filepath)) {
-                $ts = mtime_folders($filepath.'/', $regex, $subcount);
+                $ts = \Sledgehammer\mtime_folders($filepath.'/', $regex, $subcount);
                 $count += $subcount;
             } else {
                 if ($regex && preg_match($regex, $filename) === 0) { // Does't match any of the extensions?
@@ -1084,7 +1081,7 @@ function mtime_folders($path, $extensions = null, &$count = null)
  */
 function copydir($source, $destination, $exclude = [])
 {
-    if (!is_dir($destination) && !mkdirs($destination)) {
+    if (!is_dir($destination) && !\Sledgehammer\mkdirs($destination)) {
         return false;
     }
     $count = 0;
@@ -1101,7 +1098,7 @@ function copydir($source, $destination, $exclude = [])
         } elseif ($entry->isDir()) {
             $count += copydir($entry->getPathname(), $destination.'/'.$entry->getFilename(), $exclude);
         } else {
-            notice('Unsupported filetype');
+            \Sledgehammer\notice('Unsupported filetype');
         }
     }
 
@@ -1180,7 +1177,7 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
             break;
 
         default:
-            notice('Datatype: "'.$datatype.'" is unknown');
+            \Sledgehammer\notice('Datatype: "'.$datatype.'" is unknown');
             break;
     }
     // Based on the Tomorrow theme.
@@ -1316,12 +1313,12 @@ function statusbar()
     $divider = '<span class="statusbar-divider">, </span>';
     if (defined('Sledgehammer\STARTED')) {
         $now = microtime(true);
-        echo '<span class="statusbar-tab"><span class="statusbar-parsetime">Time&nbsp;<b>', format_parsetime($now - STARTED), '</b>&nbsp;sec';
+        echo '<span class="statusbar-tab"><span class="statusbar-parsetime">Time&nbsp;<b>', \Sledgehammer\format_parsetime($now - \Sledgehammer\STARTED), '</b>&nbsp;sec';
         if (defined('Sledgehammer\INITIALIZED')) {
-            echo ' <span class="statusbar-popout">Init&nbsp;<b>', format_parsetime(INITIALIZED - STARTED), '</b>&nbsp;sec';
+            echo ' <span class="statusbar-popout">Init&nbsp;<b>', \Sledgehammer\format_parsetime(\Sledgehammer\INITIALIZED - \Sledgehammer\STARTED), '</b>&nbsp;sec';
             if (defined('Sledgehammer\GENERATED')) {
-                echo $divider, 'Execute&nbsp;<b>', format_parsetime(GENERATED - INITIALIZED), '</b>&nbsp;sec';
-                echo $divider, 'Render&nbsp;<b>', format_parsetime($now - GENERATED), '</b>&nbsp;sec';
+                echo $divider, 'Execute&nbsp;<b>', \Sledgehammer\format_parsetime(GENERATED - \Sledgehammer\INITIALIZED), '</b>&nbsp;sec';
+                echo $divider, 'Render&nbsp;<b>', \Sledgehammer\format_parsetime($now - GENERATED), '</b>&nbsp;sec';
             }
             echo '</span>';
         }
@@ -1401,7 +1398,7 @@ function iterator_keys($iterator)
         throw new Exception('$search_value not implemented');
     }
     if (!is_object($iterator) || !($iterator instanceof Iterator)) {
-        warning('The first argument should be an Iterator object');
+        \Sledgehammer\warning('The first argument should be an Iterator object');
     }
     $keys = [];
     for ($iterator->rewind(); $iterator->valid(); $iterator->next()) {
@@ -1554,7 +1551,7 @@ function browser($part = null)
     if (isset($info[$part])) {
         return $info[$part];
     }
-    notice('Unexpected part: "'.$part.'", expecting: "'.implode('", "', array_keys($info)).'"');
+    \Sledgehammer\notice('Unexpected part: "'.$part.'", expecting: "'.implode('", "', array_keys($info)).'"');
 }
 
 /**
@@ -1581,17 +1578,17 @@ function getClientIp()
         return $ips[0]; // Gebruik dan de eerste.
     }
     $flags = FILTER_FLAG_NO_RES_RANGE; // Geen 127.0.0.1 of 169.254.x.x IPs
-    if (ENVIRONMENT != 'development') {
+    if (\Sledgehammer\ENVIRONMENT != 'development') {
         $flags = $flags | FILTER_FLAG_NO_PRIV_RANGE; // 192.168.x.x niet toestaan. (Tenzij in development modes)
     }
     foreach ($ips as $ip) {
         if (filter_var($ip, FILTER_VALIDATE_IP, $flags) === false) {
-            notice('Invalid IP: "'.$ip.'"');
+            \Sledgehammer\notice('Invalid IP: "'.$ip.'"');
         } else {
             return $ip;
         }
     }
-    warning('No valid client IP detected', array('IPs' => $ips));
+    \Sledgehammer\warning('No valid client IP detected', array('IPs' => $ips));
 
     return $ips[0]; // Gebruik dan de eerste.
 }
@@ -1613,9 +1610,9 @@ function send_headers($headers)
             $location = ', output started in '.$file.' on line '.$line;
         }
         if (class_exists('Sledgehammer\ErrorHandler', false)) {
-            notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
+            \Sledgehammer\notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
         } else {
-            trigger_error('Couldn\'t sent header(s) "'.human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
+            trigger_error('Couldn\'t sent header(s) "'.\Sledgehammer\human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
         }
 
         return;
@@ -1632,7 +1629,7 @@ function send_headers($headers)
         }
     }
     foreach ($notices as $notice) {
-        notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
+        \Sledgehammer\notice($notice, 'Use $headers format: array("Content-Type" => "text/css")');
     }
 }
 
@@ -1674,7 +1671,7 @@ function render_file($filename)
     }
     if (empty($_SERVER['HTTP_RANGE'])) {
         $headers['Content-Length'] = $filesize; // @todo Detectie inbouwen voor bestanden groter dan 2GiB, deze geven fouten.
-        send_headers($headers);
+        \Sledgehammer\send_headers($headers);
         // Output buffers uitschakelen, anders zal readfile heb bestand in het geheugen inladen. (en mogelijk de memory_limit overschrijden)
         while (ob_get_level() > 0) {
             ob_end_flush();
@@ -1724,7 +1721,7 @@ function render_file($filename)
     }
     fseek($fp, $seek_start); // seek to start of missing part
     set_time_limit(0);
-    send_headers($headers);
+    \Sledgehammer\send_headers($headers);
     while (!feof($fp)) {
         echo fread($fp, 1024 * 16); // Verstuur in blokken van 16KiB
         flush();
@@ -1858,7 +1855,7 @@ function sudo($username, $password, $command)
     $process = proc_open('expect', $descriptorspec, $pipes, null, null);
 
     if ($process === false) {
-        warning('Failed to run expect');
+        \Sledgehammer\warning('Failed to run expect');
 
         return;
     }
@@ -1966,6 +1963,7 @@ function collection($traversable)
 function cache($path, $options, $closure)
 {
     $cache = PropertyPath::get($path, Cache::rootNode());
+
     return $cache->value($options, $closure);
 }
 
@@ -2000,7 +1998,7 @@ function once($callback)
 
 function getDatabase($link = 'default')
 {
-    deprecated('\\Sledgehammer\\getDatabase() is deprecated in favor of Connection::instance()');
+    \Sledgehammer\deprecated('\\Sledgehammer\\getDatabase() is deprecated in favor of Connection::instance()');
 
     return Connection::instance($link);
 }

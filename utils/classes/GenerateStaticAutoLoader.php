@@ -4,16 +4,16 @@ namespace Sledgehammer\Core;
 
 /**
  * Run the generate_static_library.php script from DevUtils.
- *
-
  */
-class GenerateStaticAutoLoader extends Util {
-
-    function __construct() {
+class GenerateStaticAutoLoader extends Util
+{
+    public function __construct()
+    {
         parent::__construct('Optimize AutoLoader');
     }
 
-    function generateContent() {
+    public function generateContent()
+    {
         $warningMessage = 'This will generate a <b>AutoLoader.db.php</b> file which contains the file-locations for all detected classes and interfaces.<br /><br />';
         $warningMessage .= 'Changes in will no longer be detected by the AutoLoader!<br />';
         $warningMessage .= 'You\'ll need to rerun this script when definitions have changed.';
@@ -22,9 +22,7 @@ class GenerateStaticAutoLoader extends Util {
         if ($answer == 'continue') {
             return new UtilScript('generate_static_autoloader.php', 'Generate AutoLoader database');
         }
+
         return $dialog;
     }
-
 }
-
-?>

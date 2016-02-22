@@ -88,7 +88,7 @@ foreach ($files as $filename) {
  * URL path to the root folder. Example: "/" or "/site1/"
  */
 define('Sledgehammer\WEBPATH', $webpath);
-$folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(WEBPATH)), $match);
+$folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(WEB\Sledgehammer\PATH)), $match);
 /*
  * Relative URL path to the root folder. Example: "../"
  */

@@ -3,7 +3,6 @@
 namespace SledgehammerTests\Core;
 
 use Sledgehammer\Core\Database\Sql;
-use function Sledgehammer\select;
 
 /**
  * Unittest for the Sql query generator.
@@ -12,7 +11,7 @@ class SqlTest extends TestCase
 {
     public function test_method_chaining()
     {
-        $sql = select('c.id')
+        $sql = \Sledgehammer\select('c.id')
                 ->from('customers AS c')
                 ->innerJoin('orders', 'c.id = customer_id')
                 ->andWhere('c.id = 1');
@@ -45,16 +44,16 @@ class SqlTest extends TestCase
 
     public function test_nested_conditions()
     {
-        $sql = select('*')->from('customers')->where(array('OR', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
+        $sql = \Sledgehammer\select('*')->from('customers')->where(array('OR', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 OR (special = 1 AND age < 12)');
 
-        $sql = select('*')->from('customers')->orWhere(array('AND', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
+        $sql = \Sledgehammer\select('*')->from('customers')->orWhere(array('AND', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 AND special = 1 AND age < 12');
 
-        $sql = select('*')->from('customers')->where(array('bonus = 1'))->orWhere('special = 1')->andWhere('age < 12');
+        $sql = \Sledgehammer\select('*')->from('customers')->where(array('bonus = 1'))->orWhere('special = 1')->andWhere('age < 12');
         $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE (bonus = 1 OR special = 1) AND age < 12');
 
-        $sql = select('*')->from('customers');
+        $sql = \Sledgehammer\select('*')->from('customers');
         $sql->where = array(
             'AND', // ignored (only 1 condition)
             array(

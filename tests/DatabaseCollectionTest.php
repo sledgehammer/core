@@ -5,7 +5,6 @@ namespace SledgehammerTests\Core;
 use PDO;
 use Sledgehammer\Core\Database\Connection;
 use Sledgehammer\Core\Database\DatabaseCollection;
-use function Sledgehammer\select;
 
 class DatabaseCollectionTest extends DatabaseTestCase
 {
@@ -157,6 +156,6 @@ class DatabaseCollectionTest extends DatabaseTestCase
      */
     private function getDatabaseCollection()
     {
-        return new DatabaseCollection(select('*')->from('fruits'), $this->dbLink);
+        return new DatabaseCollection(\Sledgehammer\select('*')->from('fruits'), $this->dbLink);
     }
 }

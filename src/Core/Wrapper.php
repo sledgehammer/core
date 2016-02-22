@@ -38,7 +38,7 @@ abstract class Wrapper extends Object implements \ArrayAccess, \Iterator
             if (property_exists($this, $property)) {
                 $this->$property = $value;
             } else {
-                notice('Invalid option: "'.$name.'"');
+                \Sledgehammer\notice('Invalid option: "'.$name.'"');
             }
         }
     }

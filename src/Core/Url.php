@@ -1,11 +1,8 @@
 <?php
+
 namespace Sledgehammer\Core;
 
 use Exception;
-use function Sledgehammer\array_value;
-use function Sledgehammer\deprecated;
-use function Sledgehammer\set_object_vars;
-
 
 /**
  * Utility class for generating and manipulating urls.
@@ -92,7 +89,7 @@ class Url extends Object
         if (isset($info['path'])) {
             $info['path'] = rawurldecode($info['path']); // "%20" omzetten naar " " e.d.
         }
-        set_object_vars($this, $info);
+        \Sledgehammer\set_object_vars($this, $info);
     }
 
     /**
@@ -180,7 +177,7 @@ class Url extends Object
     public static function getCurrentURL()
     {
         if (self::$current === null) {
-            if (array_value($_SERVER, 'HTTPS') == 'on') {
+            if (\Sledgehammer\array_value($_SERVER, 'HTTPS') == 'on') {
                 $scheme = 'https';
                 $port = ($_SERVER['SERVER_PORT'] == '443') ? '' : ':'.$_SERVER['SERVER_PORT'];
             } else {
@@ -224,7 +221,7 @@ class Url extends Object
      */
     public static function parameters($append = [], $stack = null)
     {
-        deprecated('Maar nog geen alternatief beschikbaar');
+        \Sledgehammer\deprecated('Maar nog geen alternatief beschikbaar');
         if ($stack === null) { // Huidige parameters opvragen
             $stack = $_GET;
         } elseif (is_string($stack)) { // Is er geen array, maar een query string meegegeven?
@@ -247,7 +244,7 @@ class Url extends Object
      */
     public static function subdomain($index = -1, $uri = null)
     {
-        deprecated('Maar nog geen alternatief beschikbaar');
+        \Sledgehammer\deprecated('Maar nog geen alternatief beschikbaar');
 
         if ($uri === null) {
             $uri = self::info('host');
@@ -271,7 +268,7 @@ class Url extends Object
      */
     public static function domain()
     {
-        deprecated('Maar nog geen alternatief beschikbaar');
+        \Sledgehammer\deprecated('Maar nog geen alternatief beschikbaar');
 
         $hostname = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : php_uname('n');
         $regexDomain = '/[a-z0-9]+([a-z]{2}){0,1}.[a-z]{2,4}$/i';

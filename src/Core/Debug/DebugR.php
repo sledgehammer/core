@@ -4,8 +4,6 @@ namespace Sledgehammer\Core\Debug;
 
 use Sledgehammer\Core\Json;
 use Sledgehammer\Core\Object;
-use function Sledgehammer\array_value;
-use function Sledgehammer\notice;
 
 /**
  * DebugR, send additional debugging information via HTTP heders.
@@ -60,7 +58,7 @@ class DebugR extends Object
     }
 
     /**
-     * Send an message to console.warning().
+     * Send an message to console.\Sledgehammer\warning().
      *
      * @param string $message The warning message
      */
@@ -119,7 +117,7 @@ class DebugR extends Object
             'overflow-x: auto',
             'white-space: normal',
         );
-        self::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.array_value($_SERVER, 'REQUEST_METHOD').'&nbsp;&nbsp;'.array_value($_SERVER, 'REQUEST_URI').'</div>'.$html);
+        self::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.\Sledgehammer\array_value($_SERVER, 'REQUEST_METHOD').'&nbsp;&nbsp;'.\Sledgehammer\array_value($_SERVER, 'REQUEST_URI').'</div>'.$html);
     }
 
     /**
@@ -133,15 +131,15 @@ class DebugR extends Object
             return;
         }
         if (preg_match('/^(?<label>[a-z0-9\-]+)(?<suffix>\\.[0-9]+)?$/i', $label, $match) == false) {
-            notice('Label: "'.$label.'" in invalid', 'A label may contain number, letters and "-"');
+            \Sledgehammer\notice('Label: "'.$label.'" in invalid', 'A label may contain number, letters and "-"');
 
             return;
         }
-        $number = array_value(self::$increments, $match['label']);
+        $number = \Sledgehammer\array_value(self::$increments, $match['label']);
         if (isset($match['suffix'])) { // Has a suffix?
             $labelSuffix = $match[0];
             if ($overwrite === false) {
-                notice('Overwrite flag required for label: "'.$label.'"');
+                \Sledgehammer\notice('Overwrite flag required for label: "'.$label.'"');
 
                 return;
             }
@@ -160,7 +158,7 @@ class DebugR extends Object
             } else {
                 $location = ', output started in '.$file.' on line '.$line;
             }
-            notice('Couldn\'t sent header(s)'.$location);
+            \Sledgehammer\notice('Couldn\'t sent header(s)'.$location);
 
             return;
         }

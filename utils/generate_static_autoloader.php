@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Rebuild the Library database-file based on the installed modules
+ * Rebuild the Library database-file based on the installed modules.
  */
 
 namespace Sledgehammer\Core;
 
-$projectFolder = realpath(__DIR__ . '/../../../');
+$projectFolder = realpath(__DIR__.'/../../../');
 if ($projectFolder == '') {
     trigger_error('Invalid directory structure, expection "$folder/sledgehammer/core/"', E_USER_ERROR);
 }
-require_once(__DIR__ . '/../bootstrap.php');
+require_once __DIR__.'/../bootstrap.php';
 
 echo "Resolving required modules...\n";
 $modules = Framework::getModules();
@@ -23,12 +23,12 @@ foreach ($modules as $module) {
 
 echo "Scanning classes and interfaces...\n";
 ini_set('memory_limit', '128M'); // Bij grote hoeveelheden classes (1000+) gebruikt php token_get_all() onnodig veel geheugen
-$loader = new Autoloader(PATH);
+$loader = new Autoloader(\Sledgehammer\PATH);
 $loader->enableCache = false;
 foreach ($modules as $module) {
     $path = $module['path'];
-    if (file_exists($module['path'] . 'classes')) { // A sledgehammer folder layout?
-        $path = $path . 'classes'; // Only import the classes folder
+    if (file_exists($module['path'].'classes')) { // A sledgehammer folder layout?
+        $path = $path.'classes'; // Only import the classes folder
         $settings = []; // Use the strict default settings
     } else {
         // Disable validations
@@ -44,11 +44,10 @@ foreach ($modules as $module) {
     $loader->importFolder($path, $settings);
 }
 echo "Writing database...\n";
-$loader->saveDatabase(PATH . 'AutoLoader.db.php');
-if (file_exists(PATH . 'AutoLoader.db.php')) {
+$loader->saveDatabase(\Sledgehammer\PATH.'AutoLoader.db.php');
+if (file_exists(\Sledgehammer\PATH.'AutoLoader.db.php')) {
     echo "  done.\n";
 } else {
     echo "  failed.\n";
     exit(0);
 }
-?>

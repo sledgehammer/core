@@ -4,9 +4,6 @@ namespace Sledgehammer\Core\Debug;
 
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Object;
-use const Sledgehammer\PATH;
-use const Sledgehammer\WEBPATH;
-use const Sledgehammer\WEBROOT;
 
 /**
  * Parses a var_dump() and renders a syntax highlighted version of var_export().
@@ -116,7 +113,7 @@ class Dump extends Object
                 'file' => $backtrace[0]['file'],
                 'line' => $backtrace[0]['line'],
             ];
-            if (array_value($backtrace[0], 'class') === 'Sledgehammer\DebugR') {
+            if (\Sledgehammer\array_value($backtrace[0], 'class') === 'Sledgehammer\DebugR') {
                 $this->trace['invocation'] = 'DebugR::dump';
             }
         }
@@ -164,12 +161,12 @@ class Dump extends Object
             $this->offset = 0;
             $this->parseVardump();
         } catch (Exception $e) { // parsing failed?
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
             echo $this->vardump; //show original var_dump()
         }
         echo "\n</pre>\n";
         if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
-            $webroot = defined('Sledgehammer\WEBPATH') ? WEBPATH : WEBROOT;
+            $webroot = defined('Sledgehammer\WEBPATH') ? \Sledgehammer\WEBPATH : \Sledgehammer\WEBROOT;
             echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
         } else {
             echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js\"><\/sc' + 'ript>')</script>";
@@ -208,7 +205,7 @@ class Dump extends Object
 
             return ob_get_clean();
         } catch (Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
 
             return '';
         }
@@ -542,7 +539,7 @@ class Dump extends Object
         }
         echo '</span>)&nbsp;';
         $this->renderType('comment', ' in ');
-        echo '/', str_replace('\\', '/', str_replace(PATH, '', $this->trace['file']));
+        echo '/', str_replace('\\', '/', str_replace(\Sledgehammer\PATH, '', $this->trace['file']));
         $this->renderType('comment', ' on line ');
         echo $this->trace['line'];
         echo "</div>\n";

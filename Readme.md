@@ -40,13 +40,9 @@ A general purpose PHP toolkit, with a focus on debugging.
 
 ## Constants
 
-* ENVIRONMENT : The current environment ("development", "staging" or "production") based on `$_SERVER['APPLICATION_ENV']`  
-* E\_MAX      : Maximum errorlevel, because `E_ALL` doesn't include `E_STRICT` messages in php 5.3.  
-* PATH        : The absolute (server)path of the project folder  
-* TMP_DIR     : The absolute (server)path of the tmp/cache folder  
-* APP_DIR     : The absolute (server)path of the application folder  
-* MODULE_DIR  : The absolute (server)path of the sledgehammer (module) folder
-
+* \Sledgehammer\ENVIRONMENT : The current environment ("development", "staging" or "production") based on `$_SERVER['APPLICATION_ENV']`  
+* \Sledgehammer\PATH        : The absolute (server)path of the project folder  
+* \Sledgehammer\TMP_DIR     : The absolute (server)path of the tmp/cache folder  
 
 ## Installation
 
@@ -62,11 +58,11 @@ You can try the [dump](http://sledgehammer.github.com/api/function-dump.html) fu
 
 ## Configuration
 
-If no `ENVIRONMENT` constant has been defined, Sledgehammer will look at the value of `$_SERVER['APPLICATION_ENV']`. If this isn't found either, the default fallback is "production"
+If no `\Sledgehammer\ENVIRONMENT` constant has been defined, Sledgehammer will look at the value of `$_SERVER['APPLICATION_ENV']`. If this isn't found either, the default fallback is "production"
 
 You can set the `APPLICATION_ENV` by adding `SetEnv APPLICATION_ENV development` to the `.htaccess` or `httpd.conf`:
 
-You can force an environment by defining the ENVIRONMENT constant before including "vendor/autoload.php"
+You can force an environment by defining the \Sledgehammer\ENVIRONMENT constant before including "vendor/autoload.php"
 
 ## ErrorHandler
 

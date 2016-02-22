@@ -59,7 +59,7 @@ class HttpAuthentication extends Object
             }
         }
         if (headers_sent()) {
-            warning('Unable show login dialog, HTTP headers already sent');
+            \Sledgehammer\warning('Unable show login dialog, HTTP headers already sent');
 
             return false;
         }

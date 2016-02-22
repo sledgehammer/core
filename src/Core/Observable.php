@@ -6,10 +6,6 @@ use Closure;
 use ReflectionObject;
 use ReflectionProperty;
 use stdClass;
-use function Sledgehammer\get_public_vars;
-use function Sledgehammer\notice;
-use function Sledgehammer\quoted_human_implode;
-use function Sledgehammer\warning;
 
 /**
  * Observable, an Event/Listener.
@@ -74,7 +70,7 @@ trait Observable
                 call_user_func_array($callback, $arguments);
             }
         } else {
-            notice('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
+            \Sledgehammer\notice('Event: "'.$event.'" not registered', 'Available events: '.\Sledgehammer\quoted_human_implode(', ', array_keys($this->events)));
         }
     }
 
@@ -94,16 +90,16 @@ trait Observable
         if ($this->hasEvent($event) === false) {
             $availableEvents = array_keys($this->events);
             $availableEvents[] = 'change';
-            foreach (array_keys(get_public_vars($this)) as $property) {
+            foreach (array_keys(\Sledgehammer\get_public_vars($this)) as $property) {
                 $availableEvents[] = 'change:'.$property;
             }
-            throw new InfoException('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
+            throw new InfoException('Event: "'.$event.'" not registered', 'Available events: '.\Sledgehammer\quoted_human_implode(', ', array_keys($this->events)));
         }
         $this->events[$event][] = $callback;
         end($this->events[$event]);
         $identifier = key($this->events[$event]);
         if ($event === 'change') {
-            $properties = array_merge(array_keys(get_public_vars($this)), array_keys($this->__kvo));
+            $properties = array_merge(array_keys(\Sledgehammer\get_public_vars($this)), array_keys($this->__kvo));
             $self = $this;
             foreach ($properties as $property) {
                 $this->on('change:'.$property, function ($sender, $new, $old) use ($self, $property) {
@@ -136,7 +132,7 @@ trait Observable
             return true;
         }
         if ($event === 'change') {
-            return (count(get_public_vars($this)) + count($this->__kvo)) !== 0; // A class without public properties doesn't have a change event.
+            return (count(\Sledgehammer\get_public_vars($this)) + count($this->__kvo)) !== 0; // A class without public properties doesn't have a change event.
         }
         if (preg_match('/^change:([a-z0-9]+)$/i', $event, $matches)) {
             if (array_key_exists($matches[1], $this->__kvo)) {
@@ -163,12 +159,12 @@ trait Observable
     public function off($event, $identifier)
     {
         if ($this->hasEvent($event) === false) {
-            warning('Event: "'.$event.'" not registered', 'Available events: '.quoted_human_implode(', ', array_keys($this->events)));
+            \Sledgehammer\warning('Event: "'.$event.'" not registered', 'Available events: '.\Sledgehammer\quoted_human_implode(', ', array_keys($this->events)));
 
             return false;
         }
         if (empty($this->events[$event][$identifier])) {
-            warning('Identifier: "'.$identifier.'" not found in listeners for event: "'.$event.'"', 'Available identifiers: '.quoted_human_implode(', ', array_keys($this->events[$event])));
+            \Sledgehammer\warning('Identifier: "'.$identifier.'" not found in listeners for event: "'.$event.'"', 'Available identifiers: '.\Sledgehammer\quoted_human_implode(', ', array_keys($this->events[$event])));
 
             return false;
         }

@@ -5,8 +5,6 @@ namespace SledgehammerTests\Core;
 use Exception;
 use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\Debug\PhpTokenizer;
-use function Sledgehammer\dump;
-use function Sledgehammer\report_exception;
 
 class PhpTokenizerTest extends TestCase
 {
@@ -26,14 +24,14 @@ class PhpTokenizerTest extends TestCase
             foreach ($tokens as $token) {
                 if (strpos($token[1], '{') !== false) {
                     if ($token[0] != 'T_OPEN_BRACKET' || $token[1] != '{') {
-                        dump($token);
+                        \Sledgehammer\dump($token);
                     }
                 }
             }
-            dump($tokens);
+            \Sledgehammer\dump($tokens);
             ob_flush();
         } catch (Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
             ob_flush();
         }
     }
@@ -59,7 +57,7 @@ class PhpTokenizerTest extends TestCase
             }
             $this->assertEquals($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
         } catch (Exception $e) {
-            report_exception($e);
+            \Sledgehammer\report_exception($e);
             ob_flush();
             $this->fail($e->getMessage());
         }

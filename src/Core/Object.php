@@ -3,11 +3,6 @@
 namespace Sledgehammer\Core;
 
 use ReflectionObject;
-use function Sledgehammer\build_properties_hint;
-use function Sledgehammer\notice;
-use function Sledgehammer\reflect_properties;
-use function Sledgehammer\syntax_highlight;
-use function Sledgehammer\warning;
 
 /**
  * A generic php superclass.
@@ -30,7 +25,7 @@ abstract class Object
      */
     public function __get($property)
     {
-        warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint(reflect_properties($this)));
+        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint(\Sledgehammer\reflect_properties($this)));
     }
 
     /**
@@ -41,7 +36,7 @@ abstract class Object
      */
     public function __set($property, $value)
     {
-        warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', build_properties_hint(reflect_properties($this)));
+        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint(\Sledgehammer\reflect_properties($this)));
         $this->$property = $value; // Add the property to the object. (PHP's default behavior)
     }
 
@@ -70,11 +65,11 @@ abstract class Object
             foreach ($rMethod->getParameters() as $rParam) {
                 $param = '$'.$rParam->name;
                 if ($rParam->isDefaultValueAvailable()) {
-                    $param .= ' = '.syntax_highlight($rParam->getDefaultValue());
+                    $param .= ' = '.\Sledgehammer\syntax_highlight($rParam->getDefaultValue());
                 }
                 $parameters[] = $param;
             }
-            $methods[$scope][] = syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
+            $methods[$scope][] = \Sledgehammer\syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
         }
         $methodsText = '';
         $glue = '<br />&nbsp;&nbsp;';
@@ -91,7 +86,7 @@ abstract class Object
      */
     public function __toString()
     {
-        notice('Object: "'.get_class($this).'" is used as string');
+        \Sledgehammer\notice('Object: "'.get_class($this).'" is used as string');
 
         return 'Object('.get_class($this).')';
     }

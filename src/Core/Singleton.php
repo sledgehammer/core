@@ -5,7 +5,6 @@ namespace Sledgehammer\Core;
 use Closure;
 use Exception;
 use ReflectionClass;
-use function Sledgehammer\quoted_human_implode;
 
 /**
  * Adds singleton behavior to a class.
@@ -63,7 +62,7 @@ trait Singleton
 
                 return $instance;
             }
-            throw new InfoException(static::class.'::instances["'.$identifier.'"] is not configured', 'Available instances: '.quoted_human_implode(' or ', array_keys(static::$instances)));
+            throw new InfoException(static::class.'::instances["'.$identifier.'"] is not configured', 'Available instances: '.\Sledgehammer\quoted_human_implode(' or ', array_keys(static::$instances)));
         }
         $connection = static::$instances[$identifier];
         if ($identifier instanceof static) {

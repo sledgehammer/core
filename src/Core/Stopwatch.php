@@ -47,7 +47,7 @@ class Stopwatch extends Object
     {
         $elapsed = microtime(true) - $this->start;
 
-        return format_parsetime($elapsed).' sec';
+        return \Sledgehammer\format_parsetime($elapsed).' sec';
     }
 
     /**
@@ -61,6 +61,6 @@ class Stopwatch extends Object
         $elapsed = $now - $this->lap;
         $this->lap = $now;
 
-        return format_parsetime($elapsed).' sec';
+        return \Sledgehammer\format_parsetime($elapsed).' sec';
     }
 }

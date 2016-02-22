@@ -4,10 +4,6 @@
  * Bootstrap the Sledgehammer Framework.
  */
 use Sledgehammer\Core\Debug\DebugR;
-use const Sledgehammer\PATH;
-use const Sledgehammer\VENDOR_DIR;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\mkdirs;
 
 /*
  * 1. Set DebugR statusbar header.
@@ -47,19 +43,19 @@ if (!defined('Sledgehammer\VENDOR_DIR')) {
     }
 }
 // Directory of the project.
-define('Sledgehammer\PATH',  dirname(VENDOR_DIR).DIRECTORY_SEPARATOR);
+define('Sledgehammer\PATH',  dirname(\Sledgehammer\VENDOR_DIR).DIRECTORY_SEPARATOR);
 
 // Detect & create a writable tmp folder
 if (defined('Sledgehammer\TMP_DIR') === false) {
-    $__TMP_DIR = PATH.'tmp'.DIRECTORY_SEPARATOR;
+    $__TMP_DIR = \Sledgehammer\PATH.'tmp'.DIRECTORY_SEPARATOR;
     if (is_dir($__TMP_DIR) && is_writable($__TMP_DIR)) { // The project has a "tmp" folder?
         $__TMP_DIR .= 'sledgehammer';
     } else {
-        $__TMP_DIR = PATH.'storage'.DIRECTORY_SEPARATOR;
+        $__TMP_DIR = \Sledgehammer\PATH.'storage'.DIRECTORY_SEPARATOR;
         if (is_dir($__TMP_DIR) && is_writable($__TMP_DIR)) { // The project has a laravel storage folder?
             $__TMP_DIR .= 'sledgehammer';
         } else { // Use the global /tmp
-            $__TMP_DIR = '/tmp/sledgehammer_'.md5(PATH);
+            $__TMP_DIR = '/tmp/sledgehammer_'.md5(\Sledgehammer\PATH);
         }
     }
     if (function_exists('posix_getpwuid')) {
@@ -83,7 +79,7 @@ define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|NOT IN|LIKE|NOT LIK
 require_once __DIR__.'/functions.php'; // Namespaced functions
 require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
 
-mkdirs(TMP_DIR);
+\Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR);
 
 /*
  * Configure and enable the AutoLoader

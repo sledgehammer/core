@@ -4,10 +4,6 @@ namespace Sledgehammer\Core;
 
 use ArrayAccess;
 use DirectoryIterator;
-use const Sledgehammer\TMP_DIR;
-use function Sledgehammer\mkdirs;
-use function Sledgehammer\notice;
-use function Sledgehammer\quoted_human_implode;
 
 /**
  * A Cache node in the Caching graph.
@@ -15,7 +11,7 @@ use function Sledgehammer\quoted_human_implode;
  * @link https://github.com/sledgehammer/sledgehammer/wiki/Caching
  *
  * API:
- *   return cache('Twitter.feeds', '+15min', function () {
+ *   return \Sledgehammer\cache('Twitter.feeds', '+15min', function () {
  *     // slow operation
  *     return $outcome;
  *   });
@@ -94,7 +90,7 @@ class Cache extends Object implements ArrayAccess
     public function __destruct()
     {
         if ($this->_locked) {
-            notice('Cache is locked, releasing: "'.$this->_identifier.'"');
+            \Sledgehammer\notice('Cache is locked, releasing: "'.$this->_identifier.'"');
             $this->release(); // Auto-release locks on time-outs
         }
     }
@@ -113,7 +109,7 @@ class Cache extends Object implements ArrayAccess
         $backend = 'file';
         self::$instance = new self('', $backend);
         if ($backend === 'file') {
-            mkdirs(TMP_DIR.'Cache');
+            \Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR.'Cache');
             if (rand(1, 25) === 1) { // Run gc only once in every X requests.
                 self::file_gc();
             }
@@ -153,7 +149,7 @@ class Cache extends Object implements ArrayAccess
         );
         $options = array_merge($default, $options);
         if (count($options) !== count($default)) {
-            notice('Option: '.quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
+            \Sledgehammer\notice('Option: '.\Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
         }
         if ($options['expires'] === false && $options['forever'] === false && $options['max_age'] === false) {
             throw new InfoException('Invalid options: "expires",  "max_age" or "forever" must be set', $options);
@@ -227,7 +223,7 @@ class Cache extends Object implements ArrayAccess
                 $maxAge = $now - $maxAge;
             }
             if ($maxAge > $now) {
-                notice('maxAge is '.($maxAge - $now).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
+                \Sledgehammer\notice('maxAge is '.($maxAge - $now).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
 
                 return false;
             }
@@ -258,7 +254,7 @@ class Cache extends Object implements ArrayAccess
             if ($expires <= 3600) { // Is a ttl?
                 $expires += time();
             } elseif ($expires < time()) {
-                notice('Writing an expired cache entry', 'Use Cache->clear() to invalidate a cache entry');
+                \Sledgehammer\notice('Writing an expired cache entry', 'Use Cache->clear() to invalidate a cache entry');
             }
         }
         $method = $this->_backend.'_write';
@@ -354,7 +350,7 @@ class Cache extends Object implements ArrayAccess
         }
         $success = apc_store($this->_guid, $data, $ttl);
         if ($success === false) {
-            warning('Failed to write value to the cache');
+            \Sledgehammer\warning('Failed to write value to the cache');
         }
     }
 
@@ -387,7 +383,7 @@ class Cache extends Object implements ArrayAccess
     private function apc_release()
     {
         if (apc_delete($this->_guid.'.lock') == false) {
-            warning('apc_delete() failed, was already released?');
+            \Sledgehammer\warning('apc_delete() failed, was already released?');
         }
     }
 
@@ -396,7 +392,7 @@ class Cache extends Object implements ArrayAccess
         if ($this->_file !== null) {
             throw new Exception('Cache already has an open filepointer');
         }
-        $this->_file = fopen(TMP_DIR.'Cache/'.$this->_guid, 'c+');
+        $this->_file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid, 'c+');
         if ($this->_file === false) {
             throw new Exception('Creating lockfile failed');
         }
@@ -421,11 +417,11 @@ class Cache extends Object implements ArrayAccess
     private function file_read(&$output)
     {
         if ($this->_file === null) { // unlocked read?
-            $filename = TMP_DIR.'Cache/'.$this->_guid;
+            $filename = \Sledgehammer\TMP_DIR.'Cache/'.$this->_guid;
             if (file_exists($filename) === false) {
                 return false;
             }
-            $file = fopen(TMP_DIR.'Cache/'.$this->_guid, 'r');
+            $file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid, 'r');
         } else {
             $file = $this->_file;
         }
@@ -470,7 +466,7 @@ class Cache extends Object implements ArrayAccess
         if ($this->_file) {
             throw new Exception('Can\'t clear a locked file');
         }
-        unlink(TMP_DIR.'Cache/'.$this->_guid);
+        unlink(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid);
     }
 
     /**
@@ -478,7 +474,7 @@ class Cache extends Object implements ArrayAccess
      */
     private static function file_gc()
     {
-        $dir = new DirectoryIterator(TMP_DIR.'Cache');
+        $dir = new DirectoryIterator(\Sledgehammer\TMP_DIR.'Cache');
         $files = [];
         foreach ($dir as $entry) {
             if ($entry->isFile()) {
@@ -490,7 +486,7 @@ class Cache extends Object implements ArrayAccess
         $cache = new self('GC', 'file');
         foreach ($files as $id) {
             $cache->_guid = $id;
-            $cache->_file = fopen(TMP_DIR.'Cache/'.$id, 'r');
+            $cache->_file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$id, 'r');
             $hit = $cache->read($output);
             fclose($cache->_file);
             $cache->_file = null;

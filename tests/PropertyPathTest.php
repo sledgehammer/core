@@ -6,7 +6,6 @@ use PHPUnit_Framework_Error_Notice;
 use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\PropertyPath;
 use Sledgehammer\Core\PropertyPath_Tester;
-use function Sledgehammer\is_closure;
 
 class PropertyPathTest extends TestCase
 {
@@ -198,7 +197,7 @@ class PropertyPathTest extends TestCase
     {
         $closure = PropertyPath::compile('id');
         $item = array('id' => 8);
-        $this->assertTrue(is_closure($closure), 'compile() should return a closure');
+        $this->assertTrue(\Sledgehammer\is_closure($closure), 'compile() should return a closure');
         $this->assertEquals(8, $closure($item));
     }
 

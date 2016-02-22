@@ -2,27 +2,28 @@
 
 /**
  * Vergelijkt 2 environments, en geeft aan constantes/database settings verschillen/ontbreken.
- *
  */
 
 namespace Sledgehammer\Core;
 
-class CompareEnvironments extends Util {
-
-    function __construct() {
+class CompareEnvironments extends Util
+{
+    public function __construct()
+    {
         $this->title = 'Compare environment settings';
     }
 
     /**
-     * Constroleerd op verschillende opties
+     * Constroleerd op verschillende opties.
      *
-     * @param array $data Dit array wordt gevult met de verschillen
+     * @param array  $data   Dit array wordt gevult met de verschillen
      * @param string $module Naam van de betreffende module
-     * @param string $file Type bestand (constants.ini / database.ini)
-     * @param array $source Array met opties van de bron environment
-     * @param array $target Array met opties van de doel environment
+     * @param string $file   Type bestand (constants.ini / database.ini)
+     * @param array  $source Array met opties van de bron environment
+     * @param array  $target Array met opties van de doel environment
      */
-    function formatted_diff($source, $target) {
+    public function formatted_diff($source, $target)
+    {
         $data = [];
         $missing_in_source = array_diff_key($target, $source);
         if (count($missing_in_source) > 0) {
@@ -41,7 +42,7 @@ class CompareEnvironments extends Util {
                     'source' => htmlentities($value),
                     'target' => '<span style="color:red">Missing</span>',
                 );
-            } elseif (!equals($source[$key], $target[$key])) {
+            } elseif (!\Sledgehammer\equals($source[$key], $target[$key])) {
                 $data[] = array(
                     'setting' => $key,
                     'source' => htmlentities($value),
@@ -49,10 +50,12 @@ class CompareEnvironments extends Util {
                 );
             }
         }
+
         return $data;
     }
 
-    function execute() {
+    public function execute()
+    {
         // Genereer een formulier waarmee je 2 environments kan kiezen.
         $environments = array('development', 'staging', 'production');
         $Form = new Form(array('method' => 'get'), array(
@@ -93,7 +96,7 @@ class CompareEnvironments extends Util {
         // Vergelijk database instellingen
         $database_diff = [];
         $db_links_compared = [];
-        $database_ini = $this->paths['project'] . 'app/database.ini';
+        $database_ini = $this->paths['project'].'app/database.ini';
         if (file_exists($database_ini)) {
             $database_settings = parse_ini_file($database_ini, true);
             foreach ($database_settings as $env_and_link => $settings) {
@@ -105,15 +108,15 @@ class CompareEnvironments extends Util {
                 }
                 $data = false;
                 if ($environment == $source) { // Is deze database setting voor de bron environment?
-                    if (isset($database_settings[$target . '.' . $link])) { // Is deze link ook voor de target environment geconfigureerd?
-                        $target_settings = $database_settings[$target . '.' . $link];
+                    if (isset($database_settings[$target.'.'.$link])) { // Is deze link ook voor de target environment geconfigureerd?
+                        $target_settings = $database_settings[$target.'.'.$link];
                     } else {
                         $target_settings = []; // Er zijn geen target settings
                     }
                     $data = formatted_diff($settings, $target_settings);
                 } elseif ($environment == $target) {
-                    if (isset($database_settings[$source . '.' . $link])) { // Is deze link ook voor de target environment geconfigureerd?
-                        $source_settings = $database_settings[$source . '.' . $link];
+                    if (isset($database_settings[$source.'.'.$link])) { // Is deze link ook voor de target environment geconfigureerd?
+                        $source_settings = $database_settings[$source.'.'.$link];
                     } else {
                         $source_settings = []; // Er zijn geen target settings
                     }
@@ -121,7 +124,7 @@ class CompareEnvironments extends Util {
                 }
                 if ($data) {
                     foreach ($data as $row) {
-                        $row['Link'] = '[' . $link . ']';
+                        $row['Link'] = '['.$link.']';
                         $database_diff[] = $row;
                     }
                     $db_links_compared[] = $link;
@@ -133,30 +136,28 @@ class CompareEnvironments extends Util {
             $ConstantsDiff = new InteractiveTable(array('Module', 'setting', 'source', 'target'), '#');
             $ConstantsDiff->headers = array(
                 'setting' => 'Constant',
-                'source' => '[' . $source . ']',
-                'target' => '[' . $target . ']',
+                'source' => '['.$source.']',
+                'target' => '['.$target.']',
             );
             $ConstantsDiff->Iterator = $constants_diff;
-            $output .= '<h2>Constants.ini\'s</h2>' . view_to_string($ConstantsDiff);
+            $output .= '<h2>Constants.ini\'s</h2>'.view_to_string($ConstantsDiff);
         }
 
         if (count($database_diff) > 0) {
             $DatabaseDiff = new InteractiveTable(array('Link', 'setting', 'source', 'target'), '#');
             $DatabaseDiff->headers = array(
                 'setting' => 'Setting',
-                'source' => '[' . $source . ']',
-                'target' => '[' . $target . ']',
+                'source' => '['.$source.']',
+                'target' => '['.$target.']',
             );
             $DatabaseDiff->Iterator = $database_diff;
-            $output .= '<h2>Database.ini</h2>' . view_to_string($DatabaseDiff);
+            $output .= '<h2>Database.ini</h2>'.view_to_string($DatabaseDiff);
         }
 
         if ($output == '') {
             $output .= view_to_string(Alert::info('<h3>No differences found</h3>The environments are identical'));
         }
-        return new Html(view_to_string($Form) . '<br />' . $output);
+
+        return new Html(view_to_string($Form).'<br />'.$output);
     }
-
 }
-
-?>

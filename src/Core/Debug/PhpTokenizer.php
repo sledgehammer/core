@@ -1,12 +1,10 @@
 <?php
+
 namespace Sledgehammer\Core\Debug;
 
 use Exception;
 use Iterator;
 use Sledgehammer\Core\Object;
-use function Sledgehammer\dump;
-use function Sledgehammer\human_implode;
-use function Sledgehammer\notice;
 
 /**
  * A tokenizer that gives context to tokens of php internal tokenizer.
@@ -31,7 +29,7 @@ use function Sledgehammer\notice;
  *   T_CALL         An global function that is called in the code
  *   T_METHOD_CALL  An method that is called in the code
  */
-class PhpTokenizer extends Object implements \Iterator
+class PhpTokenizer extends Object implements Iterator
 {
     /**
      * Current state "INIT", "HTML", "PHP", "USE", "NAMESPACE", etc.
@@ -100,7 +98,7 @@ class PhpTokenizer extends Object implements \Iterator
         $this->tokens = token_get_all($contents);
         $error = error_get_last();
         if ($error !== $previousError) {
-            notice($error['type'], $error['message']);
+            \Sledgehammer\notice($error['type'], $error['message']);
         }
     }
 
@@ -866,12 +864,12 @@ class PhpTokenizer extends Object implements \Iterator
         if (is_array($token)) {
             $token[0] = token_name($token[0]);
         }
-        dump($token);
+        \Sledgehammer\dump($token);
     }
 
     private function failure($message)
     {
-        throw new Exception$message.' (state "'.$this->state.'" parsing line '.$this->lineNumber.')');
+        throw new Exception($message.' (state "'.$this->state.'" parsing line '.$this->lineNumber.')');
     }
 
     /**
@@ -902,7 +900,7 @@ class PhpTokenizer extends Object implements \Iterator
         foreach ($expectedTokens as $expectedToken) {
             $names[] = $this->tokenName($expectedToken);
         }
-        $this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.human_implode('" or "', $names, '", "').'"');
+        $this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.\Sledgehammer\human_implode('" or "', $names, '", "').'"');
     }
 
     /**
@@ -936,6 +934,6 @@ class PhpTokenizer extends Object implements \Iterator
         if (is_string($expectedToken)) {
             return $token === $expectedToken;
         }
-        throw new Exception'Invalid value for parameter: $expectedToken');
+        throw new Exception('Invalid value for parameter: $expectedToken');
     }
 }
