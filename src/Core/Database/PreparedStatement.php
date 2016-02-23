@@ -63,7 +63,7 @@ class PreparedStatement extends Statement
         }
         $this->database->logger->append($statement, array('duration' => $executedIn));
         if ($result === false) {
-            $this->database->reportError($statement);
+            $this->database->reportError($statement, $this->errorInfo());
         } else {
             $this->database->checkWarnings($statement);
         }

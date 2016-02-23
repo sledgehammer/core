@@ -71,7 +71,7 @@ trait Singleton
         if (is_string($connection)) { // A reference to another instance?
             return static::instance($connection);
         }
-        if ($connection instanceof Closure) { // A closure which creates the instance?
+        if (is_array($connection) || get_class($connection) === 'Closure') { // A callback which creates the instance?
             static::$instances[$identifier] = call_user_func($connection);
 
             return static::instance($identifier);

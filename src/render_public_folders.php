@@ -1,14 +1,10 @@
 <?php
 
-namespace Sledgehammer\Core;
-
 /*
  * Matches the request against the files in the "public" folders.
  * When a file is found, that file will be sent to the browser.
  *
  * This script must be the first include in the "rewrite.php"
- *
-
  */
 if (!defined('Sledgehammer\STARTED')) {
     /*
@@ -38,7 +34,7 @@ foreach (explode('/', $webpath) as $i => $folder) {
 }
 $relativeWebpath = implode('/', $relativeWebpath);
 $files = [];
-$modulePath = dirname(__DIR__);
+$modulePath = dirname(dirname(__DIR__));
 // Scan for the public app folder.
 $appPath = dirname(__DIR__);
 while (strlen($appPath) > 3) { // 'C:\' == 3
@@ -79,16 +75,16 @@ foreach ($files as $filename) {
         require_once __DIR__.'/functions.php'; // voor render_file() en redirect()
         if (is_dir($filename)) {
             error_log('Requesting a public folder without a trailing slash, redirecting to "'.$uriPath.'/"', E_NOTICE);
-            redirect($uriPath.'/'); //	Redirect naar dezelfde url, maar dan als mapnaam
+            Sledgehammer\redirect($uriPath.'/'); //	Redirect naar dezelfde url, maar dan als mapnaam
         }
-        render_file($filename); // Render het gewone bestand.
+        Sledgehammer\render_file($filename); // Render het gewone bestand.
     }
 }
 /*
  * URL path to the root folder. Example: "/" or "/site1/"
  */
 define('Sledgehammer\WEBPATH', $webpath);
-$folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(WEB\Sledgehammer\PATH)), $match);
+$folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(Sledgehammer\WEBPATH)), $match);
 /*
  * Relative URL path to the root folder. Example: "../"
  */

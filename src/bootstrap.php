@@ -6,13 +6,7 @@
 use Sledgehammer\Core\Debug\DebugR;
 
 /*
- * 1. Set DebugR statusbar header.
- */
-if (headers_sent() === false) {
-    DebugR::send('sledgehammer-statusbar', 'no statusbar data.', true);
-}
-/*
- * 2. Define the Sledgehammer\* Constants
+ * 1. Define the Sledgehammer\* Constants
  */
 if (!defined('Sledgehammer\STARTED')) {
     // Timestamp (in microseconds) for when the script started.
@@ -39,7 +33,7 @@ if (!defined('Sledgehammer\VENDOR_DIR')) {
     if (file_exists(dirname(__DIR__).'/vendor')) { // local composer install
         define('Sledgehammer\VENDOR_DIR', dirname(__DIR__).'/vendor'.DIRECTORY_SEPARATOR);
     } else {
-        define('Sledgehammer\VENDOR_DIR', dirname(dirname(dirname(__DIR__))).'/vendor'.DIRECTORY_SEPARATOR);
+        define('Sledgehammer\VENDOR_DIR', dirname(dirname(dirname(dirname(__DIR__)))).'/vendor'.DIRECTORY_SEPARATOR);
     }
 }
 // Directory of the project.
@@ -74,7 +68,7 @@ define('Sledgehammer\SORT_NATURAL_CI', -2);
 define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|NOT IN|LIKE|NOT LIKE');
 
 /**
- * 3. Declare public functions.
+ * 2. Declare public functions.
  */
 require_once __DIR__.'/functions.php'; // Namespaced functions
 require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
@@ -82,12 +76,18 @@ require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
 \Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR);
 
 /*
- * Configure and enable the AutoLoader
+ * 3. Configure and register the AutoLoader
  */
 require_once __DIR__.'/Core/Object.php';
 require_once __DIR__.'/Core/Debug/Autoloader.php';
 spl_autoload_register('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
 
+/*
+ * 4. Set DebugR statusbar header.
+ */
+if (headers_sent() === false) {
+    DebugR::send('sledgehammer-statusbar', 'no statusbar data.', true);
+}
 /*
  * Timestamp (in microseconds) for when the Sledgehammer Framework was initialized.
  */

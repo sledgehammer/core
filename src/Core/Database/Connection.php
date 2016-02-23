@@ -606,9 +606,11 @@ class Connection extends PDO
      *
      * @param string $statement
      */
-    public function reportError($statement)
+    public function reportError($statement, $error = null)
     {
-        $error = $this->errorInfo();
+        if ($error === null) {
+            $error = $this->errorInfo();
+        }
         $this->previousInsertId = '0';
         if ($this->getAttribute(PDO::ATTR_ERRMODE) == PDO::ERRMODE_SILENT) { // The error issn't already reported?
             $info = [];

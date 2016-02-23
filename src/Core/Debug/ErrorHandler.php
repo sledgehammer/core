@@ -498,7 +498,7 @@ class ErrorHandler extends Object
                 }
 
                 if (function_exists('mail') && !mail($this->email, $subject, '<html><body style="background-color: #fcf8e3">'.$html."</body></html>\n", $headers)) {
-                    error_log('The Sledgehammer\ErrorHandler was unable to email the report.');
+                    error_log('The '.self::class.' was unable to email the report.');
                 }
             }
             if ($this->html) {
