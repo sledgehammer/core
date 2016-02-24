@@ -1334,7 +1334,7 @@ function statusbar()
         }
         echo '&nbsp;MiB';
     }
-    if (class_exists('Sledgehammer\Logger', false) && count(Logger::$instances) > 0) {
+    if (class_exists(Logger::class, false) && count(Logger::$instances) > 0) {
         foreach (Logger::$instances as $name => $logger) {
             if ($logger->count !== 0) {
                 echo $divider;
