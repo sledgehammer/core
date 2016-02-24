@@ -1,10 +1,9 @@
 <?php
 
-/**
- *
- */
+use Sledgehammer\Core\FlushCache;
+use Sledgehammer\Core\GenerateStaticAutoLoader;
+use Sledgehammer\Devutils\UtilScript;
 
-namespace Sledgehammer\Core;
 
 return array(
     'flush_cache.html' => new FlushCache(),

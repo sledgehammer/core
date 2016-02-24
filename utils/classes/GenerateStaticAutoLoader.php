@@ -2,6 +2,10 @@
 
 namespace Sledgehammer\Core;
 
+use Sledgehammer\Devutils\Util;
+use Sledgehammer\Devutils\UtilScript;
+use Sledgehammer\Mvc\Component\Dialog;
+
 /**
  * Run the generate_static_library.php script from DevUtils.
  */

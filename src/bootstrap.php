@@ -4,7 +4,9 @@
  * Bootstrap the Sledgehammer Framework.
  */
 use Sledgehammer\Core\Debug\DebugR;
-
+if (defined('Sledgehammer\INITIALIZED')) {
+    return;
+}
 /*
  * 1. Define the Sledgehammer\* Constants
  */
