@@ -423,7 +423,11 @@ class ErrorHandler extends Object
         if ($this->isProcessing) {
             echo '<span style="color:red">[ErrorHandler failure]';
             if ($this->html && is_string($message)) { // show error?
-                echo ' ', htmlentities($message);
+                if ($message === '__UNCAUGHT_EXCEPTION__' && $this->isThrowable($type)) {
+                    echo ' ', htmlentities($type->getMessage().' in '.$type->getFile().' on line '.$type->getLine());
+                } else {
+                    echo ' ', htmlentities($message);
+                }
             }
             echo ' </span>';
             error_log('ErrorHandler failure: '.$message);
