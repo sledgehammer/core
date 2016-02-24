@@ -4,7 +4,7 @@
  * Vergelijkt 2 environments, en geeft aan constantes/database settings verschillen/ontbreken.
  */
 
-namespace Sledgehammer\Core;
+namespace Sledgehammer\Core\Util;
 
 class CompareEnvironments extends Util
 {

@@ -4,7 +4,7 @@
  * FlushCache.
  */
 
-namespace Sledgehammer\Core;
+namespace Sledgehammer\Core\Util;
 
 use Sledgehammer\Devutils\DevUtilsWebsite;
 use Sledgehammer\Devutils\Util;
@@ -21,9 +21,9 @@ class FlushCache extends Util
 
     public function generateContent()
     {
-        $script = realpath(__DIR__.'/../flush_cache.php');
+        $script = realpath(__DIR__.'/../../../utils/flush_cache.php');
         $output = shell_exec('php '.$script);
-        $output .= '<br />';
+        $output .= '<br>';
         $output .= DevUtilsWebsite::suExec('php '.escapeshellarg($script));
         if (function_exists('apc_clear_cache')) {
             apc_clear_cache();
@@ -31,6 +31,6 @@ class FlushCache extends Util
             apc_clear_cache('opcode');
         }
 
-        return Alert::success('<h4>Flush cache</h4><br />'.$output);
+        return Alert::success('<h4>Flush cache</h4><br>'.$output);
     }
 }

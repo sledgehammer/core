@@ -1,6 +1,6 @@
 <?php
 
-namespace SledgehammerTests\Core;
+namespace Sledgehammer\Core\Util;
 
 use DirectoryIterator;
 use Exception;

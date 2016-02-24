@@ -1,6 +1,6 @@
 <?php
 
-namespace Sledgehammer\Core;
+namespace Sledgehammer\Core\Util;
 
 use Exception;
 use SimpleXMLElement;
