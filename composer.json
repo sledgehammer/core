@@ -7,14 +7,10 @@
     "sledgehammer": true,
     "autoload": {
         "psr-4": {
-            "Sledgehammer\\Core\\": "src/Core"
+            "Sledgehammer\\Core\\": "src/",
+            "SledgehammerTests\\Core\\": "tests/"
         },
         "files": ["src/bootstrap.php"]
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "SledgehammerTests\\Core\\": "tests"
-        }
     },
     "require": {
         "php": ">=5.5"
