@@ -367,7 +367,7 @@ class Autoloader extends Object
         if ($composer && isset($composer['sledgehammer'])) {
             $settings += [
                 'matching_filename' => true,
-                'mandatory_definition' => true, // A php-file should declare a class or interface
+                'mandatory_definition' => true, // A php-file should declare a class or interface (unless the filename is lowercase)
                 'mandatory_superclass' => true, // A class should extend another class (preferably \Sledgehammer\Object as base)
                 'one_definition_per_file' => true, // A php-file should only contain one class or inferface definition.
                 'detect_accidental_output' => true, // Check if the php-file contains html parts (which would send the http headers)
@@ -631,7 +631,7 @@ class Autoloader extends Object
             if ($settings['one_definition_per_file']) {
                 \Sledgehammer\notice('Multiple definitions found in '.$filename, $definitions);
             }
-        } elseif ($settings['mandatory_definition'] && count($definitions) == 0) {
+        } elseif ($settings['mandatory_definition'] && count($definitions) === 0 && basename($filename) !== strtolower(basename($filename))) {
             \Sledgehammer\notice('No classes or interfaces found in '.$filename);
         }
         $filename = $this->relativePath($filename);

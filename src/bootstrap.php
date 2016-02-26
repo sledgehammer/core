@@ -80,8 +80,8 @@ require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
 /*
  * 3. Configure and register the AutoLoader
  */
-require_once __DIR__.'/Core/Object.php';
-require_once __DIR__.'/Core/Debug/Autoloader.php';
+require_once __DIR__.'/Object.php';
+require_once __DIR__.'/Debug/Autoloader.php';
 spl_autoload_register('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
 
 /*
