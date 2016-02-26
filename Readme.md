@@ -1,6 +1,6 @@
 # Sledgehammer Core
 
-[![Build Status](https://travis-ci.org/sledgehammer/core.png)](https://travis-ci.org/sledgehammer/core)
+[![Build Status](https://travis-ci.org/sledgehammer/core.svg)](https://travis-ci.org/sledgehammer/core)
 
 A general purpose PHP toolkit, with a focus on debugging.
 
