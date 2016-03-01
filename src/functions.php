@@ -39,9 +39,9 @@ function dump($variable, $export = false)
 {
     if (!class_exists('Sledgehammer\Core\Debug\Dump', false)) {
         if (!class_exists('Sledgehammer\Core\Object', false)) {
-            include __DIR__.'/Core/Object.php';
+            include __DIR__.'/Object.php';
         }
-        include __DIR__.'/Core/Debug/Dump.php';
+        include __DIR__.'/Debug/Dump.php';
     }
     if ($export) {
         ob_start();
@@ -1118,7 +1118,7 @@ function copydir($source, $destination, $exclude = [])
 function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
 {
     if (class_exists(Framework::class, false) === false) {
-        require_once(__DIR__.'/Core/Framework.php'); 
+        require_once(__DIR__.'/Framework.php'); 
     }
     if ($datatype === null) {
         $datatype = gettype($variable);
