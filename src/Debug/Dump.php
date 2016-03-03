@@ -165,12 +165,7 @@ class Dump extends Object
             echo $this->vardump; //show original var_dump()
         }
         echo "\n</pre>\n";
-        if (defined('Sledgehammer\WEBROOT') || defined('Sledgehammer\WEBPATH')) {
-            $webroot = defined('Sledgehammer\WEBPATH') ? \Sledgehammer\WEBPATH : \Sledgehammer\WEBROOT;
-            echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"".$webroot."core/js/jquery.js\"><\/sc' + 'ript>')</script>";
-        } else {
-            echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js\"><\/sc' + 'ript>')</script>";
-        }
+        echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js\"><\/sc' + 'ript>')</script>";
         echo "<script type=\"text/javascript\">\n";
         echo "(function ($) {\n";
         echo "	if (typeof $ === 'undefined') {\n";
