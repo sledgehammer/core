@@ -102,8 +102,14 @@ class Json extends Object
      *
      * @return string JSON formatted string
      */
-    public static function encode($data, $options = 0)
+    public static function encode($data, $options = null)
     {
+        if ($options === null) {
+            $options = JSON_UNESCAPED_SLASHES;
+            if (\Sledgehammer\ENVIRONMENT === 'development') {
+                $options |= JSON_PRETTY_PRINT;
+            }
+        }
         $json = json_encode($data, $options);
         $error = json_last_error();
         if ($error !== JSON_ERROR_NONE) {
@@ -127,11 +133,7 @@ class Json extends Object
      */
     public static function decode($json, $assoc = false, $depth = 512, $options = 0)
     {
-        if ($options === 0) {
-            $data = json_decode($json, $assoc, $depth);
-        } else {
-            $data = json_decode($json, $assoc, $depth, $options); // Options available since php 5.4.0
-        }
+        $data = json_decode($json, $assoc, $depth, $options);
         $error = json_last_error();
         if ($error !== JSON_ERROR_NONE) {
             throw new Exception(self::errorMessage($error), $error);
