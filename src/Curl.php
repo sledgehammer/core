@@ -4,6 +4,7 @@ namespace Sledgehammer\Core;
 
 use Closure;
 use CURLFile;
+use Exception;
 
 /**
  * Curl, an HTTP/FTP response object
@@ -323,22 +324,21 @@ class Curl extends Object
             fflush($fp);
             flock($fp, LOCK_UN);
         });
-        $response->on('closed', function () use ($fp) {
-            fclose($fp);
-        });
-        $response->on('abort', function () use ($filename, $fp) {
-            dump('AB');
+        $deleteFile = function () use ($filename, &$fp) {
             flock($fp, LOCK_UN);
             fclose($fp);
             unlink($filename);
-        });
+            $fp = fopen('php://memory', 'w');
+        };
+        $response->on('abort', $deleteFile);
         // Override default error handle
-        $response->onError = function ($message, $options) use ($filename, $fp) {
-            flock($fp, LOCK_UN);
-            fclose($fp);
-            unlink($filename);
+        $response->onError = function ($message, $options) use ($deleteFile) {
+            $deleteFile();
             throw new InfoException($message, $options);
         };
+        $response->on('closed', function ($response) use (&$fp) {
+            fclose($fp);
+        });
         if ($async == false) {
             $response->waitForCompletion();
         }
