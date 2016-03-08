@@ -8,11 +8,11 @@ use ReflectionProperty;
 use stdClass;
 
 /**
- * Observable, an Event/Listener.
+ * EventEmitter
  *
  * Example subclass:
- * class Button extends Observable {
- *
+ * class Button {
+ *   use EventEmitter;
  *   protected $events = array(
  *     'click' => []
  *   );
@@ -34,7 +34,7 @@ use stdClass;
  * // reset all listeners.
  * $this->onClick = null;
  */
-trait Observable
+trait EventEmitter
 {
     /**
      * Storage array for the properties with KVO (Key Value Observer) listeners.
@@ -119,7 +119,7 @@ trait Observable
     }
 
     /**
-     * Check if the observable has registered the given event.
+     * Check id the $event is a registered event.
      *
      * @param string $event
      *

@@ -5,9 +5,9 @@ namespace SledgehammerTests\Core;
 use Exception;
 use SledgehammerTests\Core\Fixtures\TestButton;
 
-class ObservableTest extends TestCase
+class EventEmitterTest extends TestCase
 {
-    public function test_button()
+    public function testButton()
     {
         $button = new TestButton();
         // Test hasEvent
@@ -22,7 +22,7 @@ class ObservableTest extends TestCase
 
         // Test onClick method
         $button->trigger('click', $this);
-        $this->assertEquals($button->lastClickedBy, 'SledgehammerTests\Core\ObservableTest');
+        $this->assertEquals($button->lastClickedBy, self::class);
         // Test custom event via property
         $tempvar = false;
         $button->onClick = function ($sender) use (&$tempvar) {

@@ -22,7 +22,7 @@ use IteratorAggregate;
  */
 class Collection extends Object implements IteratorAggregate, Countable, ArrayAccess
 {
-    use Observable;
+    use EventEmitter;
     /**
      * The traversable the Collection class operates on.
      *

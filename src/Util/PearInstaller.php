@@ -4,15 +4,17 @@ namespace Sledgehammer\Core\Util;
 
 use Exception;
 use SimpleXMLElement;
-
+use Sledgehammer\Core\EventEmitter;
+use Sledgehammer\Core\Object;
 /**
  * PearInstaller, installs PEAR packages into your project folder.
  *
  * @link http://pear.php.net/manual/en/core.rest.php
  * @link http://pear.php.net/manual/en/guide.developers.package2.tags.php
  */
-class PearInstaller extends Observable
+class PearInstaller extends Object
 {
+    use EventEmitter;
     /**
      * @var array The events/listeners
      */

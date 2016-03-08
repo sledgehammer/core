@@ -2,18 +2,17 @@
 
 namespace SledgehammerTests\Core\Fixtures;
 
+use Sledgehammer\Core\EventEmitter;
 use Sledgehammer\Core\Object;
-use Sledgehammer\Core\Observable;
-use SledgehammerTests\Core\ObservableTest;
 
 /**
- * TestButton, An class for testing an Observable.
+ * TestButton, An class for testing an EventEmitter.
  *
- * @see ObservableTest
  */
 class TestButton extends Object
 {
-    use Observable;
+    use EventEmitter;
+
     protected $events = array(
         'click' => [],
     );

@@ -35,7 +35,7 @@ use CURLFile;
  */
 class Curl extends Object
 {
-    use Observable;
+    use EventEmitter;
     /**
      * Sane defaults for Curl requests. Only used in the static helper methods like Curl::get(), Curl::post(), etc.
      *
@@ -325,6 +325,12 @@ class Curl extends Object
         });
         $response->on('closed', function () use ($fp) {
             fclose($fp);
+        });
+        $response->on('abort', function () use ($filename, $fp) {
+            dump('AB');
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            unlink($filename);
         });
         // Override default error handle
         $response->onError = function ($message, $options) use ($filename, $fp) {
