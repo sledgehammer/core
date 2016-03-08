@@ -152,10 +152,12 @@ class Dump extends Object
         ];
         $id = uniqid('dump');
         echo '<pre id="'.$id.'" style="'.implode(';', $style)."\">\n";
-
+        $displayErrors = ini_get('display_errors');
+        ini_set('display_errors', true);
         ob_start();
         var_dump($this->variable);
         $this->vardump = rtrim(ob_get_clean());
+        ini_set('display_errors', $displayErrors);
 //		$this->debug($output);
         try {
             $this->offset = 0;
