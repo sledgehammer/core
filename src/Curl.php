@@ -758,7 +758,7 @@ class Curl extends Object
      *
      * @throws Exception
      */
-    private function waitForCompletion()
+    public function waitForCompletion()
     {
         if ($this->isComplete()) {
             return;
