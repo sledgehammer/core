@@ -75,7 +75,7 @@ class Logger extends Object
      *
      * @var Closure|array|string
      */
-    public $renderer = 'Sledgehammer\Logger::renderEntry';
+    public $renderer;
 
     /**
      * Add N filename and linenumber traces to the log.
@@ -103,6 +103,7 @@ class Logger extends Object
      */
     public function __construct($options = [])
     {
+        $this->renderer = self::class.'::renderEntry';
         if (is_string($options)) {
             $identifier = $options;
             $options = [];
@@ -203,6 +204,9 @@ class Logger extends Object
         echo '<thead class="log-header"><tr><th class="log-header-column logentry-number">Nr.</th>';
         if ($this->columns === null) {
             echo '<th class="log-header-column">', ucfirst($this->singular), '</th>';
+            if ($this->totalDuration !== 0.0) {
+                echo '<th class="log-header-column">Duration</th>';
+            }
         } else {
             foreach ($this->columns as $column) {
                 echo '<th class="log-header-column">', $column, '</th>';
@@ -247,13 +251,16 @@ class Logger extends Object
      *
      * @param string $entry
      */
-    public static function renderEntry($entry)
+    public static function renderEntry($entry, $meta)
     {
         echo '<td>';
         if (is_array($entry)) {
             echo 'Array';
         } else {
             echo htmlspecialchars($entry, ENT_NOQUOTES, 'ISO-8859-15');
+            if (isset($meta['duration'])) {
+                echo '<td class="logentry-number"><b>', \Sledgehammer\format_parsetime($meta['duration']), '</b>&nbsp;sec</td>';
+            }
         }
         echo '</td>';
     }

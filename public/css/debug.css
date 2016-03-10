@@ -22,6 +22,7 @@
 	background-image:      -o-linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
 	background-image:         linear-gradient(bottom, #b5b5b5 0%, #d5d5d5 100%);
 	box-shadow: inset 0px 1px 0px #ececec;
+    backface-visibility: hidden;
 }
 .statusbar-placeholder {
 	display: block;
