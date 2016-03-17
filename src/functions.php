@@ -1311,7 +1311,7 @@ function format_parsetime($seconds, $precision = 3)
  * Show debug and profiling information.
  * Contains parsetime, memory usage and (sql) log entries.
  */
-function statusbar()
+function statusbar($debugr = false)
 {
     $divider = '<span class="statusbar-divider">, </span>';
     if (defined('Sledgehammer\STARTED')) {
@@ -1333,6 +1333,9 @@ function statusbar()
             echo '<span style="margin: 0 1px;">/</span><b title="Peak memory usage">', number_format(memory_get_peak_usage() / 1048576, 2), '</b>';
         }
         echo '&nbsp;MiB';
+    }
+    if ($debugr) {
+        echo '<span class="statusbar-divider">, </span><span id="statusbar-debugr" class="statusbar-tab"><a href="http://debugr.net/" target="_blank">DebugR</a></span>';
     }
     if (class_exists(Logger::class, false) && count(Logger::$instances) > 0) {
         foreach (Logger::$instances as $name => $logger) {
