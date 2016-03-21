@@ -144,12 +144,12 @@ class Html extends Object
      * htmlentities() using the current charset.
      *
      * @param string $text
-     * @param int    $flags ENT_COMPAT, ENT_QUOTES, ENT_NOQUOTES, ENT_IGNORE , ENT_SUBSTITUTE, ENT_DISALLOWD, ENT_HTML401, ENT_XML1, ENT_XHTML, ENT_HTML5
+     * @param int $flags ENT_COMPAT, ENT_QUOTES, ENT_NOQUOTES, ENT_IGNORE , ENT_SUBSTITUTE, ENT_DISALLOWED, ENT_HTML401, ENT_XML1, ENT_XHTML, ENT_HTML5
      *
      * @return string
      */
     public static function escape($text, $flags = ENT_COMPAT)
     {
-        return htmlentities($text, ENT_COMPAT, Framework::$charset);
+        return htmlentities($text, $flags, Framework::$charset);
     }
 }
