@@ -103,7 +103,7 @@ class Connection extends PDO
                 switch (strtolower(Framework::$charset)) {
 
                     case 'utf-8':
-                        $charset = 'UTF8';
+                        $charset = 'utf8mb4';
                         break;
 
                     case 'iso-8859-1':
