@@ -78,4 +78,34 @@ class UrlTest extends TestCase
         $url->path = '/folder1/test2.html';
         $this->assertEquals($url->getFilename(), 'test2.html');
     }
+    
+    public function testImmutableMethods() {
+        $url = new Url('http://example.com/about.htm');
+        
+        $this->assertEquals('https://example.com/about.htm', (string) $url->scheme('https'));
+        $this->assertEquals('http://example.nl/about.htm', (string) $url->host('example.nl'));
+        $this->assertEquals('http://example.com:8080/about.htm', (string) $url->port(8080));
+        $this->assertEquals('http://example.com/disclaimer.htm', (string) $url->path('disclaimer.htm'));
+        $this->assertEquals('http://example.com/about.htm?param1=one', (string) $url->query(['param1' => 'one']));
+        $this->assertEquals('http://example.com/about.htm?param2=two', (string) $url->parameter('param2', 'two'));
+        $this->assertEquals('http://example.com/about.htm#author', (string) $url->fragment('author'));
+        
+        $this->assertEquals('http://example.com/about.htm', $url, 'Original url is unchanged');
+    }
+    
+    public function testParameter()
+    {
+        $emptyUrl = new Url('');
+        $this->assertEquals('?test=value', (string) $emptyUrl->parameter('test', 'value'));
+        $this->assertEquals('?test%5B0%5D=value', (string) $emptyUrl->parameter('test[]', 'value'));
+        $this->assertEquals('?test%5B99%5D=value', (string) $emptyUrl->parameter('test[99]', 'value'));
+        
+        $urlWithParam = new Url('?param=1');
+        $this->assertEquals('?param%5B0%5D=1&param%5B1%5D=value', (string) $urlWithParam->parameter('param[]', 'value'));
+
+        $urlWithParams = new Url('?param[0]=123&param[4]=456');
+        $this->assertEquals('?param%5B0%5D=123&param%5B4%5D=456&param%5B5%5D=value', (string) $urlWithParams->parameter('param[]', 'value'));
+        $this->assertEquals('?param%5B0%5D=123&param%5B4%5D=value', (string) $urlWithParams->parameter('param[4]', 'value'));
+        
+    }
 }
