@@ -1118,7 +1118,7 @@ function copydir($source, $destination, $exclude = [])
 function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
 {
     if (class_exists(Framework::class, false) === false) {
-        require_once(__DIR__.'/Framework.php'); 
+        require_once __DIR__.'/Framework.php';
     }
     if ($datatype === null) {
         $datatype = gettype($variable);

@@ -171,7 +171,7 @@ class Url extends Object
 
         return basename($this->path);
     }
-    
+
     /**
      * Return new Url with different protocol.
      * 
@@ -179,35 +179,44 @@ class Url extends Object
      *   $url->schema('https']); returns the secure url without modifing the original url.
      * 
      * @param string $protocol
-     * @return \Sledgehammer\Core\Url
+     *
+     * @return Url
      */
-    public function scheme($protocol) {
+    public function scheme($protocol)
+    {
         $url = clone $this;
         $url->scheme = $protocol;
+
         return $url;
     }
-    
+
     /**
      * Return new Url with different hostname.
      *
      * @param string $hostname
-     * @return \Sledgehammer\Core\Url
+     *
+     * @return Url
      */
-    public function host($hostname) {
+    public function host($hostname)
+    {
         $url = clone $this;
         $url->host = $hostname;
+
         return $url;
     }
-    
+
     /**
      * Return new Url with different port.
      *
      * @param string $number
-     * @return \Sledgehammer\Core\Url
+     *
+     * @return Url
      */
-    public function port($number) {
+    public function port($number)
+    {
         $url = clone $this;
         $url->port = $number;
+
         return $url;
     }
 
@@ -215,21 +224,25 @@ class Url extends Object
      * Return new Url with different path.
      *
      * @param string $path
-     * @return \Sledgehammer\Core\Url
+     *
+     * @return Url
      */
-    public function path($path) {
+    public function path($path)
+    {
         $url = clone $this;
         $url->path = $path;
+
         return $url;
     }
-    
+
     /**
      * Return new Url with modified paramaters.
      * 
      * @param array $parameters
-     * @param bool $merge true: Keep existing parameters, false:  overwrite existing query.
+     * @param bool  $merge      true: Keep existing parameters, false:  overwrite existing query.
      */
-    public function query($parameters, $merge = false) {
+    public function query($parameters, $merge = false)
+    {
         $url = clone $this;
         if ($merge) {
             foreach ($parameters as $parameter => $value) {
@@ -238,46 +251,82 @@ class Url extends Object
         } else {
             $url->query = $parameters;
         }
+
         return $url;
     }
-    
+
     /**
-     * Return new Url with modified paramaters.
+     * Return new Url with modified parameters.
      * 
      * @param string $parameter
-     * @param mixed $value
+     * @param mixed  $value
+     * @param int [$index] 
+     *
+     * @return Url
      */
-    public function parameter($parameter, $value) {
+    public function parameter($parameter, $value, $index = false)
+    {
         $url = clone $this;
-        if (preg_match('/^(?<param>[^\[]+)\[(?<index>[^\]]*)\]$/', $parameter, $match)) {
-            $param = $match['param'];
-            if (isset($url->query[$param])) {
-                if (is_string($url->query[$param])) {
-                    $url->query[$param] = [$url->query[$param]];
+        $append = false;
+        if ($index === false && preg_match('/^(?<param>[^\[]+)\[(?<index>[^\]]*)\]$/', $parameter, $match)) {
+            $parameter = $match['param'];
+            $index = $match['index'];
+            $append = ($match['index'] === '');
+        }
+        if ($index === false) {
+            $url->query[$parameter] = $value;
+        } else {
+            if (isset($url->query[$parameter])) {
+                if (is_string($url->query[$parameter])) {
+                    $url->query[$parameter] = [$url->query[$parameter]];
                 }
             } else {
-                $url->query[$param] = [];
+                $url->query[$parameter] = [];
             }
-            if ($match['index'] === '') {
-                $url->query[$param][] = $value;
+            if ($append) {
+                $url->query[$parameter][] = $value;
             } else {
-                $url->query[$param][$match['index']] = $value;
+                $url->query[$parameter][$index] = $value;
             }
-        } else {
-            $url->query[$parameter] = $value;
+        }
+
+        return $url;
+    }
+
+    /**
+     * Return new Url without the given parameter.
+     *
+     * @param string $parameter
+     * @param int [$index]
+     * @return Url
+     */
+    public function removeParameter($parameter, $index = false)
+    {
+        $url = clone $this;
+        if ($index === false && preg_match('/^(?<param>[^\[]+)\[(?<index>[^\]]+)\]$/', $parameter, $match)) {
+            $parameter = $match['param'];
+            $index = $match['index'];
+        }
+        if ($index === false) {
+            unset($url->query[$parameter]);
+        } elseif (isset($url->query[$parameter])) {
+            unset($url->query[$parameter][$index]);
         }
         return $url;
     }
-    
+
     /**
      * Return new Url with different .
      *
      * @param string $value
-     * @return \Sledgehammer\Core\Url
+     *
+     * @return Url
      */
-    public function fragment($value) {
+    public function fragment($value)
+    {
         $url = clone $this;
         $url->fragment = $value;
+
         return $url;
     }
 

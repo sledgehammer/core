@@ -144,7 +144,7 @@ class Html extends Object
      * htmlentities() using the current charset.
      *
      * @param string $text
-     * @param int $flags ENT_COMPAT, ENT_QUOTES, ENT_NOQUOTES, ENT_IGNORE , ENT_SUBSTITUTE, ENT_DISALLOWED, ENT_HTML401, ENT_XML1, ENT_XHTML, ENT_HTML5
+     * @param int    $flags ENT_COMPAT, ENT_QUOTES, ENT_NOQUOTES, ENT_IGNORE , ENT_SUBSTITUTE, ENT_DISALLOWED, ENT_HTML401, ENT_XML1, ENT_XHTML, ENT_HTML5
      *
      * @return string
      */

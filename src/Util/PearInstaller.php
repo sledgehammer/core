@@ -6,6 +6,7 @@ use Exception;
 use SimpleXMLElement;
 use Sledgehammer\Core\EventEmitter;
 use Sledgehammer\Core\Object;
+
 /**
  * PearInstaller, installs PEAR packages into your project folder.
  *

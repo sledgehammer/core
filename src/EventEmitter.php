@@ -8,7 +8,7 @@ use ReflectionProperty;
 use stdClass;
 
 /**
- * EventEmitter
+ * EventEmitter.
  *
  * Example subclass:
  * class Button {

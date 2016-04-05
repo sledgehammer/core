@@ -9,6 +9,7 @@ namespace Sledgehammer\Core\Util;
 use Sledgehammer\Devutils\DevUtilsWebsite;
 use Sledgehammer\Devutils\Util;
 use Sledgehammer\Mvc\Component\Alert;
+
 /**
  * Delete the contents of the $project/tmp/ or /tmp/sledgehammer-$hash/ folder.
  */

@@ -5,7 +5,6 @@ namespace Sledgehammer\Core;
 use ArrayAccess;
 use Exception;
 
-
 /**
  * Text, a string class for handeling (multibyte) strings with OOP syntax
  * Modelled after the C# String class.

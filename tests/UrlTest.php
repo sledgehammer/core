@@ -23,26 +23,26 @@ class UrlTest extends TestCase
     public function test_path()
     {
         // escape (invalid url)
-        $url = new Url('/filename with spaces.html');
-        $this->assertEquals($url->__toString(), '/filename%20with%20spaces.html');
+        $url1 = new Url('/filename with spaces.html');
+        $this->assertEquals($url1->__toString(), '/filename%20with%20spaces.html');
 
         // decode urlpath
-        $url = new Url('/path%20with%20spaces.html');
-        $this->assertEquals($url->path, '/path with spaces.html');
-        $this->assertEquals($url->__toString(), '/path%20with%20spaces.html');
+        $url2 = new Url('/path%20with%20spaces.html');
+        $this->assertEquals($url2->path, '/path with spaces.html');
+        $this->assertEquals($url2->__toString(), '/path%20with%20spaces.html');
     }
 
     public function test_query()
     {
         // querystring notation
-        $url = new Url('/');
-        $url->query = 'name=value';
-        $this->assertEquals($url->__toString(), '/?name=value');
+        $url1 = new Url('/');
+        $url1->query = 'name=value';
+        $this->assertEquals($url1->__toString(), '/?name=value');
 
         // query/parameter array notation
-        $url = new Url('/');
-        $url->query['name'] = 'value';
-        $this->assertEquals($url->__toString(), '/?name=value');
+        $url2 = new Url('/');
+        $url2->query['name'] = 'value';
+        $this->assertEquals($url2->__toString(), '/?name=value');
     }
 
     public function test_folders()
@@ -106,6 +106,10 @@ class UrlTest extends TestCase
         $urlWithParams = new Url('?param[0]=123&param[4]=456');
         $this->assertEquals('?param%5B0%5D=123&param%5B4%5D=456&param%5B5%5D=value', (string) $urlWithParams->parameter('param[]', 'value'));
         $this->assertEquals('?param%5B0%5D=123&param%5B4%5D=value', (string) $urlWithParams->parameter('param[4]', 'value'));
+        $this->assertEquals('?param%5B0%5D=123&param%5B4%5D=value', (string) $urlWithParams->parameter('param', 'value', 4));
+        
+        $this->assertEquals('?param%5B0%5D=123', (string) $urlWithParams->removeParameter('param[4]'));
+        $this->assertEquals('?param%5B0%5D=123', (string) $urlWithParams->removeParameter('param', 4));
         
     }
 }
