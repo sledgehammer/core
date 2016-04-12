@@ -63,7 +63,7 @@ class TagIteratorTest extends TestCase
 
     public function test_before_after()
     {
-        $this->compare('before<br />middle<a href="test.html">TEST</a>after', array(
+        $this->compare('before<br />middle<a href="test.html?page=1&amp;per_page=10">TEST</a>after', array(
             0 => 'before',
             1 => array(
                 0 => '<br',
@@ -75,10 +75,10 @@ class TagIteratorTest extends TestCase
             3 => array(
                 0 => '<a',
                 1 => array(
-                    'href' => 'test.html',
+                    'href' => 'test.html?page=1&per_page=10',
                 ),
                 2 => '>',
-                'html' => '<a href="test.html">',
+                'html' => '<a href="test.html?page=1&amp;per_page=10">',
             ),
             4 => 'TEST',
             5 => array(

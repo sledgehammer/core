@@ -205,13 +205,13 @@ class TagIterator extends Object implements \Iterator
                     case 'ATTRIBUTES':
                         if ($token[0] == 'T_ATTRIBUTE') {
                             $attribute = ($this->toLowercase ? strtolower($token[1]) : $token[1]);
-                            $tag[1][$attribute] = null;
+                            $tag[1][$attribute] = true;
                         }
                         if ($token[0] == 'T_VALUE') {
                             if ($attribute === null) {
                                 $this->warnings[] = 'TagIterator: T_VALUE without T_ATTRIBUTE';
                             } else {
-                                $tag[1][$attribute] = $token[1];
+                                $tag[1][$attribute] = html_entity_decode($token[1]);
                                 $attribute = null;
                             }
                         }
