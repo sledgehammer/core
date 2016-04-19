@@ -57,7 +57,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
      * (Known as "collect" in Ruby or "pluck" in underscore.js).
      *
      * @param string|array|Closure $selector  Path to the variable to select. Examples: "->id", "[message]", "customer.name", array('id' => 'message_id', 'message' => 'message_text')
-     * @param string|null|false    $selectKey (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
+     * @param string|null|false|Closure $selectKey (optional) The path that will be used as key. false: Keep the current key, null:  create linear keys.
      *
      * @return Collection
      */
@@ -77,6 +77,8 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
         }
         if ($selectKey === null) {
             $index = 0;
+        } elseif ($selectKey !== false && is_string($selectKey)) {
+            $selectKey = PropertyPath::compile($selectKey);   
         }
         $items = [];
         foreach ($this as $key => $item) {
@@ -84,7 +86,7 @@ class Collection extends Object implements IteratorAggregate, Countable, ArrayAc
                 $key = $index;
                 ++$index;
             } elseif ($selectKey !== false) {
-                $key = PropertyPath::get($selectKey, $item);
+                $key = $selectKey($item);
             }
             $items[$key] = $closure($item, $key);
         }
