@@ -508,11 +508,10 @@ class Autoloader extends Object
         $setttings = $this->mergeSettings($settings);
         $previousError = error_get_last();
         if (filesize($filename) > $settings['filesize_limit']) {
-            \Sledgehammer\notice('File '.$filename.' too big, skipping...', array(
+            $this->hint('File '.$filename.' too big, skipping...', array(
                 'allowed size' => $settings['filesize_limit'],
                 'actual size' => filesize($filename),
             ));
-
             return;
         }
         $tokens = token_get_all(file_get_contents($filename));
@@ -902,7 +901,7 @@ class Autoloader extends Object
             return;
         }
         if (\Sledgehammer\ENVIRONMENT === 'development') {
-            \Sledgehammer\notice('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
+            self::hint('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
         }
         $autoloader = self::instance();
     }
@@ -939,5 +938,20 @@ class Autoloader extends Object
         spl_autoload_unregister('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
 
         return $autoloader;
+    }
+
+    /**
+     * Report the notice but prevent the (Laravel) error_handler to throw an exception.
+     */
+    private static function hint($message, $information = null) {
+        $handler = set_error_handler('error_log');
+        restore_error_handler();
+        if ($handler !== null) {
+            if (is_array($handler) && is_object($handler[0]) && $handler[0] instanceof \Illuminate\Foundation\Bootstrap\HandleExceptions) {
+                \Illuminate\Support\Facades\Log::notice($message);
+            } else {
+                \Sledgehammer\notice($message, $information);
+            }
+        }
     }
 }

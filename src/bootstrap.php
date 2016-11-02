@@ -17,12 +17,23 @@ if (!defined('Sledgehammer\STARTED')) {
 }
 // Detect the Environment
 if (defined('Sledgehammer\ENVIRONMENT') === false) {
-    if (getenv('APP_ENV')) { // Laravel
+    $__ENV = false;
+    if (getenv('APP_ENV')) { // Laravel (and Dotenv already ran)
         $__ENV = getenv('APP_ENV');
-    } elseif (getenv('APPLICATION_ENV')) { // Zend
-        $__ENV = getenv('APPLICATION_ENV');
-    } else {
-        $__ENV = 'production';
+    } elseif (file_exists(__DIR__.'/../../../../.env')) { // Laravel but Dotenv didn't ran yet
+        $__ENV = @parse_ini_file(__DIR__.'/../../../../.env');
+        if (is_array($__ENV) && isset($__ENV['APP_ENV'])) {
+            $__ENV = $__ENV['APP_ENV'];
+        } else {
+            $__ENV = false; // No APP_ENV? .env not compatible with parse_ini_file?
+        }
+    }
+    if (!$__ENV) {
+        if (getenv('APPLICATION_ENV')) { // Zend
+            $__ENV = getenv('APPLICATION_ENV');
+        } else {
+            $__ENV = 'production';
+        }
     }
     define('Sledgehammer\ENVIRONMENT', $__ENV);
     unset($__ENV);

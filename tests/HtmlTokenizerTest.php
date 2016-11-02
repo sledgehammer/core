@@ -1,8 +1,8 @@
 <?php
 
-use Sledgehammer\Core\HtmlTokenizer;
-
 namespace SledgehammerTests\Core;
+
+use Sledgehammer\Core\HtmlTokenizer;
 
 class HtmlTokenizerTest extends TestCase
 {
