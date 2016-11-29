@@ -213,7 +213,7 @@ abstract class DatabaseTestCase extends TestCase
         if ($message === null) {
             $message = 'Number of queries ('.$count.') should match '.$expectedCount;
         }
-        $this->assertEquals($count, $expectedCount, $message);
+        $this->assertSame($count, $expectedCount, $message);
     }
 
     /**
@@ -232,7 +232,7 @@ abstract class DatabaseTestCase extends TestCase
         if ($message === null) {
             $message = 'Table "'.$table.' should match contents. %s';
         }
-        $this->assertEquals($expected_contents, $table_contents, $message);
+        $this->assertSame($expected_contents, $table_contents, $message);
     }
 
     /**

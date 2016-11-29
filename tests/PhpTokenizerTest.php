@@ -55,7 +55,7 @@ class PhpTokenizerTest extends TestCase
                 $mergedTokens .= $token[1];
                 $tokens[] = $token;
             }
-            $this->assertEquals($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
+            $this->assertSame($content, $mergedTokens, 'Input should match all tokens combined (file: "'.$filename.'")');
         } catch (Exception $e) {
             \Sledgehammer\report_exception($e);
             ob_flush();

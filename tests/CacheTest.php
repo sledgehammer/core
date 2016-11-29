@@ -68,7 +68,7 @@ class CacheTest extends TestCase
             \Sledgehammer\cache(__FILE__.__FUNCTION__, array('a invalid option' => 'yes'), array($this, 'incrementCounter'));
             $this->fail('An invalid options should generate a notice');
         } catch (Exception $e) {
-            $this->assertEquals('Option: "a invalid option" is invalid', $e->getMessage());
+            $this->assertSame('Option: "a invalid option" is invalid', $e->getMessage());
         }
     }
 
@@ -79,7 +79,7 @@ class CacheTest extends TestCase
             \Sledgehammer\cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
             $this->fail('An max_age in the future should generate a notice');
         } catch (\PHPUnit_Framework_Error_Notice $e) {
-            $this->assertEquals('maxAge is 60 seconds in the future', $e->getMessage());
+            $this->assertSame('maxAge is 60 seconds in the future', $e->getMessage());
         }
     }
 
@@ -88,7 +88,7 @@ class CacheTest extends TestCase
         $this->counter = 0;
         $cache = new CacheTester(__FILE__.__FUNCTION__, $type);
         $counter = $cache->value('+1sec', array($this, 'incrementCounter')); // miss
-        $this->assertEquals(1, $counter, 'The counter should be incremented');
+        $this->assertSame(1, $counter, 'The counter should be incremented');
         $cache->clear();
     }
 
@@ -97,9 +97,9 @@ class CacheTest extends TestCase
         $this->counter = 0;
         $cache = new CacheTester(__FILE__.__FUNCTION__, $type);
         $counter1 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss/store
-        $this->assertEquals(1, $counter1, 'Sanity check');
+        $this->assertSame(1, $counter1, 'Sanity check');
         $counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit
-        $this->assertEquals(1, $counter2, 'The counter should only be incremented once');
+        $this->assertSame(1, $counter2, 'The counter should only be incremented once');
         $cache->clear();
     }
 
@@ -109,11 +109,11 @@ class CacheTest extends TestCase
         $cache = new CacheTester(__FILE__.__FUNCTION__, $type);
         $start = time();
         $counter1 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss/store
-        $this->assertEquals(1, $counter1, 'Sanity check');
+        $this->assertSame(1, $counter1, 'Sanity check');
         usleep(100000); // 0.1 sec
         $counter2 = $cache->value('+1sec', array($this, 'incrementCounter')); // hit (or missed by a milisecond)
         if ($counter2 === 1) { // hit
-            $this->assertEquals(1, $counter2, 'Should not be expired just yet');
+            $this->assertSame(1, $counter2, 'Should not be expired just yet');
             $nextExpectation = 2;
         } else {
             $this->assertNotEquals($start, time(), 'Should be missed by a milisecond'); // stored at 1.9999
@@ -122,7 +122,7 @@ class CacheTest extends TestCase
         }
         sleep(2); // Wait 2s for the cache to expire.
         $counter3 = $cache->value('+1sec', array($this, 'incrementCounter')); // miss (expired)
-        $this->assertEquals($nextExpectation, $counter3, 'Should be expired (and incremented again)');
+        $this->assertSame($nextExpectation, $counter3, 'Should be expired (and incremented again)');
         $cache->clear();
     }
 

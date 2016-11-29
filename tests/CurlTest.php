@@ -12,9 +12,9 @@ class CurlTest extends TestCase
     public function test_single_get()
     {
         $this->assertEmptyPool();
-        $response = Curl::get('http://www.bfanger.nl/');
-        $this->assertEquals($response->http_code, 200);
-        $this->assertEquals($response->effective_url, 'https://bfanger.nl/'); // forwarded to bfanger.nl (without "www.")
+        $response = Curl::get('http://www.travis-ci.org/');
+        $this->assertSame($response->http_code, 200);
+        $this->assertSame($response->effective_url, 'https://travis-ci.org/'); // forwarded to https and without "www."
     }
 
     public function test_async()
@@ -69,9 +69,9 @@ class CurlTest extends TestCase
         $response->onLoad = function ($response) use (&$output) {
             $output = $response->http_code;
         };
-        $this->assertEquals($output, false);
-        $this->assertEquals($response->getInfo(CURLINFO_HTTP_CODE), 200); // calls waitForCompletion which triggers the event
-        $this->assertEquals($output, 200);
+        $this->assertSame($output, false);
+        $this->assertSame($response->getInfo(CURLINFO_HTTP_CODE), 200); // calls waitForCompletion which triggers the event
+        $this->assertSame($output, 200);
     }
 
     public function test_curl_debugging()
@@ -83,7 +83,7 @@ class CurlTest extends TestCase
             CURLOPT_VERBOSE => true,
         );
         $response = Curl::get('http://bfanger.nl/', $options);
-        $this->assertEquals($response->http_code, 200);
+        $this->assertSame($response->http_code, 200);
         rewind($fp);
         $log = stream_get_contents($fp);
         $response->on('closed', function () use ($fp) {
@@ -109,8 +109,8 @@ class CurlTest extends TestCase
     {
         $filename = \Sledgehammer\TMP_DIR.basename(__CLASS__).'.txt';
         file_put_contents($filename, 'Curl TEST');
-        $request = Curl::putFile('http://bfanger.nl/', $filename);
-        $this->assertEquals(200, $request->http_code);
+        $request = Curl::putFile('http://date.jsontest.com/?service=ip', $filename, [CURLOPT_FAILONERROR => false]);
+        $this->assertSame(405, $request->http_code);
     }
 
     private function assertEmptyPool()

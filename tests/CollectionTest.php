@@ -11,9 +11,9 @@ class CollectionTest extends TestCase
     {
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
         $vegetables = $fruitsAndVegetables->where(array('type' => 'vegetable'));
-        $this->assertEquals(count($vegetables), 1, 'Only 1 vegetable in the collection');
-        $this->assertEquals($vegetables[0]['name'], 'carrot');
-        $this->assertEquals($vegetables->toArray(), array(
+        $this->assertSame(count($vegetables), 1, 'Only 1 vegetable in the collection');
+        $this->assertSame($vegetables[0]['name'], 'carrot');
+        $this->assertSame($vegetables->toArray(), array(
             array(
                 'id' => '8',
                 'name' => 'carrot',
@@ -21,9 +21,9 @@ class CollectionTest extends TestCase
             ),
         ));
         $fruits = $fruitsAndVegetables->where(array('type' => 'fruit'));
-        $this->assertEquals(count($fruits), 3, '3 fruits in the collection');
-        $this->assertEquals($fruits[0]['name'], 'apple');
-        $this->assertEquals($fruits->toArray(), array(
+        $this->assertSame(count($fruits), 3, '3 fruits in the collection');
+        $this->assertSame($fruits[0]['name'], 'apple');
+        $this->assertSame($fruits->toArray(), array(
             array(
                 'id' => '4',
                 'name' => 'apple',
@@ -52,7 +52,7 @@ class CollectionTest extends TestCase
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
         // Simple select a single field
         $names = $fruitsAndVegetables->select('name');
-        $this->assertEquals($names->toArray(), array(
+        $this->assertSame($names->toArray(), array(
             'apple',
             'pear',
             'banana',
@@ -60,7 +60,7 @@ class CollectionTest extends TestCase
         ));
         // The second parameter determines the key
         $list = $fruitsAndVegetables->select('name', '[id]');
-        $this->assertEquals($list->toArray(), array(
+        $this->assertSame($list->toArray(), array(
             4 => 'apple',
             6 => 'pear',
             7 => 'banana',
@@ -68,7 +68,7 @@ class CollectionTest extends TestCase
         ));
         // Select multiple fields and create a new structure
         $struct = $fruitsAndVegetables->where(array('name' => 'banana'))->select(array('name' => '[name]', 'meta[id]' => 'id', 'meta[type]' => 'type'));
-        $this->assertEquals($struct->toArray(), array(
+        $this->assertSame($struct->toArray(), array(
             array(
                 'name' => 'banana',
                 'meta' => array(
@@ -84,14 +84,14 @@ class CollectionTest extends TestCase
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
         // indexed
         $abc = $fruitsAndVegetables->orderBy('name')->select('name');
-        $this->assertEquals($abc->toArray(), array(
+        $this->assertSame($abc->toArray(), array(
             'apple',
             'banana',
             'carrot',
             'pear',
         ));
         $zyx = $fruitsAndVegetables->orderByDescending('name')->select('name');
-        $this->assertEquals($zyx->toArray(), array(
+        $this->assertSame($zyx->toArray(), array(
             'pear',
             'carrot',
             'banana',
@@ -102,12 +102,12 @@ class CollectionTest extends TestCase
     public function test_selectKey()
     {
         $xyz = new Collection(array('x' => 10, 'y' => 20, 'z' => 30));
-        $this->assertEquals(array(10, 20, 30), $xyz->selectKey(null)->toArray(), 'null should return an index array.');
-        $this->assertEquals(array(10 => 10, 20 => 20, 30 => 30), $xyz->selectKey('.')->toArray(), 'Using a path as key.');
+        $this->assertSame(array(10, 20, 30), $xyz->selectKey(null)->toArray(), 'null should return an index array.');
+        $this->assertSame(array(10 => 10, 20 => 20, 30 => 30), $xyz->selectKey('.')->toArray(), 'Using a path as key.');
         $closure = function ($item, $key) {
             return $key.$item;
         };
-        $this->assertEquals(array('x10' => 10, 'y20' => 20, 'z30' => 30), $xyz->selectKey($closure)->toArray(), 'Using a closure as key.');
+        $this->assertSame(array('x10' => 10, 'y20' => 20, 'z30' => 30), $xyz->selectKey($closure)->toArray(), 'Using a closure as key.');
     }
 
     public function test_where_operators()
@@ -134,19 +134,19 @@ class CollectionTest extends TestCase
         });
 
         unset($collection[3]);
-        $this->assertEquals(1, $removedCount, 'Removing an item should trigger a "removed" event');
+        $this->assertSame(1, $removedCount, 'Removing an item should trigger a "removed" event');
         unset($collection[3]);
-        $this->assertEquals(1, $removedCount, 'An unset that wasn\'t set should NOT trigger a "removed" event');
+        $this->assertSame(1, $removedCount, 'An unset that wasn\'t set should NOT trigger a "removed" event');
 
         $addedCount = 0;
         $collection->on('added', function ($item, $index) use (&$addedCount) {
             ++$addedCount;
         });
         $collection['Hi'] = 'New value';
-        $this->assertEquals(1, $addedCount, 'Adding an item should trigger a "added" event');
+        $this->assertSame(1, $addedCount, 'Adding an item should trigger a "added" event');
         $collection['Hi'] = 'Another value';
-        $this->assertEquals(2, $removedCount, 'Replacing an item should trigger a "removed" event');
-        $this->assertEquals(2, $addedCount, 'Replacing an item should trigger a "added" event');
+        $this->assertSame(2, $removedCount, 'Replacing an item should trigger a "removed" event');
+        $this->assertSame(2, $addedCount, 'Replacing an item should trigger a "added" event');
     }
 
     public function test_indexof()
@@ -154,9 +154,9 @@ class CollectionTest extends TestCase
         $object1 = new stdClass();
         $object2 = new stdClass();
         $collection = new Collection(array(10, 20, array('id' => 30), $object1, $object2));
-        $this->assertEquals(1, $collection->indexOf(20));
-        $this->assertEquals(2, $collection->indexOf(array('id?' => 30)));
-        $this->assertEquals(4, $collection->indexOf($object2));
+        $this->assertSame(1, $collection->indexOf(20));
+        $this->assertSame(2, $collection->indexOf(array('id?' => 30)));
+        $this->assertSame(4, $collection->indexOf($object2));
     }
 
     public function test_remove()
@@ -164,12 +164,12 @@ class CollectionTest extends TestCase
         $object = new stdClass();
         $collection = new Collection(array(10, array('id' => 20), $object));
         $collection->remove($object);
-        $this->assertEquals(array(10, array('id' => 20)), $collection->toArray());
+        $this->assertSame(array(10, array('id' => 20)), $collection->toArray());
         $collection->remove(function ($item) {
             return $item == 10;
         });
-        $this->assertEquals(array(array('id' => 20)), $collection->toArray());
-//		$this->assertEquals(2, $collection->indexOf(array('id?' => 30)));
+        $this->assertSame(array(array('id' => 20)), $collection->toArray());
+//		$this->assertSame(2, $collection->indexOf(array('id?' => 30)));
     }
 
     public function test_remove_odd_in_foreach()
@@ -183,7 +183,7 @@ class CollectionTest extends TestCase
             ++$i;
         }
         $this->assertCount(2, $collection, 'Should be halved');
-        $this->assertEquals(array(1, 3), $collection->toArray());
+        $this->assertSame(array(1, 3), $collection->toArray());
     }
 
     public function test_remove_even_in_foreach()
@@ -197,7 +197,7 @@ class CollectionTest extends TestCase
             ++$i;
         }
         $this->assertCount(2, $collection, 'Should be halved');
-        $this->assertEquals(array(2, 4), $collection->toArray());
+        $this->assertSame(array(2, 4), $collection->toArray());
     }
 
     public function test_map()
@@ -206,8 +206,8 @@ class CollectionTest extends TestCase
         $mapped = $collection->map(function ($v) {
             return $v * 2;
         });
-        $this->assertEquals(array(2, 4, 6, 10), $mapped->toArray(), 'All values should be doubled');
-        $this->assertEquals(array(1, 2, 3, 5), $collection->toArray(), 'Original array should remain intact');
+        $this->assertSame(array(2, 4, 6, 10), $mapped->toArray(), 'All values should be doubled');
+        $this->assertSame(array(1, 2, 3, 5), $collection->toArray(), 'Original array should remain intact');
     }
 
     public function test_reduce()
@@ -216,8 +216,8 @@ class CollectionTest extends TestCase
         $result = $collection->reduce(function ($result, $v) {
             return $result + $v;
         });
-        $this->assertEquals(10, $result, '1 + 2 + 3 + 4 = 10');
-        $this->assertEquals(array(1, 2, 3, 4), $collection->toArray(), 'Original array should remain intact');
+        $this->assertSame(10, $result, '1 + 2 + 3 + 4 = 10');
+        $this->assertSame(array(1, 2, 3, 4), $collection->toArray(), 'Original array should remain intact');
     }
 
     /**

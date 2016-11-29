@@ -48,7 +48,7 @@ class DatabaseTest extends DatabaseTestCase
     public function test_fetch()
     {
         $db = Connection::instance($this->dbLink);
-        $this->assertEquals($db->fetchAll('SELECT * FROM ducks'), array(
+        $this->assertSame($db->fetchAll('SELECT * FROM ducks'), array(
             array(
                 'id' => '1',
                 'name' => 'Kwik',
@@ -64,12 +64,12 @@ class DatabaseTest extends DatabaseTestCase
         ));
         // Fetch row
         $kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
-        $this->assertEquals($kwik, array(
+        $this->assertSame($kwik, array(
             'id' => '1',
             'name' => 'Kwik',
         ));
         // Fetch value
-        $this->assertEquals($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
+        $this->assertSame($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
         $this->setExpectedException('PHPUnit_Framework_Error_Warning', 'Resultset has no columns, expecting 1 or more columns');
         $db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
@@ -80,7 +80,7 @@ class DatabaseTest extends DatabaseTestCase
         $db = Connection::instance($this->dbLink);
         $result = $db->query('SELECT * FROM ducks');
         $this->assertInstanceOf(Statement::class, $result);
-        $this->assertEquals(count($result), 3); //, 'count() should return the number of rows found');
+        $this->assertSame(count($result), 3); //, 'count() should return the number of rows found');
     }
 
     /**

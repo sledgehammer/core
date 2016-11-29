@@ -10,8 +10,8 @@ class CoreFunctionsTest extends TestCase
     public function test_value_function()
     {
         $bestaat = 'Wel';
-        $this->assertEquals(\Sledgehammer\value($bestaat), $bestaat, 'value($var) geeft de waarde van $var terug');
-        $this->assertEquals(\Sledgehammer\value($bestaatNiet), null, 'value() op een niet bestaande $var geeft null terug');
+        $this->assertSame(\Sledgehammer\value($bestaat), $bestaat, 'value($var) geeft de waarde van $var terug');
+        $this->assertSame(\Sledgehammer\value($bestaatNiet), null, 'value() op een niet bestaande $var geeft null terug');
         // Kon ik dit maar voorkomen....
         $this->assertTrue(array_key_exists('bestaatNiet', get_defined_vars()), 'Na de value() bestaat de var $bestaatNiet en heeft de waarde null');
     }
@@ -22,11 +22,11 @@ class CoreFunctionsTest extends TestCase
             'bestaat' => 'Wel',
         ];
         $array['nested'] = &$array;
-        $this->assertEquals('Wel', \Sledgehammer\array_value($array, 'bestaat'), '\Sledgehammer\array_value($var, "key") geeft de waarde van $var["key"] terug');
-        $this->assertEquals(null, \Sledgehammer\array_value($array, 'bestaatNiet'), '\Sledgehammer\array_value() op een niet bestaande index geeft null terug');
-        $this->assertEquals(null, \Sledgehammer\array_value($array, 'bestaat', 'niet'), '\Sledgehammer\array_value() met een index  geeft null terug');
-        $this->assertEquals('Wel', \Sledgehammer\array_value($array, 'nested', 'nested', 'bestaat'), '\Sledgehammer\array_value($var, "key1", "key1") heeft de waarde van $var["key1"]["key2] terug');
-        $this->assertEquals(null, \Sledgehammer\array_value($array, 'nested', 'nested', 'bestaatNiet'));
+        $this->assertSame('Wel', \Sledgehammer\array_value($array, 'bestaat'), '\Sledgehammer\array_value($var, "key") geeft de waarde van $var["key"] terug');
+        $this->assertSame(null, \Sledgehammer\array_value($array, 'bestaatNiet'), '\Sledgehammer\array_value() op een niet bestaande index geeft null terug');
+        $this->assertSame(null, \Sledgehammer\array_value($array, 'bestaat', 'niet'), '\Sledgehammer\array_value() met een index  geeft null terug');
+        $this->assertSame('Wel', \Sledgehammer\array_value($array, 'nested', 'nested', 'bestaat'), '\Sledgehammer\array_value($var, "key1", "key1") heeft de waarde van $var["key1"]["key2] terug');
+        $this->assertSame(null, \Sledgehammer\array_value($array, 'nested', 'nested', 'bestaatNiet'));
     }
 
     public function test_compare()

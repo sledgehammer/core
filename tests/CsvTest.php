@@ -10,7 +10,7 @@ class CsvTest extends TestCase
     {
         // Read a file (where the last line is not an EOL)
         $csv = new Csv(__DIR__.'/data/noeol.csv');
-        $this->assertEquals(array(
+        $this->assertSame(array(
             array('department' => 'it', 'name' => 'Govert'),
             array('department' => 'health', 'name' => 'G. Verschuur'),
                 ), iterator_to_array($csv));
@@ -19,7 +19,7 @@ class CsvTest extends TestCase
     public function test_skip_empty_lines()
     {
         $csv = new Csv(__DIR__.'/data/empty_lines.csv');
-        $this->assertEquals(array(
+        $this->assertSame(array(
             array('id' => '1', 'name' => 'Donald Duck'),
             array('id' => '2', 'name' => 'Goofy'),
             array('id' => '3', 'name' => 'Kwik'),
@@ -33,9 +33,9 @@ class CsvTest extends TestCase
         $data = array(array('id' => '1', 'name' => 'John'), array('id' => '2', 'name' => 'Doe'));
         $filename = \Sledgehammer\TMP_DIR.'CsvTests_testfile.csv';
         Csv::write($filename, $data);
-        $this->assertEquals(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");
+        $this->assertSame(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");
         $csv = new Csv($filename);
-        $this->assertEquals(iterator_to_array($csv), $data);
+        $this->assertSame(iterator_to_array($csv), $data);
         unlink($filename);
     }
 }

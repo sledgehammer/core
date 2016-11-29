@@ -17,20 +17,20 @@ class EventEmitterTest extends TestCase
         try {
             $button->trigger('won_word_cup', $this);
         } catch (Exception $e) {
-            $this->assertEquals('Event: "won_word_cup" not registered', $e->getMessage());
+            $this->assertSame('Event: "won_word_cup" not registered', $e->getMessage());
         }
 
         // Test onClick method
         $button->trigger('click', $this);
-        $this->assertEquals($button->lastClickedBy, self::class);
+        $this->assertSame($button->lastClickedBy, self::class);
         // Test custom event via property
         $tempvar = false;
         $button->onClick = function ($sender) use (&$tempvar) {
             $tempvar = 'custom event';
         };
         $button->click();
-        $this->assertEquals($tempvar, 'custom event');
-        $this->assertEquals($button->lastClickedBy, 'SledgehammerTests\Core\Fixtures\TestButton');
+        $this->assertSame($tempvar, 'custom event');
+        $this->assertSame($button->lastClickedBy, 'SledgehammerTests\Core\Fixtures\TestButton');
 
         $tempvar = 'reset';
         $tempvar2 = false;
@@ -39,8 +39,8 @@ class EventEmitterTest extends TestCase
         };
 
         $button->click();
-        $this->assertEquals($tempvar2, 'custom event2');
-        $this->assertEquals($tempvar, 'reset', 'The first "custom event" is overwitten. and no longer gets triggered');
+        $this->assertSame($tempvar2, 'custom event2');
+        $this->assertSame($tempvar, 'reset', 'The first "custom event" is overwitten. and no longer gets triggered');
 
         // Test custom event via on
         $tempvar3 = false;
@@ -49,33 +49,33 @@ class EventEmitterTest extends TestCase
         });
         $tempvar2 = 'reset';
         $button->trigger('click', $button);
-        $this->assertEquals($tempvar2, 'custom event2');
-        $this->assertEquals($tempvar3, 'custom event3');
+        $this->assertSame($tempvar2, 'custom event2');
+        $this->assertSame($tempvar3, 'custom event3');
         $button->off('click', $listenerId);
         $tempvar3 = 'nothing happend';
         $button->trigger('click', $button);
-        $this->assertEquals($tempvar3, 'nothing happend');
+        $this->assertSame($tempvar3, 'nothing happend');
     }
 
     public function test_kvo()
     {
         $button = new TestButton();
-        $this->assertEquals($button->title, 'Button1');
+        $this->assertSame($button->title, 'Button1');
         $this->assertTrue($this->property_exists($button, 'title'), 'The title propertty is a normal property'); // When no events are bound to a property change
         $eventArguments = false;
         $button->on('change:title', function ($button, $new, $old) use (&$eventArguments) {
             $eventArguments = func_get_args();
         });
         $this->assertFalse($this->property_exists($button, 'title'), 'The title is now a virtual property');
-        $this->assertEquals($button->title, 'Button1', 'The property should still have its value');
+        $this->assertSame($button->title, 'Button1', 'The property should still have its value');
 
         $button->title = 'Click me';
-        $this->assertEquals(array(
+        $this->assertSame(array(
             $button,
             'Click me',
             'Button1',
                 ), $eventArguments);
-        $this->assertEquals($button->title, 'Click me', 'The property changed to the new value');
+        $this->assertSame($button->title, 'Click me', 'The property changed to the new value');
 
         $changeLog = [];
         // Monitor all changes
@@ -84,7 +84,7 @@ class EventEmitterTest extends TestCase
         };
         $button->clicked = 10;
         $button->click();
-        $this->assertEquals(array(
+        $this->assertSame(array(
             'clicked' => array(10, 11),
             'lastClickedBy' => array('SledgehammerTests\Core\Fixtures\TestButton'),
                 ), $changeLog);

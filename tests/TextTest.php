@@ -14,13 +14,13 @@ class TextTest extends TestCase
         $expectedLength = 13;
         $numberOfBytesInUtf8 = 17;
         $detectOrder = array('ASCII', 'UTF-8', 'ISO-8859-15');
-        $this->assertEquals(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
-        $this->assertEquals(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
+        $this->assertSame(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
+        $this->assertSame(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
 
-        $this->assertEquals(\Sledgehammer\text($latin1, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
-        $this->assertEquals(\Sledgehammer\text($utf8, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
+        $this->assertSame(\Sledgehammer\text($latin1, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a ISO-8859-15 string');
+        $this->assertSame(\Sledgehammer\text($utf8, $detectOrder)->length, $expectedLength, 'Text->length should return the number of characters on a UTF-8 string');
 
-        $this->assertEquals(strlen(\Sledgehammer\text($latin1, $detectOrder)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
+        $this->assertSame(strlen(\Sledgehammer\text($latin1, $detectOrder)), $numberOfBytesInUtf8, 'Text converts ISO-8859-15 string to UTF-8 strings');
     }
 
     public function test_toUpper()
@@ -31,7 +31,7 @@ class TextTest extends TestCase
 
         $text = \Sledgehammer\text($italie);
         $uppercaseText = $text->toUpper();
-        $this->assertEquals((string) $text, $italie, 'toUpper doesn\'t modify the text instance');
+        $this->assertSame((string) $text, $italie, 'toUpper doesn\'t modify the text instance');
         $this->assertInstanceOf(Text::class, $uppercaseText, 'Returns a new Text instance');
         $this->assertEquals($uppercaseText, $uppercaseItalie, 'toUpper convert the characters to uppercase');
         $this->assertEquals($uppercaseText->toLower(), $italie, 'toLower convert the characters back to lowercase');

@@ -17,7 +17,7 @@ class SqlTest extends TestCase
                 ->andWhere('c.id = 1');
         $sql->where[] = 'orders.id = 1';
         $sql = $sql->column('o.amount');
-        $this->assertEquals((string) $sql, 'SELECT c.id, o.amount FROM customers AS c INNER JOIN orders ON (c.id = customer_id) WHERE c.id = 1 AND orders.id = 1');
+        $this->assertSame((string) $sql, 'SELECT c.id, o.amount FROM customers AS c INNER JOIN orders ON (c.id = customer_id) WHERE c.id = 1 AND orders.id = 1');
     }
 
     public function test_property_api()
@@ -32,26 +32,26 @@ class SqlTest extends TestCase
             'c.id = 1',
             'orders.id = 1',
         );
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers AS c INNER JOIN orders ON (c.id = customer_id) WHERE c.id = 1 AND orders.id = 1');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers AS c INNER JOIN orders ON (c.id = customer_id) WHERE c.id = 1 AND orders.id = 1');
 
         // Creating a from raw strings (makes it easy to generate the query you want)
         $sql = new Sql();
         $sql->columns = '*';
         $sql->tables = 'customers';
         $sql->where = 'id = 1';
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE id = 1');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers WHERE id = 1');
     }
 
     public function test_nested_conditions()
     {
         $sql = \Sledgehammer\select('*')->from('customers')->where(array('OR', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 OR (special = 1 AND age < 12)');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 OR (special = 1 AND age < 12)');
 
         $sql = \Sledgehammer\select('*')->from('customers')->orWhere(array('AND', 'bonus = 1', array('AND', 'special = 1', 'age < 12')));
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 AND special = 1 AND age < 12');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers WHERE bonus = 1 AND special = 1 AND age < 12');
 
         $sql = \Sledgehammer\select('*')->from('customers')->where(array('bonus = 1'))->orWhere('special = 1')->andWhere('age < 12');
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE (bonus = 1 OR special = 1) AND age < 12');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers WHERE (bonus = 1 OR special = 1) AND age < 12');
 
         $sql = \Sledgehammer\select('*')->from('customers');
         $sql->where = array(
@@ -75,6 +75,6 @@ class SqlTest extends TestCase
                 ),
             ),
         );
-        $this->assertEquals((string) $sql, 'SELECT * FROM customers WHERE a = 1 OR b = 2 OR c = 3 OR (d = 4 AND e = 5 AND f = 6 AND g = 7 AND h = 8 AND (i = 9 OR j = 10))');
+        $this->assertSame((string) $sql, 'SELECT * FROM customers WHERE a = 1 OR b = 2 OR c = 3 OR (d = 4 AND e = 5 AND f = 6 AND g = 7 AND h = 8 AND (i = 9 OR j = 10))');
     }
 }

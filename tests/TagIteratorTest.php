@@ -202,9 +202,9 @@ EOD;
         foreach ($output as $token) {
             $reconstructedHtml .= (is_array($token) ? $token['html'] : $token);
         }
-        $this->assertEquals($html, $reconstructedHtml, 'reconstructed HTML should match the original HTML');
+        $this->assertSame($html, $reconstructedHtml, 'reconstructed HTML should match the original HTML');
         if ($expectedOutput != '__SKIP_OUTPUT_CHECK__') {
-            $this->assertEquals($expectedOutput, $output);
+            $this->assertSame($expectedOutput, $output);
         }
         //$this->assertWarnings($tags, $warnings);
     }

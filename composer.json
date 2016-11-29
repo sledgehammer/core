@@ -4,7 +4,6 @@
     "keywords": ["sledgehammer", "toolkit", "core"],
     "homepage": "http://sledgehammer.github.com/",
     "license": "MIT",
-    "sledgehammer": true,
     "autoload": {
         "psr-4": {
             "Sledgehammer\\Core\\": "src/",
