@@ -16,7 +16,7 @@ use ReflectionObject;
  *   Throws an Exception when calling a non-existing method (instead of a fatal error)
  *   Generates a notice when the object is used as a string (instead of throwing an exception)
  */
-abstract class Object
+abstract class Base
 {
     /**
      * Report that $property doesn't exist.

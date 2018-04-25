@@ -2,7 +2,7 @@
 
 namespace SledgehammerTests\Core;
 
-use PHPUnit_Framework_Error_Notice;
+use PHPUnit\Framework\Error\Notice;
 use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\PropertyPath;
 use Sledgehammer\Core\PropertyPath_Tester;
@@ -78,31 +78,31 @@ class PropertyPathTest extends TestCase
 
     public function test_parser_warning_empty_path()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Path is empty');
+        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Path is empty');
         $this->assertSame(PropertyPath::parse(''), []);
     }
 
     public function test_parser_warning_invalid_start()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "." in the path');
+        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "." in the path');
         $this->assertSame(PropertyPath::parse('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
     }
 
     public function test_parser_warning_invalid_chain()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
+        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
         $this->assertSame(PropertyPath::parse('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
     }
 
     public function test_parser_warning_invalid_arrow()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
+        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
         $this->assertSame(PropertyPath::parse('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
     }
 
     public function test_parser_warning_unmatched_brackets()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Notice', 'Unmatched brackets, missing a "]" in path after "element"');
+        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Unmatched brackets, missing a "]" in path after "element"');
         $this->assertSame(PropertyPath::parse('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
     }
 
@@ -140,8 +140,8 @@ class PropertyPathTest extends TestCase
         $this->assertSame(PropertyPath::get('[id?]', $array), '1', 'Path "->id?" should work on arrays');
         $this->assertSame(PropertyPath::get('->id?', $object), '2', 'Path "->id?" should work on objects');
 
-//		$this->assertSame(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
-//		$this->assertSame(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
+        //		$this->assertSame(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
+        //		$this->assertSame(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
         // @todo Add UnitTest for method notation "getFilename()"
 
         $sequence = array(
@@ -151,7 +151,7 @@ class PropertyPathTest extends TestCase
         );
         $this->assertSame(PropertyPath::get('[*].id', $sequence), array(1, 3, 5));
 
-        PHPUnit_Framework_Error_Notice::$enabled = false;
+        Notice::$enabled = false;
         $error_log = ini_get('error_log');
         ini_set('error_log', '/dev/null');
 
@@ -165,9 +165,9 @@ class PropertyPathTest extends TestCase
         $this->assertSame(PropertyPath::get('[id]', $object), null, 'Path "[id]" should NOT work on objects');
         $this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
 
-//		PropertyPath::get('->id?', $array)
-//		PropertyPath::get('[id?]', $object)
-        PHPUnit_Framework_Error_Notice::$enabled = true;
+        //		PropertyPath::get('->id?', $array)
+        //		PropertyPath::get('[id?]', $object)
+        Notice::$enabled = true;
         ini_set('error_log', $error_log);
     }
 

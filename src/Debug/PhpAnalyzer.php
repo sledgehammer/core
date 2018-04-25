@@ -4,12 +4,12 @@ namespace Sledgehammer\Core\Debug;
 
 use Exception;
 use ReflectionClass;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * Statically Analyzes PHP code and collects data about class and interface usage and deflarations.
  */
-class PhpAnalyzer extends Object
+class PhpAnalyzer extends Base
 {
     /**
      * Declared classes.

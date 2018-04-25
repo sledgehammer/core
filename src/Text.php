@@ -13,7 +13,7 @@ use Exception;
  *
  * @property-read int $length  The number of characters
  */
-class Text extends Object implements ArrayAccess
+class Text extends Base implements ArrayAccess
 {
     /**
      * The string in UTF-8.

@@ -4,9 +4,9 @@
 
 A general purpose PHP toolkit, with a focus on debugging.
 
-- Improved error reporting with Sledgehammer\Core\Debug\ErrorHandler.
-- Improved var_dump() with dump().
-- Improved PDO compatible database connection with Sledgehammer\Core\Database\Connection.
+* Improved error reporting with Sledgehammer\Core\Debug\ErrorHandler.
+* Improved var_dump() with dump().
+* Improved PDO compatible database connection with Sledgehammer\Core\Database\Connection.
 
 ## Resources
 
@@ -19,30 +19,30 @@ A general purpose PHP toolkit, with a focus on debugging.
 
 * Debugging, error-reporting, loggin and profiling functionality.
 * A collection of global functions (that should be included in PHP, imho)
-* Generic utility classes 
+* Generic utility classes
 
 ## Classes
 
-* [Autoloader](http://sledgehammer.github.com/api/class-Sledgehammer.Autoloader.html)    : Detects classes and interfaces in any php file and load them when needed. no more includes.
-* [ErrorHandler](http://sledgehammer.github.com/api/class-Sledgehammer.ErroHandler.html) : An error reporting solution.
-* [Object](http://sledgehammer.github.com/api/class-Sledgehammer.Object.html)            : A more strict base class with improved error messages.
-* [Dump/dump()](http://sledgehammer.github.com/api/class-Sledgehammer.Dump.html)         : A colorfull `var_dump`, with copy-pastable array format.
-* [Database](http://sledgehammer.github.com/api/class-Sledgehammer.Database.html)        : PDO Database class enhanced with logging/profiling and improved error/warning detection.
-* [Sql](http://sledgehammer.github.com/api/class-Sledgehammer.Sql.html)                  : Generating complex queries in a chainable.
-* [Collection](http://sledgehammer.github.com/api/class-Sledgehammer.Collection.html)    : Enhanced Array/Iterator handling.
-* [Text](http://sledgehammer.github.com/api/class-Sledgehammer.Text.html)                : Chainable UTF-8 string functions.
-* [Url](http://sledgehammer.github.com/api/class-Sledgehammer.Url.html)                  : Read and generate urls in a OOP style.
-* [Cache/cache()](http://sledgehammer.github.com/api/class-Sledgehammer.Cache.html)      : Easy caching api using closures.
-* [Json](http://sledgehammer.github.com/api/class-Sledgehammer.Json.html)                : Reliable JSON encoding and decoding.
-* [DebugR](http://sledgehammer.github.com/api/class-Sledgehammer.DebugR.html)            : Sending debugging information alongside XMLHttpRequests. 
-* [more...](http://sledgehammer.github.com/api/package-Core.html)
-
+* [Autoloader](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.Autoloader.html) : Detects classes and interfaces in any php file and load them when needed. no more includes.
+* [ErrorHandler](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.ErrorHandler.html) : An error reporting solution.
+* [Base](http://sledgehammer.github.com/api/class-Sledgehammer.Base.html) : A more strict base class with improved error messages.
+* [Sledgehammer/dump()](http://sledgehammer.github.io/api/function-Sledgehammer.dump.html) : A colorful `var_dump`, with copy-pastable array format.
+* [Database](http://sledgehammer.github.com/api/class-Sledgehammer.Database.html) : PDO Database class enhanced with logging/profiling and improved error/warning detection.
+* [Sql](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Database.Sql.html) : Generating complex queries in a chainable.
+* [Collection](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Collection.html) : Enhanced Array/Iterator handling.
+* [Text](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Text.html) : Chainable UTF-8 string functions.
+* [Url](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Url.html) : Read and generate urls in a OOP style.
+* [Sledgehammer/cache()](http://sledgehammer.github.io/api/function-Sledgehammer.cache.html) : Easy caching api using closures.
+* [Json](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Json.html) : Reliable JSON encoding and decoding.
+* [DebugR](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.DebugR.html) : Sending debugging information alongside XMLHttpRequests.
+* [more...](http://sledgehammer.github.io/api/namespace-Sledgehammer.Core.html)
 
 ## Constants
 
-* \Sledgehammer\ENVIRONMENT : The current environment ("development", "staging" or "production") based on `$_SERVER['APPLICATION_ENV']`  
-* \Sledgehammer\PATH        : The absolute (server)path of the project folder  
-* \Sledgehammer\TMP_DIR     : The absolute (server)path of the tmp/cache folder  
+* \Sledgehammer\ENVIRONMENT : The current environment ("development", "staging" or "production") based on `$_SERVER['APPLICATION_ENV']`
+* \Sledgehammer\PATH : The absolute (server)path of the project folder
+* \Sledgehammer\TMP_DIR : The absolute (server)path of the tmp/cache folder
+* \Sledgehammer\DEBUG_VAR : The parameter name that can override debug settings, default: `?debug=1`
 
 ## Installation
 
@@ -72,7 +72,9 @@ The errorhandler sends error reports per email to the address configured in `Err
 By default the emailaddress specified in `$_SERVER['SERVER_ADMIN']` is used.
 
 ### Static files
+
 Serve static files from modules by adding a line to your rewrite/index.php.
+
 ```
 require("vendor/sledgehammer/core/src/render_public_folders.php");
 ```

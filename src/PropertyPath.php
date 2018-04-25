@@ -33,7 +33,7 @@ use stdClass;
  *
  * Add "?" after an identifier to allow missing properties/elements. Example: "[abc?]" or "abc?" checks if the abc property/element exists. (and returns null if they don't)
  */
-class PropertyPath extends Object
+class PropertyPath extends Base
 {
     const TYPE_ANY = 'ANY'; // object-property or array-element
     const TYPE_PROPERTY = 'PROPERTY';

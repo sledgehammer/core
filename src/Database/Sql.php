@@ -4,7 +4,7 @@ namespace Sledgehammer\Core\Database;
 
 use Exception;
 use Sledgehammer\Core\InfoException;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * Query object to mutate and generate (complex) SQL queries.
@@ -21,7 +21,7 @@ use Sledgehammer\Core\Object;
  *
  * More on method chaining: http://stackoverflow.com/questions/1103985/method-chaining-why-is-it-a-good-practice-or-not#7215149
  */
-class Sql extends Object
+class Sql extends Base
 {
     /**
      * Hiermee kun de "SELECT" aanpassen naar een "SELECT SQL_COUNT" e.d.
@@ -156,9 +156,7 @@ class Sql extends Object
      */
     public function setFrom($table)
     {
-        if (count($this->tables) != 0) {
-            $this->tables = [];
-        }
+        $this->tables = [];
         if (func_num_args() == 1 && is_array($table)) { // Eerste argument is een array?
             $tables = $table;
         } else {
@@ -443,10 +441,10 @@ class Sql extends Object
      */
     private function compose()
     {
-        if (count($this->columns) == 0) {
+        if ((is_array($this->columns) && count($this->columns) == 0) || (is_string($this->columns) && strlen($this->columns) == 0)) {
             throw new Exception('1 or more columns are required, Call '.get_class($this).'->select($columns)');
         }
-        if (count($this->tables) == 0) {
+        if (is_array($this->tables) && count($this->tables) == 0) {
             throw new Exception('1 or tables are required, Call '.get_class($this).'->from($table)');
         }
         $sql = $this->select.' ';

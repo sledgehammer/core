@@ -51,7 +51,7 @@ if (!defined('Sledgehammer\VENDOR_DIR')) {
     }
 }
 // Directory of the project.
-define('Sledgehammer\PATH',  dirname(\Sledgehammer\VENDOR_DIR).DIRECTORY_SEPARATOR);
+define('Sledgehammer\PATH', dirname(\Sledgehammer\VENDOR_DIR).DIRECTORY_SEPARATOR);
 
 // Detect & create a writable tmp folder
 if (defined('Sledgehammer\TMP_DIR') === false) {
@@ -92,7 +92,7 @@ require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
 /*
  * 3. Configure and register the AutoLoader
  */
-require_once __DIR__.'/Object.php';
+require_once __DIR__.'/Base.php';
 require_once __DIR__.'/Debug/Autoloader.php';
 spl_autoload_register('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
 

@@ -5,7 +5,7 @@ namespace Sledgehammer\Core;
 /**
  * Helper class for manual performance profiling.
  */
-class Stopwatch extends Object
+class Stopwatch extends Base
 {
     /**
      * Timestamp.

@@ -38,7 +38,7 @@ use Traversable;
 function dump($variable, $export = false)
 {
     if (!class_exists('Sledgehammer\Core\Debug\Dump', false)) {
-        if (!class_exists('Sledgehammer\Core\Object', false)) {
+        if (!class_exists('Sledgehammer\Core\Base', false)) {
             include __DIR__.'/Object.php';
         }
         include __DIR__.'/Debug/Dump.php';

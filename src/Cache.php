@@ -23,7 +23,7 @@ use DirectoryIterator;
  *
  * @todo Implement dependancies (clearing a node should clear all childnodes, a expirationdate should not extend beyond the parents expirationdate)
  */
-class Cache extends Object implements ArrayAccess
+class Cache extends Base implements ArrayAccess
 {
     /**
      * Unique identifier for this cache node.

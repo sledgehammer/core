@@ -20,7 +20,7 @@ use IteratorAggregate;
  *
  * Inspired by LinQ and Underscore.php
  */
-class Collection extends Object implements IteratorAggregate, Countable, ArrayAccess
+class Collection extends Base implements IteratorAggregate, Countable, ArrayAccess
 {
     use EventEmitter;
     /**

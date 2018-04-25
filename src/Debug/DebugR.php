@@ -3,14 +3,14 @@
 namespace Sledgehammer\Core\Debug;
 
 use Sledgehammer\Core\Json;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * DebugR, send additional debugging information via HTTP heders.
  *
  * @link http://debugr.net/
  */
-class DebugR extends Object
+class DebugR extends Base
 {
     public static $increments = [];
 

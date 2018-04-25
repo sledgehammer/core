@@ -5,19 +5,19 @@ namespace Sledgehammer\Core\Debug;
 use Exception;
 use Sledgehammer\Core\Framework;
 use Sledgehammer\Core\InfoException;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 use Throwable;
 
 /**
  * Improved errorhandling for php notices, warnings, errors and uncaught exceptions.
- * 
+ *
  * html - Nice report with full backtrace.
  * email - Send report as e-mail
  * debugR - Report error from inside a XHR request.
  * log - Add record the the error_log
  * cli - similar to normal error output
  */
-class ErrorHandler extends Object
+class ErrorHandler extends Base
 {
     use \Sledgehammer\Core\Singleton;
 
@@ -319,8 +319,7 @@ class ErrorHandler extends Object
         }
         echo '<div style="', implode(';', $style), '">';
         if ($showDetails) {
-            $scheme = (\Sledgehammer\array_value($_SERVER, 'HTTPS') == 'on') ? 'https' : 'http';
-            echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\''.$scheme.'://bfanger.nl/core/img/ErrorHandler.png\')'.$offset.'"></span>';
+            echo '<span style="display:inline-block; width: 26px; height: 26px; vertical-align: middle; margin: 0 6px 2px 0; background: url(\'https://rawgit.com/sledgehammer/core/master/public/img/ErrorHandler.png\')'.$offset.'"></span>';
         }
         echo '<span style="font-size:13px; text-shadow: 0 1px 0 #fff;color:', $message_color, '">';
         if (is_array($message)) {
@@ -940,7 +939,7 @@ class ErrorHandler extends Object
 
     protected static function defaultInstance()
     {
-        if (class_exists('Sledgehammer\Core\Object', false) === false) {
+        if (class_exists('Sledgehammer\Core\Base', false) === false) {
             require_once __DIR__.'/../Object.php';
         }
         $errorHandler = new self();
@@ -951,7 +950,6 @@ class ErrorHandler extends Object
             $errorHandler->debugR = true;
             $errorHandler->emails_per_request = 10;
         } else {
-            ini_set('display_errors', false);
             $errorHandler->emails_per_request = 2;
             $errorHandler->emails_per_minute = 6;
             $errorHandler->emails_per_day = 25;

@@ -8,7 +8,7 @@ namespace Sledgehammer\Core;
  *
  * @see \Sledgehammer\Readonly for an example implementation.
  */
-abstract class Wrapper extends Object implements \ArrayAccess, \Iterator
+abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
 {
     /**
      * The wrapped object or array.

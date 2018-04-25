@@ -10,7 +10,7 @@ namespace Sledgehammer\Core;
  * Vaak is een oplossing mogelijk met DOMDocument of SimpleXML.
  * Gebruik in die gevallen niet deze iterator.
  */
-class TagIterator extends Object implements \Iterator
+class TagIterator extends Base implements \Iterator
 {
     /**
      * Generated parser warnings. (The tokenizer doesn't report warnings, it just stores them in this array).

@@ -42,7 +42,7 @@ namespace Sledgehammer\Core;
  *
  * @link http://en.wikipedia.org/wiki/HTML_element#Syntax
  */
-class HtmlTokenizer extends Object implements \Iterator
+class HtmlTokenizer extends Base implements \Iterator
 {
     /**
      * Generated parser warnings. (The tokenizer doesn't report warnings it just stores them in this array).

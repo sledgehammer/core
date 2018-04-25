@@ -3,7 +3,7 @@
 namespace Sledgehammer\Core\Debug;
 
 use Sledgehammer\Core\InfoException;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * Parses a var_dump() and renders a syntax highlighted version of var_export().
@@ -18,7 +18,7 @@ use Sledgehammer\Core\Object;
  * Disable xdebug's var_dump() for full-length, full-depth dump() output.
  * By adding "xdebug.overload_var_dump = Off" to the php.ini
  */
-class Dump extends Object
+class Dump extends Base
 {
     /**
      * The variable to display.

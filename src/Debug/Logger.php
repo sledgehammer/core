@@ -4,7 +4,7 @@ namespace Sledgehammer\Core\Debug;
 
 use Closure;
 use Sledgehammer\Core\Html;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 use Sledgehammer\Core\Singleton;
 
 /**
@@ -17,7 +17,7 @@ use Sledgehammer\Core\Singleton;
  * - Customizable columns and renderer.
  * - Ability to add a backtrace per log message.
  */
-class Logger extends Object
+class Logger extends Base
 {
     use Singleton;
     /**

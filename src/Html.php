@@ -6,7 +6,7 @@ namespace Sledgehammer\Core;
  * Html, a view compatible class for rendering raw html.
  * Contains static helper functions for generating tags, etc.
  */
-class Html extends Object
+class Html extends Base
 {
     /**
      * The output string.

@@ -7,7 +7,7 @@ use Exception;
 /**
  * Utility class for generating and manipulating urls.
  */
-class Url extends Object
+class Url extends Base
 {
     /**
      * The protocol/schema.

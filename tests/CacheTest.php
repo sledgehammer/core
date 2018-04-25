@@ -3,6 +3,7 @@
 namespace SledgehammerTests\Core;
 
 use Exception;
+use PHPUnit\Framework\Error\Notice;
 use Sledgehammer\Core\Cache;
 use SledgehammerTests\Core\Fixtures\CacheTester;
 
@@ -78,7 +79,7 @@ class CacheTest extends TestCase
         try {
             \Sledgehammer\cache(__FILE__.__FUNCTION__, array('max_age' => '+1 min'), array($this, 'incrementCounter'));
             $this->fail('An max_age in the future should generate a notice');
-        } catch (\PHPUnit_Framework_Error_Notice $e) {
+        } catch (Notice $e) {
             $this->assertSame('maxAge is 60 seconds in the future', $e->getMessage());
         }
     }

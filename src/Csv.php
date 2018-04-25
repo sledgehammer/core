@@ -11,7 +11,7 @@ use Iterator;
  *
  * De eerste regel van het csv bestand kan gebruikt worden om de kolomnamen te defineren.
  */
-class Csv extends Object implements Iterator
+class Csv extends Base implements Iterator
 {
     /**
      * Path van het csv bestand.

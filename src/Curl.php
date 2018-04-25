@@ -34,7 +34,7 @@ use Exception;
  * @property-write Closure $onLoad  Event fires when the request has successfully completed.
  * @property-write Closure $onAbort Event fires when the request has been aborted. For instance, by invoking the abort() method.
  */
-class Curl extends Object
+class Curl extends Base
 {
     use EventEmitter;
     /**

@@ -10,7 +10,7 @@ namespace Sledgehammer\Core\Database;
  * Sessie gegevens 'centraal' opslaan in een database
  * Hierdoor kan een Loadbalancer in 'round robin' mode draaien.
  */
-class SessionHandler extends Object
+class SessionHandler extends Base
 {
     /**
      * De tabel waar de sessie gegevens in worden opgeslagen. (Zal standaard de session_name() als tabelnaam gebruiken).

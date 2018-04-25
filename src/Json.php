@@ -10,7 +10,7 @@ use Sledgehammer\Core\Debug\ErrorHandler;
  * Renders the data as Json
  * Compatible with MVC's the Document/View inferface.
  */
-class Json extends Object
+class Json extends Base
 {
     /**
      * UTF-8 encoded data.

@@ -13,7 +13,7 @@ namespace Sledgehammer\Core;
  *   $auth = new HttpAuthentication('Realm', array('MyClass','login'));
  *   $credentials = $auth->authenticate();
  */
-class HttpAuthentication extends Object
+class HttpAuthentication extends Base
 {
     /**
      * WWW-Authenticate: realm=.

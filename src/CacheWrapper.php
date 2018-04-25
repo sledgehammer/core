@@ -10,7 +10,7 @@ use Iterator;
 /**
  * Wrap an object inside a CacheWrapper to cache all method calls and properties.
  */
-class CacheWrapper extends Object implements ArrayAccess, Iterator
+class CacheWrapper extends Base implements ArrayAccess, Iterator
 {
     /**
      * The wrapped object.

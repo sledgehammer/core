@@ -11,7 +11,7 @@ namespace Sledgehammer\Core;
  * - Module detection and initialisation
  * - Language & locale initialisation.
  */
-class Framework extends Object
+class Framework extends Base
 {
     /**
      * Register UTF-8 as default charset.

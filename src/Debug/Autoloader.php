@@ -7,7 +7,7 @@ use Exception;
 use ReflectionClass;
 use ReflectionMethod;
 use Sledgehammer\Core\InfoException;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 use Sledgehammer\Core\Singleton;
 
 /**
@@ -17,7 +17,7 @@ use Sledgehammer\Core\Singleton;
  * Validates definiton files according to $this->settings.
  * Detects and corrects namespace issues.
  */
-class Autoloader extends Object
+class Autoloader extends Base
 {
     use Singleton;
 
@@ -583,7 +583,7 @@ class Autoloader extends Object
                     if ($token[0] == T_EXTENDS) {
                         $state = 'DETECT';
                         break;
-                    } elseif ($settings['mandatory_superclass'] && !in_array($definition, array('Sledgehammer\Core\Object'))) {
+                    } elseif ($settings['mandatory_superclass'] && !in_array($definition, array('Sledgehammer\Core\Base'))) {
                         \Sledgehammer\notice('Class: "'.$definition.'" has no superclass, expection "class X extends Y"');
                     }
                     if ($token == '{' || $token[0] == T_IMPLEMENTS) {

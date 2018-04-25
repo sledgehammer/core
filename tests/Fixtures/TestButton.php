@@ -3,13 +3,13 @@
 namespace SledgehammerTests\Core\Fixtures;
 
 use Sledgehammer\Core\EventEmitter;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * TestButton, An class for testing an EventEmitter.
  *
  */
-class TestButton extends Object
+class TestButton extends Base
 {
     use EventEmitter;
 

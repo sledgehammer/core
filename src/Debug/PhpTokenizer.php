@@ -4,7 +4,7 @@ namespace Sledgehammer\Core\Debug;
 
 use Exception;
 use Iterator;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * A tokenizer that gives context to tokens of php internal tokenizer.
@@ -29,7 +29,7 @@ use Sledgehammer\Core\Object;
  *   T_CALL         An global function that is called in the code
  *   T_METHOD_CALL  An method that is called in the code
  */
-class PhpTokenizer extends Object implements Iterator
+class PhpTokenizer extends Base implements Iterator
 {
     /**
      * Current state "INIT", "HTML", "PHP", "USE", "NAMESPACE", etc.
