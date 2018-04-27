@@ -15,99 +15,99 @@ class TagIteratorTest extends TestCase
 
     public function test_cdata()
     {
-        $this->compare('<div id="test"><![CDATA[<ignore me="ok">]]></div>', array(
-            0 => array(
+        $this->compare('<div id="test"><![CDATA[<ignore me="ok">]]></div>', [
+            0 => [
                 0 => '<div',
-                1 => array(
+                1 => [
                     'id' => 'test',
-                ),
+                ],
                 2 => '>',
                 'html' => '<div id="test">',
-            ),
+            ],
             1 => '<![CDATA[<ignore me="ok">]]>',
-            2 => array(
+            2 => [
                 0 => '</div',
                 1 => [],
                 2 => '>',
                 'html' => '</div>',
-            ),
-        ));
+            ],
+        ]);
     }
 
     public function test_plainText()
     {
         $html = 'Een plain tekst voorbeeld';
-        $this->compare($html, array($html));
+        $this->compare($html, [$html]);
     }
 
     public function test_link()
     {
-        $this->compare('<a href="http://www.google.nl">Zoeken</a>', array(
-            0 => array(
+        $this->compare('<a href="http://www.google.nl">Zoeken</a>', [
+            0 => [
                 0 => '<a',
-                1 => array(
+                1 => [
                     'href' => 'http://www.google.nl',
-                ),
+                ],
                 2 => '>',
                 'html' => '<a href="http://www.google.nl">',
-            ),
+            ],
             1 => 'Zoeken',
-            2 => array(
+            2 => [
                 0 => '</a',
                 1 => [],
                 2 => '>',
                 'html' => '</a>',
-            ),
-        ));
+            ],
+        ]);
     }
 
     public function test_before_after()
     {
-        $this->compare('before<br />middle<a href="test.html?page=1&amp;per_page=10">TEST</a>after', array(
+        $this->compare('before<br />middle<a href="test.html?page=1&amp;per_page=10">TEST</a>after', [
             0 => 'before',
-            1 => array(
+            1 => [
                 0 => '<br',
                 1 => [],
                 2 => '/>',
                 'html' => '<br />',
-            ),
+            ],
             2 => 'middle',
-            3 => array(
+            3 => [
                 0 => '<a',
-                1 => array(
+                1 => [
                     'href' => 'test.html?page=1&per_page=10',
-                ),
+                ],
                 2 => '>',
                 'html' => '<a href="test.html?page=1&amp;per_page=10">',
-            ),
+            ],
             4 => 'TEST',
-            5 => array(
+            5 => [
                 0 => '</a',
                 1 => [],
                 2 => '>',
                 'html' => '</a>',
-            ),
+            ],
             6 => 'after',
-        ));
+        ]);
     }
 
     public function test_inline_dtd()
     {
         $html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-        $this->compare($html, array(
-            array(
+        $this->compare($html, [
+            [
                 0 => '<!DOCTYPE',
-                1 => array(
+                1 => [
                     0 => ' html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"',
-                ),
+                ],
                 2 => '>',
                 'html' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
-            ),
-        ));
-//		$html = <<<END
+            ],
+        ]);
+        //		$html = <<<END
 //<!DOCTYPE NEWSPAPER [
 //
 //<!ELEMENT NEWSPAPER (ARTICLE+)>

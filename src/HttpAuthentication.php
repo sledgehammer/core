@@ -55,7 +55,7 @@ class HttpAuthentication extends Base
     {
         if (isset($_SERVER['PHP_AUTH_USER'])) { // Is er een gebruikersnaam bekend?
             if (call_user_func($this->validation, $_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
-                return array('username' => $_SERVER['PHP_AUTH_USER'], 'password' => $_SERVER['PHP_AUTH_PW']);
+                return ['username' => $_SERVER['PHP_AUTH_USER'], 'password' => $_SERVER['PHP_AUTH_PW']];
             }
         }
         if (headers_sent()) {

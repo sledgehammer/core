@@ -40,10 +40,10 @@ class CoreFunctionsTest extends TestCase
         $this->assertTrue(\Sledgehammer\compare(0, '>=', null));
         $this->assertFalse(\Sledgehammer\compare('', '==', 0));
         $this->assertFalse(\Sledgehammer\compare(0, '>', null));
-        $this->assertTrue(\Sledgehammer\compare(2, 'IN', array(1, 2, 3)));
-        $this->assertFalse(\Sledgehammer\compare(4, 'IN', array(1, 2, 3)));
-        $this->assertTrue(\Sledgehammer\compare(4, 'NOT IN', array(1, 2, 3)));
-        $this->assertFalse(\Sledgehammer\compare(2, 'NOT IN', array(1, 2, 3)));
+        $this->assertTrue(\Sledgehammer\compare(2, 'IN', [1, 2, 3]));
+        $this->assertFalse(\Sledgehammer\compare(4, 'IN', [1, 2, 3]));
+        $this->assertTrue(\Sledgehammer\compare(4, 'NOT IN', [1, 2, 3]));
+        $this->assertFalse(\Sledgehammer\compare(2, 'NOT IN', [1, 2, 3]));
         $this->assertTrue(\Sledgehammer\compare(1, '==', true));
         $this->assertTrue(\Sledgehammer\compare('1', '==', true));
         $this->assertTrue(\Sledgehammer\compare(0, '==', false));

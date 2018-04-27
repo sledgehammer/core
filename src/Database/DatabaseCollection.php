@@ -75,7 +75,7 @@ class DatabaseCollection extends Collection
         if (is_int($selector)) {
             $selector = (string) $selector;
         }
-        $selectorPaths = is_string($selector) ? array($selector => $selector) : $selector;
+        $selectorPaths = is_string($selector) ? [$selector => $selector] : $selector;
         $hasKeySelector = ($selectKey !== false && $selectKey !== null);
         if ($hasKeySelector) {
             \Sledgehammer\array_key_unshift($selectorPaths, $selectKey, $selectKey);
@@ -83,7 +83,7 @@ class DatabaseCollection extends Collection
         if (count($selectorPaths) === 0) { // empty selector?
             return parent::select($selector, $selectKey);
         }
-        $isWildcardSelector = ($this->sql->columns === '*' || $this->sql->columns == array('*' => '*'));
+        $isWildcardSelector = ($this->sql->columns === '*' || $this->sql->columns == ['*' => '*']);
         if ($isWildcardSelector === false && (is_string($this->sql->columns) || count($selectorPaths) >= count($this->sql->columns))) {
             // The selector can't be a subsection of current columns.
             return parent::select($selector, $selectKey);
@@ -124,7 +124,7 @@ class DatabaseCollection extends Collection
      *
      * auto converts
      *   ['x_id' => null]  to "x_id IS NULL"
-     * 	 ['x_id !=' => null]  to "x_id IS NOT NULL"
+     *   ['x_id !=' => null]  to "x_id IS NOT NULL"
      *  'hits' => 0]  to "hits = '0'"  (Because in mysql '' = 0 evaluates to true, '' = '0' to false)
      *
      * @param array $conditions
@@ -273,14 +273,12 @@ class DatabaseCollection extends Collection
             $sql->offset += $offset; // Add to the current offset.
             if ($sql->limit === false) {
                 return new self($sql, $this->dbLink);
-            } else {
-                $sql->limit -= $offset;
-                if ($sql->limit <= 0) { // Will all entries be skipped?
-                    return new Collection(array()); // return an empty collection
-                }
-
-                return new self($sql, $this->dbLink);
             }
+            $sql->limit -= $offset;
+            if ($sql->limit <= 0) { // Will all entries be skipped?
+                    return new Collection([]); // return an empty collection
+            }
+            return new self($sql, $this->dbLink);
         }
 
         return parent::skip($offset);
@@ -347,9 +345,8 @@ class DatabaseCollection extends Collection
     {
         if (is_object($this->sql)) {
             return clone $this->sql;
-        } else {
-            return $this->sql;
         }
+        return $this->sql;
     }
 
     /**
@@ -445,7 +442,7 @@ class DatabaseCollection extends Collection
         if (count($compiled) > 1) {
             return false;
         }
-        if (in_array($compiled[0][0], array(PropertyPath::TYPE_ANY, PropertyPath::TYPE_ELEMENT))) {
+        if (in_array($compiled[0][0], [PropertyPath::TYPE_ANY, PropertyPath::TYPE_ELEMENT])) {
             $db = Connection::instance($this->dbLink);
 
             return $db->quoteIdentifier($compiled[0][1]);

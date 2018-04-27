@@ -35,7 +35,7 @@ class ServerEnvironmentTest extends TestCase
 
     public function test_environment()
     {
-        $allowedEnvironments = array('development', 'testing', 'acceptation', 'production', 'phpunit');
+        $allowedEnvironments = ['development', 'testing', 'acceptation', 'production', 'phpunit'];
         $this->assertTrue(in_array(\Sledgehammer\ENVIRONMENT, $allowedEnvironments), '\Sledgehammer\ENVIRONMENT moet een van de volgende waarden zijn: "'.\Sledgehammer\human_implode('" of "', $allowedEnvironments, '", "').'"');
     }
 }

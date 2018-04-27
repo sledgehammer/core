@@ -205,7 +205,7 @@ class Csv extends Base implements Iterator
         $row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
 
         if ($row) { // Is het einde (eof) nog niet bereikt?
-            if ($row === array(null)) { // Empty row?
+            if ($row === [null]) { // Empty row?
                 return $this->next(); // Skip row
             }
             ++$this->index;

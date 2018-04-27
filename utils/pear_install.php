@@ -22,7 +22,7 @@ if ($argc < 2) {
     echo "\n";
     exit(1);
 }
-$targets = array(
+$targets = [
     'php' => \Sledgehammer\PATH.'vendor/pear/php',
     'data' => \Sledgehammer\PATH.'vendor/pear/data',
     'script' => \Sledgehammer\PATH.'vendor/pear/script',
@@ -33,7 +33,7 @@ $targets = array(
 //	'src' => ?,
 //	'ext' => ?,
 //	'extsrc' => ?,
-);
+];
 $pear = new PearInstaller($targets);
 $pear->on('channelAdded', function ($sender, $domain, $channel) {
     echo 'Channel "'.$domain.'" loaded. ('.count($channel['packages'])." packages)\n";

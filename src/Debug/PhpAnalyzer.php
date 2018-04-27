@@ -96,9 +96,9 @@ class PhpAnalyzer extends Base
         $namespace = '';
         $uses = [];
         $definitions = [];
-        $definition = array(
+        $definition = [
             'level' => -1,
-        );
+        ];
         $globalFunctions = [];
         $functions = &$globalFunctions;
         $level = 0;
@@ -113,7 +113,6 @@ class PhpAnalyzer extends Base
                 continue;
             }
             switch ($type) {
-
                 case 'T_NAMESPACE':
                     $namespace = $value;
                     break;
@@ -130,7 +129,7 @@ class PhpAnalyzer extends Base
                     break;
 
                 case 'T_INTERFACE':
-                    $definitions[] = array(
+                    $definitions[] = [
                         'type' => 'INTERFACE',
                         'namespace' => $namespace,
                         'interface' => $value,
@@ -138,12 +137,12 @@ class PhpAnalyzer extends Base
                         'extends' => [],
                         'methods' => [],
                         'level' => $level,
-                    );
+                    ];
                     $definition = &$definitions[count($definitions) - 1];
                     break;
 
                 case 'T_CLASS':
-                    $definitions[] = array(
+                    $definitions[] = [
                         'type' => 'CLASS',
                         'namespace' => $namespace,
                         'class' => $value,
@@ -152,7 +151,7 @@ class PhpAnalyzer extends Base
                         'implements' => [],
                         'methods' => [],
                         'level' => $level,
-                    );
+                    ];
                     $definition = &$definitions[count($definitions) - 1];
                     break;
 
@@ -232,17 +231,16 @@ class PhpAnalyzer extends Base
             $identifier = $definition['identifier'];
             unset($definition['identifier'], $definition['level']);
             $definition['filename'] = $filename;
-//			$duplicate = false;
-//			if (isset($this->classes[$identifier])) {
-//				$duplicate = $this->classes[$identifier];
-//			} elseif (isset($this->interfaces[$identifier])) {
-//				$duplicate = $this->interfaces[$identifier];
-//			}
-//			if ($duplicate) {
-//				$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
-//			}
+            // $duplicate = false;
+            // if (isset($this->classes[$identifier])) {
+            //     $duplicate = $this->classes[$identifier];
+            // } elseif (isset($this->interfaces[$identifier])) {
+            //     $duplicate = $this->interfaces[$identifier];
+            // }
+            // if ($duplicate) {
+            //     $this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
+            // }
             switch ($definition['type']) {
-
                 case 'CLASS':
                     unset($definition['type']);
                     if (count($definition['extends']) > 1) {
@@ -314,9 +312,9 @@ class PhpAnalyzer extends Base
             //throw new \Exception('Definition "'.$definition.'" is unknown');
         }
         $reflectionClass = new ReflectionClass($definition);
-        $info = array(
+        $info = [
             'namespace' => $reflectionClass->getNamespaceName(),
-        );
+        ];
         $class = $reflectionClass->name;
         if ($reflectionClass->isInterface()) {
             $info['interface'] = $class;

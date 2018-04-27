@@ -27,7 +27,7 @@ class Framework extends Base
      *
      * @var array
      */
-    public static $statusCodes = array(
+    public static $statusCodes = [
         // 1xx Informational
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -113,5 +113,5 @@ class Framework extends Base
         511 => 'Network Authentication Required',
         598 => 'Network read timeout error',
         599 => 'Network connect timeout error',
-    );
+    ];
 }

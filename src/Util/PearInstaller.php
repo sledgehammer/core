@@ -19,11 +19,11 @@ class PearInstaller extends Base
     /**
      * @var array The events/listeners
      */
-    protected $events = array(
+    protected $events = [
         'installing' => [],
         'installed' => [],
         'channelAdded' => [],
-    );
+    ];
 
     /**
      * @var array The target directories per role. array("php" => PATH.'pear/classes')
@@ -60,11 +60,11 @@ class PearInstaller extends Base
         }
         $data = simplexml_load_file('http://'.$domain.'/channel.xml');
         $baseurl = (string) $data->servers->primary->rest->baseurl[0];
-        $this->channels[$domain] = array(
+        $this->channels[$domain] = [
             'baseurl' => $baseurl,
             'categories' => [],
             'packages' => [],
-        );
+        ];
         $pear = $this;
 
         $xml = simplexml_load_file($baseurl.'c/categories.xml');
@@ -93,11 +93,11 @@ class PearInstaller extends Base
             $url = $package->attributes('http://www.w3.org/1999/xlink');
             $package = (string) $package;
             $this->packages[$package] = $channel;
-            $this->channels[$channel]['packages'][$package] = array(
+            $this->channels[$channel]['packages'][$package] = [
                 'channel' => $channel,
                 'category' => $category,
                 'path' => (string) $url['href'],
-            );
+            ];
         }
     }
 
@@ -183,9 +183,9 @@ class PearInstaller extends Base
                 //				\Sledgehammer\notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
                 continue;
             }
-            $this->install((string) $dependancy->name, array(
+            $this->install((string) $dependancy->name, [
                 'channel' => (string) $dependancy->channel,
-            ));
+            ]);
         }
         $renames = [];
         foreach ($info->phprelease as $release) {
@@ -199,7 +199,7 @@ class PearInstaller extends Base
         foreach ($files as $file) {
             if (isset($this->targets[$file['role']])) {
                 $dir = $this->targets[$file['role']];
-                if (in_array($file['role'], array('doc', 'www'))) {
+                if (in_array($file['role'], ['doc', 'www'])) {
                     if (\Sledgehammer\text($file['to'])->startsWith($package) == false) {
                         $dir = $this->makePath($dir, $package);
                     }
@@ -268,7 +268,7 @@ class PearInstaller extends Base
     {
         $info = simplexml_load_file('http://'.$package['channel'].$package['path'].'/info.xml')->r->attributes('http://www.w3.org/1999/xlink');
         $url = 'http://'.$package['channel'].$info['href'].'/';
-        if (in_array($version, array('stable', 'beta', 'latest'))) {
+        if (in_array($version, ['stable', 'beta', 'latest'])) {
             $version = file_get_contents($url.$version.'.txt');
             if (preg_match('/^[0-9]+/', $version) == false) {
                 throw new Exception('Invalid version number: "'.$version.'"');
@@ -298,11 +298,11 @@ class PearInstaller extends Base
             if (isset($renames[$target])) {
                 $target = $renames[$target];
             }
-            $file = array(
+            $file = [
                 'role' => (string) $data['role'],
                 'from' => $this->makePath($from, $data['name']),
                 'to' => $this->makePath($to, $target),
-            );
+            ];
             if ($data['md5sum']) {
                 $file['md5'] = (string) $data['md5sum'];
             }
@@ -311,12 +311,12 @@ class PearInstaller extends Base
                 foreach ($tasks as $task) {
                     if ($task->getName() == 'replace') {
                         $replace = $task->attributes();
-                        $file['tasks'][] = array(
+                        $file['tasks'][] = [
                             'task' => 'replace',
                             'type' => (string) $replace['type'],
                             'from' => (string) $replace['from'],
                             'to' => (string) $replace['to'],
-                        );
+                        ];
                     }
                 }
             }

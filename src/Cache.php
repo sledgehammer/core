@@ -136,17 +136,17 @@ class Cache extends Base implements ArrayAccess
     {
         // Convert option to an array
         if (is_array($options) === false) {
-            $options = array(
+            $options = [
                 'expires' => $options,
-            );
+            ];
         }
         // Merge default options
-        $default = array(
+        $default = [
             'expires' => false,
             'forever' => false,
             'max_age' => false,
             'lock' => true,
-        );
+        ];
         $options = array_merge($default, $options);
         if (count($options) !== count($default)) {
             \Sledgehammer\notice('Option: '.\Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
@@ -333,9 +333,9 @@ class Cache extends Base implements ArrayAccess
      */
     private function apc_write($value, $expires = null)
     {
-        $data = array(
+        $data = [
             'data' => $value,
-        );
+        ];
         if ($this->_locked) {
             $data['updated'] = $this->_locked;
         } else {
@@ -434,11 +434,11 @@ class Cache extends Base implements ArrayAccess
             return false;
         }
         $updated = stream_get_line($file, 1024, "\n");
-        $output = array(
+        $output = [
             'expires' => intval(substr($expires, 9)), // "Expires: " = 9
             'updated' => intval(substr($updated, 9)), // "Updated: " = 9
             'data' => unserialize(stream_get_contents($file)),
-        );
+        ];
         if ($this->_file === null) {
             fclose($file);
         }

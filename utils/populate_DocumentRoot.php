@@ -12,7 +12,7 @@ if ($argc > 1) {
 } else {
     // Detecteer de publieke folder(s)
     $targetFolders = [];
-    $detectFolders = array('www', 'public');
+    $detectFolders = ['www', 'public'];
     foreach ($detectFolders as $folder) {
         if (file_exists(\Sledgehammer\PATH.$folder.'/rewrite.php')) {
             $targetFolders[] = $folder;
@@ -45,7 +45,7 @@ foreach ($targetFolders as $targetFolder) {
     foreach ($folders as $folder => $targetSuffix) {
         $targetPath = \Sledgehammer\PATH.$targetFolder.$targetSuffix;
         \Sledgehammer\mkdirs($targetPath);
-        $fileCount += copydir($folder, $targetPath, array('.svn'));
+        $fileCount += copydir($folder, $targetPath, ['.svn']);
     }
     echo '  '.$fileCount." files copied\n";
 }

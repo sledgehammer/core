@@ -65,9 +65,9 @@ class RequiredPhpExtensionsTest extends TestCase
 
             return;
         }
-        $whitelist = array(
+        $whitelist = [
 //            'apc' => array(realpath(CORE_DIR.'classes/Cache.php')), // Sledgehammer\Cache doesn't require apc, only uses apc when available
-        );
+        ];
 
         if ($this->onlyClassesFolder) { // Alleen de classes mappen van de modules inlezen
             $modules = Framework::getModules();

@@ -48,26 +48,26 @@ class DatabaseTest extends DatabaseTestCase
     public function test_fetch()
     {
         $db = Connection::instance($this->dbLink);
-        $this->assertSame($db->fetchAll('SELECT * FROM ducks'), array(
-            array(
+        $this->assertSame($db->fetchAll('SELECT * FROM ducks'), [
+            [
                 'id' => '1',
                 'name' => 'Kwik',
-            ),
-            array(
+            ],
+            [
                 'id' => '2',
                 'name' => 'Kwek',
-            ),
-            array(
+            ],
+            [
                 'id' => '3',
                 'name' => 'Kwak',
-            ),
-        ));
+            ],
+        ]);
         // Fetch row
         $kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
-        $this->assertSame($kwik, array(
+        $this->assertSame($kwik, [
             'id' => '1',
             'name' => 'Kwik',
-        ));
+        ]);
         // Fetch value
         $this->assertSame($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
@@ -104,9 +104,9 @@ class DatabaseTest extends DatabaseTestCase
 			)');
         }
         $query = $db->prepare('INSERT INTO ducks (name) VALUES (?)');
-        $query->execute(array('Kwik'));
-        $query->execute(array('Kwek'));
-        $query->execute(array('Kwak'));
+        $query->execute(['Kwik']);
+        $query->execute(['Kwek']);
+        $query->execute(['Kwak']);
     }
 
     public function getTests()

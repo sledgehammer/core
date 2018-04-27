@@ -164,15 +164,15 @@ class Json extends Base
             \Sledgehammer\warning($error);
         }
 
-        return new self(array(
+        return new self([
             'success' => false,
             'error' => $error,
-                ), array(
-            'http' => array(
+                ], [
+            'http' => [
                 'Status' => $http.' '.Framework::$statusCodes[$http],
                 'Content-Type' => (ErrorHandler::instance()->html ? 'text/html;  charset=utf-8' : 'application/json'),
-            ),
-        ));
+            ],
+        ]);
     }
 
     /**
@@ -185,15 +185,15 @@ class Json extends Base
     public static function success($data = null)
     {
         if ($data === null) {
-            return new self(array(
+            return new self([
                 'success' => true,
-            ));
+            ]);
         }
 
-        return new self(array(
+        return new self([
             'success' => true,
             'data' => $data,
-        ));
+        ]);
     }
 
     /**
@@ -266,7 +266,8 @@ class Json extends Base
             case JSON_ERROR_UTF8:
                 $message .= 'Malformed UTF-8 characters, possibly incorrectly encoded';
                 break;
-            default: $message = 'Unknown error';
+            default:
+                $message = 'Unknown error';
         }
 
         return $message;

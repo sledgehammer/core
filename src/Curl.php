@@ -46,27 +46,27 @@ class Curl extends Base
      *
      * @var array
      */
-    public static $defaults = array(
+    public static $defaults = [
         CURLOPT_FAILONERROR => true, // Report an error when the HTTP status >= 400.
         CURLOPT_RETURNTRANSFER => true, // Don't stream the contents to the output buffer.
         // Automaticly disabled in safe mode
         CURLOPT_FOLLOWLOCATION => true, // When allowed follow 301 and 302 redirects.
         CURLOPT_MAXREDIRS => 25, // Prevent infinite redirection loops.
             // Dynamic options
-//		CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
-    );
+        // CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
+    ];
 
     /**
      * Allow listening to the events: 'load' and 'abort'.
      *
      * @var array
      */
-    protected $events = array(
+    protected $events = [
         'load' => [], // Fires when the request has completed
         'abort' => [], // Fires when the request was aborted
         'closed' => [], // Fires when the curl handle is closed,
         'error' => [], // Fires when the curl handle encounters an error CURLOPT_FAILONERROR.
-    );
+    ];
 
     /**
      * All the given CURLOPT_* options.
@@ -200,11 +200,11 @@ class Curl extends Base
      */
     public static function post($url, $data = [], $options = [], $callback = null)
     {
-        $defaults = self::defaults(array(
+        $defaults = self::defaults([
                     CURLOPT_URL => $url,
                     CURLOPT_POST => true,
                     CURLOPT_POSTFIELDS => $data,
-        ));
+        ]);
         $response = new self($options + $defaults);
         if ($callback !== null) {
             $response->on('load', $callback);
@@ -225,11 +225,11 @@ class Curl extends Base
      */
     public static function put($url, $data = '', $options = [], $callback = null)
     {
-        $defaults = self::defaults(array(
+        $defaults = self::defaults([
                     CURLOPT_URL => $url,
                     CURLOPT_CUSTOMREQUEST => 'PUT',
                     CURLOPT_POSTFIELDS => $data,
-        ));
+        ]);
         $response = new self($options + $defaults);
         if ($callback !== null) {
             $response->on('load', $callback);
@@ -254,12 +254,12 @@ class Curl extends Base
     public static function putFile($url, $filename, $options = [], $callback = null)
     {
         $fp = fopen($filename, 'r');
-        $defaults = self::defaults(array(
+        $defaults = self::defaults([
                     CURLOPT_URL => $url,
                     CURLOPT_PUT => true,
                     CURLOPT_INFILE => $fp,
                     CURLOPT_INFILESIZE => filesize($filename),
-        ));
+        ]);
         $response = new self($options + $defaults);
         if ($callback !== null) {
             $response->on('load', $callback);
@@ -284,9 +284,9 @@ class Curl extends Base
     public static function delete($url, $options = [], $callback = null)
     {
         $options[CURLOPT_URL] = $url;
-        $defaults = self::defaults(array(
+        $defaults = self::defaults([
                     CURLOPT_CUSTOMREQUEST => 'DELETE',
-        ));
+        ]);
         $response = new self($options + $defaults);
         if ($callback !== null) {
             $response->on('load', $callback);
@@ -314,11 +314,11 @@ class Curl extends Base
             throw new Exception('Unable to write to "'.$filename.'"');
         }
         flock($fp, LOCK_EX);
-        $defaults = self::defaults(array(
+        $defaults = self::defaults([
                     CURLOPT_URL => $url,
                     CURLOPT_RETURNTRANSFER => false,
                     CURLOPT_FILE => $fp,
-        ));
+        ]);
         $response = new self($options + $defaults);
         $response->on('load', function () use ($fp) {
             fflush($fp);
@@ -356,22 +356,22 @@ class Curl extends Base
     {
         $url = new Url($endpoint);
         $url->query = $_GET;
-        $options = array(
+        $options = [
             CURLOPT_URL => (string) $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $_SERVER['REQUEST_METHOD'],
             CURLOPT_FAILONERROR => false,
             CURLOPT_HEADER => true,
             CURLOPT_HTTPHEADER => [],
-        );
+        ];
         // Proxy HTTP headers
         foreach ($_SERVER as $name => $value) {
-            if (substr($name, 0, 5) === 'HTTP_' && in_array($name, array('HTTP_HOST', 'HTTP_CONNECTION')) === false) {
+            if (substr($name, 0, 5) === 'HTTP_' && in_array($name, ['HTTP_HOST', 'HTTP_CONNECTION']) === false) {
                 $options[CURLOPT_HTTPHEADER][] = substr($name, 5).':'.$value;
             }
         }
         // Proxy POST/PUT contents
-        if (in_array($_SERVER['REQUEST_METHOD'], array('POST', 'PUT'))) {
+        if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT'])) {
             if (empty($_POST) === false) {
                 $options[CURLOPT_POSTFIELDS] = $_POST;
             } elseif (empty($_PUT) === false) {

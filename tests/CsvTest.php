@@ -10,27 +10,27 @@ class CsvTest extends TestCase
     {
         // Read a file (where the last line is not an EOL)
         $csv = new Csv(__DIR__.'/data/noeol.csv');
-        $this->assertSame(array(
-            array('department' => 'it', 'name' => 'Govert'),
-            array('department' => 'health', 'name' => 'G. Verschuur'),
-                ), iterator_to_array($csv));
+        $this->assertSame([
+            ['department' => 'it', 'name' => 'Govert'],
+            ['department' => 'health', 'name' => 'G. Verschuur'],
+                ], iterator_to_array($csv));
     }
 
     public function test_skip_empty_lines()
     {
         $csv = new Csv(__DIR__.'/data/empty_lines.csv');
-        $this->assertSame(array(
-            array('id' => '1', 'name' => 'Donald Duck'),
-            array('id' => '2', 'name' => 'Goofy'),
-            array('id' => '3', 'name' => 'Kwik'),
-            array('id' => '4', 'name' => 'Kwek'),
-            array('id' => '5', 'name' => 'Darkwing Duck'),
-                ), iterator_to_array($csv));
+        $this->assertSame([
+            ['id' => '1', 'name' => 'Donald Duck'],
+            ['id' => '2', 'name' => 'Goofy'],
+            ['id' => '3', 'name' => 'Kwik'],
+            ['id' => '4', 'name' => 'Kwek'],
+            ['id' => '5', 'name' => 'Darkwing Duck'],
+                ], iterator_to_array($csv));
     }
 
     public function test_write()
     {
-        $data = array(array('id' => '1', 'name' => 'John'), array('id' => '2', 'name' => 'Doe'));
+        $data = [['id' => '1', 'name' => 'John'], ['id' => '2', 'name' => 'Doe']];
         $filename = \Sledgehammer\TMP_DIR.'CsvTests_testfile.csv';
         Csv::write($filename, $data);
         $this->assertSame(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");

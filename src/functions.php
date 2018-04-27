@@ -294,7 +294,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
         $mimetype = null;
     } else {
         // extension => Content-Type
-        $mimetypes = array(
+        $mimetypes = [
             'htm' => 'text/html',
             'html' => 'text/html',
             'php' => 'text/html',
@@ -355,7 +355,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
             'odt' => 'application/vnd.oasis.opendocument.text',
             'ott' => 'application/vnd.oasis.opendocument.text-template',
             'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-        );
+        ];
         $mimetype = \Sledgehammer\value($mimetypes[strtolower($extension)]);
     }
     if ($mimetype !== null) {
@@ -365,7 +365,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
     if ($globalMimetypes === null) {
         // Import global mime.types.
         $globalMimetypes = [];
-        foreach (array('/etc/mime.types', '/etc/apache2/mime.types') as $mimeFile) {
+        foreach (['/etc/mime.types', '/etc/apache2/mime.types'] as $mimeFile) {
             if (is_readable($mimeFile)) {
                 foreach (file($mimeFile) as $line) {
                     if (substr($line, 0, 1) == '#') {  // skip comments
@@ -473,7 +473,8 @@ function extract_element($array, $identifier, &$value)
     $bracket_position = strpos($identifier, '[');
     if ($bracket_position === false) { // Gaat het NIET om een array?
         return false;
-    } elseif (strpos($identifier, '[]')) {
+    }
+    if (strpos($identifier, '[]')) {
         \Sledgehammer\notice('Het identifier bevat een ongeldige combinatie van blokhaken: []', $identifier);
 
         return false;
@@ -513,7 +514,7 @@ function extract_logical_operator($conditions)
     if (key($conditions) !== 0) {
         return false;
     }
-    $operators = array('AND', 'OR');
+    $operators = ['AND', 'OR'];
     $operator = current($conditions);
     if (in_array($operator, $operators)) {
         return $operator;
@@ -582,12 +583,18 @@ function equals($var1, $var2)
 function compare($value, $operator, $expectation)
 {
     switch ($operator) {
-        case '==': return \Sledgehammer\equals($value, $expectation);
-        case '!=': return !\Sledgehammer\equals($value, $expectation);
-        case '<': return $value < $expectation;
-        case '>': return $value > $expectation;
-        case '<=': return $value <= $expectation;
-        case '>=': return $value >= $expectation;
+        case '==':
+            return \Sledgehammer\equals($value, $expectation);
+        case '!=':
+            return !\Sledgehammer\equals($value, $expectation);
+        case '<':
+            return $value < $expectation;
+        case '>':
+            return $value > $expectation;
+        case '<=':
+            return $value <= $expectation;
+        case '>=':
+            return $value >= $expectation;
         case 'IN':
             foreach ($expectation as $val) {
                 if (\Sledgehammer\equals($value, $val)) {
@@ -614,7 +621,7 @@ function compare($value, $operator, $expectation)
                         $nextChar = @$expectation[$i];
                         if ($nextChar === null) { // last character?
                             $pattern .= preg_quote($char, '/');
-                        } elseif (in_array($nextChar, array('%', '_', '\\'))) { // The \ is used as an escape?
+                        } elseif (in_array($nextChar, ['%', '_', '\\'])) { // The \ is used as an escape?
                             $pattern .= preg_quote($nextChar, '/');
                         } else {
                             $pattern .= preg_quote($char.$nextChar, '/');
@@ -706,9 +713,8 @@ function get_public_vars($class)
 {
     if (is_string($class)) {
         return get_class_vars($class);
-    } else {
-        return get_object_vars($class);
     }
+    return get_object_vars($class);
 }
 
 /**
@@ -728,11 +734,11 @@ function reflect_properties($object)
 {
     $reflection = new ReflectionObject($object);
     $values = get_object_vars($object);
-    $properties = array(
+    $properties = [
         'public' => [],
         'protected' => [],
         'private' => [],
-    );
+    ];
     foreach ($reflection->getProperties() as $property) {
         if ($property->isPublic()) {
             if (array_key_exists($property->name, $values) === false) {
@@ -796,7 +802,7 @@ function call_static_func($class, $staticMethod)
     array_shift($arguments);
     array_shift($arguments);
 
-    return call_user_func_array(array($class, $staticMethod), $arguments);
+    return call_user_func_array([$class, $staticMethod], $arguments);
 }
 
 /**
@@ -981,13 +987,13 @@ function rmdir_contents($path, $allowFailures = false)
  */
 function safe_unlink($filepath, $basepath, $recursive = false)
 {
-    if (in_array(substr($basepath, -1), array('/', '\\'))) { // Heeft de $basepath een trailing slash?
+    if (in_array(substr($basepath, -1), ['/', '\\'])) { // Heeft de $basepath een trailing slash?
         $basepath = substr($basepath, 0, -1);
     }
     if (strlen($basepath) < 4) { // Minimal "/tmp"
         throw new Exception('$basepath "'.$basepath.'" is too short');
     }
-    // 	Controleer of het path niet buiten de basepath ligt.
+    // Controleer of het path niet buiten de basepath ligt.
     $realpath = realpath(dirname($filepath));
     if ($realpath == false) {
         throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
@@ -1089,7 +1095,8 @@ function copydir($source, $destination, $exclude = [])
     foreach ($dir as $entry) {
         if ($entry->isDot() || in_array($entry->getFilename(), $exclude)) {
             continue;
-        } elseif ($entry->isFile()) {
+        }
+        if ($entry->isFile()) {
             if (copy($entry->getPathname(), $destination.'/'.$entry->getFilename())) {
                 ++$count;
             } else {
@@ -1124,7 +1131,6 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
         $datatype = gettype($variable);
     }
     switch ($datatype) {
-
         case 'boolean':
             $color = 'symbol';
             $label = $variable ? 'true' : 'false';
@@ -1185,7 +1191,7 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
     }
     // Based on the Tomorrow theme.
     // @link https://github.com/ChrisKempson/Tomorrow-Theme
-    $colorCodes = array(
+    $colorCodes = [
         // #ffffff Background
         // #efefef Current Line
         // #d6d6d6 Selection
@@ -1200,11 +1206,11 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
         'attribute' => '#c82829', // Red
         'variable' => '#c82829', // Red
         'comment' => '#8e908c', // Gray
-    );
+    ];
     $html = '<span style="color:'.$colorCodes[$color].'"';
     if (($datatype === 'object' || $datatype === 'array') && $titleLimit > 0) { // Built title attribute?
         $title = partial_var_export($variable, $titleLimit, 4);
-        $html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
+        $html .= ' title="'.str_replace(["\n"], ['&#10;'], htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
     }
 
     return $html.'>'.$label.'</span>';
@@ -1298,13 +1304,12 @@ function format_parsetime($seconds, $precision = 3)
 {
     if ($seconds < 60) { // Duurde het genereren korter dan 1 minuut?
         return number_format($seconds, $precision);
-    } else {
-        $minutes = floor($seconds / 60);
-        $miliseconds = fmod($seconds, 1);
-        $seconds = str_pad($seconds % 60, 2, '0', STR_PAD_LEFT);
-
-        return $minutes.':'.$seconds.substr(number_format($miliseconds, $precision), 1);
     }
+    $minutes = floor($seconds / 60);
+    $miliseconds = fmod($seconds, 1);
+    $seconds = str_pad($seconds % 60, 2, '0', STR_PAD_LEFT);
+
+    return $minutes.':'.$seconds.substr(number_format($miliseconds, $precision), 1);
 }
 
 /**
@@ -1368,14 +1373,13 @@ function iterators_to_arrays($data)
         if ($data instanceof Iterator) { // Is dit een iterator?
             $array = iterator_to_array($data); // Iterator omzetten naar een array.
             return iterators_to_arrays($array); /// Alle elementen (mogelijk) omzetten
-        } else {
-            $object = clone $data;
-            foreach ($data as $property => $value) {
-                $object->$property = iterators_to_arrays($value);
-            }
-
-            return $object;
         }
+        $object = clone $data;
+        foreach ($data as $property => $value) {
+            $object->$property = iterators_to_arrays($value);
+        }
+
+        return $object;
     }
     // dan is het een array.
     $array = [];
@@ -1446,10 +1450,10 @@ function extend_time_limit($seconds, $relative = false)
  */
 function extend_include_path($path)
 {
-    if (in_array(substr($path, -1), array('/', '\\'))) {
+    if (in_array(substr($path, -1), ['/', '\\'])) {
         $path = substr($path, 0, -1);
     }
-    $paths = array('.', $path);
+    $paths = ['.', $path];
     foreach (explode(PATH_SEPARATOR, get_include_path()) as $dir) {
         if ($dir !== '.' && $dir !== $path) {
             $paths[] = $dir;
@@ -1481,7 +1485,7 @@ function file_extension($filename, &$filename_without_extention = null)
     }
     $filename_without_extention = $filename;
 
-    return; // Deze $filename heeft geen extensie
+    // Deze $filename heeft geen extensie
 }
 
 /**
@@ -1546,11 +1550,11 @@ function browser($part = null)
     } else {
         $os = 'Overig';
     }
-    $info = array(
+    $info = [
         'name' => $browser,
         'version' => $version,
         'os' => $os,
-    );
+    ];
     if ($part === null) { // Return all info?
         return $info;
     }
@@ -1571,7 +1575,7 @@ function browser($part = null)
  */
 function getClientIp()
 {
-    $fields = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR');
+    $fields = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR'];
     $ips = [];
     foreach ($fields as $key) {
         if (array_key_exists($key, $_SERVER) === true) {
@@ -1594,7 +1598,7 @@ function getClientIp()
             return $ip;
         }
     }
-    \Sledgehammer\warning('No valid client IP detected', array('IPs' => $ips));
+    \Sledgehammer\warning('No valid client IP detected', ['IPs' => $ips]);
 
     return $ips[0]; // Gebruik dan de eerste.
 }
@@ -1616,7 +1620,7 @@ function send_headers($headers)
             $location = ', output started in '.$file.' on line '.$line;
         }
         if (class_exists('Sledgehammer\ErrorHandler', false)) {
-            \Sledgehammer\notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
+            \Sledgehammer\notice('Couldn\'t sent header(s)'.$location, ['headers' => $headers]);
         } else {
             trigger_error('Couldn\'t sent header(s) "'.\Sledgehammer\human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
         }
@@ -1687,27 +1691,27 @@ function render_file($filename)
             exit();
         }
         throw new Exception('readfile() failed');
-    } else {
-        // Het gehele bestand sturen (resume support is untested)
-        $success = readfile($filename);
-        if ($success) {
-            exit();
-        }
-        throw new Exception('readfile() failed');
-        // #########################################
-        // Onderstaande CODE wordt nooit uitgevoerd.
-        // Een gedeelte van het bestand sturen
-        //check if http_range is sent by browser (or download manager)
-        list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-        $range = '';
-        if ($size_unit == 'bytes') {
-            //multiple ranges could be specified at the same time, but for simplicity only serve the first range
-            //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-            list($range, $extra_ranges) = explode(',', $range_orig, 2);
-        }
-        // Figure out download piece from range (if set)
-        list($seek_start, $seek_end) = explode('-', $range, 2);
     }
+    // Het gehele bestand sturen (resume support is untested)
+    $success = readfile($filename);
+    if ($success) {
+        exit();
+    }
+    throw new Exception('readfile() failed');
+    // #########################################
+    // Onderstaande CODE wordt nooit uitgevoerd.
+    // Een gedeelte van het bestand sturen
+    //check if http_range is sent by browser (or download manager)
+    list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+    $range = '';
+    if ($size_unit == 'bytes') {
+        //multiple ranges could be specified at the same time, but for simplicity only serve the first range
+        //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+        list($range, $extra_ranges) = explode(',', $range_orig, 2);
+    }
+    // Figure out download piece from range (if set)
+    list($seek_start, $seek_end) = explode('-', $range, 2);
+    
 
     // set start and end based on range (if set), else set defaults
     // also check for invalid ranges.
@@ -1766,7 +1770,7 @@ function xmlentities($string, $charset = null)
         $charset = Framework::$charset;
     }
 
-    return mb_encode_numericentity($string, array(0x0080, 0xfffff, 0, 0xfffff), $charset);
+    return mb_encode_numericentity($string, [0x0080, 0xfffff, 0, 0xfffff], $charset);
 }
 
 /**
@@ -1851,11 +1855,11 @@ function su_exec($username, $password, $command, &$return_var = null)
  */
 function sudo($username, $password, $command)
 {
-    $descriptorspec = array(
-        0 => array('pipe', 'r'), // stdin
-        1 => array('pipe', 'w'), // stdout
-        2 => array('pipe', 'w'), // stderr
-    );
+    $descriptorspec = [
+        0 => ['pipe', 'r'], // stdin
+        1 => ['pipe', 'w'], // stdout
+        2 => ['pipe', 'w'], // stderr
+    ];
 
     /* @var $process resource */
     $process = proc_open('expect', $descriptorspec, $pipes, null, null);
@@ -1883,7 +1887,7 @@ exit [lindex $result 3]');
     fclose($stdin);
     $showOutput = false;
     while (!feof($stdout) && !feof($stderr)) {
-        $read = array($stdout, $stderr);
+        $read = [$stdout, $stderr];
         if (stream_select($read, $write, $except, 30)) {
             foreach ($read as $stream) {
                 $output = fgets($stream);

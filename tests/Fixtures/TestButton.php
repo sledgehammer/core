@@ -13,9 +13,9 @@ class TestButton extends Base
 {
     use EventEmitter;
 
-    protected $events = array(
+    protected $events = [
         'click' => [],
-    );
+    ];
     public $clicked = 0;
     public $lastClickedBy = null;
     public $title = 'Button1';

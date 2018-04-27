@@ -51,7 +51,7 @@ abstract class Base
         $rObject = new ReflectionObject($this);
         $methods = [];
         foreach ($rObject->getMethods() as $rMethod) {
-            if (in_array($rMethod->name, array('__get', '__set', '__call', '__toString'))) {
+            if (in_array($rMethod->name, ['__get', '__set', '__call', '__toString'])) {
                 continue;
             }
             if ($rMethod->isPublic()) {

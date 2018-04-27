@@ -9,10 +9,10 @@ class WrapperTest extends TestCase
 {
     public function test_readonly_array()
     {
-        $data = array(
+        $data = [
             'greeting' => 'Hello',
-            'subarray' => array('element' => 'value'),
-        );
+            'subarray' => ['element' => 'value'],
+        ];
         $wrapped = new Readonly($data);
         $this->assertSame($wrapped['greeting'], 'Hello');
         $this->assertInstanceOf(Readonly::class, $wrapped['subarray']);

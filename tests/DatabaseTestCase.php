@@ -71,10 +71,9 @@ abstract class DatabaseTestCase extends TestCase
             $this->dbLink = $this->dbName;
 
             switch ($pdoDriver) {
-
                 case 'mysql':
                     $this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
-                    $db = new Connection('mysql://root:root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $db = new Connection('mysql://root:root@localhost', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     $db->reportWarnings = false;
                     $db->query('DROP DATABASE IF EXISTS '.$this->dbName);
                     $db->query('CREATE DATABASE '.$this->dbName);
@@ -82,7 +81,7 @@ abstract class DatabaseTestCase extends TestCase
                     break;
 
                 case 'sqlite':
-                    $db = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $db = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     break;
                 default:
                     throw new Exception('Unsupported pdoDriver');
@@ -117,7 +116,7 @@ abstract class DatabaseTestCase extends TestCase
     /**
      * The last test in the TestCase.
      */
-    public function test_cleanup()
+    public function testCleanup()
     {
         // DROP test database
         $db = Connection::instance($this->dbLink);
@@ -190,14 +189,13 @@ abstract class DatabaseTestCase extends TestCase
             $this->assertTrue(true, $message);
 
             return true;
-        } else {
-            if ($message === null) {
-                $message = 'Unexpected SQL ['.$entry.'], expecting ['.$sql.']';
-            }
-            $this->fail($message);
-
-            return false;
         }
+        if ($message === null) {
+            $message = 'Unexpected SQL ['.$entry.'], expecting ['.$sql.']';
+        }
+        $this->fail($message);
+
+        return false;
     }
 
     /**
@@ -244,7 +242,6 @@ abstract class DatabaseTestCase extends TestCase
         //dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));
         if ($this->skipRebuildDatabase == false && $this->dbName) {
             switch ($db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
-
                 case 'mysql':
                     $reportWarnings = $db->reportWarnings;
                     $db->reportWarnings = false;
@@ -254,9 +251,9 @@ abstract class DatabaseTestCase extends TestCase
                     $db->reportWarnings = $reportWarnings;
                     break;
 
-                case 'sqlite';
+                case 'sqlite':
                     Connection::$instances[$this->dbLink] = 'CLEAR';
-                    $newDb = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $newDb = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     foreach ($db as $property => $value) {
                         $newDb->$property = $value;
                     }

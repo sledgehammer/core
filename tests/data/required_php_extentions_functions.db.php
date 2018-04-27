@@ -3,664 +3,664 @@
 /**
  * Lijst met functies gegroepeerd per module.
  */
-return array(
-    'apc' => array(
+return [
+    'apc' => [
         'apc_add',
         'apc_cache_info',
         'apc_clear_cache',
         'apc_compile_file',
         'apc_define_constants',
-    ),
-    'apd' => array(
+    ],
+    'apd' => [
         'apd_breakpoint',
         'apd_callstack',
         'apd_clunk',
         'apd_continue',
         'apd_croak',
-    ),
-    'bcompiler' => array(
+    ],
+    'bcompiler' => [
         'bcompiler_load',
         'bcompiler_load_exe',
         'bcompiler_parse_class',
         'bcompiler_read',
         'bcompiler_write_class',
-    ),
-    'errorfunc' => array(
+    ],
+    'errorfunc' => [
         'debug_backtrace',
         'debug_print_backtrace',
         'error_get_last',
         'error_log',
         'error_reporting',
-    ),
-    'overload' => array(
+    ],
+    'overload' => [
         'overload',
-    ),
-    'outcontrol' => array(
+    ],
+    'outcontrol' => [
         'flush',
         'ob_clean',
         'ob_end_clean',
         'ob_end_flush',
         'ob_flush',
-    ),
-    'info' => array(
+    ],
+    'info' => [
         'assert',
         'assert_options',
         'dl',
         'extension_loaded',
         'get_cfg_var',
-    ),
-    'runkit' => array(
+    ],
+    'runkit' => [
         'runkit_class_adopt',
         'runkit_class_emancipate',
         'runkit_constant_add',
         'runkit_constant_redefine',
         'runkit_constant_remove',
-    ),
+    ],
     'oggvorbis' => [],
-    'openal' => array(
+    'openal' => [
         'openal_buffer_create',
         'openal_buffer_data',
         'openal_buffer_destroy',
         'openal_buffer_get',
         'openal_buffer_loadwav',
-    ),
-    'radius' => array(
+    ],
+    'radius' => [
         'radius_acct_open',
         'radius_add_server',
         'radius_auth_open',
         'radius_close',
         'radius_config',
-    ),
-    'calendar' => array(
+    ],
+    'calendar' => [
         'cal_days_in_month',
         'cal_from_jd',
         'cal_info',
         'cal_to_jd',
         'easter_date',
-    ),
-    'datetime' => array(
+    ],
+    'datetime' => [
         'checkdate',
         'date_create',
         'date_date_set',
         'date_default_timezone_get',
         'date_default_timezone_set',
-    ),
-    'newt' => array(
+    ],
+    'newt' => [
         'newt_bell',
         'newt_button',
         'newt_button_bar',
         'newt_centered_window',
         'newt_checkbox_get_value',
-    ),
-    'ncurses' => array(
+    ],
+    'ncurses' => [
         'ncurses_addch',
         'ncurses_addchnstr',
         'ncurses_addchstr',
         'ncurses_addnstr',
         'ncurses_addstr',
-    ),
-    'readline' => array(
+    ],
+    'readline' => [
         'readline_add_history',
         'readline_callback_handler_install',
         'readline_callback_handler_remove',
         'readline_callback_read_char',
         'readline_clear_history',
-    ),
-    'lzf' => array(
+    ],
+    'lzf' => [
         'lzf_compress',
         'lzf_decompress',
         'lzf_optimized_for',
-    ),
+    ],
     'phar' => [],
-    'rar' => array(
+    'rar' => [
         'Rar',
         'rar_close',
         'rar_entry_get',
-    ),
-    'zip' => array(
+    ],
+    'zip' => [
         'zip_close',
         'zip_entry_close',
         'zip_entry_compressedsize',
         'zip_entry_compressionmethod',
         'zip_entry_filesize',
-    ),
-    'zlib' => array(
+    ],
+    'zlib' => [
         'gzclose',
         'gzcompress',
         // 'gzdecode', Pas in PHP6
         'gzdeflate',
         'gzencode',
-    ),
-    'mcve' => array(
+    ],
+    'mcve' => [
         'm_checkstatus',
         'm_completeauthorizations',
         'm_connect',
         'm_connectionerror',
         'm_deletetrans',
-    ),
-    'spplus' => array(
+    ],
+    'spplus' => [
         'calcul_hmac',
         'calculhmac',
         'nthmac',
         'signeurlpaiement',
-    ),
-    'crack' => array(
+    ],
+    'crack' => [
         'crack_check',
         'crack_closedict',
         'crack_getlastmessage',
         'crack_opendict',
-    ),
-    'hash' => array(
+    ],
+    'hash' => [
         'hash_algos',
         'hash_copy',
         'hash_file',
         'hash_final',
         'hash_hmac_file',
-    ),
-    'mcrypt' => array(
+    ],
+    'mcrypt' => [
         'mcrypt_cbc',
         'mcrypt_cfb',
         'mcrypt_create_iv',
         'mcrypt_decrypt',
         'mcrypt_ecb',
-    ),
-    'mhash' => array(
+    ],
+    'mhash' => [
         'mhash',
         'mhash_count',
         'mhash_get_block_size',
         'mhash_get_hash_name',
-    ),
-    'mysql' => array(
+    ],
+    'mysql' => [
         'mysql_query',
         'mysql_connect',
-    ),
-    'mysqli' => array(
+    ],
+    'mysqli' => [
         'MySQLi',
         'MySQLi_Result',
-    ),
-    'openssl' => array(
+    ],
+    'openssl' => [
         'openssl_csr_export',
         'openssl_csr_export_to_file',
         'openssl_csr_get_public_key',
         'openssl_csr_get_subject',
         'openssl_csr_new',
-    ),
-    'dio' => array(
+    ],
+    'dio' => [
         'dio_close',
         'dio_fcntl',
         'dio_open',
         'dio_read',
         'dio_seek',
-    ),
-    'dir' => array(
+    ],
+    'dir' => [
         'chdir',
         'closedir',
         'getcwd',
         'opendir',
-    ),
-    'dir --enable-chroot' => array(
+    ],
+    'dir --enable-chroot' => [
         'chroot',
-    ),
-    'fileinfo' => array(
+    ],
+    'fileinfo' => [
         'finfo_buffer',
         'finfo_close',
         'finfo_file',
         'finfo_open',
         'finfo_set_flags',
-    ),
-    'filesystem' => array(
+    ],
+    'filesystem' => [
         'basename',
         'chgrp',
         'chmod',
         'chown',
         'clearstatcache',
-    ),
-    'mime-magic' => array(
+    ],
+    'mime-magic' => [
         'mime_content_type',
-    ),
-    'xattr' => array(
+    ],
+    'xattr' => [
         'xattr_get',
         'xattr_list',
         'xattr_remove',
         'xattr_set',
         'xattr_supported',
-    ),
-    'xdiff' => array(
+    ],
+    'xdiff' => [
         'xdiff_file_diff',
         'xdiff_file_diff_binary',
         'xdiff_file_patch',
         'xdiff_file_patch_binary',
         'xdiff_string_diff_binary',
-    ),
-    'enchant' => array(
+    ],
+    'enchant' => [
         'enchant_broker_describe',
         'enchant_broker_dict_exists',
         'enchant_broker_free',
         'enchant_broker_free_dict',
         'enchant_broker_get_error',
-    ),
+    ],
     'fribidi' => [],
-    'gettext' => array(
+    'gettext' => [
         'bind_textdomain_codeset',
         'bindtextdomain',
         'dcgettext',
         'dcngettext',
         'dgettext',
-    ),
-    'iconv' => array(
+    ],
+    'iconv' => [
         'iconv_get_encoding',
         'iconv_mime_decode',
         'iconv_mime_decode_headers',
         'iconv_mime_encode',
         'iconv_set_encoding',
-    ),
-    'intl' => array(
+    ],
+    'intl' => [
         'grapheme_extract',
         'grapheme_stripos',
         'grapheme_stristr',
         'grapheme_strlen',
         'grapheme_strpos',
-    ),
-    'mbstring' => array(
+    ],
+    'mbstring' => [
         'mb_check_encoding',
         'mb_convert_case',
         'mb_convert_encoding',
         'mb_convert_kana',
         'mb_convert_variables',
-    ),
-    'pspell' => array(
+    ],
+    'pspell' => [
         'pspell_add_to_personal',
         'pspell_add_to_session',
         'pspell_check',
         'pspell_clear_session',
         'pspell_config_create',
-    ),
-    'recode' => array(
+    ],
+    'recode' => [
         'recode',
         'recode_file',
         'recode_string',
-    ),
-    'unicode' => array(
+    ],
+    'unicode' => [
         'unicode_decode',
         'unicode_encode',
         'unicode_get_error_mode',
         'unicode_get_subst_char',
         'unicode_set_error_mode',
-    ),
-    'exif' => array(
+    ],
+    'exif' => [
         'exif_imagetype',
         'exif_read_data',
         'exif_tagname',
         'exif_thumbnail',
         'read_exif_data',
-    ),
-    'image' => array(
+    ],
+    'image' => [
         'getimagesize',
         'image_type_to_extension',
         'image_type_to_mime_type',
-    ),
-    'image (gd)' => array(
+    ],
+    'image (gd)' => [
         'gd_info',
         'imagealphablending',
-    ),
-    'imagick' => array(
+    ],
+    'imagick' => [
         'Imagick',
-    ),
-    'cyrus' => array(
+    ],
+    'cyrus' => [
         'cyrus_authenticate',
         'cyrus_bind',
         'cyrus_close',
         'cyrus_connect',
         'cyrus_query',
-    ),
-    'imap' => array(
+    ],
+    'imap' => [
         'imap_alerts',
         'imap_append',
         'imap_binary',
         'imap_body',
         'imap_bodystruct',
-    ),
-    'mail' => array(
+    ],
+    'mail' => [
         'ezmlm_hash',
         'mail',
-    ),
-    'mailparse' => array(
+    ],
+    'mailparse' => [
         'mailparse_determine_best_xfer_encoding',
         'mailparse_msg_create',
         'mailparse_msg_extract_part',
         'mailparse_msg_extract_part_file',
         'mailparse_msg_extract_whole_part_file',
-    ),
-    'vpopmail' => array(
+    ],
+    'vpopmail' => [
         'vpopmail_add_alias_domain',
         'vpopmail_add_alias_domain_ex',
         'vpopmail_add_domain',
         'vpopmail_add_domain_ex',
         'vpopmail_add_user',
-    ),
-    'bcmath' => array(
+    ],
+    'bcmath' => [
         'bcadd',
         'bccomp',
         'bcdiv',
         'bcmod',
         'bcmul',
-    ),
-    'gmp' => array(
+    ],
+    'gmp' => [
         'gmp_abs',
         'gmp_add',
         'gmp_and',
         'gmp_clrbit',
         'gmp_cmp',
-    ),
-    'math' => array(
+    ],
+    'math' => [
         'abs',
         'acos',
         'acosh',
         'asin',
         'asinh',
-    ),
-    'stats' => array(
+    ],
+    'stats' => [
         'stats_absolute_deviation',
         'stats_cdf_beta',
         'stats_cdf_binomial',
         'stats_cdf_cauchy',
         'stats_cdf_chisquare',
-    ),
-    'fdf' => array(
+    ],
+    'fdf' => [
         'fdf_add_doc_javascript',
         'fdf_add_template',
         'fdf_close',
         'fdf_create',
         'fdf_enum_values',
-    ),
-    'gnupg' => array(
+    ],
+    'gnupg' => [
         'gnupg_adddecryptkey',
         'gnupg_addencryptkey',
         'gnupg_addsignkey',
         'gnupg_cleardecryptkeys',
         'gnupg_clearencryptkeys',
-    ),
-    'haru' => array(
+    ],
+    'haru' => [
         'HaruDoc',
-    ),
-    'ming' => array(
+    ],
+    'ming' => [
         'ming_keypress',
         'ming_setcubicthreshold',
         'ming_setscale',
         'ming_setswfcompression',
         'ming_useconstants',
-    ),
-    'pdf' => array(
+    ],
+    'pdf' => [
         'PDF_activate_item',
         'PDF_add_annotation',
         'PDF_add_bookmark',
         'PDF_add_launchlink',
         'PDF_add_locallink',
-    ),
-    'ps' => array(
+    ],
+    'ps' => [
         'ps_add_bookmark',
         'ps_add_launchlink',
         'ps_add_locallink',
         'ps_add_note',
         'ps_add_pdflink',
-    ),
-    'rpmreader' => array(
+    ],
+    'rpmreader' => [
         'rpm_close',
         'rpm_get_tag',
         'rpm_is_valid',
         'rpm_open',
         'rpm_version',
-    ),
-    'swf' => array(
+    ],
+    'swf' => [
         'swf_actiongeturl',
         'swf_actiongotoframe',
         'swf_actiongotolabel',
         'swf_actionnextframe',
         'swf_actionplay',
-    ),
-    'swish' => array(
+    ],
+    'swish' => [
         'Swish',
-    ),
-    'exec' => array(
+    ],
+    'exec' => [
         'escapeshellarg',
         'escapeshellcmd',
         'exec',
         'passthru',
         'proc_close',
-    ),
-    'expect' => array(
+    ],
+    'expect' => [
         'expect_expectl',
         'expect_popen',
-    ),
-    'pcntl' => array(
+    ],
+    'pcntl' => [
         'pcntl_alarm',
         'pcntl_exec',
         'pcntl_fork',
         'pcntl_getpriority',
         'pcntl_setpriority',
-    ),
-    'posix' => array(
+    ],
+    'posix' => [
         'posix_access',
         'posix_ctermid',
         'posix_get_last_error',
         'posix_getcwd',
         'posix_getegid',
-    ),
-    'sem' => array(
+    ],
+    'sem' => [
         'ftok',
         'msg_get_queue',
         'msg_queue_exists',
         'msg_receive',
         'msg_remove_queue',
-    ),
-    'shmop' => array(
+    ],
+    'shmop' => [
         'shmop_close',
         'shmop_delete',
         'shmop_open',
         'shmop_read',
         'shmop_size',
-    ),
-    'geoip' => array(
+    ],
+    'geoip' => [
         'geoip_country_code_by_name',
         'geoip_country_name_by_name',
         'geoip_database_info',
         'geoip_db_avail',
         'geoip_db_filename',
-    ),
-    'json' => array(
+    ],
+    'json' => [
         'json_decode',
         'json_encode',
-    ),
-    'misc' => array(
+    ],
+    'misc' => [
         'connection_aborted',
         'connection_status',
         // 'connection_timeout', deprecated
         'constant',
         'define',
-    ),
-    'parsekit' => array(
+    ],
+    'parsekit' => [
         'parsekit_compile_file',
         'parsekit_compile_string',
         'parsekit_func_arginfo',
-    ),
-    'spl' => array(
+    ],
+    'spl' => [
         'class_implements',
         'class_parents',
         'iterator_count',
         'iterator_to_array',
         'spl_autoload_call',
-    ),
-    'stream' => array(
+    ],
+    'stream' => [
         'stream_bucket_append',
         'stream_bucket_make_writeable',
         'stream_bucket_new',
         'stream_bucket_prepend',
         'stream_context_create',
-    ),
-    'tidy' => array(
+    ],
+    'tidy' => [
         'ob_tidyhandler',
         'tidy_access_count',
         'tidy_clean_repair',
         'tidy_config_count',
-    ),
-    'tokenizer' => array(
+    ],
+    'tokenizer' => [
         'token_get_all',
         'token_name',
-    ),
-    'url' => array(
+    ],
+    'url' => [
         'get_headers',
         'get_meta_tags',
         'http_build_query',
         'parse_url',
         'rawurldecode',
-    ),
-    'curl' => array(
+    ],
+    'curl' => [
         'curl_close',
         'curl_copy_handle',
         'curl_errno',
         'curl_error',
         'curl_exec',
-    ),
-    'fam' => array(
+    ],
+    'fam' => [
         'fam_cancel_monitor',
         'fam_close',
         'fam_monitor_collection',
         'fam_monitor_directory',
         'fam_monitor_file',
-    ),
-    'ftp' => array(
+    ],
+    'ftp' => [
         'ftp_alloc',
         'ftp_cdup',
         'ftp_chdir',
         'ftp_chmod',
         'ftp_close',
-    ),
-    'hw' => array(
+    ],
+    'hw' => [
         'hw_Children',
         'hw_ChildrenObj',
         'hw_Close',
         'hw_Connect',
         'hw_changeobject',
-    ),
-    'hwapi' => array(
+    ],
+    'hwapi' => [
         'hw_api_attribute',
-    ),
-    'http' => array(
+    ],
+    'http' => [
         'HttpDeflateStream',
-    ),
-    'java' => array(
+    ],
+    'java' => [
         'java_last_exception_clear',
         'java_last_exception_get',
-    ),
-    'ldap' => array(
+    ],
+    'ldap' => [
         'ldap_add',
         'ldap_bind',
         'ldap_close',
         'ldap_compare',
         'ldap_connect',
-    ),
-    'notes' => array(
+    ],
+    'notes' => [
         'notes_body',
         'notes_copy_db',
         'notes_create_db',
         'notes_create_note',
         'notes_drop_db',
-    ),
-    'memcache' => array(
+    ],
+    'memcache' => [
         'Memcache',
-    ),
-    'mnogosearch' => array(
+    ],
+    'mnogosearch' => [
         'udm_add_search_limit',
         'udm_alloc_agent',
         'udm_alloc_agent_array',
         'udm_api_version',
         'udm_cat_list',
-    ),
-    'mqseries' => array(
+    ],
+    'mqseries' => [
         'mqseries_back',
         'mqseries_begin',
         'mqseries_close',
         'mqseries_cmit',
         'mqseries_conn',
-    ),
-    'net-gopher' => array(
+    ],
+    'net-gopher' => [
         'gopher_parsedir',
-    ),
-    'network' => array(
+    ],
+    'network' => [
         'checkdnsrr',
         'closelog',
         'define_syslog_variables',
         'dns_check_record',
         'dns_get_mx',
-    ),
-    'sam' => array(
+    ],
+    'sam' => [
         'SAMConnection',
-    ),
-    'snmp' => array(
+    ],
+    'snmp' => [
         'snmp_get_quick_print',
         'snmp_get_valueretrieval',
         'snmp_read_mib',
         'snmp_set_enum_print',
         'snmp_set_oid_numeric_print',
-    ),
-    'sockets' => array(
+    ],
+    'sockets' => [
         'socket_accept',
         'socket_bind',
         'socket_clear_error',
         'socket_close',
         'socket_connect',
-    ),
-    'svn' => array(
+    ],
+    'svn' => [
         'svn_add',
         'svn_auth_get_parameter',
         'svn_auth_set_parameter',
         'svn_cat',
         'svn_checkout',
-    ),
-    'tcpwrap' => array(
+    ],
+    'tcpwrap' => [
         'tcpwrap_check',
-    ),
-    'yaz' => array(
+    ],
+    'yaz' => [
         'yaz_addinfo',
         'yaz_ccl_conf',
         'yaz_ccl_parse',
         'yaz_close',
         'yaz_connect',
-    ),
-    'nis' => array(
+    ],
+    'nis' => [
         'yp_all',
         'yp_cat',
         'yp_err_string',
         'yp_errno',
         'yp_first',
-    ),
-    'apache' => array(
+    ],
+    'apache' => [
         'apache_child_terminate',
         'apache_get_modules',
         'apache_get_version',
         'apache_getenv',
         'apache_lookup_uri',
-    ),
-    'iisfunc' => array(
+    ],
+    'iisfunc' => [
         'iis_add_server',
         'iis_get_dir_security',
         'iis_get_script_map',
         'iis_get_server_by_comment',
         'iis_get_server_by_path',
-    ),
-    'nsapi' => array(
+    ],
+    'nsapi' => [
         'nsapi_request_headers',
         'nsapi_response_headers',
         'nsapi_virtual',
-    ),
-    'msession' => array(
+    ],
+    'msession' => [
         'msession_connect',
         'msession_count',
         'msession_create',
         'msession_destroy',
         'msession_disconnect',
-    ),
-    'session' => array(
+    ],
+    'session' => [
         'session_start',
         'session_name',
         'session_cache_expire',
@@ -668,175 +668,175 @@ return array(
         'session_commit',
         'session_decode',
         'session_destroy',
-    ),
-    'session-pgsql' => array(
+    ],
+    'session-pgsql' => [
         'session_pgsql_add_error',
         'session_pgsql_get_error',
         'session_pgsql_get_field',
         'session_pgsql_reset',
         'session_pgsql_set_field',
-    ),
-    'bbcode' => array(
+    ],
+    'bbcode' => [
         'bbcode_add_element',
         'bbcode_add_smiley',
         'bbcode_create',
         'bbcode_destroy',
         'bbcode_parse',
-    ),
-    'pcre' => array(
+    ],
+    'pcre' => [
         'preg_grep',
         'preg_last_error',
         'preg_match',
         'preg_match_all',
         'preg_quote',
-    ),
-    'regex' => array(
+    ],
+    'regex' => [
         'ereg',
         'ereg_replace',
         'eregi',
         'eregi_replace',
         'split',
-    ),
-    'strings' => array(
+    ],
+    'strings' => [
         'addcslashes',
         'addslashes',
         'chop',
         'chr',
         'chunk_split',
-    ),
-    'array' => array(
+    ],
+    'array' => [
         'array_change_key_case',
         'array_chunk',
         'array_combine',
         'array_count_values',
         'array_diff_assoc',
-    ),
-    'classobj' => array(
+    ],
+    'classobj' => [
         'call_user_method',
         'call_user_method_array',
         'class_exists',
         'get_class_methods',
         'get_class_vars',
-    ),
-    'classkit' => array(
+    ],
+    'classkit' => [
         'classkit_import',
         'classkit_method_add',
         'classkit_method_copy',
         'classkit_method_redefine',
         'classkit_method_remove',
-    ),
-    'ctype' => array(
+    ],
+    'ctype' => [
         'ctype_alnum',
         'ctype_alpha',
         'ctype_cntrl',
         'ctype_digit',
         'ctype_graph',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
         'filter_has_var',
         'filter_id',
         'filter_input',
         'filter_input_array',
         'filter_list',
-    ),
-    'funchand' => array(
+    ],
+    'funchand' => [
         'call_user_func',
         'call_user_func_array',
         'create_function',
         'func_get_arg',
         'func_get_args',
-    ),
-    'objaggregation' => array(
+    ],
+    'objaggregation' => [
         'aggregate_info',
         'aggregate_methods',
         'aggregate_methods_by_list',
         'aggregate_methods_by_regexp',
         'aggregate_properties_by_list',
-    ),
-    'var' => array(
+    ],
+    'var' => [
         'debug_zval_dump',
         'doubleval',
         // 'empty', niet testbaar met function_exists()
         'floatval',
         'get_defined_vars',
-    ),
-    'soap' => array(
+    ],
+    'soap' => [
         'SoapClient',
         'is_soap_fault',
-    ),
-    'xmlrpc' => array(
+    ],
+    'xmlrpc' => [
         'xmlrpc_decode',
         'xmlrpc_decode_request',
         'xmlrpc_encode',
         'xmlrpc_encode_request',
         'xmlrpc_get_type',
-    ),
-    'com' => array(
+    ],
+    'com' => [
         'com_addref',
         'com_create_guid',
         'com_event_sink',
         'com_get',
         'com_get_active_object',
-    ),
-    'printer' => array(
+    ],
+    'printer' => [
         'printer_abort',
         'printer_close',
         'printer_create_brush',
         'printer_create_dc',
         'printer_create_font',
-    ),
-    'dom' => array(
+    ],
+    'dom' => [
         'dom_import_simplexml',
-    ),
-    'domxml' => array(
+    ],
+    'domxml' => [
         'DomDocument',
-    ),
-    'libxml' => array(
+    ],
+    'libxml' => [
         'libxml_clear_errors',
         'libxml_get_errors',
         'libxml_get_last_error',
         'libxml_set_streams_context',
         'libxml_use_internal_errors',
-    ),
-    'qtdom' => array(
+    ],
+    'qtdom' => [
         'qdom_error',
         'qdom_tree',
-    ),
-    'sca' => array(
+    ],
+    'sca' => [
         'SCA',
         'SCA_LocalProxy',
         'SCA_SoapProxy',
-    ),
-    'sdo-das-xml' => array(
+    ],
+    'sdo-das-xml' => [
         'SDO_DAS_XML_Document',
-    ),
-    'simplexml' => array(
+    ],
+    'simplexml' => [
         'SimpleXMLElement',
-    ),
-    'wddx' => array(
+    ],
+    'wddx' => [
         'wddx_add_vars',
         'wddx_deserialize',
         'wddx_packet_end',
         'wddx_packet_start',
         'wddx_serialize_value',
-    ),
-    'xml' => array(
+    ],
+    'xml' => [
         'xml_error_string',
         'xml_get_current_byte_index',
         'xml_get_current_column_number',
         'xml_get_current_line_number',
         'xml_get_error_code',
-    ),
+    ],
     'xmlreader' => [],
-    'xmlwriter' => array(
+    'xmlwriter' => [
         'XMLWriter',
-    ),
+    ],
     'xsl' => [],
-    'xslt' => array(
+    'xslt' => [
         'xslt_backend_info',
         'xslt_backend_name',
         'xslt_backend_version',
         'xslt_create',
         'xslt_errno',
-    ),
-);
+    ],
+];

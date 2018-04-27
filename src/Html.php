@@ -97,7 +97,7 @@ class Html extends Base
             return $element;
         }
         if ($contents === '') { // Close the tag?
-            if (in_array($name, array('area', 'base', 'br', 'hr', 'input', 'img', 'link', 'meta'))) {
+            if (in_array($name, ['area', 'base', 'br', 'hr', 'input', 'img', 'link', 'meta'])) {
                 $element->html .= ' />';
             } else {
                 $element->html .= '></'.$name.'>';
@@ -131,13 +131,13 @@ class Html extends Base
     public static function icon($icon)
     {
         if (preg_match('/^[a-z-]+$/', $icon)) {
-            return self::element('span', array('class' => 'glyphicon glyphicon-'.$icon));
+            return self::element('span', ['class' => 'glyphicon glyphicon-'.$icon]);
         }
         if (preg_match('/^http[s]|^\/|^[.]{1,2}\//', $icon) === 0) { // relative url?
             $icon = \Sledgehammer\WEBROOT.$icon;
         }
 
-        return self::element('img', array('src' => $icon, 'class' => 'icon', 'alt' => ''));
+        return self::element('img', ['src' => $icon, 'class' => 'icon', 'alt' => '']);
     }
 
     /**

@@ -10,40 +10,40 @@ class CollectionTest extends TestCase
     public function test_where()
     {
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
-        $vegetables = $fruitsAndVegetables->where(array('type' => 'vegetable'));
+        $vegetables = $fruitsAndVegetables->where(['type' => 'vegetable']);
         $this->assertSame(count($vegetables), 1, 'Only 1 vegetable in the collection');
         $this->assertSame($vegetables[0]['name'], 'carrot');
-        $this->assertSame($vegetables->toArray(), array(
-            array(
+        $this->assertSame($vegetables->toArray(), [
+            [
                 'id' => '8',
                 'name' => 'carrot',
                 'type' => 'vegetable',
-            ),
-        ));
-        $fruits = $fruitsAndVegetables->where(array('type' => 'fruit'));
+            ],
+        ]);
+        $fruits = $fruitsAndVegetables->where(['type' => 'fruit']);
         $this->assertSame(count($fruits), 3, '3 fruits in the collection');
         $this->assertSame($fruits[0]['name'], 'apple');
-        $this->assertSame($fruits->toArray(), array(
-            array(
+        $this->assertSame($fruits->toArray(), [
+            [
                 'id' => '4',
                 'name' => 'apple',
                 'type' => 'fruit',
-            ),
-            array(
+            ],
+            [
                 'id' => '6',
                 'name' => 'pear',
                 'type' => 'fruit',
-            ),
-            array(
+            ],
+            [
                 'id' => '7',
                 'name' => 'banana',
                 'type' => 'fruit',
-            ),
-        ));
-        $andWhere = $fruitsAndVegetables->where(array('AND', 'type' => 'fruit', 'id <=' => 4));
+            ],
+        ]);
+        $andWhere = $fruitsAndVegetables->where(['AND', 'type' => 'fruit', 'id <=' => 4]);
         $this->assertCount(1, $andWhere);
 
-        $orWhere = $fruitsAndVegetables->where(array('OR', 'type' => 'fruit', 'id' => 8));
+        $orWhere = $fruitsAndVegetables->where(['OR', 'type' => 'fruit', 'id' => 8]);
         $this->assertCount(4, $orWhere);
     }
 
@@ -52,31 +52,31 @@ class CollectionTest extends TestCase
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
         // Simple select a single field
         $names = $fruitsAndVegetables->select('name');
-        $this->assertSame($names->toArray(), array(
+        $this->assertSame($names->toArray(), [
             'apple',
             'pear',
             'banana',
             'carrot',
-        ));
+        ]);
         // The second parameter determines the key
         $list = $fruitsAndVegetables->select('name', '[id]');
-        $this->assertSame($list->toArray(), array(
+        $this->assertSame($list->toArray(), [
             4 => 'apple',
             6 => 'pear',
             7 => 'banana',
             8 => 'carrot',
-        ));
+        ]);
         // Select multiple fields and create a new structure
-        $struct = $fruitsAndVegetables->where(array('name' => 'banana'))->select(array('name' => '[name]', 'meta[id]' => 'id', 'meta[type]' => 'type'));
-        $this->assertSame($struct->toArray(), array(
-            array(
+        $struct = $fruitsAndVegetables->where(['name' => 'banana'])->select(['name' => '[name]', 'meta[id]' => 'id', 'meta[type]' => 'type']);
+        $this->assertSame($struct->toArray(), [
+            [
                 'name' => 'banana',
-                'meta' => array(
+                'meta' => [
                     'id' => '7',
                     'type' => 'fruit',
-                ),
-            ),
-        ));
+                ],
+            ],
+        ]);
     }
 
     public function test_orderBy()
@@ -84,45 +84,45 @@ class CollectionTest extends TestCase
         $fruitsAndVegetables = $this->getFruitsAndVegetables();
         // indexed
         $abc = $fruitsAndVegetables->orderBy('name')->select('name');
-        $this->assertSame($abc->toArray(), array(
+        $this->assertSame($abc->toArray(), [
             'apple',
             'banana',
             'carrot',
             'pear',
-        ));
+        ]);
         $zyx = $fruitsAndVegetables->orderByDescending('name')->select('name');
-        $this->assertSame($zyx->toArray(), array(
+        $this->assertSame($zyx->toArray(), [
             'pear',
             'carrot',
             'banana',
             'apple',
-        ));
+        ]);
     }
 
     public function test_selectKey()
     {
-        $xyz = new Collection(array('x' => 10, 'y' => 20, 'z' => 30));
-        $this->assertSame(array(10, 20, 30), $xyz->selectKey(null)->toArray(), 'null should return an index array.');
-        $this->assertSame(array(10 => 10, 20 => 20, 30 => 30), $xyz->selectKey('.')->toArray(), 'Using a path as key.');
+        $xyz = new Collection(['x' => 10, 'y' => 20, 'z' => 30]);
+        $this->assertSame([10, 20, 30], $xyz->selectKey(null)->toArray(), 'null should return an index array.');
+        $this->assertSame([10 => 10, 20 => 20, 30 => 30], $xyz->selectKey('.')->toArray(), 'Using a path as key.');
         $closure = function ($item, $key) {
             return $key.$item;
         };
-        $this->assertSame(array('x10' => 10, 'y20' => 20, 'z30' => 30), $xyz->selectKey($closure)->toArray(), 'Using a closure as key.');
+        $this->assertSame(['x10' => 10, 'y20' => 20, 'z30' => 30], $xyz->selectKey($closure)->toArray(), 'Using a closure as key.');
     }
 
     public function test_where_operators()
     {
-        $numbers = new Collection(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        $numbers = new Collection([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         $this->assertCount(1, $numbers->where('2'));
         $this->assertCount(2, $numbers->where('<= 2'));
         $this->assertCount(5, $numbers->where('> 5'));
-        $vehicles = new Collection(array(
-            array('name' => 'car', 'wheels' => 4),
-            array('name' => 'trike', 'wheels' => 3),
-            array('name' => 'bike', 'wheels' => 2),
-        ));
-        $this->assertCount(1, $vehicles->where(array('wheels >' => 3)));
-        $this->assertCount(2, $vehicles->where(array('name LIKE' => '%ke')));
+        $vehicles = new Collection([
+            ['name' => 'car', 'wheels' => 4],
+            ['name' => 'trike', 'wheels' => 3],
+            ['name' => 'bike', 'wheels' => 2],
+        ]);
+        $this->assertCount(1, $vehicles->where(['wheels >' => 3]));
+        $this->assertCount(2, $vehicles->where(['name LIKE' => '%ke']));
     }
 
     public function test_events()
@@ -153,28 +153,28 @@ class CollectionTest extends TestCase
     {
         $object1 = new stdClass();
         $object2 = new stdClass();
-        $collection = new Collection(array(10, 20, array('id' => 30), $object1, $object2));
+        $collection = new Collection([10, 20, ['id' => 30], $object1, $object2]);
         $this->assertSame(1, $collection->indexOf(20));
-        $this->assertSame(2, $collection->indexOf(array('id?' => 30)));
+        $this->assertSame(2, $collection->indexOf(['id?' => 30]));
         $this->assertSame(4, $collection->indexOf($object2));
     }
 
     public function test_remove()
     {
         $object = new stdClass();
-        $collection = new Collection(array(10, array('id' => 20), $object));
+        $collection = new Collection([10, ['id' => 20], $object]);
         $collection->remove($object);
-        $this->assertSame(array(10, array('id' => 20)), $collection->toArray());
+        $this->assertSame([10, ['id' => 20]], $collection->toArray());
         $collection->remove(function ($item) {
             return $item == 10;
         });
-        $this->assertSame(array(array('id' => 20)), $collection->toArray());
-//		$this->assertSame(2, $collection->indexOf(array('id?' => 30)));
+        $this->assertSame([['id' => 20]], $collection->toArray());
+        //		$this->assertSame(2, $collection->indexOf(array('id?' => 30)));
     }
 
     public function test_remove_odd_in_foreach()
     {
-        $collection = new Collection(array(1, 2, 3, 4));
+        $collection = new Collection([1, 2, 3, 4]);
         $i = 0;
         foreach ($collection as $entry) {
             if ($i % 2 === 1) {
@@ -183,12 +183,12 @@ class CollectionTest extends TestCase
             ++$i;
         }
         $this->assertCount(2, $collection, 'Should be halved');
-        $this->assertSame(array(1, 3), $collection->toArray());
+        $this->assertSame([1, 3], $collection->toArray());
     }
 
     public function test_remove_even_in_foreach()
     {
-        $collection = new Collection(array(1, 2, 3, 4));
+        $collection = new Collection([1, 2, 3, 4]);
         $i = 0;
         foreach ($collection as $entry) {
             if ($i % 2 === 0) {
@@ -197,27 +197,27 @@ class CollectionTest extends TestCase
             ++$i;
         }
         $this->assertCount(2, $collection, 'Should be halved');
-        $this->assertSame(array(2, 4), $collection->toArray());
+        $this->assertSame([2, 4], $collection->toArray());
     }
 
     public function test_map()
     {
-        $collection = new Collection(array(1, 2, 3, 5));
+        $collection = new Collection([1, 2, 3, 5]);
         $mapped = $collection->map(function ($v) {
             return $v * 2;
         });
-        $this->assertSame(array(2, 4, 6, 10), $mapped->toArray(), 'All values should be doubled');
-        $this->assertSame(array(1, 2, 3, 5), $collection->toArray(), 'Original array should remain intact');
+        $this->assertSame([2, 4, 6, 10], $mapped->toArray(), 'All values should be doubled');
+        $this->assertSame([1, 2, 3, 5], $collection->toArray(), 'Original array should remain intact');
     }
 
     public function test_reduce()
     {
-        $collection = new Collection(array(1, 2, 3, 4));
+        $collection = new Collection([1, 2, 3, 4]);
         $result = $collection->reduce(function ($result, $v) {
             return $result + $v;
         });
         $this->assertSame(10, $result, '1 + 2 + 3 + 4 = 10');
-        $this->assertSame(array(1, 2, 3, 4), $collection->toArray(), 'Original array should remain intact');
+        $this->assertSame([1, 2, 3, 4], $collection->toArray(), 'Original array should remain intact');
     }
 
     /**
@@ -227,11 +227,11 @@ class CollectionTest extends TestCase
      */
     private function getFruitsAndVegetables()
     {
-        return new Collection(array(
-            array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
-            array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
-            array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
-            array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
-        ));
+        return new Collection([
+            ['id' => '4', 'name' => 'apple', 'type' => 'fruit'],
+            ['id' => '6', 'name' => 'pear', 'type' => 'fruit'],
+            ['id' => '7', 'name' => 'banana', 'type' => 'fruit'],
+            ['id' => '8', 'name' => 'carrot', 'type' => 'vegetable'],
+        ]);
     }
 }

@@ -86,10 +86,10 @@ class CurlTest extends TestCase
     {
         $this->assertEmptyPool();
         $fp = fopen('php://memory', 'w+');
-        $options = array(
+        $options = [
             CURLOPT_STDERR => $fp,
             CURLOPT_VERBOSE => true,
-        );
+        ];
         $response = Curl::get('http://jsonplaceholder.typicode.com/users/1', $options);
         $this->assertSame($response->http_code, 200);
         rewind($fp);

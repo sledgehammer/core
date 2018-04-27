@@ -13,7 +13,7 @@ class TextTest extends TestCase
         $ascii = 'abc';
         $expectedLength = 13;
         $numberOfBytesInUtf8 = 17;
-        $detectOrder = array('ASCII', 'UTF-8', 'ISO-8859-15');
+        $detectOrder = ['ASCII', 'UTF-8', 'ISO-8859-15'];
         $this->assertSame(strlen($latin1), $expectedLength, 'strlen() returns the number of chars on ISO-8859-15 and other singlebyte encodings');
         $this->assertSame(strlen($utf8), $numberOfBytesInUtf8, 'strlen() return the number of bytes, NOT the number of chars on UTF-8 and other multibyte encodings');
 

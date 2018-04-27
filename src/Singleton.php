@@ -8,25 +8,25 @@ use ReflectionClass;
 
 /**
  * Adds singleton behavior to a class.
- * 
+ *
  * Example: Get the default instance
- *   $db = Connection::instance(); 
- * 
+ *   $db = Connection::instance();
+ *
  * Example: Set/overwrite the default instance
  *   Connection::$instances['default'] = new Connection('mysql://localhost'));
- * 
+ *
  * Example: Lazily configure the singleton via closure
  *   Connection::$instances['default'] = function () {
  *     return new Connection('mysql://localhost');
  *   };
- * 
+ *
  * Example: Lazily configure the singleton in the class
  *   class MyClass {
  *     use Singleton;
  *     protected static defaultInstance() {
  *       return new MyClass(['configured' => 'with defaults']);
  *     }
- *   } 
+ *   }
  */
 trait Singleton
 {
@@ -45,7 +45,7 @@ trait Singleton
     /**
      * Get the singleton instance.
      *
-     * @param string $identifier The identifier (string), 
+     * @param string $identifier The identifier (string),
      * @param static [$instance] New value for the identifier.
      *
      * @return static

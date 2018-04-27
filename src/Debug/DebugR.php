@@ -99,7 +99,7 @@ class DebugR extends Base
      */
     public static function html($html)
     {
-        $style = array(
+        $style = [
             'display: inline-block',
             'padding: 8px 15px',
             'background-color: #7a3964',
@@ -116,7 +116,7 @@ class DebugR extends Base
             'text-align: left',
             'overflow-x: auto',
             'white-space: normal',
-        );
+        ];
         self::send('html', '<div style="'.implode(';', $style).'"><span style="font-weight:normal;margin-right: 10px">DebugR</span>'.\Sledgehammer\array_value($_SERVER, 'REQUEST_METHOD').'&nbsp;&nbsp;'.\Sledgehammer\array_value($_SERVER, 'REQUEST_URI').'</div>'.$html);
     }
 
