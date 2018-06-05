@@ -35,12 +35,12 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      *
      * @var array
      */
-    protected $events = [
+    protected $events = array(
         'adding' => [],
         'added' => [],
         'removing' => [],
         'removed' => [],
-    ];
+    );
 
     /**
      * Constructor.
@@ -113,8 +113,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
             }
 
             return new self($items);
-        }
-        if (\Sledgehammer\is_closure($selector)) {
+        } elseif (\Sledgehammer\is_closure($selector)) {
             $closure = $selector;
         } else {
             $closure = PropertyPath::compile($selector);
@@ -248,6 +247,8 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
                 return $key;
             }
         }
+
+        return;
     }
 
     /**
@@ -424,7 +425,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
         // Sort the values
         if ($method === SORT_NATURAL) {
             natsort($sortOrder);
-        } elseif ($method === \Sledgehammer\SORT_NATURAL_CI) {
+        } elseif ($method === (SORT_FLAG_CASE | SORT_NATURAL)) {
             natcasesort($sortOrder);
         } else {
             asort($sortOrder, $method);

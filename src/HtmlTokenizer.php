@@ -130,7 +130,7 @@ class HtmlTokenizer extends Base implements \Iterator
     {
         $this->html = $html;
         $this->htmlLength = strlen($html);
-        $this->wsArray = [' ', "\n", "\r", "\t"];
+        $this->wsArray = array(' ', "\n", "\r", "\t");
         $this->wsPattern = implode($this->wsArray);
         $this->rewind();
     }
@@ -161,6 +161,7 @@ class HtmlTokenizer extends Base implements \Iterator
         try {
             $startPos = $this->position;
             switch ($this->state) {
+
                 case 'CONTENT':
                     $this->parseContent();
                     break;
@@ -263,7 +264,7 @@ class HtmlTokenizer extends Base implements \Iterator
             $this->tagType = 'T_TAG';
             $this->buildToken($this->position, 'T_OPEN');
         }
-        $pos = $this->firstOccurrance(array_merge(['>'], $this->wsArray), $match);
+        $pos = $this->firstOccurrance(array_merge(array('>'), $this->wsArray), $match);
         if ($pos === false) {
             $this->warning('Unclosed '.$this->tagType);
             $this->buildLastToken($this->tagType);
@@ -286,7 +287,7 @@ class HtmlTokenizer extends Base implements \Iterator
     {
         $this->collectWhitespace();
         // Detect ending
-        $pos = $this->firstOccurrance(['>', '/>'], $match);
+        $pos = $this->firstOccurrance(array('>', '/>'), $match);
         if ($pos === $this->position) { // Einde tagBody
             $this->buildToken($this->position + strlen($match) - 1, 'T_CLOSE');
             $this->state = 'CONTENT';
@@ -304,13 +305,13 @@ class HtmlTokenizer extends Base implements \Iterator
         // Attribute naam
         $type = ($this->tagType == 'T_TAG') ? 'T_ATTRIBUTE' : 'T_INVALID';
         $char = $this->getChar();
-        if (in_array($char, ['/', '!', '?'])) {
+        if (in_array($char, array('/', '!', '?'))) {
             $this->warning('Invalid character: "'.$char.'"');
             $this->buildToken($this->position, 'T_INVALID');
 
             return;
         }
-        $pos = $this->firstOccurrance(array_merge($this->wsArray, ['=', '>']), $match);
+        $pos = $this->firstOccurrance(array_merge($this->wsArray, array('=', '>')), $match);
         if ($pos === false) {
             $this->warning('Unclosed '.$this->tagType);
             $this->buildLastToken($type);
@@ -337,7 +338,7 @@ class HtmlTokenizer extends Base implements \Iterator
         $t_delimiter = ($invalid ? 'T_INVALID' : 'T_DELIMITER');
 
         $delimiter = $this->getChar();
-        if (in_array($delimiter, ['"', "'"])) { // Heeft de waarde delimiters?
+        if (in_array($delimiter, array('"', "'"))) { // Heeft de waarde delimiters?
             $this->buildToken($this->position, $t_delimiter);
             $pos = $this->strpos($delimiter);
             if ($pos === false) {
@@ -354,7 +355,7 @@ class HtmlTokenizer extends Base implements \Iterator
 
             return;
         }
-        $pos = $this->firstOccurrance(array_merge($this->wsArray, ['>']));
+        $pos = $this->firstOccurrance(array_merge($this->wsArray, array('>')));
         if ($pos === false) {
             $this->warning('Undelimited VALUE');
             $this->buildLastToken($t_value);
@@ -388,7 +389,7 @@ class HtmlTokenizer extends Base implements \Iterator
      */
     public function parseParserTag()
     {
-        $endPos = $this->firstOccurrance(['?>', '>'], $endToken);
+        $endPos = $this->firstOccurrance(array('?>', '>'), $endToken);
         if ($endPos === false) {
             $this->warning('parserTag not terminated (use "?>")');
             $this->buildLastToken(null);
@@ -430,7 +431,7 @@ class HtmlTokenizer extends Base implements \Iterator
             return;
         }
         $this->buildToken($this->position + 1);
-        $pos = $this->firstOccurrance(array_merge(['[', '>'], $this->wsArray));
+        $pos = $this->firstOccurrance(array_merge(array('[', '>'), $this->wsArray));
         if ($pos === false) {
             $this->warning('Inline DTD tag not terminated');
             $this->buildLastToken('T_DTD_ENTITY');
@@ -447,7 +448,7 @@ class HtmlTokenizer extends Base implements \Iterator
 
     public function parseDTDAttributes($state)
     {
-        $pos = $this->firstOccurrance(['[', '>'], $match);
+        $pos = $this->firstOccurrance(array('[', '>'), $match);
         if ($pos === false) {
             $this->warning('Inline DTD tag not terminated');
             $this->buildLastToken('T_DTD_ATTRIBUTES');
@@ -475,7 +476,7 @@ class HtmlTokenizer extends Base implements \Iterator
     public function parseDTDElements()
     {
         $this->collectWhitespace();
-        $pos = $this->firstOccurrance(['<!', ']', '>'], $match);
+        $pos = $this->firstOccurrance(array('<!', ']', '>'), $match);
         if ($pos === false) {
             $this->warning('Invalid DTD elements');
             $this->buildLastToken('T_DTD_ATTRIBUTES');
@@ -558,7 +559,7 @@ class HtmlTokenizer extends Base implements \Iterator
         if ($tokenType === null) {
             $this->tokenQueue[] = $value;
         } else {
-            $this->tokenQueue[] = [$tokenType, $value];
+            $this->tokenQueue[] = array($tokenType, $value);
         }
     }
 
@@ -685,7 +686,7 @@ class HtmlTokenizer extends Base implements \Iterator
     public function dump($charset = 'UTF-8')
     {
         $errorColor = 'white:background:red';
-        $colors = [
+        $colors = array(
             'T_TAG' => 'purple',
             'T_CLOSE_TAG' => 'purple',
             'T_OPEN' => 'green',
@@ -703,7 +704,7 @@ class HtmlTokenizer extends Base implements \Iterator
             'T_GT' => $errorColor,
             'T_PARSER_TAG' => 'Aquamarine',
             'T_DELIMITER' => 'orange',
-        ];
+        );
         echo '<pre style="background:white;overflow:auto;padding:10px;color:red">';
         foreach ($this as $index => $token) {
             if (is_array($token)) {

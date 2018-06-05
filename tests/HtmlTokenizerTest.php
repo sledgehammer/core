@@ -149,7 +149,7 @@ EOD;
     private function prettyPrint($tokenizer)
     {
         $errorColor = 'white:background:red';
-        $colors = [
+        $colors = array(
             'T_TAG' => 'purple',
             'T_CLOSE_TAG' => 'purple',
             'T_OPEN' => 'green',
@@ -167,7 +167,7 @@ EOD;
             'T_GT' => $errorColor,
             'T_PARSER_TAG' => 'Aquamarine',
             'T_DELIMITER' => 'orange',
-        ];
+        );
         echo '<pre style="background:white;overflow:auto;padding:10px;color:red">';
         foreach ($tokenizer as $index => $token) {
             if (is_array($token)) {

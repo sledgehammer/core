@@ -112,10 +112,10 @@ class Url extends Base
             }
             $url .= $this->host;
             if ($this->port) {
-                $standardPorts = [
+                $standardPorts = array(
                     'http' => 80,
                     'https' => 443,
-                ];
+                );
                 if ($this->scheme === null || empty($standardPorts[$this->scheme]) || $standardPorts[$this->scheme] != $this->port) { // Is the port non-standard?
                     $url .= ':'.$this->port;
                 }
@@ -174,10 +174,10 @@ class Url extends Base
 
     /**
      * Return new Url with different protocol.
-     *
+     * 
      * Example:
      *   $url->schema('https']); returns the secure url without modifing the original url.
-     *
+     * 
      * @param string $protocol
      *
      * @return Url
@@ -237,7 +237,7 @@ class Url extends Base
 
     /**
      * Return new Url with modified paramaters.
-     *
+     * 
      * @param array $parameters
      * @param bool  $merge      true: Keep existing parameters, false:  overwrite existing query.
      */
@@ -257,10 +257,10 @@ class Url extends Base
 
     /**
      * Return new Url with modified parameters.
-     *
+     * 
      * @param string $parameter
      * @param mixed  $value
-     * @param int [$index]
+     * @param int [$index] 
      *
      * @return Url
      */

@@ -32,14 +32,14 @@ foreach ($modules as $module) {
         $settings = []; // Use the strict default settings
     } else {
         // Disable validations
-        $settings = [
+        $settings = array(
             'matching_filename' => false,
             'mandatory_definition' => false,
             'mandatory_superclass' => false,
             'one_definition_per_file' => false,
             'revalidate_cache_delay' => 20,
             'detect_accidental_output' => false,
-        ];
+        );
     }
     $loader->importFolder($path, $settings);
 }

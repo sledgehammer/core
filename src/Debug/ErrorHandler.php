@@ -19,8 +19,6 @@ use Throwable;
  */
 class ErrorHandler extends Base
 {
-    use \Sledgehammer\Core\Singleton;
-
     /**
      * Schrijf de fout ook weg naar het php errorlog (/var/log/httpd/error.log?).
      *
@@ -88,7 +86,8 @@ class ErrorHandler extends Base
     public $emails_per_day = 'NO_LIMIT';
 
     /**
-     * Limit the amount of errors with a full backtrace. Setting this value too high may cause browser crashes. (The limit is measured per error-type).
+     * Limit the amount of errors with a full backtrace. Setting this value too high may cause browser crashes.
+     * (The limit is measured per error-type).
      *
      * @var int
      */
@@ -107,7 +106,7 @@ class ErrorHandler extends Base
      *
      * @var array
      */
-    private $error_types = [
+    private $error_types = array(
         E_ERROR => 'Error',
         E_WARNING => 'Warning',
         E_PARSE => 'Error',
@@ -124,7 +123,7 @@ class ErrorHandler extends Base
         E_DEPRECATED => 'Deprecated',
         E_USER_DEPRECATED => 'Deprecated',
         'EXCEPTION' => 'Exception',
-    ];
+    );
 
     /**
      * Show at maximun 50 KiB per argument in the backtrace.
@@ -140,15 +139,44 @@ class ErrorHandler extends Base
      */
     private $isProcessing = false;
 
-    /**
-     * Deze ErrorHandler instellen voor het afhandelen van de errormeldingen.
-     */
-    public static function enable()
+    static private $enabled = false;
+
+    public function __construct($options = [])
     {
-        $handler = self::instance();
-        set_error_handler([$handler, 'errorCallback']);
-        set_exception_handler([$handler, 'exceptionCallback']);
-        register_shutdown_function([$handler, 'shutdownCallback']);
+        foreach ($options as $option => $value) {
+            $this->$option = $value;
+        }
+    }
+
+    /**
+     * Enable the ErrorHandler to handler.
+     *
+     * @return ErrorHandler
+     */
+    public static function enable($options = [])
+    {
+        if (!self::$enabled) {
+            if (class_exists('Sledgehammer\Core\Base', false) === false) {
+                require_once __DIR__.'/../Base.php';
+            }
+            self::$enabled = new self([]);
+            // Mimic default php error display behavior
+            if (filter_var(ini_get('display_errors'), FILTER_VALIDATE_BOOLEAN)) {
+                if (php_sapi_name() === 'cli') {
+                    self::$enabled->cli = true;
+                } else {
+                    self::$enabled->html = true;
+                }
+            }
+            set_error_handler([self::class, 'errorCallback']);
+            set_exception_handler([self::class, 'exceptionCallback']);
+            register_shutdown_function([self::class, 'shutdownCallback']);
+        }
+        // Overwrite the options
+        foreach ($options as $_option => $value) {
+            self::$enabled->$_option = $value;
+        }
+        return self::$enabled;
     }
 
     /**
@@ -160,9 +188,9 @@ class ErrorHandler extends Base
      * @param int|null    $line
      * @param array|null  $context
      */
-    public function errorCallback($type, $message, $filename = null, $line = null, $context = null)
+    public static function errorCallback($type, $message, $filename = null, $line = null, $context = null)
     {
-        $this->report($type, $message);
+        self::report($type, $message);
         if ($type == E_USER_ERROR || $type == E_RECOVERABLE_ERROR) {
             exit(1);
         }
@@ -173,7 +201,7 @@ class ErrorHandler extends Base
      *
      * @param Exception $exception
      */
-    public function exceptionCallback($exception)
+    public static function exceptionCallback($exception)
     {
         if (self::isThrowable($exception)) {
             if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
@@ -190,23 +218,23 @@ class ErrorHandler extends Base
     /**
      * Use the shutdown to handle fatal errors. E_ERROR.
      */
-    public function shutdownCallback()
+    public static function shutdownCallback()
     {
         $error = error_get_last();
         if ($error !== null && $error['type'] === E_ERROR) {
-            $this->report($error['type'], $error['message']);
+            self::report($error['type'], $error['message']);
         }
     }
 
     /**
-     * Functie die wordt aangeroepen door de functies \Sledgehammer\notice() / \Sledgehammer\warning() / error() en de error handler functie.
+     * Functie die wordt aangeroepen door de \Sledgehammer\notice, warning en error functies
      *
      * @param int|Exception $type
      * @param string        $message
      * @param mixed         $information
      * @param bool          $check_for_alternate_error_handler Controleert of de error door een andere error_handler moet worden afgehandeld (Bv: SimpleTestErrorHandler)
      */
-    public function report($type, $message = '__EMPTY_ERROR_MESSAGE__', $information = null, $check_for_alternate_error_handler = false)
+    public static function report($type, $message = '__EMPTY_ERROR_MESSAGE__', $information = null, $check_for_alternate_error_handler = false)
     {
         if (is_int($type)) {
             $errorLevel = error_reporting();
@@ -214,26 +242,23 @@ class ErrorHandler extends Base
                 return;
             }
         }
+        if (self::$enabled) {
+            self::$enabled->process($type, $message, $information);
+            return;
+        }
         if (self::isThrowable($type)) {
             // @todo check the exception handler is this instance.
-        } elseif ($check_for_alternate_error_handler) {
-            $callback = set_error_handler([$this, 'errorCallback']);
-            restore_error_handler();
-            if (is_array($callback) == false || $callback[0] !== $this) {
-                $conversion_table = [
-                    E_ERROR => E_USER_ERROR,
-                    E_WARNING => E_USER_WARNING,
-                    E_NOTICE => E_USER_NOTICE,
-                    E_DEPRECATED => E_USER_DEPRECATED,
-                ];
-                if (array_key_exists($type, $conversion_table)) {
-                    $type = $conversion_table[$type]; // Voorkom "Invalid error type specified" bij trigger_error
-                }
-                trigger_error($message, $type); // De fout doorgeven aan de andere error handler
-                return;
-            }
         }
-        $this->process($type, $message, $information);
+        $conversion_table = [
+            E_ERROR => E_USER_ERROR,
+            E_WARNING => E_USER_WARNING,
+            E_NOTICE => E_USER_NOTICE,
+            E_DEPRECATED => E_USER_DEPRECATED,
+        ];
+        if (array_key_exists($type, $conversion_table)) {
+            $type = $conversion_table[$type]; // Voorkom "Invalid error type specified" bij trigger_error
+        }
+        trigger_error($message, $type); // De fout doorgeven aan de andere error handler
     }
 
     /**
@@ -298,7 +323,7 @@ class ErrorHandler extends Base
                 --$this->limits['backtrace'][$type];
             }
         }
-        $style = [
+        $style = array(
             'padding: 10px 15px 15px 15px',
             'background-color: #fcf8e3',
             'color: #333',
@@ -310,7 +335,7 @@ class ErrorHandler extends Base
             'text-align: left',
             'overflow-x: auto',
             'white-space: normal',
-        ];
+        );
         if ($showDetails === false) {
             $style[] = 'padding-top: 14px';
         }
@@ -336,7 +361,7 @@ class ErrorHandler extends Base
         if ($showDetails) {
             $label_style = '';
         } else {
-            $label_style = [
+            $label_style = array(
                 'padding: 1px 3px 2px',
                 'font-size: 10px',
                 'line-height: 15px',
@@ -346,7 +371,7 @@ class ErrorHandler extends Base
                 'white-space: nowrap',
                 'background-color: '.$label_color,
                 'border-radius: 3px',
-            ];
+            );
             $label_style = ' style="'.implode(';', $label_style).'"';
         }
         echo '<b'.$label_style.'>';
@@ -456,7 +481,7 @@ class ErrorHandler extends Base
                 if (class_exists('Sledgehammer\Core\Json', false) === false) {
                     require_once __DIR__.'/../Json.php';
                 }
-                if (self::isThrowable($type) || in_array($type, [E_USER_ERROR, E_ERROR, 'EXCEPTION'])) {
+                if (self::isThrowable($type) || in_array($type, array(E_USER_ERROR, E_ERROR, 'EXCEPTION'))) {
                     DebugR::error($error_message);
                 } else {
                     DebugR::warning($error_message);
@@ -536,10 +561,10 @@ class ErrorHandler extends Base
         $backtrace = debug_backtrace();
         foreach ($backtrace as $call) {
             if (isset($call['file']) && $call['file'] !== __FILE__ && $call['function'] !== 'report') {
-                return [
+                return array(
                     'file' => ((strpos($call['file'], \Sledgehammer\PATH) === 0) ? substr($call['file'], strlen(\Sledgehammer\PATH)) : $call['file']),
                     'line' => $call['line'],
-                ];
+                );
             }
         }
 
@@ -565,19 +590,18 @@ class ErrorHandler extends Base
                         $this->renderBacktraceCall($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler->errorCallback parameters
                         next($backtrace);
                         break;
-                    }   // De fout komt uit een functie (bijvoorbeeld een Permission denied uit een fopen())
+                    } else { // De fout komt uit een functie (bijvoorbeeld een Permission denied uit een fopen())
                         $call = next($backtrace); // Sla deze $call over deze bevat alleen de ErrorHandler->errorCallback() aanroep
                         $this->renderBacktraceCall($call);
-                    next($backtrace);
-                    break;
-                }
-                if ($call['function'] == 'shutdown_callback') {
+                        next($backtrace);
+                        break;
+                    }
+                } elseif ($call['function'] == 'shutdown_callback') {
                     $error = error_get_last();
                     $this->renderBacktraceCall($error);
                     next($backtrace);
                     break;
-                }
-                if ($call['function'] == 'report' && self::isThrowable($call['args'][0])) { // Gaat het om een Exception
+                } elseif ($call['function'] == 'report' && self::isThrowable($call['args'][0])) { // Gaat het om een Exception
                     $exception = $call['args'][0];
                     $reported = false;
                     $viaExceptionCallback = next($backtrace);
@@ -593,10 +617,10 @@ class ErrorHandler extends Base
                         }
                     }
                     echo 'Exception thrown ';
-                    $trace = [
+                    $trace = array(
                         'file' => $exception->getFile(),
                         'line' => $exception->getLine(),
-                    ];
+                    );
                     $this->renderBacktraceCall($trace, true);
 
                     $previous = $exception->getPrevious();
@@ -605,10 +629,10 @@ class ErrorHandler extends Base
                         if ($previous !== null) {
                             echo 'title=', htmlentities($previous->getTraceAsString(), ENT_COMPAT, 'UTF-8').'">Previous ';
                             echo get_class($previous), '("'.$previous->getMessage(), '") was thrown';
-                            $trace = [
+                            $trace = array(
                                 'file' => $previous->getFile(),
                                 'line' => $previous->getLine(),
-                            ];
+                            );
                             $this->renderBacktraceCall($trace, true);
                         } else {
                             echo '>';
@@ -658,10 +682,10 @@ class ErrorHandler extends Base
             }
             if (isset($call['function'])) {
                 echo \Sledgehammer\syntax_highlight($call['function'], 'method');
-                $errorHandlerInvocations = ['errorCallback', 'trigger_error', 'error', 'warning', 'notice', 'deprecated', 'Sledgehammer\error', 'Sledgehammer\warning', 'Sledgehammer\notice', 'Sledgehammer\deprecated'];
-                $databaseClasses = ['PDO', 'Sledgehammer\Database', 'mysqli']; // prevent showing/mailing passwords in the backtrace.
-                $databaseFunctions = ['mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect'];
-                if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], ['connect', '__construct'])) || (in_array($call['function'], ['call_user_func', 'call_user_func_array']) && in_array($call['args'][0], $errorHandlerInvocations))) {
+                $errorHandlerInvocations = array('errorCallback', 'trigger_error', 'error', 'warning', 'notice', 'deprecated', 'Sledgehammer\error', 'Sledgehammer\warning', 'Sledgehammer\notice', 'Sledgehammer\deprecated');
+                $databaseClasses = array('PDO', 'Sledgehammer\Database', 'mysqli'); // prevent showing/mailing passwords in the backtrace.
+                $databaseFunctions = array('mysql_connect', 'mysql_pconnect', 'mysqli_connect', 'mysqli_pconnect');
+                if (in_array($call['function'], array_merge($errorHandlerInvocations, $databaseFunctions)) || (in_array(@$call['class'], $databaseClasses) && in_array($call['function'], array('connect', '__construct'))) || (in_array($call['function'], array('call_user_func', 'call_user_func_array')) && in_array($call['args'][0], $errorHandlerInvocations))) {
                     echo '(&hellip;)';
                 } else {
                     echo '(';
@@ -718,7 +742,7 @@ class ErrorHandler extends Base
         }
         $function = preg_replace("/^[ \t]*(public |private |protected )function |\n/", '', $function);
 
-        return ['Function' => $function];
+        return array('Function' => $function);
     }
 
     /**
@@ -812,7 +836,7 @@ class ErrorHandler extends Base
                 return 0;
             }
         }
-        $filename = \Sledgehammer\TMP_DIR.'error_handler_email_limit.txt';
+        $filename = Environment::tmpdir().'error_handler_email_limit.txt';
         if (!@file_exists($filename)) {
             error_log('File "'.$filename.'" doesn\'t exist (yet)');
             // nieuwe voorraad.
@@ -935,58 +959,5 @@ class ErrorHandler extends Base
     private static function isThrowable($throwable)
     {
         return $throwable instanceof Exception || $throwable instanceof Throwable;
-    }
-
-    protected static function defaultInstance()
-    {
-        if (class_exists('Sledgehammer\Core\Base', false) === false) {
-            require_once __DIR__.'/../Object.php';
-        }
-        $errorHandler = new self();
-
-        if (defined('Sledgehammer\ENVIRONMENT') === false || \Sledgehammer\ENVIRONMENT === 'development' || \Sledgehammer\ENVIRONMENT === 'phpunit') {
-            ini_set('display_errors', true);
-            $errorHandler->html = true;
-            $errorHandler->debugR = true;
-            $errorHandler->emails_per_request = 10;
-        } else {
-            $errorHandler->emails_per_request = 2;
-            $errorHandler->emails_per_minute = 6;
-            $errorHandler->emails_per_day = 25;
-            $_email = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : false;
-            if (preg_match('/^.+@.+\..+$/', $_email) && !in_array($_email, ['you@example.com'])) { // Is het geen emailadres, of het standaard apache emailadres?
-                $errorHandler->email = $_email;
-            } elseif ($_email != '') { // Is het email niet leeg of false?
-                error_log('Invalid $_SERVER["SERVER_ADMIN"]: "'.$_email.'", expecting an valid emailaddress');
-            }
-        }
-
-        if (defined('Sledgehammer\ENVIRONMENT') && \Sledgehammer\DEBUG_VAR != false) { // Is the \Sledgehammer\DEBUG_VAR enabled?
-            $overrideDebugOutput = null;
-            if (isset($_GET[\Sledgehammer\DEBUG_VAR])) { // Is the \Sledgehammer\DEBUG_VAR present in the $_GET parameters?
-                $overrideDebugOutput = $_GET[\Sledgehammer\DEBUG_VAR];
-                switch ($overrideDebugOutput) {
-                    case 'cookie':
-                        setcookie(\Sledgehammer\DEBUG_VAR, true);
-                        break;
-
-                    case 'nocookie':
-                        setcookie(\Sledgehammer\DEBUG_VAR, false, 0);
-                        break;
-                }
-            } elseif (isset($_COOKIE[\Sledgehammer\DEBUG_VAR])) { // Is the \Sledgehammer\DEBUG_VAR present in the $_COOKIE?
-                $overrideDebugOutput = $_COOKIE[\Sledgehammer\DEBUG_VAR];
-            }
-            if ($overrideDebugOutput !== null) {
-                ini_set('display_errors', (bool) $overrideDebugOutput);
-                $errorHandler->html = (bool) $overrideDebugOutput;
-            }
-        }
-        if (php_sapi_name() === 'cli' && $errorHandler->html) {
-            $errorHandler->html = false;
-            $errorHandler->cli = true;
-        }
-
-        return $errorHandler;
     }
 }

@@ -33,7 +33,7 @@ class SessionHandler extends Base
      */
     public function __construct($options = [])
     {
-        $availableOptions = ['table', 'dbLink'];
+        $availableOptions = array('table', 'dbLink');
         foreach ($options as $property => $value) {
             if (in_array($property, $availableOptions)) {
                 $this->$property = $value;
@@ -51,7 +51,7 @@ class SessionHandler extends Base
      */
     public function init()
     {
-        session_set_save_handler([$this, 'noop'], [$this, 'noop'], [$this, 'read'], [$this, 'write'], [$this, 'destroy'], [$this, 'cleanup']);
+        session_set_save_handler(array($this, 'noop'), array($this, 'noop'), array($this, 'read'), array($this, 'write'), array($this, 'destroy'), array($this, 'cleanup'));
         register_shutdown_function('session_write_close');
     }
 

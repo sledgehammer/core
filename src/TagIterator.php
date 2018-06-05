@@ -136,12 +136,12 @@ class TagIterator extends Base implements \Iterator
                         if ($token !== '-->') {
                             throw new \Exception('Unterminated T_COMMENT');
                         }
-                        $this->tag = [
+                        $this->tag = array(
                             0 => '<!--',
-                            1 => [$comment[1]],
+                            1 => array($comment[1]),
                             2 => $token,
                             'html' => '<!--'.$comment[1].$token,
-                        ];
+                        );
                     }
                 } else {
                     $this->tag = $content;
@@ -164,12 +164,12 @@ class TagIterator extends Base implements \Iterator
      */
     private function extractTag()
     {
-        $tag = [
+        $tag = array(
             0 => '', // tag '<a' of '</a'
             1 => [], // parameters
             2 => '', // > of />
             'html' => '',
-        ];
+        );
         $token = $this->tokenizer->current();
         if ($token[0] !== 'T_OPEN') { // Sanity check
             throw new \Exception('Sanity check failed. Expected a "T_OPEN" token');
@@ -187,12 +187,13 @@ class TagIterator extends Base implements \Iterator
             }
             if ($token[0] !== 'T_WHITESPACE') {
                 switch ($state) {
-                    case 'NAME':
+
+                    case 'NAME';
                         if ($token[0] == 'T_OPEN') {
                             $tag[0] = $token[1];
                             break;
                         }
-                        if (!in_array($token[0], ['T_TAG', 'T_CLOSE_TAG'])) {
+                        if (!in_array($token[0], array('T_TAG', 'T_CLOSE_TAG'))) {
                             $this->warnings[] = 'TagIterator: Unexpected token: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
 
                             return $tag['html'];
@@ -227,12 +228,12 @@ class TagIterator extends Base implements \Iterator
      */
     private function extractEntity()
     {
-        $entity = [
+        $entity = array(
             0 => '', // entity '<!DOCTYPE'
             1 => [], // parameters
             2 => '', // > of />
             'html' => '',
-        ];
+        );
         $token = $this->tokenizer->current();
         if ($token !== '<!') { // Sanity check
             throw new \Exception('Sanity check failed. Expected a "<!" token');

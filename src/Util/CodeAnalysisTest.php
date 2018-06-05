@@ -16,7 +16,7 @@ use Sledgehammer\Core\Framework;
  */
 class CodeAnalysisTest extends TestCase
 {
-    public function testDefinitions()
+    public function test_definitions()
     {
         $loader = new Autoloader(\Sledgehammer\PATH);
         $loader->enableCache = false;
@@ -28,14 +28,14 @@ class CodeAnalysisTest extends TestCase
                 $settings = []; // Use the strict default settings
             } else {
                 // Disable validations
-                $settings = [
+                $settings = array(
                     'matching_filename' => false,
                     'mandatory_definition' => false,
                     'mandatory_superclass' => false,
                     'one_definition_per_file' => false,
                     'revalidate_cache_delay' => 20,
                     'detect_accidental_output' => false,
-                ];
+                );
             }
             $loader->importFolder($path, $settings);
         }
@@ -50,7 +50,7 @@ class CodeAnalysisTest extends TestCase
         // @todo: Controleren of de inhoud van de autoloader.db.php niet verouderd is.
     }
 
-    public function donttestSingleFile()
+    public function donttest_single_file()
     {
         $phpAnalyzer = new PhpAnalyzer();
         $info = $phpAnalyzer->getInfo('Sledgehammer\Facebook');
@@ -61,7 +61,7 @@ class CodeAnalysisTest extends TestCase
     /**
      * Crawl the codebase and validate if all used classes are available.
      */
-    public function testSpiderCodebase()
+    public function test_spider_codebase()
     {
         $analyzer = new PhpAnalyzer();
         $modules = Framework::getModules();
@@ -97,7 +97,7 @@ class CodeAnalysisTest extends TestCase
     /**
      * Analize all known classes and validate if all classes are available.
      */
-    public function testKnownClasses()
+    public function test_known_classes()
     {
         $definitions = Autoloader::instance()->getDefinitions();
         $files = [];
@@ -123,16 +123,16 @@ class CodeAnalysisTest extends TestCase
         }
     }
 
-    public function donttestEntireCodebase()
+    public function donttest_entire_codebase()
     {
         $loader = new Autoloader(\Sledgehammer\PATH);
-        $loader->importFolder(\Sledgehammer\PATH, [
+        $loader->importFolder(\Sledgehammer\PATH, array(
             'matching_filename' => false,
             'mandatory_definition' => false,
             'mandatory_superclass' => false,
             'one_definition_per_file' => false,
             'detect_accidental_output' => false,
-        ]); // Import all
+        )); // Import all
         //
         $analyzer = new PhpAnalyzer();
         $this->analyzeDirectory($analyzer, \Sledgehammer\PATH);
@@ -160,11 +160,11 @@ class CodeAnalysisTest extends TestCase
                 continue;
             }
             $ext = \Sledgehammer\file_extension($entry->getFilename());
-            if (in_array($ext, ['php'])) {
+            if (in_array($ext, array('php'))) {
                 try {
                     $analyzer->open($entry->getPathname());
                 } catch (Exception $e) {
-                    // \Sledgehammer\report_exception($e);
+                    //					\Sledgehammer\report_exception($e);
                     $this->fail($e->getMessage());
                 }
             }
@@ -179,8 +179,7 @@ class CodeAnalysisTest extends TestCase
      */
     private function tryGetInfo(PhpAnalyzer $analyzer, $definition)
     {
-        $defs = ['self', 'AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase', 'PHPUnit_TextUI_ResultPrinter'];
-        if (in_array($definition, $defs)) {
+        if (in_array($definition, array('self', 'AutoCompleteTestRepository', 'PHPUnit_Framework_TestCase', 'PHPUnit_TextUI_ResultPrinter'))) {
             return true;
         }
         try {

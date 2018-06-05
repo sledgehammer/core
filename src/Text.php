@@ -285,8 +285,9 @@ class Text extends Base implements ArrayAccess
     {
         if ($ignoreCase) {
             return mb_stripos($this->text, $text, $offset, 'UTF-8');
+        } else {
+            return mb_strpos($this->text, $text, $offset, 'UTF-8');
         }
-        return mb_strpos($this->text, $text, $offset, 'UTF-8');
     }
 
     /**
@@ -336,8 +337,9 @@ class Text extends Base implements ArrayAccess
         $text = new self($text);
         if ($ignoreCase) {
             return $text->toLower()->text === $text->toLower()->text;
+        } else {
+            return $text->text === $text->text;
         }
-        return $text->text === $text->text;
     }
 
     /**

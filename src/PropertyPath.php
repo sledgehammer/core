@@ -73,6 +73,7 @@ class PropertyPath extends Base
         $parts = self::parse($path);
         foreach ($parts as $part) {
             switch ($part[0]) {
+
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = $data->{$part[1]};
@@ -169,11 +170,13 @@ class PropertyPath extends Base
                         }
 
                         return $items;
-                    }
-                    \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
+                    } else {
+                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
 
-                    return;
-                     
+                        return;
+                    }
+                    break;
+
                 case self::TYPE_SELF:
                     return $data;
 
@@ -201,6 +204,7 @@ class PropertyPath extends Base
         $parts = self::parse($path);
         foreach ($parts as $part) {
             switch ($part[0]) {
+
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
@@ -267,6 +271,7 @@ class PropertyPath extends Base
         $last = array_pop($parts);
         foreach ($parts as $part) {
             switch ($part[0]) {
+
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
@@ -305,6 +310,7 @@ class PropertyPath extends Base
         }
 
         switch ($last[0]) {
+
             case self::TYPE_ANY:
             case self::TYPE_OPTIONAL:
                 if (is_object($data)) {
@@ -363,13 +369,13 @@ class PropertyPath extends Base
     public static function escape($identifier)
     {
         $escaped = str_replace('\\', '\\\\', $identifier); // escape the escape-character.
-        return strtr($escaped, [
+        return strtr($escaped, array(
             '.' => '\.',
             '[' => '\[',
             ']' => '\[',
             '->' => '\->',
             '()' => '\()',
-        ]);
+        ));
     }
 
     /**
@@ -475,13 +481,14 @@ class PropertyPath extends Base
         for ($i = 0; $i < $length; ++$i) {
             $token = $tokens[$i];
             if (($i + 1) === $length) {
-                $nextToken = ['T_END', ''];
+                $nextToken = array('T_END', '');
             } else {
                 $nextToken = $tokens[$i + 1];
             }
             switch ($token[0]) {
+
                 // TYPE_ANY
-                case self::T_STRING:
+                case self::T_STRING;
                     if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
                         \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
 
@@ -489,13 +496,13 @@ class PropertyPath extends Base
                     }
 
                     if ($nextToken[0] === self::T_OPTIONAL) {
-                        $compiled[] = [self::TYPE_OPTIONAL, $token[1]];
+                        $compiled[] = array(self::TYPE_OPTIONAL, $token[1]);
                         ++$i;
                     } else {
-                        $compiled[] = [
+                        $compiled[] = array(
                             self::TYPE_ANY,
                             $token[1],
-                        ];
+                        );
                     }
                     break;
 
@@ -507,7 +514,7 @@ class PropertyPath extends Base
 
                             return false;
                         }
-                        $compiled[] = [self::TYPE_SELF, $token[1]];
+                        $compiled[] = array(self::TYPE_SELF, $token[1]);
                         break;
                     }
                     if ($nextToken[0] !== self::T_STRING) {
@@ -516,10 +523,10 @@ class PropertyPath extends Base
                         return false;
                     }
                     if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
-                        $compiled[] = [self::TYPE_OPTIONAL, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_OPTIONAL, $nextToken[1]);
                         $i += 2;
                     } else {
-                        $compiled[] = [self::TYPE_ANY, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_ANY, $nextToken[1]);
                         ++$i;
                     }
                     break;
@@ -532,13 +539,13 @@ class PropertyPath extends Base
                         return false;
                     }
                     if (($i + 2) !== $length && $tokens[$i + 2][0] === self::T_OPTIONAL) {
-                        $compiled[] = [self::TYPE_OPTIONAL_PROPERTY, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_OPTIONAL_PROPERTY, $nextToken[1]);
                         $i += 2;
                     } else {
                         if (preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $nextToken[1]) != 1) {
                             \Sledgehammer\notice('Invalid property identifier "'.$nextToken[1].'" in path "'.$path.'"');
                         }
-                        $compiled[] = [self::TYPE_PROPERTY, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_PROPERTY, $nextToken[1]);
                         ++$i;
                     }
                     break;
@@ -561,7 +568,7 @@ class PropertyPath extends Base
 
                             return false;
                         }
-                        $compiled[] = [self::TYPE_OPTIONAL_ELEMENT, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_OPTIONAL_ELEMENT, $nextToken[1]);
                         $i += 3;
                     } else {
                         if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
@@ -569,7 +576,7 @@ class PropertyPath extends Base
 
                             return false;
                         }
-                        $compiled[] = [self::TYPE_ELEMENT, $nextToken[1]];
+                        $compiled[] = array(self::TYPE_ELEMENT, $nextToken[1]);
                         $i += 2;
                     }
                     break;
@@ -590,7 +597,7 @@ class PropertyPath extends Base
                     foreach ($tokens as $token) {
                         $subpath .= $token[1];
                     }
-                    $compiled[] = [self::TYPE_SUBPATH, $subpath];
+                    $compiled[] = array(self::TYPE_SUBPATH, $subpath);
 
                     return $compiled;
 
@@ -620,20 +627,21 @@ class PropertyPath extends Base
         for ($i = 0; $i < $length; ++$i) {
             $char = $path[$i];
             switch ($char) {
+
                 case '\\':
                     if (($i + 1) === $length) { // is '\' the last character?
                         $buffer .= $char;
                         break;
                     }
-                    if (in_array($path[$i + 1], ['.', '-', '[', ']', '?', '(', '\\', '*'])) {
+                    if (in_array($path[$i + 1], array('.', '-', '[', ']', '?', '(', '\\', '*'))) {
                         $buffer .= $path[$i + 1];
                         ++$i;
                     }
                     break;
 
                 case '.':
-                    $tokens[] = [self::T_STRING, $buffer];
-                    $tokens[] = [self::T_DOT, '.'];
+                    $tokens[] = array(self::T_STRING, $buffer);
+                    $tokens[] = array(self::T_DOT, '.');
                     $buffer = '';
                     break;
 
@@ -642,25 +650,25 @@ class PropertyPath extends Base
                         $buffer .= $char;
                         break;
                     }
-                    $tokens[] = [self::T_STRING, $buffer];
+                    $tokens[] = array(self::T_STRING, $buffer);
                     $buffer = '';
                     if (($i + 2) < $length && $path[$i + 1].$path[$i + 2] == '*]') { // [*] ?
-                        $tokens[] = [self::T_ALL_ELEMENTS, '[*]'];
+                        $tokens[] = array(self::T_ALL_ELEMENTS, '[*]');
                         $i += 2;
                     } else {
-                        $tokens[] = [self::T_BRACKET_OPEN, '['];
+                        $tokens[] = array(self::T_BRACKET_OPEN, '[');
                     }
                     break;
 
                 case ']':
-                    $tokens[] = [self::T_STRING, $buffer];
-                    $tokens[] = [self::T_BRACKET_CLOSE, ']'];
+                    $tokens[] = array(self::T_STRING, $buffer);
+                    $tokens[] = array(self::T_BRACKET_CLOSE, ']');
                     $buffer = '';
                     break;
 
                 case '?':
-                    $tokens[] = [self::T_STRING, $buffer];
-                    $tokens[] = [self::T_OPTIONAL, '?'];
+                    $tokens[] = array(self::T_STRING, $buffer);
+                    $tokens[] = array(self::T_OPTIONAL, '?');
                     $buffer = '';
                     break;
 
@@ -673,8 +681,8 @@ class PropertyPath extends Base
                         $buffer .= $char;
                     } else {
                         // Arrow "->" detected
-                        $tokens[] = [self::T_STRING, $buffer];
-                        $tokens[] = [self::T_ARROW, '->'];
+                        $tokens[] = array(self::T_STRING, $buffer);
+                        $tokens[] = array(self::T_ARROW, '->');
                         $buffer = '';
                         ++$i;
                     }
@@ -689,8 +697,8 @@ class PropertyPath extends Base
                         $buffer .= $char;
                     } else {
                         // parentheses "()" detected.
-                        $tokens[] = [self::T_STRING, $buffer];
-                        $tokens[] = [self::T_PARENTHESES, '()'];
+                        $tokens[] = array(self::T_STRING, $buffer);
+                        $tokens[] = array(self::T_PARENTHESES, '()');
                         $buffer = '';
                         ++$i;
                     }
@@ -701,7 +709,7 @@ class PropertyPath extends Base
                     break;
             }
         }
-        $tokens[] = [self::T_STRING, $buffer];
+        $tokens[] = array(self::T_STRING, $buffer);
         foreach ($tokens as $key => $token) {
             if ($token[1] === '') {
                 unset($tokens[$key]);

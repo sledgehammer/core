@@ -56,7 +56,7 @@ if ($relativeWebpath == '' || substr($relativeWebpath, -1) == '/') { // Gaat de 
     $files[] = dirname($_SERVER['SCRIPT_FILENAME']).'/'.$relativeWebpath;
     foreach ($files as $filename) {
         // Zoek naar index bestanden in de public/ mappen. Ala DirectoryIndex
-        foreach (['index.html', 'index.htm', 'index.php'] as $indexFile) {
+        foreach (array('index.html', 'index.htm', 'index.php') as $indexFile) {
             $indexFiles[] = $filename.$indexFile;
         }
     }
@@ -75,7 +75,7 @@ foreach ($files as $filename) {
         require_once __DIR__.'/functions.php'; // voor render_file() en redirect()
         if (is_dir($filename)) {
             error_log('Requesting a public folder without a trailing slash, redirecting to "'.$uriPath.'/"', E_NOTICE);
-            Sledgehammer\redirect($uriPath.'/'); // Redirect naar dezelfde url, maar dan als mapnaam
+            Sledgehammer\redirect($uriPath.'/'); //	Redirect naar dezelfde url, maar dan als mapnaam
         }
         Sledgehammer\render_file($filename); // Render het gewone bestand.
     }

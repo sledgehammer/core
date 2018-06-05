@@ -8,6 +8,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Base;
+use Sledgehammer\Core\Environment;
 use Sledgehammer\Core\Singleton;
 
 /**
@@ -48,10 +49,10 @@ class Autoloader extends Base
      *
      * @var array
      */
-    private $defaultSettings = [
+    private $defaultSettings = array(
         'matching_filename' => false, // The classname should match the filename.
         'mandatory_definition' => false, // A php-file should declare a class or interface
-        'mandatory_superclass' => false, // A class should extend another class (preferably \Sledgehammer\Core\Base)
+        'mandatory_superclass' => false, // A class should extend another class (preferably \Sledgehammer\Object as base)
         'one_definition_per_file' => false, // A php-file should only contain one class or inferface definition.
         'ignore_folders' => ['.git'], // Exclude these folders (relative from autoloader.ini) otherwise use absolute paths
         'ignore_files' => [], // Exclude these files (relative from autoloader.ini) otherwise use absolute paths
@@ -60,7 +61,7 @@ class Autoloader extends Base
         'cache_level' => 1, // Number of (sub)folders to create caches for
         'filesize_limit' => 524288, // Skip files larger than 512KiB (to prevent out of memory issues)
         'notice_ambiguous' => true, // Show a notice if a definition is ambiguous.
-    ];
+    );
 
     /**
      * Array containing the filename per class or interface.
@@ -170,9 +171,9 @@ class Autoloader extends Base
             }
             if ($this->isLast()) {
                 if (isset($this->ambiguous[$definition])) {
-                    \Sledgehammer\warning('Ambiguous definition: "'.$definition.'"', ['Multiple implentations' => $this->ambiguous[$definition]]);
+                    \Sledgehammer\warning('Ambiguous definition: "'.$definition.'"', array('Multiple implentations' => $this->ambiguous[$definition]));
                 } else {
-                    \Sledgehammer\warning('Unknown definition: "'.$definition.'"', ['Available definitions' => implode(array_keys($this->definitions), ', ')]);
+                    \Sledgehammer\warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
                 }
             }
 
@@ -336,14 +337,14 @@ class Autoloader extends Base
             $settings = $this->settings; // Strict settings
         } else {
             // Disable validations
-            $settings = [
+            $settings = array(
                 'matching_filename' => false,
                 'mandatory_definition' => false,
                 'mandatory_superclass' => false,
                 'one_definition_per_file' => false,
                 'revalidate_cache_delay' => 20,
                 'detect_accidental_output' => false,
-            ];
+            );
         }
         $this->importFolder($path, $settings);
     }
@@ -368,7 +369,7 @@ class Autoloader extends Base
             $settings += [
                 'matching_filename' => true,
                 'mandatory_definition' => true, // A php-file should declare a class or interface (unless the filename is lowercase)
-                'mandatory_superclass' => true, // A class should extend another class (preferably \Sledgehammer\Core\Base)
+                'mandatory_superclass' => true, // A class should extend another class (preferably \Sledgehammer\Object as base)
                 'one_definition_per_file' => true, // A php-file should only contain one class or inferface definition.
                 'detect_accidental_output' => true, // Check if the php-file contains html parts (which would send the http headers)
                 'notice_ambiguous' => true, // Show a notice if a definition is ambiguous.
@@ -381,14 +382,13 @@ class Autoloader extends Base
             $preventDefault = true;
             if (isset($composer['autoload']['classmap'])) {
                 foreach ($composer['autoload']['classmap'] as $entry) {
-                    $paths = is_array($entry) ? $entry : [$entry];
+                    $paths = is_array($entry) ? $entry : array($entry);
                     foreach ($paths as $entryPath) {
                         if (empty($entryPath) || $entry === '.') {
                             \Sledgehammer\notice('Empty autoload.classmap in "composer.json" isn\'t supported');
                             $preventDefault = false;
                             break;
-                        }
-                        if (is_dir($path.$entryPath)) {
+                        } elseif (is_dir($path.$entryPath)) {
                             $locations[] = $entryPath;
                             $trace[] = 'classmap';
                         }
@@ -409,9 +409,9 @@ class Autoloader extends Base
                 $namespaces += $composer['autoload-dev']['psr-4'];
             }
             foreach ($namespaces as $namespace => $entry) {
-                $paths = is_array($entry) ? $entry : [$entry];
+                $paths = is_array($entry) ? $entry : array($entry);
                 foreach ($paths as $entryPath) {
-                    if (in_array($entryPath, ['', '/', '.'])) {
+                    if (in_array($entryPath, array('', '/', '.'))) {
                         $preventDefault = false;
                         break 2;
                     }
@@ -431,9 +431,10 @@ class Autoloader extends Base
                             continue;
                         }
                         $this->importFile($path.$entry, $settings);
+                    } else {
+                        // Allow invalid composer.json configurations, not Sledgehammers problem.
+                        // \Sledgehammer\notice('Invalid "composer.json" entry: '.$trace[$i].': "'.$entry.'"', 'file or directory: "'.$path.$entry.'" not found');
                     }
-                    // Allow invalid composer.json configurations, not Sledgehammers problem.
-                    // \Sledgehammer\notice('Invalid "composer.json" entry: '.$trace[$i].': "'.$entry.'"', 'file or directory: "'.$path.$entry.'" not found');
                 }
 
                 return;
@@ -447,14 +448,14 @@ class Autoloader extends Base
             if ($folder == 'classes') {
                 $folder = basename(dirname($path));
             }
-            $cacheFile = \Sledgehammer\TMP_DIR.'AutoLoader/'.$folder.'_'.md5($path).'.php';
+            $cacheFile = Environment::tmpdir().'AutoLoader/'.$folder.'_'.md5($path).'.php';
             if (!\Sledgehammer\mkdirs(dirname($cacheFile))) {
                 $this->enableCache = false;
                 $useCache = false;
             } elseif (file_exists($cacheFile)) {
                 $mtimeCache = filemtime($cacheFile);
                 $revalidateCache = ($mtimeCache < (time() - $settings['revalidate_cache_delay'])); // Is er een delay ingesteld en is deze nog niet verstreken?;
-                $mtimeFolder = ($revalidateCache ? \Sledgehammer\mtime_folders($path, ['php'], $scanCount) : 0);
+                $mtimeFolder = ($revalidateCache ? \Sledgehammer\mtime_folders($path, array('php'), $scanCount) : 0);
                 if ($mtimeFolder !== false && $mtimeCache > $mtimeFolder) { // Is het cache bestand niet verouderd?
                     if ($this->loadDatabase($cacheFile, true, $scanCount)) {
                         if ($settings['revalidate_cache_delay'] && $revalidateCache) { // is het cache bestand opnieuw gevalideerd?
@@ -508,10 +509,10 @@ class Autoloader extends Base
         $setttings = $this->mergeSettings($settings);
         $previousError = error_get_last();
         if (filesize($filename) > $settings['filesize_limit']) {
-            $this->hint('File '.$filename.' too big, skipping...', [
+            $this->hint('File '.$filename.' too big, skipping...', array(
                 'allowed size' => $settings['filesize_limit'],
                 'actual size' => filesize($filename),
-            ]);
+            ));
             return;
         }
         $tokens = token_get_all(file_get_contents($filename));
@@ -553,11 +554,11 @@ class Autoloader extends Base
                     break;
 
                 case 'NAMESPACE':
-                    if (in_array($token[0], [T_STRING, T_NS_SEPARATOR])) {
+                    if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
                         $namespace .= $token[1];
                         break;
                     }
-                    if (in_array($token, [';', '{'])) {
+                    if (in_array($token, array(';', '{'))) {
                         $state = 'DETECT';
                         break;
                     }
@@ -568,7 +569,7 @@ class Autoloader extends Base
                 case 'CLASS':
                     if ($token[0] == T_STRING) {
                         if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $token[1]) {
-                            \Sledgehammer\notice('Filename doesn\'t match classname "'.$token[1].'" in "'.$filename.'"', ['settings' => $settings]);
+                            \Sledgehammer\notice('Filename doesn\'t match classname "'.$token[1].'" in "'.$filename.'"', array('settings' => $settings));
                         }
                         if ($namespace == '') {
                             $definition = $token[1];
@@ -581,8 +582,7 @@ class Autoloader extends Base
                     if ($token[0] == T_EXTENDS) {
                         $state = 'DETECT';
                         break;
-                    }
-                    if ($settings['mandatory_superclass'] && !in_array($definition, ['Sledgehammer\Core\Base'])) {
+                    } elseif ($settings['mandatory_superclass'] && !in_array($definition, array('Sledgehammer\Core\Base'))) {
                         \Sledgehammer\notice('Class: "'.$definition.'" has no superclass, expection "class X extends Y"');
                     }
                     if ($token == '{' || $token[0] == T_IMPLEMENTS) {
@@ -596,7 +596,7 @@ class Autoloader extends Base
                 case 'INTERFACE':
                     if ($token[0] == T_STRING) {
                         if ($settings['matching_filename'] && substr(basename($filename), 0, -4) != $token[1]) {
-                            \Sledgehammer\notice('Filename doesn\'t match interface-name "'.$token[1].'" in "'.$filename.'"', ['settings' => $settings]);
+                            \Sledgehammer\notice('Filename doesn\'t match interface-name "'.$token[1].'" in "'.$filename.'"', array('settings' => $settings));
                         }
                         if ($namespace == '') {
                             $definition = $token[1];
@@ -636,14 +636,14 @@ class Autoloader extends Base
         foreach ($definitions as $definition) {
             if (isset($this->definitions[$definition]) && $this->definitions[$definition] != $filename) {
                 if (empty($this->ambiguous[$definition])) {
-                    $this->ambiguous[$definition] = [$this->definitions[$definition]];
+                    $this->ambiguous[$definition] = array($this->definitions[$definition]);
                 }
                 unset($this->definitions[$definition]); // Ignore both definitions to prevent autoloading the wrong one.
             }
             if (isset($this->ambiguous[$definition])) {
                 $this->ambiguous[$definition][] = $filename;
                 if ($settings['notice_ambiguous']) {
-                    \Sledgehammer\notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: '.\Sledgehammer\quoted_human_implode(' and ', $this->ambiguous[$definition]), ['settings' => $settings]);
+                    \Sledgehammer\notice('"'.$definition.'" is ambiguous, it\'s found in multiple files: '.\Sledgehammer\quoted_human_implode(' and ', $this->ambiguous[$definition]), array('settings' => $settings));
                 }
             } else {
                 $this->definitions[$definition] = $filename;
@@ -676,7 +676,7 @@ class Autoloader extends Base
         }
         $filename = $this->getFilename($definition);
         if ($filename === null) {
-            throw new InfoException('Unknown definition: "'.$definition.'"', ['Available definitions' => implode(array_keys($this->definitions), ', ')]);
+            throw new InfoException('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
         }
         $tokens = token_get_all(file_get_contents($filename));
         $code = '';
@@ -788,7 +788,7 @@ class Autoloader extends Base
             if (array_key_exists($key, $this->defaultSettings)) {
                 $settings[$key] = $value;
             } else {
-                \Sledgehammer\notice('Invalid setting: "'.$key.'" = '.\Sledgehammer\syntax_highlight($value), ['Available settings' => $availableSettings]);
+                \Sledgehammer\notice('Invalid setting: "'.$key.'" = '.\Sledgehammer\syntax_highlight($value), array('Available settings' => $availableSettings));
             }
         }
         if (array_keys($settings) != $availableSettings) {
@@ -798,7 +798,7 @@ class Autoloader extends Base
             }
             if (count($settings) !== count($this->defaultSettings)) { // Contains invalid settings?
                 $invalid = array_diff_key($settings, $this->defaultSettings);
-                \Sledgehammer\notice('Invalid setting: "'.key($invalid).'" = '.\Sledgehammer\syntax_highlight(current($invalid)), ['Available settings' => $availableSettings]);
+                \Sledgehammer\notice('Invalid setting: "'.key($invalid).'" = '.\Sledgehammer\syntax_highlight(current($invalid)), array('Available settings' => $availableSettings));
             }
         }
 
@@ -898,9 +898,9 @@ class Autoloader extends Base
             // Don't activate the Autoloader for "class_exists()"
             return;
         }
-        if (\Sledgehammer\ENVIRONMENT === 'development') {
-            self::hint('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
-        }
+        // if (\Sledgehammer\ENVIRONMENT === 'development') {
+        //     self::hint('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
+        // }
         $autoloader = self::instance();
     }
 
@@ -918,24 +918,32 @@ class Autoloader extends Base
             }
             // Add Autoloader support for the other vendor packages.
             // Fixes cASe issues, repair namespaces, etc.
-            if (file_exists(\Sledgehammer\VENDOR_DIR)) { // Does the app have vendor packages?
-                $autoloader->importFolder(\Sledgehammer\VENDOR_DIR, [
-                    'matching_filename' => false,
-                    'mandatory_definition' => false,
-                    'mandatory_superclass' => false,
-                    'one_definition_per_file' => false,
-                    'revalidate_cache_delay' => 30,
-                    'detect_accidental_output' => false,
-                    'ignore_folders' => ['.git'],
-                    'cache_level' => 3,
-                    'notice_ambiguous' => false,
-                ]);
-            }
+            // if (file_exists(\Sledgehammer\VENDOR_DIR)) { // Does the app have vendor packages?
+            //     $autoloader->importFolder(\Sledgehammer\VENDOR_DIR, [
+            //         'matching_filename' => false,
+            //         'mandatory_definition' => false,
+            //         'mandatory_superclass' => false,
+            //         'one_definition_per_file' => false,
+            //         'revalidate_cache_delay' => 30,
+            //         'detect_accidental_output' => false,
+            //         'ignore_folders' => ['.git'],
+            //         'cache_level' => 3,
+            //         'notice_ambiguous' => false,
+            //     ]);
+            // }
         }
-        spl_autoload_register([$autoloader, 'define']);
+        spl_autoload_register(array($autoloader, 'define'));
         spl_autoload_unregister('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
 
         return $autoloader;
+    }
+
+    /**
+     * Configure and register the AutoLoader
+     */
+    public static function enable()
+    {
+        spl_autoload_register(self::class.'::lazyRegister');
     }
 
     /**

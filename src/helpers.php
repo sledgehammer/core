@@ -112,7 +112,7 @@ if (function_exists('warning') === false) {
      */
     function warning($message, $information = null)
     {
-        ErrorHandler::instance()->report(E_USER_WARNING, $message, $information, true);
+        ErrorHandler::report(E_USER_WARNING, $message, $information, true);
     }
 }
 
@@ -126,7 +126,7 @@ if (function_exists('notice') === false) {
      */
     function notice($message, $information = null)
     {
-        ErrorHandler::instance()->report(E_USER_NOTICE, $message, $information, true);
+        ErrorHandler::report(E_USER_NOTICE, $message, $information, true);
     }
 }
 
@@ -140,7 +140,7 @@ if (function_exists('deprecated') === false) {
      */
     function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = null)
     {
-        ErrorHandler::instance()->report(E_USER_DEPRECATED, $message, $information, true);
+        ErrorHandler::report(E_USER_DEPRECATED, $message, $information, true);
     }
 }
 

@@ -17,7 +17,7 @@ use stdClass;
  *     'click' => []
  *   );
  *   // optional method that gets executed when the 'click' event is fired.
- *   protected function onClick($sender) {}
+ * 	 protected function onClick($sender) {}
  * }
  *
  * $button = new Button();
@@ -64,7 +64,7 @@ trait EventEmitter
             $arguments = func_get_args();
             array_shift($arguments);
             if (method_exists($this, $method)) {
-                call_user_func_array([$this, $method], $arguments);
+                call_user_func_array(array($this, $method), $arguments);
             }
             foreach ($this->events[$event] as $callback) {
                 call_user_func_array($callback, $arguments);

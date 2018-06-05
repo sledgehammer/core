@@ -118,7 +118,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
             $filtered[$key] = $this->in($value, $method.'['.$key.']', 'parameter');
         }
 
-        return $this->out(call_user_func_array([$this->_data, $method], $filtered), $method, 'method', $filtered);
+        return $this->out(call_user_func_array(array($this->_data, $method), $filtered), $method, 'method', $filtered);
     }
 
     /**
@@ -132,11 +132,11 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         if (is_array($this->_data)) {
             return $this->out($this->_data[$key], $key, 'array');
-        }
-        if ($this->_data instanceof \ArrayAccess) {
+        } elseif ($this->_data instanceof \ArrayAccess) {
             return $this->out($this->_data[$key], $key, 'array');
+        } else {
+            throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
         }
-        throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
     }
 
     /**
@@ -185,8 +185,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         if ($this->_data instanceof \Iterator) {
             return $this->_data->rewind();
-        }
-        if (is_array($this->_data)) {
+        } elseif (is_array($this->_data)) {
             reset($this->_data);
         }
     }
@@ -200,8 +199,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         if ($this->_data instanceof \Iterator) {
             return $this->out($this->_data->current(), 'current', 'iterator');
-        }
-        if (is_array($this->_data)) {
+        } elseif (is_array($this->_data)) {
             return $this->out(current($this->_data), 'current', 'iterator');
         }
     }
@@ -227,8 +225,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         if ($this->_data instanceof \Iterator) {
             return $this->out($this->_data->key(), 'key', 'iterator');
-        }
-        if (is_array($this->_data)) {
+        } elseif (is_array($this->_data)) {
             return $this->out(key($this->_data), 'key', 'iterator');
         }
     }
@@ -242,8 +239,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         if ($this->_data instanceof \Iterator) {
             return $this->_data->valid();
-        }
-        if (is_array($this->_data)) {
+        } elseif (is_array($this->_data)) {
             return key($this->_data) !== null;
         }
 

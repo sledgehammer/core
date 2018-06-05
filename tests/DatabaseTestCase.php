@@ -60,9 +60,9 @@ abstract class DatabaseTestCase extends TestCase
             Connection::$instances['default'] = 'INVALID';
         }
 
-        if (\Sledgehammer\ENVIRONMENT !== 'phpunit') {
-            return;
-        }
+        // if (\Sledgehammer\ENVIRONMENT !== 'phpunit') {
+        //     return;
+        // }
 
         if ($this->dbLink == '__NOT_CONNECTED__') {
             $parts = explode('\\', get_class($this));
@@ -73,7 +73,7 @@ abstract class DatabaseTestCase extends TestCase
             switch ($pdoDriver) {
                 case 'mysql':
                     $this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
-                    $db = new Connection('mysql://root:root@localhost', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
+                    $db = new Connection('mysql://root:root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
                     $db->reportWarnings = false;
                     $db->query('DROP DATABASE IF EXISTS '.$this->dbName);
                     $db->query('CREATE DATABASE '.$this->dbName);
@@ -81,7 +81,7 @@ abstract class DatabaseTestCase extends TestCase
                     break;
 
                 case 'sqlite':
-                    $db = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
+                    $db = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
                     break;
                 default:
                     throw new Exception('Unsupported pdoDriver');
@@ -116,7 +116,7 @@ abstract class DatabaseTestCase extends TestCase
     /**
      * The last test in the TestCase.
      */
-    public function testCleanup()
+    public function test_cleanup()
     {
         // DROP test database
         $db = Connection::instance($this->dbLink);
@@ -189,13 +189,14 @@ abstract class DatabaseTestCase extends TestCase
             $this->assertTrue(true, $message);
 
             return true;
-        }
-        if ($message === null) {
-            $message = 'Unexpected SQL ['.$entry.'], expecting ['.$sql.']';
-        }
-        $this->fail($message);
+        } else {
+            if ($message === null) {
+                $message = 'Unexpected SQL ['.$entry.'], expecting ['.$sql.']';
+            }
+            $this->fail($message);
 
-        return false;
+            return false;
+        }
     }
 
     /**
@@ -251,9 +252,9 @@ abstract class DatabaseTestCase extends TestCase
                     $db->reportWarnings = $reportWarnings;
                     break;
 
-                case 'sqlite':
+                case 'sqlite';
                     Connection::$instances[$this->dbLink] = 'CLEAR';
-                    $newDb = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
+                    $newDb = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
                     foreach ($db as $property => $value) {
                         $newDb->$property = $value;
                     }

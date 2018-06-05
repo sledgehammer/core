@@ -158,7 +158,7 @@ class Dump extends Base
         var_dump($this->variable);
         $this->vardump = rtrim(ob_get_clean());
         ini_set('display_errors', $displayErrors);
-        // $this->debug($output);
+//		$this->debug($output);
         try {
             $this->offset = 0;
             $this->parseVardump();
@@ -249,20 +249,20 @@ class Dump extends Base
             $this->offset += $newlinePos;
 
             return;
-        }
-        $type = $this->part($parenthesesOpenPos);
-        $this->offset += $parenthesesOpenPos + 1;
-        $parenthesesClosePos = $this->position(')');
-        $length = $this->part($parenthesesClosePos);
-        $this->offset += $parenthesesClosePos + 1;
+        } else {
+            $type = $this->part($parenthesesOpenPos);
+            $this->offset += $parenthesesOpenPos + 1;
+            $parenthesesClosePos = $this->position(')');
+            $length = $this->part($parenthesesClosePos);
+            $this->offset += $parenthesesClosePos + 1;
 
-        if (self::$xdebug && substr($type, 0, 5) === 'class') {
-            preg_match('/^class (.+)#/', $type, $matches);
-            $class = $matches[1];
-            $type = 'object';
-            $this->offset += 3; // " {\n"
+            if (self::$xdebug && substr($type, 0, 5) === 'class') {
+                preg_match('/^class (.+)#/', $type, $matches);
+                $class = $matches[1];
+                $type = 'object';
+                $this->offset += 3; // " {\n"
+            }
         }
-        
 
         switch ($type) {
             // boolean (true en false)
@@ -602,12 +602,14 @@ class Dump extends Base
                 }
 
                 return;
+            } else {
+                throw new InfoException('Invalid attribute', ['attribute' => $attribute]);
             }
-            throw new InfoException('Invalid attribute', ['attribute' => $attribute]);
         }
         $parts = explode(':', $attribute);
         $partsCount = count($parts);
         switch ($partsCount) {
+
             case 1: // Is de scope niet opgegeven?
                 $this->renderType('attribute', substr($attribute, 1, -1));
                 break;

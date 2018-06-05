@@ -4,6 +4,7 @@ namespace SledgehammerTests\Core;
 
 use Exception;
 use Sledgehammer\Core\Curl;
+use Sledgehammer\Core\Environment;
 
 class CurlTest extends TestCase
 {
@@ -86,10 +87,10 @@ class CurlTest extends TestCase
     {
         $this->assertEmptyPool();
         $fp = fopen('php://memory', 'w+');
-        $options = [
+        $options = array(
             CURLOPT_STDERR => $fp,
             CURLOPT_VERBOSE => true,
-        ];
+        );
         $response = Curl::get('http://jsonplaceholder.typicode.com/users/1', $options);
         $this->assertSame($response->http_code, 200);
         rewind($fp);
@@ -104,18 +105,18 @@ class CurlTest extends TestCase
     {
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            Curl::download('http://jsonplaceholder.typicode.com/users/1', \Sledgehammer\TMP_DIR.'curltest'.$i.'.downoad', [], true);
+            Curl::download('http://jsonplaceholder.typicode.com/users/1', Environment::tmpdir().'curltest'.$i.'.downoad', [], true);
         }
         Curl::synchronize();
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            unlink(\Sledgehammer\TMP_DIR.'curltest'.$i.'.downoad');
+            unlink(Environment::tmpdir().'curltest'.$i.'.downoad');
         }
     }
 
     public function test_put()
     {
-        $filename = \Sledgehammer\TMP_DIR.basename(__CLASS__).'.txt';
+        $filename = Environment::tmpdir().basename(__CLASS__).'.txt';
         file_put_contents($filename, 'Curl TEST');
         $request = Curl::putFile('http://date.jsontest.com/?service=ip', $filename, [CURLOPT_FAILONERROR => false]);
         $this->assertSame(405, $request->http_code);

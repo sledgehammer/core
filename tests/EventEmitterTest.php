@@ -70,11 +70,11 @@ class EventEmitterTest extends TestCase
         $this->assertSame($button->title, 'Button1', 'The property should still have its value');
 
         $button->title = 'Click me';
-        $this->assertSame([
+        $this->assertSame(array(
             $button,
             'Click me',
             'Button1',
-                ], $eventArguments);
+                ), $eventArguments);
         $this->assertSame($button->title, 'Click me', 'The property changed to the new value');
 
         $changeLog = [];
@@ -84,10 +84,10 @@ class EventEmitterTest extends TestCase
         };
         $button->clicked = 10;
         $button->click();
-        $this->assertSame([
-            'clicked' => [10, 11],
-            'lastClickedBy' => ['SledgehammerTests\Core\Fixtures\TestButton'],
-                ], $changeLog);
+        $this->assertSame(array(
+            'clicked' => array(10, 11),
+            'lastClickedBy' => array('SledgehammerTests\Core\Fixtures\TestButton'),
+                ), $changeLog);
     }
 
     public function test_invalid_on_parameters()
@@ -101,6 +101,7 @@ class EventEmitterTest extends TestCase
         }
         try {
             $button->on('world_domination', function () {
+
             });
             $this->fail('Non existing events should throw an exception');
         } catch (Exception $e) {

@@ -101,6 +101,7 @@ class Connection extends PDO
             } else {
                 // Use Sledgehammer setting (default utf-8)
                 switch (strtolower(Framework::$charset)) {
+
                     case 'utf-8':
                         $charset = 'utf8mb4';
                         break;
@@ -134,15 +135,15 @@ class Connection extends PDO
             }
         }
         // Parse $options
-        $loggerOptions = [
+        $loggerOptions = array(
             'identifier' => 'Database['.$dsn.']',
             'limit' => 1000,
-            'renderer' => [$this, 'renderLog'],
+            'renderer' => array($this, 'renderLog'),
             'start' => 0,
             'plural' => 'queries',
             'singular' => 'query',
-            'columns' => ['SQL', 'Duration'],
-        ];
+            'columns' => array('SQL', 'Duration'),
+        );
         foreach ($options as $property => $value) {
             if (substr($property, 0, 3) === 'log') {
                 $loggerOptions[lcfirst(substr($property, 3))] = $value;
@@ -156,10 +157,10 @@ class Connection extends PDO
             $options[PDO::ATTR_DEFAULT_FETCH_MODE] = PDO::FETCH_ASSOC;
         }
         if (empty($options[PDO::ATTR_STATEMENT_CLASS])) {
-            $options[PDO::ATTR_STATEMENT_CLASS] = [Statement::class];
+            $options[PDO::ATTR_STATEMENT_CLASS] = array(Statement::class);
         }
         parent::__construct($dsn, $username, $passwd, $options);
-        $this->logger->append('Database connection to '.$dsn, ['duration' => (microtime(true) - $start)]);
+        $this->logger->append('Database connection to '.$dsn, array('duration' => (microtime(true) - $start)));
         --$this->logger->count;
 
         $this->driver = $this->getAttribute(PDO::ATTR_DRIVER_NAME);
@@ -185,7 +186,7 @@ class Connection extends PDO
     {
         $start = microtime(true);
         $result = parent::exec($statement);
-        $this->logger->append((string) $statement, ['duration' => (microtime(true) - $start)]);
+        $this->logger->append((string) $statement, array('duration' => (microtime(true) - $start)));
         if ($result === false) {
             $this->reportError($statement);
         } else {
@@ -209,7 +210,7 @@ class Connection extends PDO
         $start = microtime(true);
         $statement = (string) $statement;
         $result = parent::query($statement);
-        $this->logger->append($statement, ['duration' => (microtime(true) - $start)]);
+        $this->logger->append($statement, array('duration' => (microtime(true) - $start)));
         if ($result === false) {
             $this->reportError($statement);
         } else {
@@ -232,9 +233,9 @@ class Connection extends PDO
     public function prepare($statement, $driver_options = [])
     {
         $start = microtime(true);
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, [PreparedStatement::class, [$this]]);
+        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array(PreparedStatement::class, array($this)));
         $result = parent::prepare($statement, $driver_options);
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, [Statement::class]); // Restore default class
+        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array(Statement::class)); // Restore default class
         $this->logger->totalDuration += (microtime(true) - $start);
         if ($result === false) {
             $this->reportError($statement);
@@ -264,11 +265,11 @@ class Connection extends PDO
             $addQuotes = true;
         } else {
             // generic keywords (included in both sqlite and mysql)
-            $keywords = ['ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'BEFORE', 'BETWEEN', 'BY', 'CASCADE', 'CASE', 'CHECK', 'COLLATE', 'COLUMN', 'CONSTRAINT', 'CREATE', 'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'DATABASE', 'DEFAULT', 'DELETE', 'DESC', 'DISTINCT', 'DROP', 'EACH', 'ELSE', 'EXISTS', 'EXPLAIN', 'FOR', 'FOREIGN', 'FROM', 'GROUP', 'HAVING', 'IF', 'IGNORE', 'IN', 'INDEX', 'INNER', 'INSERT', 'INTO', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'MATCH', 'NATURAL', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'PRIMARY', 'REFERENCES', 'REGEXP', 'RELEASE', 'RENAME', 'REPLACE', 'RESTRICT', 'RIGHT', 'SELECT', 'SET', 'TABLE', 'THEN', 'TO', 'TRIGGER', 'UNION', 'UNIQUE', 'UPDATE', 'USING', 'VALUES', 'WHEN', 'WHERE'];
+            $keywords = array('ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'BEFORE', 'BETWEEN', 'BY', 'CASCADE', 'CASE', 'CHECK', 'COLLATE', 'COLUMN', 'CONSTRAINT', 'CREATE', 'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'DATABASE', 'DEFAULT', 'DELETE', 'DESC', 'DISTINCT', 'DROP', 'EACH', 'ELSE', 'EXISTS', 'EXPLAIN', 'FOR', 'FOREIGN', 'FROM', 'GROUP', 'HAVING', 'IF', 'IGNORE', 'IN', 'INDEX', 'INNER', 'INSERT', 'INTO', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'MATCH', 'NATURAL', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'PRIMARY', 'REFERENCES', 'REGEXP', 'RELEASE', 'RENAME', 'REPLACE', 'RESTRICT', 'RIGHT', 'SELECT', 'SET', 'TABLE', 'THEN', 'TO', 'TRIGGER', 'UNION', 'UNIQUE', 'UPDATE', 'USING', 'VALUES', 'WHEN', 'WHERE');
             if ($this->driver === 'mysql') {
-                $keywords = array_merge($keywords, ['ACCESSIBLE', 'ASENSITIVE', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'CALL', 'CHANGE', 'CHAR', 'CHARACTER', 'CONDITION', 'CONTINUE', 'CONVERT', 'CURRENT_USER', 'CURSOR', 'DATABASES', 'DAY_HOUR', 'DAY_MICROSECOND', 'DAY_MINUTE', 'DAY_SECOND', 'DEC', 'DECIMAL', 'DECLARE', 'DELAYED', 'DESCRIBE', 'DETERMINISTIC', 'DISTINCTROW', 'DIV', 'DOUBLE', 'DUAL', 'ELSEIF', 'ENCLOSED', 'ESCAPED', 'EXIT', 'FALSE', 'FETCH', 'FLOAT', 'FLOAT4', 'FLOAT8', 'FORCE', 'FULLTEXT', 'GENERAL', 'GRANT', 'HIGH_PRIORITY', 'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND', 'IGNORE_SERVER_IDS', 'INFILE', 'INOUT', 'INSENSITIVE', 'INT', 'INT1', 'INT2', 'INT3', 'INT4', 'INT8', 'INTEGER', 'INTERVAL', 'ITERATE', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LINEAR', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCK', 'LONG', 'LONGBLOB', 'LONGTEXT', 'LOOP', 'LOW_PRIORITY', 'MASTER_HEARTBEAT_PERIOD', 'MASTER_SSL_VERIFY_SERVER_CERT', 'MAXVALUE', 'MAXVALUE', 'MEDIUMBLOB', 'MEDIUMINT', 'MEDIUMTEXT', 'MIDDLEINT', 'MINUTE_MICROSECOND', 'MINUTE_SECOND', 'MOD', 'MODIFIES', 'NO_WRITE_TO_BINLOG', 'NUMERIC', 'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OUT', 'OUTFILE', 'PRECISION', 'PROCEDURE', 'PURGE', 'RANGE', 'READ', 'READS', 'READ_WRITE', 'REAL', 'REPEAT', 'REQUIRE', 'RESIGNAL', 'RESIGNAL', 'RETURN', 'REVOKE', 'RLIKE', 'SCHEMA', 'SCHEMAS', 'SECOND_MICROSECOND', 'SENSITIVE', 'SEPARATOR', 'SHOW', 'SIGNAL', 'SIGNAL', 'SLOW', 'SMALLINT', 'SPATIAL', 'SPECIFIC', 'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQL_BIG_RESULT', 'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT', 'SSL', 'STARTING', 'STRAIGHT_JOIN', 'TERMINATED', 'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TRAILING', 'TRUE', 'UNDO', 'UNLOCK', 'UNSIGNED', 'USAGE', 'USE', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VARBINARY', 'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHILE', 'WITH', 'WRITE', 'XOR', 'YEAR_MONTH', 'ZEROFILL']);
+                $keywords = array_merge($keywords, array('ACCESSIBLE', 'ASENSITIVE', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'CALL', 'CHANGE', 'CHAR', 'CHARACTER', 'CONDITION', 'CONTINUE', 'CONVERT', 'CURRENT_USER', 'CURSOR', 'DATABASES', 'DAY_HOUR', 'DAY_MICROSECOND', 'DAY_MINUTE', 'DAY_SECOND', 'DEC', 'DECIMAL', 'DECLARE', 'DELAYED', 'DESCRIBE', 'DETERMINISTIC', 'DISTINCTROW', 'DIV', 'DOUBLE', 'DUAL', 'ELSEIF', 'ENCLOSED', 'ESCAPED', 'EXIT', 'FALSE', 'FETCH', 'FLOAT', 'FLOAT4', 'FLOAT8', 'FORCE', 'FULLTEXT', 'GENERAL', 'GRANT', 'HIGH_PRIORITY', 'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND', 'IGNORE_SERVER_IDS', 'INFILE', 'INOUT', 'INSENSITIVE', 'INT', 'INT1', 'INT2', 'INT3', 'INT4', 'INT8', 'INTEGER', 'INTERVAL', 'ITERATE', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LINEAR', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCK', 'LONG', 'LONGBLOB', 'LONGTEXT', 'LOOP', 'LOW_PRIORITY', 'MASTER_HEARTBEAT_PERIOD', 'MASTER_SSL_VERIFY_SERVER_CERT', 'MAXVALUE', 'MAXVALUE', 'MEDIUMBLOB', 'MEDIUMINT', 'MEDIUMTEXT', 'MIDDLEINT', 'MINUTE_MICROSECOND', 'MINUTE_SECOND', 'MOD', 'MODIFIES', 'NO_WRITE_TO_BINLOG', 'NUMERIC', 'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OUT', 'OUTFILE', 'PRECISION', 'PROCEDURE', 'PURGE', 'RANGE', 'READ', 'READS', 'READ_WRITE', 'REAL', 'REPEAT', 'REQUIRE', 'RESIGNAL', 'RESIGNAL', 'RETURN', 'REVOKE', 'RLIKE', 'SCHEMA', 'SCHEMAS', 'SECOND_MICROSECOND', 'SENSITIVE', 'SEPARATOR', 'SHOW', 'SIGNAL', 'SIGNAL', 'SLOW', 'SMALLINT', 'SPATIAL', 'SPECIFIC', 'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQL_BIG_RESULT', 'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT', 'SSL', 'STARTING', 'STRAIGHT_JOIN', 'TERMINATED', 'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TRAILING', 'TRUE', 'UNDO', 'UNLOCK', 'UNSIGNED', 'USAGE', 'USE', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VARBINARY', 'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHILE', 'WITH', 'WRITE', 'XOR', 'YEAR_MONTH', 'ZEROFILL'));
             } elseif ($this->driver === 'sqlite') {
-                $keywords = array_merge($keywords, ['ABORT', 'ACTION', 'AFTER', 'ATTACH', 'AUTOINCREMENT', 'BEGIN', 'CAST', 'COMMIT', 'CONFLICT', 'DEFERRABLE', 'DEFERRED', 'DETACH', 'END', 'ESCAPE', 'EXCEPT', 'EXCLUSIVE', 'FAIL', 'FULL', 'GLOB', 'IMMEDIATE', 'INDEXED', 'INITIALLY', 'INSTEAD', 'INTERSECT', 'ISNULL', 'NO', 'NOTNULL', 'OF', 'OFFSET', 'PLAN', 'PRAGMA', 'QUERY', 'RAISE', 'REINDEX', 'ROLLBACK', 'ROW', 'SAVEPOINT', 'TEMP', 'TEMPORARY', 'TRANSACTION', 'VACUUM', 'VIEW', 'VIRTUAL']);
+                $keywords = array_merge($keywords, array('ABORT', 'ACTION', 'AFTER', 'ATTACH', 'AUTOINCREMENT', 'BEGIN', 'CAST', 'COMMIT', 'CONFLICT', 'DEFERRABLE', 'DEFERRED', 'DETACH', 'END', 'ESCAPE', 'EXCEPT', 'EXCLUSIVE', 'FAIL', 'FULL', 'GLOB', 'IMMEDIATE', 'INDEXED', 'INITIALLY', 'INSTEAD', 'INTERSECT', 'ISNULL', 'NO', 'NOTNULL', 'OF', 'OFFSET', 'PLAN', 'PRAGMA', 'QUERY', 'RAISE', 'REINDEX', 'ROLLBACK', 'ROW', 'SAVEPOINT', 'TEMP', 'TEMPORARY', 'TRANSACTION', 'VACUUM', 'VIEW', 'VIRTUAL'));
             }
             if (in_array(strtoupper($identifier), $keywords)) {
                 $addQuotes = true;
@@ -414,8 +415,7 @@ class Connection extends PDO
         $result = $this->query($statement);
         if ($result == false) {  // Foutieve query
             return false;
-        }
-        if ($result->columnCount() == 0) { // UPDATE, INSERT query
+        } elseif ($result->columnCount() == 0) { // UPDATE, INSERT query
             \Sledgehammer\warning('Resultset has no columns, expecting 1 or more columns');
 
             return false;
@@ -578,8 +578,8 @@ class Connection extends PDO
         $sql = htmlspecialchars($entry, ENT_COMPAT, 'ISO-8859-15');
         static $regex = null;
         if ($regex === null) {
-            $startKeywords = ['SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK'];
-            $inlineKeywords = ['AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE'];
+            $startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
+            $inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
             $regex = '/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/';
         }
         $sql = preg_replace($regex, '<span class="sql-keyword">\\0</span>', $sql);

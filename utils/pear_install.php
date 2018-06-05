@@ -10,8 +10,8 @@ use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\Debug\ErrorHandler;
 
 require __DIR__.'/../bootstrap.php';
-ErrorHandler::instance()->html = false;
-ErrorHandler::instance()->cli = true;
+// ErrorHandler::instance()->html = false;
+// ErrorHandler::instance()->cli = true;
 Autoloader::instance()->importFolder(__DIR__.'/classes');
 if ($argc < 2) {
     echo '  Usage: php '.$argv[0]." [channel] [channel/]package[-version] ...\n ";
@@ -22,18 +22,18 @@ if ($argc < 2) {
     echo "\n";
     exit(1);
 }
-$targets = [
+$targets = array(
     'php' => \Sledgehammer\PATH.'vendor/pear/php',
     'data' => \Sledgehammer\PATH.'vendor/pear/data',
     'script' => \Sledgehammer\PATH.'vendor/pear/script',
     'bin' => \Sledgehammer\PATH.'vendor/pear/bin',
     'doc' => \Sledgehammer\PATH.'vendor/pear/docs',
     'www' => APP_DIR.'vendor/pear/www',
-//	'test' => ? // Skip tests
-//	'src' => ?,
-//	'ext' => ?,
-//	'extsrc' => ?,
-];
+//  'test' => ? // Skip tests
+//  'src' => ?,
+//  'ext' => ?,
+//  'extsrc' => ?,
+);
 $pear = new PearInstaller($targets);
 $pear->on('channelAdded', function ($sender, $domain, $channel) {
     echo 'Channel "'.$domain.'" loaded. ('.count($channel['packages'])." packages)\n";

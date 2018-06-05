@@ -124,7 +124,7 @@ class Sql extends Base
         if (func_num_args() > 1) { // Support for $this->addColumns('col1', 'col2') notation.
             $columns = func_get_args();
         } elseif (is_string($columns)) {
-            $columns = [$columns];
+            $columns = array($columns);
         }
         foreach ($columns as $alias => $column) {
             $alias = $this->extractAlias($column, $alias, true); // Zit er een alias in de $column string?
@@ -186,11 +186,11 @@ class Sql extends Base
         if (isset($this->tables[$alias])) {
             throw new Exception('Table (or alias) "'.$alias.'" is not unique');
         }
-        $this->tables[$alias] = [
+        $this->tables[$alias] = array(
             'type' => $type,
             'table' => $table,
             'on' => $on,
-        ];
+        );
     }
 
     /**
@@ -225,9 +225,9 @@ class Sql extends Base
     public function column($column, $alias = null)
     {
         if ($alias === null) {
-            $columns = [$column];
+            $columns = array($column);
         } else {
-            $columns = [$alias => $column];
+            $columns = array($alias => $column);
         }
 
         return $this->columns($columns);
@@ -338,11 +338,11 @@ class Sql extends Base
     {
         $sql = clone $this;
         if ($sql->where === '') {
-            $sql->where = ['AND', $restriction];
+            $sql->where = array('AND', $restriction);
         } elseif (\Sledgehammer\extract_logical_operator($sql->where) === 'AND') {
             $sql->where[] = $restriction;
         } else {
-            $sql->where = ['AND', $sql->where, $restriction];
+            $sql->where = array('AND', $sql->where, $restriction);
         }
 
         return $sql;
@@ -359,11 +359,11 @@ class Sql extends Base
     {
         $sql = clone $this;
         if ($sql->where === '') {
-            $sql->where = ['OR', $restriction];
+            $sql->where = array('OR', $restriction);
         } elseif (\Sledgehammer\extract_logical_operator($sql->where) === 'OR') {
             $sql->where[] = $restriction;
         } else {
-            $sql->where = ['OR', $sql->where, $restriction];
+            $sql->where = array('OR', $sql->where, $restriction);
         }
 
         return $sql;
@@ -395,9 +395,9 @@ class Sql extends Base
     public function orderBy($column, $direction = 'ASC')
     {
         $sql = clone $this;
-        $sql->orderBy = [
+        $sql->orderBy = array(
             $column => $direction,
-        ];
+        );
 
         return $sql;
     }
@@ -468,7 +468,7 @@ class Sql extends Base
             $first = true;
             foreach ($this->tables as $table) {
                 if (is_string($table)) { // Is er een table (geen join)
-                    $join = ['table' => $table];
+                    $join = array('table' => $table);
                 } else {
                     $join = $table;
                 }
@@ -502,6 +502,7 @@ class Sql extends Base
             $order_by = [];
             foreach ($this->orderBy as $column => $order) {
                 switch ($order) {
+
                     case 'NULL':
                         $order_by[] = 'NULL';
                         break;
@@ -536,8 +537,7 @@ class Sql extends Base
      * @return string
      */
     private function composeRestrictions($restrictions, $addBraces = false)
-    {
-        // [string]
+    { // [string]
         if (is_string($restrictions)) { // Is the restrictionsTree already parsed?
             if ($addBraces) {
                 return '('.$restrictions.')';
@@ -559,6 +559,7 @@ class Sql extends Base
             return $this->composeRestrictions(current($restrictions));
         }
         switch ($logicalOperator) {
+
             case 'AND':
             case 'OR':
                 break;

@@ -4,6 +4,7 @@ namespace Sledgehammer\Core;
 
 use ArrayAccess;
 use DirectoryIterator;
+use Sledgehammer\Core\Environment;
 
 /**
  * A Cache node in the Caching graph.
@@ -109,7 +110,7 @@ class Cache extends Base implements ArrayAccess
         $backend = 'file';
         self::$instance = new self('', $backend);
         if ($backend === 'file') {
-            \Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR.'Cache');
+            \Sledgehammer\mkdirs(Environment::tmpdir().'Cache');
             if (rand(1, 25) === 1) { // Run gc only once in every X requests.
                 self::file_gc();
             }
@@ -136,17 +137,17 @@ class Cache extends Base implements ArrayAccess
     {
         // Convert option to an array
         if (is_array($options) === false) {
-            $options = [
+            $options = array(
                 'expires' => $options,
-            ];
+            );
         }
         // Merge default options
-        $default = [
+        $default = array(
             'expires' => false,
             'forever' => false,
             'max_age' => false,
             'lock' => true,
-        ];
+        );
         $options = array_merge($default, $options);
         if (count($options) !== count($default)) {
             \Sledgehammer\notice('Option: '.\Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
@@ -333,9 +334,9 @@ class Cache extends Base implements ArrayAccess
      */
     private function apc_write($value, $expires = null)
     {
-        $data = [
+        $data = array(
             'data' => $value,
-        ];
+        );
         if ($this->_locked) {
             $data['updated'] = $this->_locked;
         } else {
@@ -392,7 +393,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_file !== null) {
             throw new Exception('Cache already has an open filepointer');
         }
-        $this->_file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid, 'c+');
+        $this->_file = fopen(Environment::tmpdir().'Cache/'.$this->_guid, 'c+');
         if ($this->_file === false) {
             throw new Exception('Creating lockfile failed');
         }
@@ -417,11 +418,11 @@ class Cache extends Base implements ArrayAccess
     private function file_read(&$output)
     {
         if ($this->_file === null) { // unlocked read?
-            $filename = \Sledgehammer\TMP_DIR.'Cache/'.$this->_guid;
+            $filename = Environment::tmpdir().'Cache/'.$this->_guid;
             if (file_exists($filename) === false) {
                 return false;
             }
-            $file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid, 'r');
+            $file = fopen(Environment::tmpdir().'Cache/'.$this->_guid, 'r');
         } else {
             $file = $this->_file;
         }
@@ -434,11 +435,11 @@ class Cache extends Base implements ArrayAccess
             return false;
         }
         $updated = stream_get_line($file, 1024, "\n");
-        $output = [
+        $output = array(
             'expires' => intval(substr($expires, 9)), // "Expires: " = 9
             'updated' => intval(substr($updated, 9)), // "Updated: " = 9
             'data' => unserialize(stream_get_contents($file)),
-        ];
+        );
         if ($this->_file === null) {
             fclose($file);
         }
@@ -466,7 +467,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_file) {
             throw new Exception('Can\'t clear a locked file');
         }
-        unlink(\Sledgehammer\TMP_DIR.'Cache/'.$this->_guid);
+        unlink(Environment::tmpdir().'Cache/'.$this->_guid);
     }
 
     /**
@@ -474,7 +475,7 @@ class Cache extends Base implements ArrayAccess
      */
     private static function file_gc()
     {
-        $dir = new DirectoryIterator(\Sledgehammer\TMP_DIR.'Cache');
+        $dir = new DirectoryIterator(Environment::tmpdir().'Cache');
         $files = [];
         foreach ($dir as $entry) {
             if ($entry->isFile()) {
@@ -486,7 +487,7 @@ class Cache extends Base implements ArrayAccess
         $cache = new self('GC', 'file');
         foreach ($files as $id) {
             $cache->_guid = $id;
-            $cache->_file = fopen(\Sledgehammer\TMP_DIR.'Cache/'.$id, 'r');
+            $cache->_file = fopen(Environment::tmpdir().'Cache/'.$id, 'r');
             $hit = $cache->read($output);
             fclose($cache->_file);
             $cache->_file = null;

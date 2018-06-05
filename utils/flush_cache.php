@@ -6,12 +6,12 @@
 
 include __DIR__.'/../../../autoload.php';
 
-$gitignoreFile = \Sledgehammer\TMP_DIR.'.gitignore';
+$gitignoreFile = Environment::tmpdir().'.gitignore';
 if (file_exists($gitignoreFile)) {
     $gitignoreContents = file_get_contents($gitignoreFile);
 }
-echo 'Deleting files in "'.\Sledgehammer\TMP_DIR."\"\n";
-$count = \Sledgehammer\rmdir_contents(\Sledgehammer\TMP_DIR, true);
+echo 'Deleting files in "'.Environment::tmpdir()."\"\n";
+$count = \Sledgehammer\rmdir_contents(Environment::tmpdir(), true);
 if (isset($gitignoreContents)) {
     file_put_contents($gitignoreFile, $gitignoreContents);
 }

@@ -14,8 +14,8 @@ class DatabaseTest extends DatabaseTestCase
     public function __construct()
     {
         parent::__construct();
-        //		parent::__construct('mysql');
-//		parent::__construct('sqlite');
+        //      parent::__construct('mysql');
+//      parent::__construct('sqlite');
     }
 
     public function test_connect()
@@ -48,26 +48,26 @@ class DatabaseTest extends DatabaseTestCase
     public function test_fetch()
     {
         $db = Connection::instance($this->dbLink);
-        $this->assertSame($db->fetchAll('SELECT * FROM ducks'), [
-            [
+        $this->assertSame($db->fetchAll('SELECT * FROM ducks'), array(
+            array(
                 'id' => '1',
                 'name' => 'Kwik',
-            ],
-            [
+            ),
+            array(
                 'id' => '2',
                 'name' => 'Kwek',
-            ],
-            [
+            ),
+            array(
                 'id' => '3',
                 'name' => 'Kwak',
-            ],
-        ]);
+            ),
+        ));
         // Fetch row
         $kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
-        $this->assertSame($kwik, [
+        $this->assertSame($kwik, array(
             'id' => '1',
             'name' => 'Kwik',
-        ]);
+        ));
         // Fetch value
         $this->assertSame($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
@@ -104,18 +104,18 @@ class DatabaseTest extends DatabaseTestCase
 			)');
         }
         $query = $db->prepare('INSERT INTO ducks (name) VALUES (?)');
-        $query->execute(['Kwik']);
-        $query->execute(['Kwek']);
-        $query->execute(['Kwak']);
+        $query->execute(array('Kwik'));
+        $query->execute(array('Kwek'));
+        $query->execute(array('Kwak'));
     }
 
     public function getTests()
     {
-        if (\Sledgehammer\ENVIRONMENT != 'development') {
-            $this->fail('Skipping DatabaseTestCases tests in "'.\Sledgehammer\ENVIRONMENT.'"');
+        // if (\Sledgehammer\ENVIRONMENT != 'development') {
+        //     $this->fail('Skipping DatabaseTestCases tests in "'.\Sledgehammer\ENVIRONMENT.'"');
 
-            return [];
-        }
+        //     return [];
+        // }
 
         return parent::getTests();
     }

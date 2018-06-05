@@ -75,7 +75,7 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
         $path = $this->cachePath.'['.PropertyPath::escape($key).']';
         $object = $this->object;
         $value = \Sledgehammer\cache($path, $this->expires, function () use ($object, $method, $arguments) {
-            return call_user_func_array([$object, $method], $arguments);
+            return call_user_func_array(array($object, $method), $arguments);
         });
         if (is_object($value)) {
             $value = new self($value, $path, $this->expires);
@@ -86,12 +86,12 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
 
     public function offsetExists($offset)
     {
-        return $this->__call('offsetExists', [$offset]);
+        return $this->__call('offsetExists', array($offset));
     }
 
     public function offsetGet($offset)
     {
-        return $this->__call('offsetGet', [$offset]);
+        return $this->__call('offsetGet', array($offset));
     }
 
     public function offsetSet($offset, $value)

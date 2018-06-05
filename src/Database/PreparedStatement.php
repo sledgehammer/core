@@ -61,7 +61,7 @@ class PreparedStatement extends Statement
             $params = (count($input_parameters) === 0) ? $this->params : $input_parameters;
             $statement = $this->interpolate($statement, $params);
         }
-        $this->database->logger->append($statement, ['duration' => $executedIn]);
+        $this->database->logger->append($statement, array('duration' => $executedIn));
         if ($result === false) {
             $this->database->reportError($statement, $this->errorInfo());
         } else {

@@ -15,7 +15,7 @@ class UrlTest extends TestCase
         $this->assertSame($url->host, 'example.com');
         $this->assertSame($url->port, 8080);
         $this->assertSame($url->path, '/path/file');
-        $this->assertSame($url->query, ['name' => 'value']);
+        $this->assertSame($url->query, array('name' => 'value'));
         $this->assertSame($url->fragment, 'top');
         $this->assertSame($url->__toString(), $urlString, 'Generated string should contain all the parts');
     }
@@ -53,16 +53,16 @@ class UrlTest extends TestCase
         $this->assertSame($url->getFolders(), [], 'a file in the root should have no folders');
 
         $url->path = '/folder1/';
-        $this->assertSame($url->getFolders(), ['folder1']);
+        $this->assertSame($url->getFolders(), array('folder1'));
 
         $url->path = '/folder1/test.html';
-        $this->assertSame($url->getFolders(), ['folder1']);
+        $this->assertSame($url->getFolders(), array('folder1'));
 
         $url->path = '/folder1/folder2/';
-        $this->assertSame($url->getFolders(), ['folder1', 'folder2']);
+        $this->assertSame($url->getFolders(), array('folder1', 'folder2'));
 
         $url->path = '/folder1/folder2/test.html';
-        $this->assertSame($url->getFolders(), ['folder1', 'folder2']);
+        $this->assertSame($url->getFolders(), array('folder1', 'folder2'));
     }
 
     public function test_filename()

@@ -28,26 +28,26 @@ class CompareEnvironments extends Util
         $missing_in_source = array_diff_key($target, $source);
         if (count($missing_in_source) > 0) {
             foreach ($missing_in_source as $key => $null) {
-                $data[] = [
+                $data[] = array(
                     'setting' => $key,
                     'source' => '<span style="color:red">Missing</span>',
                     'target' => htmlentities($target[$key]),
-                ];
+                );
             }
         }
         foreach ($source as $key => $value) {
             if (!isset($target[$key])) {
-                $data[] = [
+                $data[] = array(
                     'setting' => $key,
                     'source' => htmlentities($value),
                     'target' => '<span style="color:red">Missing</span>',
-                ];
+                );
             } elseif (!\Sledgehammer\equals($source[$key], $target[$key])) {
-                $data[] = [
+                $data[] = array(
                     'setting' => $key,
                     'source' => htmlentities($value),
                     'target' => htmlentities($target[$key]),
-                ];
+                );
             }
         }
 
@@ -57,16 +57,16 @@ class CompareEnvironments extends Util
     public function execute()
     {
         // Genereer een formulier waarmee je 2 environments kan kiezen.
-        $environments = ['development', 'staging', 'production'];
-        $Form = new Form(['method' => 'get'], [
-            new Fieldset('Compare environments', [
-                'environments' => new FieldLabel('Environments', new Fields([
+        $environments = array('development', 'staging', 'production');
+        $Form = new Form(array('method' => 'get'), array(
+            new Fieldset('Compare environments', array(
+                'environments' => new FieldLabel('Environments', new Fields(array(
                     'source' => new SelectBox('source', $environments, [], new NotEmptyValidator()),
                     'target' => new SelectBox('target', $environments, [], new NotEmptyValidator()),
-                    new Input('submit', null, ['value' => 'Compare']),
-                        ])),
-                    ]),
-        ]);
+                    new Input('submit', null, array('value' => 'Compare')),
+                        ))),
+                    )),
+        ));
         $values = $Form->import($errors);
         if (!$values) { // Zijn er geen environments gekozen?
             return $Form;
@@ -133,23 +133,23 @@ class CompareEnvironments extends Util
         }
         $output = '';
         if (count($constants_diff) > 0) {
-            $ConstantsDiff = new InteractiveTable(['Module', 'setting', 'source', 'target'], '#');
-            $ConstantsDiff->headers = [
+            $ConstantsDiff = new InteractiveTable(array('Module', 'setting', 'source', 'target'), '#');
+            $ConstantsDiff->headers = array(
                 'setting' => 'Constant',
                 'source' => '['.$source.']',
                 'target' => '['.$target.']',
-            ];
+            );
             $ConstantsDiff->Iterator = $constants_diff;
             $output .= '<h2>Constants.ini\'s</h2>'.view_to_string($ConstantsDiff);
         }
 
         if (count($database_diff) > 0) {
-            $DatabaseDiff = new InteractiveTable(['Link', 'setting', 'source', 'target'], '#');
-            $DatabaseDiff->headers = [
+            $DatabaseDiff = new InteractiveTable(array('Link', 'setting', 'source', 'target'), '#');
+            $DatabaseDiff->headers = array(
                 'setting' => 'Setting',
                 'source' => '['.$source.']',
                 'target' => '['.$target.']',
-            ];
+            );
             $DatabaseDiff->Iterator = $database_diff;
             $output .= '<h2>Database.ini</h2>'.view_to_string($DatabaseDiff);
         }

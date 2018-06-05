@@ -157,7 +157,7 @@ class Logger extends Base
         if ($this->backtrace !== 0) {
             $meta['backtrace'] = $this->collectBacktrace();
         }
-        $this->entries[] = [$entry, $meta];
+        $this->entries[] = array($entry, $meta);
     }
 
     /**
@@ -291,10 +291,10 @@ class Logger extends Base
         foreach ($backtrace as $call) {
             --$depth;
             if (isset($call['file']) && isset($call['line'])) {
-                $trace[] = [
+                $trace[] = array(
                     'file' => str_replace(\Sledgehammer\PATH, '', $call['file']),
                     'line' => $call['line'],
-                ];
+                );
             }
         }
 

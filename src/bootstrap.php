@@ -15,33 +15,6 @@ if (!defined('Sledgehammer\STARTED')) {
     // Timestamp (in microseconds) for when the script started.
     define('Sledgehammer\STARTED', microtime(true));
 }
-// Detect the Environment
-if (defined('Sledgehammer\ENVIRONMENT') === false) {
-    $__ENV = false;
-    if (getenv('APP_ENV')) { // Laravel (and Dotenv already ran)
-        $__ENV = getenv('APP_ENV');
-    } elseif (file_exists(__DIR__.'/../../../../.env')) { // Laravel but Dotenv didn't ran yet
-        $__ENV = @parse_ini_file(__DIR__.'/../../../../.env');
-        if (is_array($__ENV) && isset($__ENV['APP_ENV'])) {
-            $__ENV = $__ENV['APP_ENV'];
-        } else {
-            $__ENV = false; // No APP_ENV? .env not compatible with parse_ini_file?
-        }
-    }
-    if (!$__ENV) {
-        if (getenv('APPLICATION_ENV')) { // Zend
-            $__ENV = getenv('APPLICATION_ENV');
-        } else {
-            $__ENV = 'production';
-        }
-    }
-    define('Sledgehammer\ENVIRONMENT', $__ENV);
-    unset($__ENV);
-}
-// Configure the "?debug=1" to use another $_GET variable.
-if (!defined('Sledgehammer\DEBUG_VAR')) {
-    define('Sledgehammer\DEBUG_VAR', 'debug');
-}
 // Directory of the vendor.
 if (!defined('Sledgehammer\VENDOR_DIR')) {
     if (file_exists(dirname(__DIR__).'/vendor')) { // local composer install
@@ -50,34 +23,8 @@ if (!defined('Sledgehammer\VENDOR_DIR')) {
         define('Sledgehammer\VENDOR_DIR', dirname(dirname(dirname(dirname(__DIR__)))).'/vendor'.DIRECTORY_SEPARATOR);
     }
 }
-// Directory of the project.
+// // Directory of the project.
 define('Sledgehammer\PATH', dirname(\Sledgehammer\VENDOR_DIR).DIRECTORY_SEPARATOR);
-
-// Detect & create a writable tmp folder
-if (defined('Sledgehammer\TMP_DIR') === false) {
-    $__TMP_DIR = \Sledgehammer\PATH.'tmp'.DIRECTORY_SEPARATOR;
-    if (is_dir($__TMP_DIR) && is_writable($__TMP_DIR)) { // The project has a "tmp" folder?
-        $__TMP_DIR .= 'sledgehammer';
-    } else {
-        $__TMP_DIR = \Sledgehammer\PATH.'storage'.DIRECTORY_SEPARATOR;
-        if (is_dir($__TMP_DIR) && is_writable($__TMP_DIR)) { // The project has a laravel storage folder?
-            $__TMP_DIR .= 'sledgehammer';
-        } else { // Use the global /tmp
-            $__TMP_DIR = '/tmp/sledgehammer_'.md5(\Sledgehammer\PATH);
-        }
-    }
-    if (function_exists('posix_getpwuid')) {
-        $__posix_getpwuid = posix_getpwuid(posix_geteuid());
-        $__TMP_DIR .= '_'.@$__posix_getpwuid['name'].DIRECTORY_SEPARATOR;
-        unset($__posix_getpwuid);
-    } else {
-        $__TMP_DIR .= DIRECTORY_SEPARATOR;
-    }
-    define('Sledgehammer\TMP_DIR', $__TMP_DIR);
-    unset($__TMP_DIR);
-}
-// Case insensitive "natural order" sorting method for natcasesort() in Collection->orderBy()
-define('Sledgehammer\SORT_NATURAL_CI', -2);
 // Regex for supported operators for the compare() function
 define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|NOT IN|LIKE|NOT LIKE');
 
@@ -87,19 +34,10 @@ define('Sledgehammer\COMPARE_OPERATORS', '==|!=|<|<=|>|>=|IN|NOT IN|LIKE|NOT LIK
 require_once __DIR__.'/functions.php'; // Namespaced functions
 require_once __DIR__.'/helpers.php'; // Global functions (but not guaranteed)
 
-\Sledgehammer\mkdirs(\Sledgehammer\TMP_DIR);
-
 /*
- * 3. Configure and register the AutoLoader
+ * 3. Set DebugR statusbar header.
  */
-require_once __DIR__.'/Base.php';
-require_once __DIR__.'/Debug/Autoloader.php';
-spl_autoload_register('Sledgehammer\Core\Debug\AutoLoader::lazyRegister');
-
-/*
- * 4. Set DebugR statusbar header.
- */
-if (headers_sent() === false) {
+if (headers_sent() === false && isset($_SERVER['HTTP_DEBUGR'])) {
     DebugR::send('sledgehammer-statusbar', 'no statusbar data.', true);
 }
 /*

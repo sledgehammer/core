@@ -106,9 +106,9 @@ class Json extends Base
     {
         if ($options === null) {
             $options = JSON_UNESCAPED_SLASHES;
-            if (\Sledgehammer\ENVIRONMENT === 'development') {
-                $options |= JSON_PRETTY_PRINT;
-            }
+            // if (\Sledgehammer\ENVIRONMENT === 'development') {
+            //     $options |= JSON_PRETTY_PRINT;
+            // }
         }
         $json = json_encode($data, $options);
         $error = json_last_error();
@@ -154,9 +154,9 @@ class Json extends Base
      */
     public static function error($error, $http = 400)
     {
-        if (headers_sent() === false && DebugR::isEnabled()) {
-            ErrorHandler::instance()->html = false;
-        }
+        // if (headers_sent() === false && DebugR::isEnabled()) {
+        //     ErrorHandler::instance()->html = false;
+        // }
         if ($error instanceof Exception) {
             \Sledgehammer\report_exception($error);
             $error = $error->getMessage();
@@ -167,10 +167,11 @@ class Json extends Base
         return new self([
             'success' => false,
             'error' => $error,
-                ], [
+        ], [
             'http' => [
                 'Status' => $http.' '.Framework::$statusCodes[$http],
-                'Content-Type' => (ErrorHandler::instance()->html ? 'text/html;  charset=utf-8' : 'application/json'),
+                'Content-Type' => 'application/json'
+                // 'Content-Type' => (ErrorHandler::instance()->html ? 'text/html;  charset=utf-8' : 'application/json'),
             ],
         ]);
     }
@@ -185,15 +186,15 @@ class Json extends Base
     public static function success($data = null)
     {
         if ($data === null) {
-            return new self([
+            return new self(array(
                 'success' => true,
-            ]);
+            ));
         }
 
-        return new self([
+        return new self(array(
             'success' => true,
             'data' => $data,
-        ]);
+        ));
     }
 
     /**
