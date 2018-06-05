@@ -39,7 +39,7 @@ function dump($variable, $export = false)
 {
     if (!class_exists('Sledgehammer\Core\Debug\Dump', false)) {
         if (!class_exists('Sledgehammer\Core\Base', false)) {
-            include __DIR__.'/Object.php';
+            include __DIR__.'/Base.php';
         }
         include __DIR__.'/Debug/Dump.php';
     }
@@ -307,6 +307,12 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
             'xsd' => 'text/xml',
             'txt' => 'text/plain',
             'ini' => 'text/plain',
+            // Fonts
+            'ttf' => 'application/x-font-ttf',
+            'otf' => 'application/x-font-opentype',
+            'woff' => 'application/font-woff',
+            'woff2' => 'application/font-woff2',
+            'eot' => 'application/vnd.ms-fontobject',
             // Images
             'png' => 'image/png',
             'jpe' => 'image/jpeg',
