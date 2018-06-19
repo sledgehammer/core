@@ -406,7 +406,7 @@ class ErrorHandler extends Base
                 $this->renderBrowserInfo();
                 $this->renderServerInfo();
             }
-            $this->renderBacktrace();
+            $this->renderBacktrace($exception);
             switch ($type) {
                 case E_WARNING:
                 case E_USER_ERROR:
@@ -577,9 +577,13 @@ class ErrorHandler extends Base
     /**
      * De bestanden, regelnummers, functie en objectnamen waar de fout optrad weergeven.
      */
-    private function renderBacktrace()
+    private function renderBacktrace($exception)
     {
-        $backtrace = debug_backtrace();
+        if (self::isThrowable($exception)) {
+            $backtrace= $exception->getTrace();
+        } else {
+            $backtrace = debug_backtrace();
+        }
         echo "<b>Backtrace</b><div>\n";
         // Pass 1:
         //   Backtrace binnen de errorhandler niet tonen
