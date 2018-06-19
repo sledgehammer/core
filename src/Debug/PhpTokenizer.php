@@ -188,7 +188,6 @@ class PhpTokenizer extends Base implements Iterator
             }
             $result = $this->$method($token, $nextToken);
             switch ($result['action']) {
-
                 case 'CONTINUE': // $token belongs to the current state
                     break;
 
@@ -295,7 +294,6 @@ class PhpTokenizer extends Base implements Iterator
             return;
         }
         switch ($this->state) {
-
             case 'HTML':
                 break;
 
@@ -377,23 +375,35 @@ class PhpTokenizer extends Base implements Iterator
                 'tokenBefore' => 'T_PHP',
             );
         }
-//		if ($nextToken === false) { // end of file?
-//			return array('LAST TOKEN?');
-//		}
+//      if ($nextToken === false) { // end of file?
+//          return array('LAST TOKEN?');
+//      }
 
         switch ($token[0]) {
-            case T_NAMESPACE: return array('action' => 'OPERATOR', 'token' => 'T_PHP', 'state' => 'NAMESPACE');
-            case T_USE: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'USE');
-            case T_INTERFACE: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'INTERFACE');
-            case T_CLASS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'CLASS');
-            case T_EXTENDS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'EXTENDS');
-            case T_IMPLEMENTS: return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'IMPLEMENTS');
-            case T_FUNCTION: return array('action' => 'CONTINUE_AS', 'state' => 'FUNCTION');
-            case T_NEW: return array('action' => 'KEYWORD', 'state' => 'TYPE');
-            case T_INSTANCEOF: return array('action' => 'KEYWORD', 'state' => 'TYPE');
-            case T_CATCH: return array('action' => 'CONTINUE_AS', 'state' => 'PARAMETERS');
-            case T_CURLY_OPEN: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
-            case T_DOLLAR_OPEN_CURLY_BRACES: return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
+            case T_NAMESPACE:
+                return array('action' => 'OPERATOR', 'token' => 'T_PHP', 'state' => 'NAMESPACE');
+            case T_USE:
+                return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'USE');
+            case T_INTERFACE:
+                return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'INTERFACE');
+            case T_CLASS:
+                return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'CLASS');
+            case T_EXTENDS:
+                return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'EXTENDS');
+            case T_IMPLEMENTS:
+                return array('action' => 'KEYWORD', 'token' => 'T_PHP', 'state' => 'IMPLEMENTS');
+            case T_FUNCTION:
+                return array('action' => 'CONTINUE_AS', 'state' => 'FUNCTION');
+            case T_NEW:
+                return array('action' => 'KEYWORD', 'state' => 'TYPE');
+            case T_INSTANCEOF:
+                return array('action' => 'KEYWORD', 'state' => 'TYPE');
+            case T_CATCH:
+                return array('action' => 'CONTINUE_AS', 'state' => 'PARAMETERS');
+            case T_CURLY_OPEN:
+                return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
+            case T_DOLLAR_OPEN_CURLY_BRACES:
+                return array('action' => 'CONTINUE_AS', 'state' => 'COMPLEX_VARIABLE');
             case T_STRING:
                 if ($nextToken == '(') {
                     $previousToken = $this->tokens[$this->tokenIndex - 1];

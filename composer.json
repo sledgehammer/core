@@ -1,7 +1,11 @@
 {
   "name": "sledgehammer/core",
   "description": "Sledgehammer - A general purpose PHP toolkit",
-  "keywords": ["sledgehammer", "toolkit", "core"],
+  "keywords": [
+    "sledgehammer",
+    "toolkit",
+    "core"
+  ],
   "homepage": "http://sledgehammer.github.com/",
   "license": "MIT",
   "autoload": {
@@ -9,10 +13,12 @@
       "Sledgehammer\\Core\\": "src/",
       "SledgehammerTests\\Core\\": "tests/"
     },
-    "files": ["src/bootstrap.php"]
+    "files": [
+      "src/bootstrap.php"
+    ]
   },
   "require-dev": {
-    "phpunit/phpunit": ">=6"
+    "phpunit/phpunit": ">=7"
   },
   "require": {
     "php": ">=7.1"

@@ -124,7 +124,7 @@ class DatabaseCollection extends Collection
      *
      * auto converts
      *   ['x_id' => null]  to "x_id IS NULL"
-     * 	 ['x_id !=' => null]  to "x_id IS NOT NULL"
+     *   ['x_id !=' => null]  to "x_id IS NOT NULL"
      *  'hits' => 0]  to "hits = '0'"  (Because in mysql '' = 0 evaluates to true, '' = '0' to false)
      *
      * @param array $conditions

@@ -53,7 +53,7 @@ class Curl extends Base
         CURLOPT_FOLLOWLOCATION => true, // When allowed follow 301 and 302 redirects.
         CURLOPT_MAXREDIRS => 25, // Prevent infinite redirection loops.
             // Dynamic options
-//		CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
+//      CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
     );
 
     /**

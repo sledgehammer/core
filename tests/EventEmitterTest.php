@@ -101,7 +101,6 @@ class EventEmitterTest extends TestCase
         }
         try {
             $button->on('world_domination', function () {
-
             });
             $this->fail('Non existing events should throw an exception');
         } catch (Exception $e) {

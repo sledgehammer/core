@@ -101,7 +101,6 @@ class Connection extends PDO
             } else {
                 // Use Sledgehammer setting (default utf-8)
                 switch (strtolower(Framework::$charset)) {
-
                     case 'utf-8':
                         $charset = 'utf8mb4';
                         break;

@@ -75,7 +75,7 @@ foreach ($files as $filename) {
         require_once __DIR__.'/functions.php'; // voor render_file() en redirect()
         if (is_dir($filename)) {
             error_log('Requesting a public folder without a trailing slash, redirecting to "'.$uriPath.'/"', E_NOTICE);
-            Sledgehammer\redirect($uriPath.'/'); //	Redirect naar dezelfde url, maar dan als mapnaam
+            Sledgehammer\redirect($uriPath.'/'); // Redirect naar dezelfde url, maar dan als mapnaam
         }
         Sledgehammer\render_file($filename); // Render het gewone bestand.
     }

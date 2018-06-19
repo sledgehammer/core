@@ -73,7 +73,6 @@ class PropertyPath extends Base
         $parts = self::parse($path);
         foreach ($parts as $part) {
             switch ($part[0]) {
-
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = $data->{$part[1]};
@@ -204,7 +203,6 @@ class PropertyPath extends Base
         $parts = self::parse($path);
         foreach ($parts as $part) {
             switch ($part[0]) {
-
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
@@ -271,7 +269,6 @@ class PropertyPath extends Base
         $last = array_pop($parts);
         foreach ($parts as $part) {
             switch ($part[0]) {
-
                 case self::TYPE_ANY:
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
@@ -310,7 +307,6 @@ class PropertyPath extends Base
         }
 
         switch ($last[0]) {
-
             case self::TYPE_ANY:
             case self::TYPE_OPTIONAL:
                 if (is_object($data)) {
@@ -486,7 +482,6 @@ class PropertyPath extends Base
                 $nextToken = $tokens[$i + 1];
             }
             switch ($token[0]) {
-
                 // TYPE_ANY
                 case self::T_STRING;
                     if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
@@ -627,7 +622,6 @@ class PropertyPath extends Base
         for ($i = 0; $i < $length; ++$i) {
             $char = $path[$i];
             switch ($char) {
-
                 case '\\':
                     if (($i + 1) === $length) { // is '\' the last character?
                         $buffer .= $char;

@@ -107,7 +107,7 @@ class TagIteratorTest extends TestCase
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
             ),
         ));
-//		$html = <<<END
+//      $html = <<<END
 //<!DOCTYPE NEWSPAPER [
 //
 //<!ELEMENT NEWSPAPER (ARTICLE+)>
@@ -125,9 +125,9 @@ class TagIteratorTest extends TestCase
 //
 //]>tekst
 //END;
-//		$this->compare($html, array(
-//			0 => $html
-//		));
+//      $this->compare($html, array(
+//          0 => $html
+//      ));
     }
 
     public function test_evil_html()

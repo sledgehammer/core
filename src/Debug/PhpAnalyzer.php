@@ -113,7 +113,6 @@ class PhpAnalyzer extends Base
                 continue;
             }
             switch ($type) {
-
                 case 'T_NAMESPACE':
                     $namespace = $value;
                     break;
@@ -232,17 +231,16 @@ class PhpAnalyzer extends Base
             $identifier = $definition['identifier'];
             unset($definition['identifier'], $definition['level']);
             $definition['filename'] = $filename;
-//			$duplicate = false;
-//			if (isset($this->classes[$identifier])) {
-//				$duplicate = $this->classes[$identifier];
-//			} elseif (isset($this->interfaces[$identifier])) {
-//				$duplicate = $this->interfaces[$identifier];
-//			}
-//			if ($duplicate) {
-//				$this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
-//			}
+//          $duplicate = false;
+//          if (isset($this->classes[$identifier])) {
+//              $duplicate = $this->classes[$identifier];
+//          } elseif (isset($this->interfaces[$identifier])) {
+//              $duplicate = $this->interfaces[$identifier];
+//          }
+//          if ($duplicate) {
+//              $this->parserNotice('"'.$identifier.'" is ambiguous, it\'s found in multiple files: "'.$duplicate['filename'].'" and "'.$definition['filename'].'"');
+//          }
             switch ($definition['type']) {
-
                 case 'CLASS':
                     unset($definition['type']);
                     if (count($definition['extends']) > 1) {

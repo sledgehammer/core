@@ -169,7 +169,7 @@ class CollectionTest extends TestCase
             return $item == 10;
         });
         $this->assertSame(array(array('id' => 20)), $collection->toArray());
-//		$this->assertSame(2, $collection->indexOf(array('id?' => 30)));
+//      $this->assertSame(2, $collection->indexOf(array('id?' => 30)));
     }
 
     public function test_remove_odd_in_foreach()

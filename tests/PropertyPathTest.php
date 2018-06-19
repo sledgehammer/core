@@ -140,8 +140,8 @@ class PropertyPathTest extends TestCase
         $this->assertSame(PropertyPath::get('[id?]', $array), '1', 'Path "->id?" should work on arrays');
         $this->assertSame(PropertyPath::get('->id?', $object), '2', 'Path "->id?" should work on objects');
 
-        //		$this->assertSame(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
-        //		$this->assertSame(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
+        //      $this->assertSame(PropertyPath::get($array, 'undefined?'), null, 'Path "id?" should work on arrays');
+        //      $this->assertSame(PropertyPath::get($object, 'undefined?'), null, 'Path "id?" should work on objects');
         // @todo Add UnitTest for method notation "getFilename()"
 
         $sequence = array(
@@ -165,8 +165,8 @@ class PropertyPathTest extends TestCase
         $this->assertSame(PropertyPath::get('[id]', $object), null, 'Path "[id]" should NOT work on objects');
         $this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
 
-        //		PropertyPath::get('->id?', $array)
-        //		PropertyPath::get('[id?]', $object)
+        //      PropertyPath::get('->id?', $array)
+        //      PropertyPath::get('[id?]', $object)
         Notice::$enabled = true;
         ini_set('error_log', $error_log);
     }

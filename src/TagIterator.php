@@ -187,7 +187,6 @@ class TagIterator extends Base implements \Iterator
             }
             if ($token[0] !== 'T_WHITESPACE') {
                 switch ($state) {
-
                     case 'NAME';
                         if ($token[0] == 'T_OPEN') {
                             $tag[0] = $token[1];

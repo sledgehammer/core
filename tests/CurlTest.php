@@ -11,22 +11,19 @@ class CurlTest extends TestCase
     // @todo Test version >= 7.19.4 (which has CURLOPT_REDIR_PROTOCOLS)
     protected function setUp()
     {
-        if (getenv('CI') && \version_compare(phpversion(), '7.2', '>=')) {
-            $this->markTestSkipped('Prevent https errors on travis');
+        if (getenv('CI')) {
+            $this->markTestSkipped('Prevent curl errors on travis');
         }
     }
-    public function test_single_get()
+    public function testSingleGet()
     {
-        if (getenv('CI')) {
-            $this->markTestSkipped('Prevent https errors on travis');
-        }
         $this->assertEmptyPool();
         $response = Curl::get('https://www.bfanger.nl/');
         $this->assertSame($response->http_code, 200);
         $this->assertSame($response->effective_url, 'https://bfanger.nl/'); // forwarded to https and without "www."
     }
 
-    public function test_async()
+    public function testAsync()
     {
         $this->assertEmptyPool();
         $response = Curl::get('http://jsonplaceholder.typicode.com/posts');
@@ -41,7 +38,7 @@ class CurlTest extends TestCase
         $this->assertTrue($complete);
     }
 
-    public function test_paralell_get()
+    public function testParalellGet()
     {
         $this->assertEmptyPool();
         $response = Curl::get('http://jsonplaceholder.typicode.com/posts/1');
@@ -52,7 +49,7 @@ class CurlTest extends TestCase
         $this->assertTrue(($response->total_time + $paralell->total_time) > $elapsed, 'Parallel requests are faster');
     }
 
-    public function test_exception_on_error()
+    public function testExceptionOnError()
     {
         $this->assertEmptyPool();
         $response = Curl::get('noprotocol://bfanger.nl/');
@@ -70,7 +67,7 @@ class CurlTest extends TestCase
         }
     }
 
-    public function test_events()
+    public function testEvents()
     {
         $this->assertEmptyPool();
         $response = Curl::get('http://jsonplaceholder.typicode.com/users/1');
@@ -83,7 +80,7 @@ class CurlTest extends TestCase
         $this->assertSame($output, 200);
     }
 
-    public function test_curl_debugging()
+    public function testCurlDebugging()
     {
         $this->assertEmptyPool();
         $fp = fopen('php://memory', 'w+');
@@ -98,10 +95,10 @@ class CurlTest extends TestCase
         $response->on('closed', function () use ($fp) {
             fclose($fp);
         });
-        $this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'Use CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+        $this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
     }
 
-    public function test_paralell_download()
+    public function testParalellDownload()
     {
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
@@ -114,7 +111,7 @@ class CurlTest extends TestCase
         }
     }
 
-    public function test_put()
+    public function testPut()
     {
         $filename = Environment::tmpdir().basename(__CLASS__).'.txt';
         file_put_contents($filename, 'Curl TEST');

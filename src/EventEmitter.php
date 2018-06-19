@@ -17,7 +17,7 @@ use stdClass;
  *     'click' => []
  *   );
  *   // optional method that gets executed when the 'click' event is fired.
- * 	 protected function onClick($sender) {}
+ *   protected function onClick($sender) {}
  * }
  *
  * $button = new Button();

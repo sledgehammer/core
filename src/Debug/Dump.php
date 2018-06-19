@@ -158,7 +158,7 @@ class Dump extends Base
         var_dump($this->variable);
         $this->vardump = rtrim(ob_get_clean());
         ini_set('display_errors', $displayErrors);
-//		$this->debug($output);
+//      $this->debug($output);
         try {
             $this->offset = 0;
             $this->parseVardump();
@@ -609,7 +609,6 @@ class Dump extends Base
         $parts = explode(':', $attribute);
         $partsCount = count($parts);
         switch ($partsCount) {
-
             case 1: // Is de scope niet opgegeven?
                 $this->renderType('attribute', substr($attribute, 1, -1));
                 break;

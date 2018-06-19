@@ -588,12 +588,18 @@ function equals($var1, $var2)
 function compare($value, $operator, $expectation)
 {
     switch ($operator) {
-        case '==': return \Sledgehammer\equals($value, $expectation);
-        case '!=': return !\Sledgehammer\equals($value, $expectation);
-        case '<': return $value < $expectation;
-        case '>': return $value > $expectation;
-        case '<=': return $value <= $expectation;
-        case '>=': return $value >= $expectation;
+        case '==':
+            return \Sledgehammer\equals($value, $expectation);
+        case '!=':
+            return !\Sledgehammer\equals($value, $expectation);
+        case '<':
+            return $value < $expectation;
+        case '>':
+            return $value > $expectation;
+        case '<=':
+            return $value <= $expectation;
+        case '>=':
+            return $value >= $expectation;
         case 'IN':
             foreach ($expectation as $val) {
                 if (\Sledgehammer\equals($value, $val)) {
@@ -993,7 +999,7 @@ function safe_unlink($filepath, $basepath, $recursive = false)
     if (strlen($basepath) < 4) { // Minimal "/tmp"
         throw new Exception('$basepath "'.$basepath.'" is too short');
     }
-    // 	Controleer of het path niet buiten de basepath ligt.
+    //  Controleer of het path niet buiten de basepath ligt.
     $realpath = realpath(dirname($filepath));
     if ($realpath == false) {
         throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
@@ -1130,7 +1136,6 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
         $datatype = gettype($variable);
     }
     switch ($datatype) {
-
         case 'boolean':
             $color = 'symbol';
             $label = $variable ? 'true' : 'false';

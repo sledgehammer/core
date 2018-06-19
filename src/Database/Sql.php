@@ -502,7 +502,6 @@ class Sql extends Base
             $order_by = [];
             foreach ($this->orderBy as $column => $order) {
                 switch ($order) {
-
                     case 'NULL':
                         $order_by[] = 'NULL';
                         break;
@@ -537,7 +536,7 @@ class Sql extends Base
      * @return string
      */
     private function composeRestrictions($restrictions, $addBraces = false)
-    { // [string]
+    {
         if (is_string($restrictions)) { // Is the restrictionsTree already parsed?
             if ($addBraces) {
                 return '('.$restrictions.')';
@@ -559,7 +558,6 @@ class Sql extends Base
             return $this->composeRestrictions(current($restrictions));
         }
         switch ($logicalOperator) {
-
             case 'AND':
             case 'OR':
                 break;

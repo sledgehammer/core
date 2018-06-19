@@ -161,7 +161,6 @@ class HtmlTokenizer extends Base implements \Iterator
         try {
             $startPos = $this->position;
             switch ($this->state) {
-
                 case 'CONTENT':
                     $this->parseContent();
                     break;

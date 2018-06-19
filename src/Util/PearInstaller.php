@@ -180,7 +180,7 @@ class PearInstaller extends Base
         // Install dependencies first
         foreach ($info->dependencies->required->package as $dependancy) {
             if ($dependancy->conflicts) {
-                //				\Sledgehammer\notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
+                //              \Sledgehammer\notice('Dependancy "'.$dependancy->name.'" for "'.$package.'" <conflicts />');
                 continue;
             }
             $this->install((string) $dependancy->name, array(

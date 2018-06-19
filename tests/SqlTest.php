@@ -59,7 +59,7 @@ class SqlTest extends TestCase
             array(
                 'OR',
                 array(
-                    'OR', 'a = 1', 'b = 2', // a nested OR inside an OR wouldn't be placed inside () because (a || b) || c == a || b || c  
+                    'OR', 'a = 1', 'b = 2', // a nested OR inside an OR wouldn't be placed inside () because (a || b) || c == a || b || c
                 ),
                 'c = 3',
                 array(

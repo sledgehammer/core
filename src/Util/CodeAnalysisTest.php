@@ -164,7 +164,6 @@ class CodeAnalysisTest extends TestCase
                 try {
                     $analyzer->open($entry->getPathname());
                 } catch (Exception $e) {
-                    //					\Sledgehammer\report_exception($e);
                     $this->fail($e->getMessage());
                 }
             }
