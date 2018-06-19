@@ -139,6 +139,9 @@ class ErrorHandler extends Base
      */
     private $isProcessing = false;
 
+    /**
+     * @var ErrorHandler|false
+     */
     static private $enabled = false;
 
     public function __construct($options = [])
@@ -205,10 +208,10 @@ class ErrorHandler extends Base
     {
         if (self::isThrowable($exception)) {
             if (count(debug_backtrace()) == 1) { // An uncaught exception? via the set_exception_handler()
-                self::instance()->report($exception, '__UNCAUGHT_EXCEPTION__');
+                self::$enabled->report($exception, '__UNCAUGHT_EXCEPTION__');
             } else {
                 \Sledgehammer\notice('Only the set_exception_handler() should call ErrorHandler->exceptionCallback. use \Sledgehammer\report_exception()', 'Use the <b>report_exception</b>($exception) for reporting to the default Errorhandler.<br />Or call the ErrorHander->report($exception) to target a specific instance.');
-                self::instance()->report($exception);
+                self::$enabled->report($exception);
             }
         } else {
             self::report(E_USER_ERROR, 'Parameter $exception must be an Exception, instead of a '.gettype($exception));
