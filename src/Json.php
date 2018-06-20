@@ -105,10 +105,7 @@ class Json extends Base
     public static function encode($data, $options = null)
     {
         if ($options === null) {
-            $options = JSON_UNESCAPED_SLASHES;
-            // if (\Sledgehammer\ENVIRONMENT === 'development') {
-            //     $options |= JSON_PRETTY_PRINT;
-            // }
+            $options = JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT;
         }
         $json = json_encode($data, $options);
         $error = json_last_error();
