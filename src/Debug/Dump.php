@@ -167,30 +167,47 @@ class Dump extends Base
             echo $this->vardump; //show original var_dump()
         }
         echo "\n</pre>\n";
-        echo "<script type=\"text/javascript\">window.jQuery || document.write('<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js\"><\/sc' + 'ript>')</script>";
-        echo "<script type=\"text/javascript\">\n";
-        echo "(function ($) {\n";
-        echo "	if (typeof $ === 'undefined') {\n";
-        echo "		return;\n";
-        echo "	}\n";
-        echo "	var dump = $('#".$id."');\n";
-        echo "	$('[data-dump=container]', dump).each(function () {\n";
-        echo "		var contents = $(this);\n";
-        echo "		var toggle = $(this).prev();\n";
-        echo "		toggle.css('cursor', 'pointer');\n";
-        echo "		toggle.click(function () {\n";
-        echo "			contents.toggle();\n";
-        echo "			if (contents.is(':visible')) {\n";
-        echo "				contents.prev('[data-dump=placeholder]').remove();\n";
-        echo "			} else {\n";
-        echo "				var hellip = $('<span data-dump=\"placeholder\" style=\"cursor:pointer;padding:0 3px\">&hellip;</span>');\n";
-        echo "				contents.before(hellip);\n";
-        echo "				hellip.click(function () { toggle.trigger('click');});\n";
-        echo "			}\n";
-        echo "		});\n";
-        echo "	});\n";
-        echo "})(jQuery);\n";
-        echo '</script>';
+        echo <<<END
+<script type="text/javascript">
+(function(el) {
+  var hellip = document.createElement("span");
+  hellip.dataset.dump = "placeholder";
+  hellip.style = "cursor:pointer;padding:0 3px";
+  hellip.innerHTML = "&hellip;";
+  
+  el.addEventListener("click", function(e) {
+    var target = e.target;
+    var parent = target.parentNode;
+    var siblings = parent.childNodes;
+    var placeholder = false;
+    if (target.dataset.dump === "placeholder") {
+      placeholder = target;
+    }
+    var index = Array.prototype.indexOf.call(siblings, target) + 1;
+    for (var i = index; i < siblings.length; i++) {
+      var sibling = siblings[i];
+      if (sibling.nodeType === Node.TEXT_NODE) {
+        continue;
+      }
+      if (sibling.dataset.dump === "placeholder") {
+        placeholder = sibling;
+        continue;
+      }
+      if (sibling.dataset.dump === "container") {
+        if (sibling.hidden) {
+          sibling.hidden = false;
+          parent.removeChild(placeholder);
+        } else {
+          sibling.hidden = true;
+          parent.insertBefore(hellip.cloneNode(true), sibling);
+        }
+      }
+      break;
+    }
+  });
+})(document.getElementById("$id"));
+</script>
+END;
         ini_set('html_errors', $old_value);
     }
 
