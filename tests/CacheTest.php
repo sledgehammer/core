@@ -5,7 +5,7 @@ namespace SledgehammerTests\Core;
 use Exception;
 use PHPUnit\Framework\Error\Notice;
 use Sledgehammer\Core\Cache;
-use Sledgehammer\Core\Environment;
+use Sledgehammer\Core\Framework;
 use SledgehammerTests\Core\Fixtures\CacheTester;
 
 /**
@@ -28,7 +28,6 @@ class CacheTest extends TestCase
 
     public function test_startup()
     {
-        \Sledgehammer\mkdirs(Environment::tmpdir().'Cache');
         $cache = Cache::rootNode();
         $this->assertInstanceOf(Cache::class, $cache);
         $this->apcSupported = function_exists('apc_fetch');

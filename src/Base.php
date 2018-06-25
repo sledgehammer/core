@@ -3,6 +3,13 @@
 namespace Sledgehammer\Core;
 
 use ReflectionObject;
+use ReflectionClass;
+use ReflectionMethod;
+use function Sledgehammer\syntax_highlight;
+use function Sledgehammer\warning;
+use function Sledgehammer\notice;
+use function Sledgehammer\build_properties_hint;
+use function Sledgehammer\reflect_properties;
 
 /**
  * A generic php superclass.
@@ -25,7 +32,8 @@ abstract class Base
      */
     public function __get($property)
     {
-        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint(\Sledgehammer\reflect_properties($this)));
+        $info = build_properties_hint(reflect_properties($this));
+        warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', $info);
     }
 
     /**
@@ -36,7 +44,8 @@ abstract class Base
      */
     public function __set($property, $value)
     {
-        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint(\Sledgehammer\reflect_properties($this)));
+        $info = build_properties_hint(reflect_properties($this));
+        warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', $info);
         $this->$property = $value; // Add the property to the object. (PHP's default behavior)
     }
 
@@ -65,19 +74,59 @@ abstract class Base
             foreach ($rMethod->getParameters() as $rParam) {
                 $param = '$'.$rParam->name;
                 if ($rParam->isDefaultValueAvailable()) {
-                    $param .= ' = '.\Sledgehammer\syntax_highlight($rParam->getDefaultValue());
+                    $param .= ' = '.syntax_highlight($rParam->getDefaultValue());
                 }
                 $parameters[] = $param;
             }
-            $methods[$scope][] = \Sledgehammer\syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
+            $methods[$scope][] = syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
+        }
+        $info = '';
+        $glue = '<br />&nbsp;&nbsp;';
+        foreach ($methods as $scope => $mds) {
+            $info .= '<b>'.$scope.' methods</b>'.$glue.implode($glue, $mds).'<br /><br />';
+        }
+        throw new InfoException('Method: "'.$method.'" doesn\'t exist in a "'.get_class($this).'" object.', $info);
+    }
+
+    /**
+     * Report that the $method doesn't exist.
+     *
+     * @param string $method
+     * @param array  $arguments
+     */
+    public static function __callStatic($method, $arguments)
+    {
+        $rClass = new ReflectionClass(static::class);
+        $methods = [];
+        foreach ($rClass->getMethods(ReflectionMethod::IS_STATIC) as $rMethod) {
+            if (in_array($rMethod->name, array('__callStatic'))) {
+                continue;
+            }
+            if ($rMethod->isPublic()) {
+                $scope = 'public';
+            } elseif ($rMethod->isProtected()) {
+                $scope = 'protected';
+            } elseif ($rMethod->isPrivate()) {
+                $scope = 'private';
+            }
+            $parameters = [];
+            foreach ($rMethod->getParameters() as $rParam) {
+                $param = '$'.$rParam->name;
+                if ($rParam->isDefaultValueAvailable()) {
+                    $param .= ' = '.syntax_highlight($rParam->getDefaultValue());
+                }
+                $parameters[] = $param;
+            }
+            $methods[$scope][] = syntax_highlight($rMethod->name, 'method').'('.implode(', ', $parameters).')';
         }
         $methodsText = '';
         $glue = '<br />&nbsp;&nbsp;';
         foreach ($methods as $scope => $mds) {
-            $methodsText .= '<b>'.$scope.' methods</b>'.$glue.implode($glue, $mds).'<br /><br />';
+            $methodsText .= '<b>'.$scope.' static methods</b>'.$glue.implode($glue, $mds).'<br /><br />';
         }
-        throw new InfoException('Method: "'.$method.'" doesn\'t exist in a "'.get_class($this).'" object.', $methodsText);
+        throw new InfoException('Static method: "'.$method.'" doesn\'t exist in "'.static::class.'".', $methodsText);
     }
+
 
     /**
      * The object is used as an string.
@@ -86,7 +135,7 @@ abstract class Base
      */
     public function __toString()
     {
-        \Sledgehammer\notice('Object: "'.get_class($this).'" is used as string');
+        notice('Object: "'.get_class($this).'" is used as string');
 
         return 'Object('.get_class($this).')';
     }

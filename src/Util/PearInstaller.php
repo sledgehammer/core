@@ -160,7 +160,7 @@ class PearInstaller extends Base
             return;
         }
         $this->trigger('installing', $this, $package, $version);
-        $tmpFolder = Environment::tmpdir().'PearInstaller/';
+        $tmpFolder = Framework::tmp('PearInstaller');
         $folderName = $package.'-'.$version;
         $tarFile = $tmpFolder.$folderName.'/package.tar';
         \Sledgehammer\mkdirs(dirname($tarFile));

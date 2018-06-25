@@ -8,7 +8,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Base;
-use Sledgehammer\Core\Environment;
+use Sledgehammer\Core\Framework;
 use Sledgehammer\Core\Singleton;
 
 /**
@@ -448,7 +448,7 @@ class Autoloader extends Base
             if ($folder == 'classes') {
                 $folder = basename(dirname($path));
             }
-            $cacheFile = Environment::tmpdir().'AutoLoader/'.$folder.'_'.md5($path).'.php';
+            $cacheFile = Framework::tmp('Autoloader').$folder.'_'.md5($path).'.php';
             if (!\Sledgehammer\mkdirs(dirname($cacheFile))) {
                 $this->enableCache = false;
                 $useCache = false;
@@ -898,9 +898,7 @@ class Autoloader extends Base
             // Don't activate the Autoloader for "class_exists()"
             return;
         }
-        // if (\Sledgehammer\ENVIRONMENT === 'development') {
-        //     self::hint('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
-        // }
+        self::hint('Activating the Sledgehammer Autoloader, Composer failed to load "'.$definition.'"');
         $autoloader = self::instance();
     }
 

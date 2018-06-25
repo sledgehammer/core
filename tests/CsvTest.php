@@ -3,7 +3,7 @@
 namespace SledgehammerTests\Core;
 
 use Sledgehammer\Core\Csv;
-use Sledgehammer\Core\Environment;
+use Sledgehammer\Core\Framework;
 
 class CsvTest extends TestCase
 {
@@ -32,7 +32,7 @@ class CsvTest extends TestCase
     public function test_write()
     {
         $data = array(array('id' => '1', 'name' => 'John'), array('id' => '2', 'name' => 'Doe'));
-        $filename = Environment::tmpdir().'CsvTests_testfile.csv';
+        $filename = Framework::tmp('CsvTest').'CsvTests_testfile.csv';
         Csv::write($filename, $data);
         $this->assertSame(file_get_contents($filename), "id;name\n1;John\n2;Doe\n");
         $csv = new Csv($filename);

@@ -2,6 +2,9 @@
 
 namespace Sledgehammer\Core;
 
+use Exception;
+use function Sledgehammer\mkdirs;
+
 /**
  * Framework.
  */
@@ -114,4 +117,44 @@ class Framework extends Base
         598 => 'Network read timeout error',
         599 => 'Network connect timeout error',
     );
+
+    /**
+     * @var string Directory for temporary files.
+     */
+    private static $tmp;
+
+
+    /**
+     * Returns directory path used for temporary files.
+     */
+    public static function tmp($directory = null)
+    {
+        if (!self::$tmp) {
+            throw new InfoException("No tmp folder was configured.", "Call ".self::class.'::setTmp() first');
+        }
+        if ($directory === null) {
+            return self::$tmp;
+        }
+        if (substr($directory, -1) !== '/') {
+            $directory .= "/";
+        }
+        if (mkdirs(self::$tmp.$directory) === false) {
+            throw new Exception('Could not create directory "'.$directory.'"');
+        }
+        return self::$tmp.$directory;
+    }
+
+    public static function setTmp($path)
+    {
+        if (substr($path, -1) !== '/') {
+            $path .= "/";
+        }
+        if (is_dir($path) == false) {
+            throw new Exception('Path "'.$path.'" is not a directory');
+        }
+        if (is_writable($path) === false) {
+            throw new Exception('Path "'.$path.'" is not writable');
+        }
+        self::$tmp = $path;
+    }
 }

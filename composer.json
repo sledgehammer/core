@@ -22,5 +22,8 @@
   },
   "require": {
     "php": ">=7.1"
+  },
+  "scripts": {
+    "test": "phpunit"
   }
 }

@@ -4,7 +4,7 @@ namespace SledgehammerTests\Core;
 
 use Exception;
 use Sledgehammer\Core\Curl;
-use Sledgehammer\Core\Environment;
+use Sledgehammer\Core\Framework;
 
 class CurlTest extends TestCase
 {
@@ -102,18 +102,18 @@ class CurlTest extends TestCase
     {
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            Curl::download('http://jsonplaceholder.typicode.com/users/1', Environment::tmpdir().'curltest'.$i.'.downoad', [], true);
+            Curl::download('http://jsonplaceholder.typicode.com/users/1', Framework::tmp('CurlTest').$i.'.download', [], true);
         }
         Curl::synchronize();
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            unlink(Environment::tmpdir().'curltest'.$i.'.downoad');
+            unlink(Framework::tmp('CurlTest').$i.'.download');
         }
     }
 
     public function testPut()
     {
-        $filename = Environment::tmpdir().basename(__CLASS__).'.txt';
+        $filename = Framework::tmp('CurlTest').'put.txt';
         file_put_contents($filename, 'Curl TEST');
         $request = Curl::putFile('http://date.jsontest.com/?service=ip', $filename, [CURLOPT_FAILONERROR => false]);
         $this->assertSame(405, $request->http_code);

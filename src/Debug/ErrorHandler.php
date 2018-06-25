@@ -843,7 +843,11 @@ class ErrorHandler extends Base
                 return 0;
             }
         }
-        $filename = Environment::tmpdir().'error_handler_email_limit.txt';
+        try {
+            $filename = Framework::tmp().'error_handler_email_limit.txt';
+        } catch (Exception $e) {
+            return 0;
+        }
         if (!@file_exists($filename)) {
             error_log('File "'.$filename.'" doesn\'t exist (yet)');
             // nieuwe voorraad.

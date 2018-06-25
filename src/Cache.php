@@ -4,7 +4,6 @@ namespace Sledgehammer\Core;
 
 use ArrayAccess;
 use DirectoryIterator;
-use Sledgehammer\Core\Environment;
 
 /**
  * A Cache node in the Caching graph.
@@ -110,7 +109,7 @@ class Cache extends Base implements ArrayAccess
         $backend = 'file';
         self::$instance = new self('', $backend);
         if ($backend === 'file') {
-            \Sledgehammer\mkdirs(Environment::tmpdir().'Cache');
+            \Sledgehammer\mkdirs(Framework::tmp('Cache'));
             if (rand(1, 25) === 1) { // Run gc only once in every X requests.
                 self::file_gc();
             }
@@ -137,17 +136,15 @@ class Cache extends Base implements ArrayAccess
     {
         // Convert option to an array
         if (is_array($options) === false) {
-            $options = array(
-                'expires' => $options,
-            );
+            $options = ['expires' => $options];
         }
         // Merge default options
-        $default = array(
+        $default = [
             'expires' => false,
             'forever' => false,
             'max_age' => false,
             'lock' => true,
-        );
+        ];
         $options = array_merge($default, $options);
         if (count($options) !== count($default)) {
             \Sledgehammer\notice('Option: '.\Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
@@ -210,7 +207,7 @@ class Cache extends Base implements ArrayAccess
      */
     protected function read(&$output, $maxAge = false)
     {
-        $method = $this->_backend.'_read';
+        $method = $this->_backend.'Read';
         $success = $this->$method($node);
         if ($success === false) {
             return false;
@@ -244,7 +241,9 @@ class Cache extends Base implements ArrayAccess
      * Store the value in the cache.
      *
      * @param mixed      $value   The value
-     * @param string|int $expires expires  A string is parsed via strtotime(). Examples: '+5min' or '2020-01-01' int's larger than 3600 (1 hour) are interpreted as unix timestamp expire date. And int's smaller or equal to 3600 are interpreted used as ttl.
+     * @param string|int $expires expires  A string is parsed via strtotime().
+     * Example $expires: '+5min' or '2020-01-01' int's larger than 3600 (1 hour) are interpreted as unix timestamp expire date.
+     * And int's smaller or equal to 3600 are interpreted used as ttl.
      */
     protected function write($value, $expires = false)
     {
@@ -258,7 +257,7 @@ class Cache extends Base implements ArrayAccess
                 \Sledgehammer\notice('Writing an expired cache entry', 'Use Cache->clear() to invalidate a cache entry');
             }
         }
-        $method = $this->_backend.'_write';
+        $method = $this->_backend.'Write';
         $this->$method($value, $expires);
     }
 
@@ -267,7 +266,7 @@ class Cache extends Base implements ArrayAccess
      */
     public function clear()
     {
-        $method = $this->_backend.'_delete';
+        $method = $this->_backend.'Delete';
         $this->$method();
     }
 
@@ -276,7 +275,7 @@ class Cache extends Base implements ArrayAccess
      */
     private function lock()
     {
-        $method = $this->_backend.'_lock';
+        $method = $this->_backend.'Lock';
         $this->$method();
         $this->_locked = time();
     }
@@ -291,7 +290,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_locked === false) {
             throw new Exception('Must call lock() before release()');
         }
-        $method = $this->_backend.'_release';
+        $method = $this->_backend.'Release';
         $this->$method();
         $this->_locked = false;
     }
@@ -319,10 +318,9 @@ class Cache extends Base implements ArrayAccess
      *
      * @return bool
      */
-    private function apc_read(&$output)
+    private function apcRead(&$output)
     {
         $output = apc_fetch($this->_guid, $success);
-
         return $success;
     }
 
@@ -332,11 +330,11 @@ class Cache extends Base implements ArrayAccess
      * @param mixed $value
      * @param int   $expires
      */
-    private function apc_write($value, $expires = null)
+    private function apcWrite($value, $expires = null)
     {
-        $data = array(
+        $data = [
             'data' => $value,
-        );
+        ];
         if ($this->_locked) {
             $data['updated'] = $this->_locked;
         } else {
@@ -358,7 +356,7 @@ class Cache extends Base implements ArrayAccess
     /**
      * Clear a cached valie.
      */
-    private function apc_delete()
+    private function apcDelete()
     {
         apc_delete($this->_guid);
     }
@@ -366,7 +364,7 @@ class Cache extends Base implements ArrayAccess
     /**
      * Obtain a lock for this cache entry.
      */
-    private function apc_lock()
+    private function apcLock()
     {
         $ttl = intval(ini_get('max_execution_time'));
         while (true) {
@@ -381,19 +379,19 @@ class Cache extends Base implements ArrayAccess
     /**
      * Release the lock for this cached entry.
      */
-    private function apc_release()
+    private function apcRelease()
     {
         if (apc_delete($this->_guid.'.lock') == false) {
-            \Sledgehammer\warning('apc_delete() failed, was already released?');
+            \Sledgehammer\warning('apcDelete() failed, was already released?');
         }
     }
 
-    private function file_lock()
+    private function fileLock()
     {
         if ($this->_file !== null) {
             throw new Exception('Cache already has an open filepointer');
         }
-        $this->_file = fopen(Environment::tmpdir().'Cache/'.$this->_guid, 'c+');
+        $this->_file = fopen(Framework::tmp('Cache').$this->_guid, 'c+');
         if ($this->_file === false) {
             throw new Exception('Creating lockfile failed');
         }
@@ -405,7 +403,7 @@ class Cache extends Base implements ArrayAccess
         }
     }
 
-    private function file_release()
+    private function fileRelease()
     {
         if ($this->_file === null) {
             throw new Exception('Cache doesn\'t have an open filepointer');
@@ -415,14 +413,14 @@ class Cache extends Base implements ArrayAccess
         $this->_file = null;
     }
 
-    private function file_read(&$output)
+    private function fileRead(&$output)
     {
         if ($this->_file === null) { // unlocked read?
-            $filename = Environment::tmpdir().'Cache/'.$this->_guid;
+            $filename = Framework::tmp('Cache').$this->_guid;
             if (file_exists($filename) === false) {
                 return false;
             }
-            $file = fopen(Environment::tmpdir().'Cache/'.$this->_guid, 'r');
+            $file = fopen(Framework::tmp('Cache').$this->_guid, 'r');
         } else {
             $file = $this->_file;
         }
@@ -435,11 +433,11 @@ class Cache extends Base implements ArrayAccess
             return false;
         }
         $updated = stream_get_line($file, 1024, "\n");
-        $output = array(
+        $output = [
             'expires' => intval(substr($expires, 9)), // "Expires: " = 9
             'updated' => intval(substr($updated, 9)), // "Updated: " = 9
             'data' => unserialize(stream_get_contents($file)),
-        );
+        ];
         if ($this->_file === null) {
             fclose($file);
         }
@@ -447,7 +445,7 @@ class Cache extends Base implements ArrayAccess
         return true;
     }
 
-    private function file_write($value, $expires = null)
+    private function fileWrite($value, $expires = null)
     {
         if ($this->_file === null) {
             throw new Exception('Cache doesn\'t have an open filepointer');
@@ -462,20 +460,20 @@ class Cache extends Base implements ArrayAccess
         fflush($this->_file);
     }
 
-    private function file_delete()
+    private function fileDelete()
     {
         if ($this->_file) {
             throw new Exception('Can\'t clear a locked file');
         }
-        unlink(Environment::tmpdir().'Cache/'.$this->_guid);
+        unlink(Framework::tmp('Cache').$this->_guid);
     }
 
     /**
      * Cleanup expired cache entries.
      */
-    private static function file_gc()
+    private static function fileGc()
     {
-        $dir = new DirectoryIterator(Environment::tmpdir().'Cache');
+        $dir = new DirectoryIterator(Framework::tmp().'Cache');
         $files = [];
         foreach ($dir as $entry) {
             if ($entry->isFile()) {
@@ -487,7 +485,7 @@ class Cache extends Base implements ArrayAccess
         $cache = new self('GC', 'file');
         foreach ($files as $id) {
             $cache->_guid = $id;
-            $cache->_file = fopen(Environment::tmpdir().'Cache/'.$id, 'r');
+            $cache->_file = fopen(Framework::tmp('Cache').$id, 'r');
             $hit = $cache->read($output);
             fclose($cache->_file);
             $cache->_file = null;

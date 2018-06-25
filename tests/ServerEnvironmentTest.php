@@ -2,7 +2,7 @@
 
 namespace SledgehammerTests\Core;
 
-use Sledgehammer\Core\Environment;
+use Sledgehammer\Core\Framework;
 
 /**
  * Controleer diverse Sledgehammer vereisten.
@@ -32,7 +32,7 @@ class ServerEnvironmentTest extends TestCase
      */
     public function test_tmp_folder()
     {
-        $this->assertTrue(is_writable(Environment::tmpdir()), 'De tmp map zou beschrijfbaar moeten zijn');
+        $this->assertTrue(is_writable(Framework::tmp()), 'De tmp map zou beschrijfbaar moeten zijn');
     }
 
     // public function test_environment()
