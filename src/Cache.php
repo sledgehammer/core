@@ -91,7 +91,7 @@ class Cache extends Base implements ArrayAccess
     {
         if ($this->_locked) {
             \Sledgehammer\notice('Cache is locked, releasing: "'.$this->_identifier.'"');
-            $this->release(); // Auto-release locks on time-outs
+            $this->unlock(); // Auto-release locks on time-outs
         }
     }
 
@@ -106,12 +106,10 @@ class Cache extends Base implements ArrayAccess
             return self::$instance;
         }
         $backend = function_exists('apc_fetch') ? 'apc' : 'file';
-        $backend = 'file';
         self::$instance = new self('', $backend);
         if ($backend === 'file') {
-            \Sledgehammer\mkdirs(Framework::tmp('Cache'));
-            if (rand(1, 25) === 1) { // Run gc only once in every X requests.
-                self::file_gc();
+            if (rand(1, 50) === 1) { // Run gc only once in every X requests.
+                self::fileCleanup();
             }
         }
 
@@ -169,11 +167,11 @@ class Cache extends Base implements ArrayAccess
                 $hit = $this->read($value, $options['max_age']);
             } catch (Exception $e) {
                 // Reading cache failed
-                $this->release();
+                $this->unlock();
                 throw $e;
             }
             if ($hit) {
-                $this->release();
+                $this->unlock();
 
                 return $value;
             }
@@ -183,14 +181,14 @@ class Cache extends Base implements ArrayAccess
             $value = call_user_func($closure);
         } catch (Exception $e) {
             if ($options['lock']) {
-                $this->release();
+                $this->unlock();
             }
             throw $e;
         }
         // Store value
         $this->write($value, $options['expires']);
         if ($options['lock']) {
-            $this->release();
+            $this->unlock();
         }
 
         return $value;
@@ -266,7 +264,7 @@ class Cache extends Base implements ArrayAccess
      */
     public function clear()
     {
-        $method = $this->_backend.'Delete';
+        $method = $this->_backend.'Clear';
         $this->$method();
     }
 
@@ -285,12 +283,12 @@ class Cache extends Base implements ArrayAccess
      *
      * @throws Exception
      */
-    private function release()
+    private function unlock()
     {
         if ($this->_locked === false) {
-            throw new Exception('Must call lock() before release()');
+            throw new Exception('Must call lock() before unlock()');
         }
-        $method = $this->_backend.'Release';
+        $method = $this->_backend.'Unlock';
         $this->$method();
         $this->_locked = false;
     }
@@ -356,7 +354,7 @@ class Cache extends Base implements ArrayAccess
     /**
      * Clear a cached valie.
      */
-    private function apcDelete()
+    private function apcClear()
     {
         apc_delete($this->_guid);
     }
@@ -377,12 +375,12 @@ class Cache extends Base implements ArrayAccess
     }
 
     /**
-     * Release the lock for this cached entry.
+     * Remove the lock for this cached entry.
      */
-    private function apcRelease()
+    private function apcUnlock()
     {
         if (apc_delete($this->_guid.'.lock') == false) {
-            \Sledgehammer\warning('apcDelete() failed, was already released?');
+            \Sledgehammer\warning('apcDelete() failed, lock was already released?');
         }
     }
 
@@ -403,7 +401,7 @@ class Cache extends Base implements ArrayAccess
         }
     }
 
-    private function fileRelease()
+    private function fileUnlock()
     {
         if ($this->_file === null) {
             throw new Exception('Cache doesn\'t have an open filepointer');
@@ -460,7 +458,7 @@ class Cache extends Base implements ArrayAccess
         fflush($this->_file);
     }
 
-    private function fileDelete()
+    private function fileClear()
     {
         if ($this->_file) {
             throw new Exception('Can\'t clear a locked file');
@@ -471,9 +469,9 @@ class Cache extends Base implements ArrayAccess
     /**
      * Cleanup expired cache entries.
      */
-    private static function fileGc()
+    private static function fileCleanup()
     {
-        $dir = new DirectoryIterator(Framework::tmp().'Cache');
+        $dir = new DirectoryIterator(Framework::tmp('Cache'));
         $files = [];
         foreach ($dir as $entry) {
             if ($entry->isFile()) {
