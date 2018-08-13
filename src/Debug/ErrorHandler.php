@@ -382,7 +382,12 @@ class ErrorHandler extends Base
             if ($type == E_ERROR) {
                 echo 'Uncaught ';
             }
-            echo get_class($exception);
+            $class = get_class($exception);
+            if (strpos($class, '\\') === false) {
+                echo $class;
+            } else {
+                echo '<abbr title="'.$class.'">'.basename(str_replace('\\', '/', $class)).'</abbr>';
+            }
         } else {
             echo $this->error_types[$type];
         }
@@ -406,7 +411,7 @@ class ErrorHandler extends Base
                 $this->renderBrowserInfo();
                 $this->renderServerInfo();
             }
-            $this->renderBacktrace($exception);
+            $this->renderBacktrace();
             switch ($type) {
                 case E_WARNING:
                 case E_USER_ERROR:
@@ -577,13 +582,9 @@ class ErrorHandler extends Base
     /**
      * De bestanden, regelnummers, functie en objectnamen waar de fout optrad weergeven.
      */
-    private function renderBacktrace($exception)
+    private function renderBacktrace()
     {
-        if (self::isThrowable($exception)) {
-            $backtrace= $exception->getTrace();
-        } else {
-            $backtrace = debug_backtrace();
-        }
+        $backtrace = debug_backtrace();
         echo "<b>Backtrace</b><div>\n";
         // Pass 1:
         //   Backtrace binnen de errorhandler niet tonen
@@ -591,7 +592,7 @@ class ErrorHandler extends Base
         //   De plaats van de errror extra benadrukken (door een extra witregel)
         $helperPath = dirname(dirname(__DIR__)).'/helpers.php';
         while ($call = next($backtrace)) {
-            if (isset($call['object']) && $call['object'] === $this) {
+            if (isset($call['class']) && $call['class'] === self::class) {
                 if ($call['function'] == 'errorCallback') { // Is de fout getriggerd door php
                     if (isset($call['file'])) { // Zit de fout niet in een functie?
                         $this->renderBacktraceCall($call, true); // Dan is de fout afkomsting van deze $call, maar verberg de ErrorHandler->errorCallback parameters
