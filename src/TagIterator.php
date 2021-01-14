@@ -70,7 +70,7 @@ class TagIterator extends Base implements \Iterator
     /**
      * Iterator::rewind().
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->tokenizer->rewind();
         $this->valid = true;
@@ -80,30 +80,24 @@ class TagIterator extends Base implements \Iterator
 
     /**
      * Iterator::valid().
-     *
-     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         return $this->valid;
     }
 
     /**
      * Iterator::current().
-     *
-     * @return array
      */
-    public function current()
+    public function current(): mixed
     {
         return $this->tag;
     }
 
     /**
      * Iterator::key().
-     *
-     * @return int
      */
-    public function key()
+    public function key(): int
     {
         return $this->key;
     }
@@ -111,7 +105,7 @@ class TagIterator extends Base implements \Iterator
     /**
      * Iterator::next().
      */
-    public function next()
+    public function next(): void
     {
         if ($this->tokenizer->valid() == false) { // Ende html bereikt?
             $this->valid = false;
@@ -140,7 +134,7 @@ class TagIterator extends Base implements \Iterator
                             0 => '<!--',
                             1 => array($comment[1]),
                             2 => $token,
-                            'html' => '<!--'.$comment[1].$token,
+                            'html' => '<!--' . $comment[1] . $token,
                         );
                     }
                 } else {
@@ -193,7 +187,7 @@ class TagIterator extends Base implements \Iterator
                             break;
                         }
                         if (!in_array($token[0], array('T_TAG', 'T_CLOSE_TAG'))) {
-                            $this->warnings[] = 'TagIterator: Unexpected token: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
+                            $this->warnings[] = 'TagIterator: Unexpected token: "' . (is_array($token) ? '[' . $token[0] . '] ' . $token[1] : $token) . '"';
 
                             return $tag['html'];
                         }
@@ -251,7 +245,7 @@ class TagIterator extends Base implements \Iterator
 
                 return $entity;
             } else {
-                $this->warnings[] = 'TagIterator: Unexpected token in entity: "'.(is_array($token) ? '['.$token[0].'] '.$token[1] : $token).'"';
+                $this->warnings[] = 'TagIterator: Unexpected token in entity: "' . (is_array($token) ? '[' . $token[0] . '] ' . $token[1] : $token) . '"';
 
                 return $entity['html'];
             }

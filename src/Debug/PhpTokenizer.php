@@ -105,7 +105,7 @@ class PhpTokenizer extends Base implements Iterator
     /**
      * Iterator::rewind().
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->tokenIndex = 0;
         $this->state = 'HTML';
@@ -122,30 +122,24 @@ class PhpTokenizer extends Base implements Iterator
 
     /**
      * Iterator::valid().
-     *
-     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         return (bool) $this->valid;
     }
 
     /**
      * Iterator:key().
-     *
-     * @return int
      */
-    public function key()
+    public function key(): int
     {
         return $this->key;
     }
 
     /**
      * Iterator::current().
-     *
-     * @return array|string
      */
-    public function current()
+    public function current(): mixed
     {
         return $this->current;
     }
@@ -153,7 +147,7 @@ class PhpTokenizer extends Base implements Iterator
     /**
      * Iterator::next().
      */
-    public function next()
+    public function next(): void
     {
         if ($this->valid === 'LAST') {
             $this->valid = false;
@@ -181,7 +175,7 @@ class PhpTokenizer extends Base implements Iterator
                 $tokenContents = $token;
             }
             $value .= $tokenContents;
-            $method = 'parse_'.$this->state;
+            $method = 'parse_' . $this->state;
             if (method_exists($this, $method) == false) {
                 $this->failure('Invalid state');
                 break;
@@ -286,7 +280,7 @@ class PhpTokenizer extends Base implements Iterator
                     return;
 
                 default:
-                    $this->failure('Unknown action: '.$result['action']);
+                    $this->failure('Unknown action: ' . $result['action']);
                     break;
             }
         }
@@ -302,7 +296,7 @@ class PhpTokenizer extends Base implements Iterator
                 break;
 
             default:
-                $this->failure('Unexpected file ending (state: "'.$this->state.'")');
+                $this->failure('Unexpected file ending (state: "' . $this->state . '")');
                 break;
         }
     }
@@ -375,9 +369,9 @@ class PhpTokenizer extends Base implements Iterator
                 'tokenBefore' => 'T_PHP',
             );
         }
-//      if ($nextToken === false) { // end of file?
-//          return array('LAST TOKEN?');
-//      }
+        //      if ($nextToken === false) { // end of file?
+        //          return array('LAST TOKEN?');
+        //      }
 
         switch ($token[0]) {
             case T_NAMESPACE:
@@ -756,7 +750,7 @@ class PhpTokenizer extends Base implements Iterator
             return array('action' => 'LAST_TOKEN', 'token' => 'T_PHP', 'state' => 'PARAMETER_VALUE');
         }
         $value = is_array($token) ? token_name($token[0]) : $token;
-        $this->failure('Unknown default value: "'.$value.'"');
+        $this->failure('Unknown default value: "' . $value . '"');
     }
 
     /**
@@ -879,7 +873,7 @@ class PhpTokenizer extends Base implements Iterator
 
     private function failure($message)
     {
-        throw new Exception($message.' (state "'.$this->state.'" parsing line '.$this->lineNumber.')');
+        throw new Exception($message . ' (state "' . $this->state . '" parsing line ' . $this->lineNumber . ')');
     }
 
     /**
@@ -890,7 +884,7 @@ class PhpTokenizer extends Base implements Iterator
     private function expectToken($token, $expectedToken)
     {
         if ($this->isEqual($token, $expectedToken) == false) {
-            $this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.$this->tokenName($expectedToken).'"');
+            $this->failure('Unexpected token: ' . $this->tokenName($token) . ', expecting "' . $this->tokenName($expectedToken) . '"');
         }
     }
 
@@ -910,7 +904,7 @@ class PhpTokenizer extends Base implements Iterator
         foreach ($expectedTokens as $expectedToken) {
             $names[] = $this->tokenName($expectedToken);
         }
-        $this->failure('Unexpected token: '.$this->tokenName($token).', expecting "'.\Sledgehammer\human_implode('" or "', $names, '", "').'"');
+        $this->failure('Unexpected token: ' . $this->tokenName($token) . ', expecting "' . \Sledgehammer\human_implode('" or "', $names, '", "') . '"');
     }
 
     /**
@@ -923,13 +917,13 @@ class PhpTokenizer extends Base implements Iterator
     private function tokenName($token)
     {
         if (is_array($token)) {
-            return token_name($token[0]).' "'.$token[1].'"';
+            return token_name($token[0]) . ' "' . $token[1] . '"';
         }
         if (is_int($token)) {
             return token_name($token);
         }
 
-        return '"'.$token.'"';
+        return '"' . $token . '"';
     }
 
     /**

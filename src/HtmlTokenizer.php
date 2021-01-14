@@ -135,7 +135,7 @@ class HtmlTokenizer extends Base implements \Iterator
         $this->rewind();
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         if ($this->iteratorKey === 0) {
             return;
@@ -190,17 +190,17 @@ class HtmlTokenizer extends Base implements \Iterator
                     break;
 
                 default:
-                    throw new \Exception('Unknown state: "'.$this->state.'"');
+                    throw new \Exception('Unknown state: "' . $this->state . '"');
             }
         } catch (\Exception $exception) {
             if ($exception->getMessage() == 'HTML_TOKENIZER_EOF') {
-                $this->warning('Unexpected end of stream, state: '.$this->state);
+                $this->warning('Unexpected end of stream, state: ' . $this->state);
             } else {
                 throw $exception;
             }
         }
         if ($startPos === $this->position) {
-            throw new \Exception('No new tokens. State: '.$this->state.', position: '.$startPos);
+            throw new \Exception('No new tokens. State: ' . $this->state . ', position: ' . $startPos);
         }
 
         return array_shift($this->tokenQueue);
@@ -233,7 +233,7 @@ class HtmlTokenizer extends Base implements \Iterator
             throw new \Exception('parseTag() saninty check failed');
         }
         $nextChar = $this->substr(1, 1);
-        if (preg_match('/[>1-9'.$this->wsPattern.']/', $nextChar)) { // Is het geen begin van een tag?
+        if (preg_match('/[>1-9' . $this->wsPattern . ']/', $nextChar)) { // Is het geen begin van een tag?
             $this->warning('A "T_TEXT" block contains a "<" character');
             $this->buildToken($this->position, 'T_LT');
             $this->state = 'CONTENT';
@@ -265,7 +265,7 @@ class HtmlTokenizer extends Base implements \Iterator
         }
         $pos = $this->firstOccurrance(array_merge(array('>'), $this->wsArray), $match);
         if ($pos === false) {
-            $this->warning('Unclosed '.$this->tagType);
+            $this->warning('Unclosed ' . $this->tagType);
             $this->buildLastToken($this->tagType);
 
             return;
@@ -305,14 +305,14 @@ class HtmlTokenizer extends Base implements \Iterator
         $type = ($this->tagType == 'T_TAG') ? 'T_ATTRIBUTE' : 'T_INVALID';
         $char = $this->getChar();
         if (in_array($char, array('/', '!', '?'))) {
-            $this->warning('Invalid character: "'.$char.'"');
+            $this->warning('Invalid character: "' . $char . '"');
             $this->buildToken($this->position, 'T_INVALID');
 
             return;
         }
         $pos = $this->firstOccurrance(array_merge($this->wsArray, array('=', '>')), $match);
         if ($pos === false) {
-            $this->warning('Unclosed '.$this->tagType);
+            $this->warning('Unclosed ' . $this->tagType);
             $this->buildLastToken($type);
 
             return;
@@ -549,9 +549,9 @@ class HtmlTokenizer extends Base implements \Iterator
         $length = $endPosition + 1 - $this->position;
         if ($length <= 0) {
             if ($this->position >= $this->htmlLength) {
-                throw new \Exception('EOF reached, parsing '.$tokenType.' token failed');
+                throw new \Exception('EOF reached, parsing ' . $tokenType . ' token failed');
             }
-            throw new \Exception('Invalid lenght for token: '.$tokenType.', start: '.$this->position.' state: '.$this->state);
+            throw new \Exception('Invalid lenght for token: ' . $tokenType . ', start: ' . $this->position . ' state: ' . $this->state);
         }
         $value = substr($this->html, $this->position, $length);
         $this->position = $endPosition + 1;
@@ -642,25 +642,25 @@ class HtmlTokenizer extends Base implements \Iterator
 
     public function warning($message)
     {
-        $this->warnings[] = $message.' on position '.$this->position.' parsing '.$this->state;
+        $this->warnings[] = $message . ' on position ' . $this->position . ' parsing ' . $this->state;
     }
 
-    public function key()
+    public function key(): mixed
     {
         return $this->iteratorKey;
     }
 
-    public function current()
+    public function current(): mixed
     {
         return $this->iteratorCurrent;
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return $this->valid;
     }
 
-    public function next()
+    public function next(): void
     {
         ++$this->iteratorKey;
         if (count($this->tokenQueue)) { // Zijn er nog tokens ge queue d?

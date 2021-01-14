@@ -84,6 +84,9 @@ class Connection extends PDO
             preg_match('/^([a-z]+):/i', $dsn, $match);
             $driver = strtolower($match[1]);
         }
+        $options[PDO::ATTR_STRINGIFY_FETCHES] = false;
+        if (empty($options[PDO::ATTR_STRINGIFY_FETCHES])) {
+        }
 
         if ($driver == 'mysql') {
             $this->reportWarnings = true;
@@ -117,7 +120,7 @@ class Connection extends PDO
             }
             if (version_compare(PHP_VERSION, '5.3.6') == -1) {
                 if (empty($options[PDO::MYSQL_ATTR_INIT_COMMAND])) {
-                    $options[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "' . $charset . '"';
+                    $options[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "' . mysql_escape_string($charset) . '"';
                 }
             } elseif ($isUrlStyle) {
                 $config['charset'] = $charset;
@@ -157,6 +160,9 @@ class Connection extends PDO
         }
         if (empty($options[PDO::ATTR_STATEMENT_CLASS])) {
             $options[PDO::ATTR_STATEMENT_CLASS] = array(Statement::class);
+        }
+        if (empty($options[PDO::ATTR_STRINGIFY_FETCHES])) {
+            $options[PDO::ATTR_STRINGIFY_FETCHES] = false;
         }
         parent::__construct($dsn, $username, $passwd, $options);
         $this->logger->append('Database connection to ' . $dsn, array('duration' => (microtime(true) - $start)));
@@ -282,8 +288,6 @@ class Connection extends PDO
      *
      * @param string $value         The string to be quoted.
      * @param int    $parameterType [optional] Provides a data type hint for drivers that have alternate quoting styles.
-     *
-     * @return string A quoted string that is safe to pass into an SQL statement.
      */
     public function quote($value, int|null $parameterType = null): string|false
     {

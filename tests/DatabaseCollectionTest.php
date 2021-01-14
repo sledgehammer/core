@@ -16,10 +16,10 @@ class DatabaseCollectionTest extends DatabaseTestCase
      * @var array
      */
     private $fruitsAndVegetables = array(
-        array('id' => '4', 'name' => 'apple', 'type' => 'fruit'),
-        array('id' => '6', 'name' => 'pear', 'type' => 'fruit'),
-        array('id' => '7', 'name' => 'banana', 'type' => 'fruit'),
-        array('id' => '8', 'name' => 'carrot', 'type' => 'vegetable'),
+        array('id' => 4, 'name' => 'apple', 'type' => 'fruit'),
+        array('id' => 6, 'name' => 'pear', 'type' => 'fruit'),
+        array('id' => 7, 'name' => 'banana', 'type' => 'fruit'),
+        array('id' => 8, 'name' => 'carrot', 'type' => 'vegetable'),
     );
 
     public function fillDatabase($db)

@@ -73,7 +73,7 @@ abstract class DatabaseTestCase extends TestCase
             switch ($pdoDriver) {
                 case 'mysql':
                     $this->dbLink .= '_'.$_SERVER['HTTP_HOST'];
-                    $db = new Connection('mysql://root:root@localhost', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $db = new Connection('mysql://root:root@localhost', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     $db->reportWarnings = false;
                     $db->query('DROP DATABASE IF EXISTS '.$this->dbName);
                     $db->query('CREATE DATABASE '.$this->dbName);
@@ -81,7 +81,7 @@ abstract class DatabaseTestCase extends TestCase
                     break;
 
                 case 'sqlite':
-                    $db = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $db = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     break;
                 default:
                     throw new Exception('Unsupported pdoDriver');
@@ -254,7 +254,7 @@ abstract class DatabaseTestCase extends TestCase
 
                 case 'sqlite';
                     Connection::$instances[$this->dbLink] = 'CLEAR';
-                    $newDb = new Connection('sqlite::memory:', null, null, array('logIdentifier' => substr($this->dbLink, 9)));
+                    $newDb = new Connection('sqlite::memory:', null, null, ['logIdentifier' => substr($this->dbLink, 9)]);
                     foreach ($db as $property => $value) {
                         $newDb->$property = $value;
                     }

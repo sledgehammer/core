@@ -81,7 +81,7 @@ class Url extends Base
     {
         $info = parse_url($url);
         if ($info === false) {
-            throw new Exception('Invalid url: "'.$url.'"');
+            throw new Exception('Invalid url: "' . $url . '"');
         }
         if (isset($info['query'])) {
             parse_str($info['query'], $info['query']); // Zet de query om naar een array
@@ -102,11 +102,11 @@ class Url extends Base
     {
         $url = '';
         if ($this->scheme !== null && $this->host !== null) {
-            $url .= $this->scheme.'://';
+            $url .= $this->scheme . '://';
             if (empty($this->user) == false) {
                 $url .= rawurlencode($this->user);
                 if (empty($this->pass) == false) {
-                    $url .= ':'.$this->pass;
+                    $url .= ':' . $this->pass;
                 }
                 $url .= '@';
             }
@@ -117,7 +117,7 @@ class Url extends Base
                     'https' => 443,
                 );
                 if ($this->scheme === null || empty($standardPorts[$this->scheme]) || $standardPorts[$this->scheme] != $this->port) { // Is the port non-standard?
-                    $url .= ':'.$this->port;
+                    $url .= ':' . $this->port;
                 }
             }
         }
@@ -128,12 +128,12 @@ class Url extends Base
             $url .= str_replace('%2F', '/', rawurlencode($this->path));
         }
         if (is_string($this->query) && trim($this->query) !== '') {
-            $url .= '?'.$this->query;
+            $url .= '?' . $this->query;
         } elseif (is_array($this->query) && count($this->query) != 0) {
-            $url .= '?'.http_build_query($this->query);
+            $url .= '?' . http_build_query($this->query);
         }
         if ($this->fragment !== null) {
-            $url .= '#'.$this->fragment;
+            $url .= '#' . $this->fragment;
         }
 
         return $url;
@@ -146,6 +146,9 @@ class Url extends Base
      */
     public function getFolders()
     {
+        if ($this->path === null) {
+            return [];
+        }
         $parts = explode('/', $this->path);
         array_pop($parts); // remove filename part
         $folders = [];
@@ -340,16 +343,16 @@ class Url extends Base
         if (self::$current === null) {
             if (\Sledgehammer\array_value($_SERVER, 'HTTPS') == 'on') {
                 $scheme = 'https';
-                $port = ($_SERVER['SERVER_PORT'] == '443') ? '' : ':'.$_SERVER['SERVER_PORT'];
+                $port = ($_SERVER['SERVER_PORT'] == '443') ? '' : ':' . $_SERVER['SERVER_PORT'];
             } else {
                 $scheme = 'http';
-                $port = ($_SERVER['SERVER_PORT'] == '80') ? '' : ':'.$_SERVER['SERVER_PORT'];
+                $port = ($_SERVER['SERVER_PORT'] == '80') ? '' : ':' . $_SERVER['SERVER_PORT'];
             }
             $domain = $_SERVER['SERVER_NAME'];
             if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) { // An IP6 address?
-                $domain = '['.$domain.']'; // Enclose IP in brackets
+                $domain = '[' . $domain . ']'; // Enclose IP in brackets
             }
-            self::$current = new self($scheme.'://'.$domain.$port.$_SERVER['REQUEST_URI']);
+            self::$current = new self($scheme . '://' . $domain . $port . $_SERVER['REQUEST_URI']);
         }
 
         return clone self::$current;

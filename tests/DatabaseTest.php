@@ -56,22 +56,22 @@ class DatabaseTest extends DatabaseTestCase
         $db = Connection::instance($this->dbLink);
         $this->assertSame($db->fetchAll('SELECT * FROM ducks'), array(
             array(
-                'id' => '1',
+                'id' => 1,
                 'name' => 'Kwik',
             ),
             array(
-                'id' => '2',
+                'id' => 2,
                 'name' => 'Kwek',
             ),
             array(
-                'id' => '3',
+                'id' => 3,
                 'name' => 'Kwak',
             ),
         ));
         // Fetch row
         $kwik = $db->fetchRow('SELECT * FROM ducks LIMIT 1');
         $this->assertSame($kwik, array(
-            'id' => '1',
+            'id' => 1,
             'name' => 'Kwik',
         ));
         // Fetch value

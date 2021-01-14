@@ -125,10 +125,8 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
      * ArrayAccess: Retrieve an element.
      *
      * @param string $key
-     *
-     * @return mixed
      */
-    public function offsetGet($key)
+    public function offsetGet($key): mixed
     {
         if (is_array($this->_data)) {
             return $this->out($this->_data[$key], $key, 'array');
@@ -193,10 +191,8 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
 
     /**
      * Iterator: Retrieve the current element.
-     *
-     * @return mixed
      */
-    public function current()
+    public function current(): mixed
     {
         if ($this->_data instanceof \Iterator) {
             return $this->out($this->_data->current(), 'current', 'iterator');
@@ -219,10 +215,8 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
 
     /**
      * Iterator: Retrieve the current key.
-     *
-     * @return string|int
      */
-    public function key()
+    public function key(): string|int
     {
         if ($this->_data instanceof \Iterator) {
             return $this->out($this->_data->key(), 'key', 'iterator');

@@ -21,7 +21,7 @@
     "phpunit/phpunit": "^9.5"
   },
   "require": {
-    "php": ">=8"
+    "php": ">=7.3"
   },
   "scripts": {
     "test": "phpunit"

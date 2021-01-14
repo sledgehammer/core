@@ -76,7 +76,7 @@ class Text extends Base implements ArrayAccess
         }
         $properties = \Sledgehammer\reflect_properties($this);
         $properties['public']['length'] = -1;
-        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.', \Sledgehammer\build_properties_hint($properties));
+        \Sledgehammer\warning('Property: "' . $property . '" doesn\'t exist in a "' . get_class($this) . '" object.', \Sledgehammer\build_properties_hint($properties));
     }
 
     // Mutations
@@ -172,7 +172,7 @@ class Text extends Base implements ArrayAccess
         }
         $pos = strrpos($this->substring(0, $maxLenght), ' ');
 
-        return $this->substring(0, $pos).$suffix;
+        return $this->substring(0, $pos) . $suffix;
     }
 
     /**
@@ -255,7 +255,7 @@ class Text extends Base implements ArrayAccess
      */
     public function ucfirst()
     {
-        return new self($this[0]->toUpper().$this->substring(1), 'UTF-8');
+        return new self($this[0]->toUpper() . $this->substring(1), 'UTF-8');
     }
 
     /**
@@ -265,7 +265,7 @@ class Text extends Base implements ArrayAccess
      */
     public function capitalize()
     {
-        return new self($this[0]->toUpper().$this->substring(1)->toLower(), 'UTF-8');
+        return new self($this[0]->toUpper() . $this->substring(1)->toLower(), 'UTF-8');
     }
 
     // Info
@@ -348,10 +348,8 @@ class Text extends Base implements ArrayAccess
      * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      *
      * @param int|string $offset
-     *
-     * @return bool
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $offset < mb_strlen($this->text, 'UTF-8');
     }
@@ -362,10 +360,8 @@ class Text extends Base implements ArrayAccess
      * @link http://php.net/manual/en/arrayaccess.offsetget.php
      *
      * @param int|string $offset
-     *
-     * @return mixed
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->substring($offset, 1);
     }
@@ -378,7 +374,7 @@ class Text extends Base implements ArrayAccess
      * @param int|string $offset
      * @param mixed      $value
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         throw new Exception('Not (yet) implemented');
     }
@@ -390,7 +386,7 @@ class Text extends Base implements ArrayAccess
      *
      * @param int string $offset
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new Exception('Not (yet) implemented');
     }
