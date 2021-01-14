@@ -204,11 +204,11 @@ class Connection extends PDO
      *
      * @return Statement
      */
-    public function query($statement)
+    public function query(string $statement, ?int $mode = null, mixed ...$args)
     {
         $start = microtime(true);
         $statement = (string) $statement;
-        $result = parent::query($statement);
+        $result = parent::query($statement,$mode, ...$args);
         $this->logger->append($statement, array('duration' => (microtime(true) - $start)));
         if ($result === false) {
             $this->reportError($statement);

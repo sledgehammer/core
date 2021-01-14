@@ -7,7 +7,7 @@ use Sledgehammer\Core\TagIterator;
 
 class TagIteratorTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         ini_set('display_errors', true);
         //restore_error_handler();
@@ -107,27 +107,27 @@ class TagIteratorTest extends TestCase
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
             ),
         ));
-//      $html = <<<END
-//<!DOCTYPE NEWSPAPER [
-//
-//<!ELEMENT NEWSPAPER (ARTICLE+)>
-//<!ELEMENT ARTICLE (HEADLINE,BYLINE,LEAD,BODY,NOTES)>
-//<!ELEMENT HEADLINE (#PCDATA)>
-//<!ELEMENT BYLINE (#PCDATA)>
-//<!ELEMENT LEAD (#PCDATA)>
-//<!ELEMENT BODY (#PCDATA)>
-//<!ELEMENT NOTES (#PCDATA)>
-//
-//<!ATTLIST ARTICLE AUTHOR CDATA #REQUIRED>
-//<!ATTLIST ARTICLE EDITOR CDATA #IMPLIED>
-//<!ATTLIST ARTICLE DATE CDATA #IMPLIED>
-//<!ATTLIST ARTICLE EDITION CDATA #IMPLIED>
-//
-//]>tekst
-//END;
-//      $this->compare($html, array(
-//          0 => $html
-//      ));
+        //      $html = <<<END
+        //<!DOCTYPE NEWSPAPER [
+        //
+        //<!ELEMENT NEWSPAPER (ARTICLE+)>
+        //<!ELEMENT ARTICLE (HEADLINE,BYLINE,LEAD,BODY,NOTES)>
+        //<!ELEMENT HEADLINE (#PCDATA)>
+        //<!ELEMENT BYLINE (#PCDATA)>
+        //<!ELEMENT LEAD (#PCDATA)>
+        //<!ELEMENT BODY (#PCDATA)>
+        //<!ELEMENT NOTES (#PCDATA)>
+        //
+        //<!ATTLIST ARTICLE AUTHOR CDATA #REQUIRED>
+        //<!ATTLIST ARTICLE EDITOR CDATA #IMPLIED>
+        //<!ATTLIST ARTICLE DATE CDATA #IMPLIED>
+        //<!ATTLIST ARTICLE EDITION CDATA #IMPLIED>
+        //
+        //]>tekst
+        //END;
+        //      $this->compare($html, array(
+        //          0 => $html
+        //      ));
     }
 
     public function test_evil_html()

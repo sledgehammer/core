@@ -9,7 +9,7 @@ use Sledgehammer\Core\Framework;
 class CurlTest extends TestCase
 {
     // @todo Test version >= 7.19.4 (which has CURLOPT_REDIR_PROTOCOLS)
-    protected function setUp()
+    protected function setUp(): void
     {
         if (getenv('CI')) {
             $this->markTestSkipped('Prevent curl errors on travis');

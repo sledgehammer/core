@@ -131,7 +131,7 @@ class HtmlTokenizer extends Base implements \Iterator
         $this->html = $html;
         $this->htmlLength = strlen($html);
         $this->wsArray = array(' ', "\n", "\r", "\t");
-        $this->wsPattern = implode($this->wsArray);
+        $this->wsPattern = implode('', $this->wsArray);
         $this->rewind();
     }
 
@@ -527,7 +527,7 @@ class HtmlTokenizer extends Base implements \Iterator
     {
         $whitespace = false;
         for ($i = $this->position; $i < $this->htmlLength; ++$i) {
-            if (in_array($this->html{$i}, $this->wsArray)) {
+            if (in_array($this->html[$i], $this->wsArray)) {
                 $whitespace = true;
             } else {
                 break;
@@ -580,7 +580,7 @@ class HtmlTokenizer extends Base implements \Iterator
             throw new \Exception('HTML_TOKENIZER_EOF');
         }
 
-        return $this->html{$this->position};
+        return $this->html[$this->position];
     }
 
     /**

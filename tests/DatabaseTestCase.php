@@ -237,7 +237,7 @@ abstract class DatabaseTestCase extends TestCase
     /**
      * Setup the database environment.
      */
-    public function setUp()
+    public function setUp(): void
     {
         $db = Connection::instance($this->dbLink);
         //dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));

@@ -2,7 +2,6 @@
 
 namespace SledgehammerTests\Core;
 
-use PHPUnit\Framework\Error\Notice;
 use Sledgehammer\Core\Debug\Autoloader;
 use Sledgehammer\Core\PropertyPath;
 use Sledgehammer\Core\PropertyPath_Tester;
@@ -78,31 +77,31 @@ class PropertyPathTest extends TestCase
 
     public function test_parser_warning_empty_path()
     {
-        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Path is empty');
+        $this->expectException('\PHPUnit\Framework\Error\Notice', 'Path is empty');
         $this->assertSame(PropertyPath::parse(''), []);
     }
 
     public function test_parser_warning_invalid_start()
     {
-        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "." in the path');
+        $this->expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "." in the path');
         $this->assertSame(PropertyPath::parse('.any'), array(array(PropertyPath::TYPE_ANY, 'any')));
     }
 
     public function test_parser_warning_invalid_chain()
     {
-        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
+        $this->expectException('\PHPUnit\Framework\Error\Notice', 'Invalid chain, expecting a ".", "->" or "[" before "any"');
         $this->assertSame(PropertyPath::parse('[element]any'), array(array(PropertyPath::TYPE_ELEMENT, 'element'), array(PropertyPath::TYPE_ANY, 'any')));
     }
 
     public function test_parser_warning_invalid_arrow()
     {
-        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
+        $this->expectException('\PHPUnit\Framework\Error\Notice', 'Invalid "->" in path, expecting an identifier after an "->"');
         $this->assertSame(PropertyPath::parse('->->property'), array(array(PropertyPath::TYPE_PROPERTY, 'property')));
     }
 
     public function test_parser_warning_unmatched_brackets()
     {
-        $this-> expectException('\PHPUnit\Framework\Error\Notice', 'Unmatched brackets, missing a "]" in path after "element"');
+        $this->expectException('\PHPUnit\Framework\Error\Notice', 'Unmatched brackets, missing a "]" in path after "element"');
         $this->assertSame(PropertyPath::parse('[element'), array(array(PropertyPath::TYPE_ANY, '[element')));
     }
 
@@ -151,24 +150,24 @@ class PropertyPathTest extends TestCase
         );
         $this->assertSame(PropertyPath::get('[*].id', $sequence), array(1, 3, 5));
 
-        Notice::$enabled = false;
-        $error_log = ini_get('error_log');
-        ini_set('error_log', '/dev/null');
+        // @todo Should optional selector still generate notices on unexpected types?
+        // PropertyPath::get('->id?', $array);
+        // PropertyPath::get('[id?]', $object);
+    }
+    public function test_PropertyPath_get_unexpectedArray()
+    {
+        $this->expectNotice();
+        $this->expectNoticeMessageMatches('/Unexpected type: array, expecting an object/');
+        $array = ['key' => 123];
+        PropertyPath::get('->key', $array); // 'Path "->key" should NOT work on arrays'
+    }
 
-        ob_start();
-        $this->assertSame(PropertyPath::get('->property->element', $object), null);
-        $this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
-        ob_start();
-        $this->assertSame(PropertyPath::get('->id', $array), null, 'Path "->id" should NOT work on arrays');
-        $this->assertRegExp('/Unexpected type: array, expecting an object/', ob_get_clean());
-        ob_start();
-        $this->assertSame(PropertyPath::get('[id]', $object), null, 'Path "[id]" should NOT work on objects');
-        $this->assertRegExp('/Unexpected type: object, expecting an array/', ob_get_clean());
-
-        //      PropertyPath::get('->id?', $array)
-        //      PropertyPath::get('[id?]', $object)
-        Notice::$enabled = true;
-        ini_set('error_log', $error_log);
+    public function test_PropertyPath_get_unexpectedObject()
+    {
+        $object = (object) ['prop' => 456];
+        $this->expectNotice();
+        $this->expectNoticeMessageMatches('/Unexpected type: object, expecting an array/');
+        PropertyPath::get('[id]', $object); // Path "[id]" should NOT work on objects
     }
 
     public function test_PropertyPath_set()

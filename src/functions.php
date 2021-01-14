@@ -3,6 +3,7 @@
 namespace Sledgehammer;
 
 use Closure;
+use Throwable;
 use DirectoryIterator;
 use Exception;
 use ReflectionObject;
@@ -20,6 +21,7 @@ use Sledgehammer\Core\PropertyPath;
 use Sledgehammer\Core\Text;
 use stdClass;
 use Traversable;
+use Iterator;
 
 /**
  * Sledgehammer functions.
@@ -443,7 +445,7 @@ function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"')
  * implode(), but with quotes (") around the values.
  *
  * @param string $glue
- * @param string $array
+ * @param array $array
  * @param string $quote
  *
  * @return string
@@ -1175,7 +1177,7 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
             $label = $variable;
             break;
 
-        // al geconverteerde datatypes
+            // al geconverteerde datatypes
         case 'symbol':
         case 'number':
         case 'comment':
@@ -1790,7 +1792,7 @@ function sem_key($identifier)
     $md5 = md5($identifier);
     $key = 0;
     for ($i = 0; $i < 32; ++$i) {
-        $key += ord($md5{$i}) * $i;
+        $key += ord($md5[$i]) * $i;
     }
 
     return $key;

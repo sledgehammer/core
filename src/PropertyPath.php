@@ -482,7 +482,7 @@ class PropertyPath extends Base
                 $nextToken = $tokens[$i + 1];
             }
             switch ($token[0]) {
-                // TYPE_ANY
+                    // TYPE_ANY
                 case self::T_STRING;
                     if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
                         \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
@@ -501,7 +501,7 @@ class PropertyPath extends Base
                     }
                     break;
 
-                // Chained T_ANY
+                    // Chained T_ANY
                 case self::T_DOT:
                     if ($first) {
                         if ($nextToken[0] !== 'T_END') {
@@ -526,7 +526,7 @@ class PropertyPath extends Base
                     }
                     break;
 
-                // TYPE_PROPERTY
+                    // TYPE_PROPERTY
                 case self::T_ARROW:
                     if ($nextToken[0] !== self::T_STRING) {
                         \Sledgehammer\notice('Invalid "'.$token[1].'" in path, expecting an identifier after an "->"');
@@ -545,7 +545,7 @@ class PropertyPath extends Base
                     }
                     break;
 
-                // TYPE_ELEMENT
+                    // TYPE_ELEMENT
                 case self::T_BRACKET_OPEN:
                     if ($nextToken[0] !== self::T_STRING) {
                         \Sledgehammer\notice('Unexpected token "'.$token[0].'" in path, expecting T_STRING after ".["', $token);

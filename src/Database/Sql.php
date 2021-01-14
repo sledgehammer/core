@@ -6,6 +6,8 @@ use Exception;
 use Sledgehammer\Core\InfoException;
 use Sledgehammer\Core\Base;
 
+use function Sledgehammer\is_indexed;
+
 /**
  * Query object to mutate and generate (complex) SQL queries.
  *
@@ -131,7 +133,7 @@ class Sql extends Base
             if ($alias === null) {
                 $this->columns[] = $column;
             } else {
-                if (isset($sql->columns[$alias])) {
+                if (isset($this->columns[$alias])) {
                     \Sledgehammer\notice('Overruling column(alias) "'.$alias.'"');
                 }
                 $this->columns[$alias] = $column;
@@ -146,7 +148,7 @@ class Sql extends Base
      */
     public function removeColumn($alias)
     {
-        unset($sql->columns[$alias]);
+        unset($this->columns[$alias]);
     }
 
     /**
@@ -453,7 +455,7 @@ class Sql extends Base
         } else {
             $columns = [];
             foreach ($this->columns as $alias => $column) { // kolommen opbouwen
-                if ($alias != $column) {
+                if ($alias != $column && is_numeric($alias) === false) {
                     $column .= ' AS '.$alias;
                 }
                 $columns[] = $column;

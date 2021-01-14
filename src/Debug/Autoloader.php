@@ -173,7 +173,7 @@ class Autoloader extends Base
                 if (isset($this->ambiguous[$definition])) {
                     \Sledgehammer\warning('Ambiguous definition: "'.$definition.'"', array('Multiple implentations' => $this->ambiguous[$definition]));
                 } else {
-                    \Sledgehammer\warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+                    \Sledgehammer\warning('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(', ', array_keys($this->definitions))));
                 }
             }
 
@@ -554,6 +554,12 @@ class Autoloader extends Base
                     break;
 
                 case 'NAMESPACE':
+                    if (defined(('T_NAME_QUALIFIED'))) {
+                        if ($token[0] === T_NAME_QUALIFIED) {
+                            $namespace .= $token[1];
+                            break;
+                        }
+                    }
                     if (in_array($token[0], array(T_STRING, T_NS_SEPARATOR))) {
                         $namespace .= $token[1];
                         break;
@@ -676,7 +682,7 @@ class Autoloader extends Base
         }
         $filename = $this->getFilename($definition);
         if ($filename === null) {
-            throw new InfoException('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(array_keys($this->definitions), ', ')));
+            throw new InfoException('Unknown definition: "'.$definition.'"', array('Available definitions' => implode(', ', array_keys($this->definitions))));
         }
         $tokens = token_get_all(file_get_contents($filename));
         $code = '';
@@ -695,7 +701,7 @@ class Autoloader extends Base
             }
 
             switch ($token[0]) {
-                // Geen private en protected
+                    // Geen private en protected
                 case T_PRIVATE:
                 case T_PROTECTED:
                     $code .= 'public';
@@ -709,7 +715,7 @@ class Autoloader extends Base
                     $i += 2;
                     break;
 
-                // Alle andere php_code toevoegen aan de $php_code string
+                    // Alle andere php_code toevoegen aan de $php_code string
                 default:
                     $code .= $token[1];
                     break;
