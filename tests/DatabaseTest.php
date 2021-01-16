@@ -14,12 +14,17 @@ class DatabaseTest extends DatabaseTestCase
     public function __construct()
     {
         parent::__construct();
-        //      parent::__construct('mysql');
-        //      parent::__construct('sqlite');
+        // parent::__construct('mysql');
+        // parent::__construct('sqlite');
     }
 
     public function test_connect()
     {
+        try {
+            $pdo = new PDO('mysql:host=localhost', 'root', 'root');
+        } catch (\Exception $e) {
+            $this->markTestSkipped('No mysql test server available');
+        }
         $dbDsn = new Connection('mysql:host=localhost', 'root', 'root');
         $dbUrl = new Connection('mysql://root:root@localhost');
         $this->assertTrue(true, 'No exceptions were thrown');
