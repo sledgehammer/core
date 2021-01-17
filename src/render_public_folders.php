@@ -18,7 +18,9 @@ if (isset($_SERVER['CONTEXT_DOCUMENT_ROOT'])) {
     $scriptname = isset($_SERVER['ORIG_SCRIPT_NAME']) ? $_SERVER['ORIG_SCRIPT_NAME'] : $_SERVER['SCRIPT_NAME'];
 }
 $webpath = dirname($scriptname);
-if ($webpath != '/') {
+if ($webpath === '.') {
+    $webpath = '/';
+} elseif ($webpath !== '/') {
     $webpath .= '/';
 }
 $uriPath = rawurldecode(parse_url((isset($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : $_SERVER['REQUEST_URI']), PHP_URL_PATH)); // Het path gedeelte van de uri
@@ -83,11 +85,15 @@ foreach ($files as $filename) {
 /*
  * URL path to the root folder. Example: "/" or "/site1/"
  */
+if (defined('Sledgehammer\WEBPATH') === false) {
 define('Sledgehammer\WEBPATH', $webpath);
+}
 $folderCount = preg_match_all('/[^\/]+\//', substr($uriPath, strlen(Sledgehammer\WEBPATH)), $match);
 /*
  * Relative URL path to the root folder. Example: "../"
  */
+if (defined('Sledgehammer\WEBROOT') === false) {
 define('Sledgehammer\WEBROOT', str_repeat('../', $folderCount));
+}
 //unset($urlPath, $publicFile, $fullpath, $folderCount, $math, $folders, $folder, $files, $filename);
 return true;
