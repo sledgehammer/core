@@ -152,12 +152,12 @@ class DatabaseCollection extends Collection
         } elseif ($logicalOperator === 'OR') {
             $method = 'orWhere';
         } else {
-            throw new Exception('Unsupported logical operator "'.$logicalOperator.'", expecting "AND" or "OR"');
+            throw new Exception('Unsupported logical operator "' . $logicalOperator . '", expecting "AND" or "OR"');
         }
 
         // The result are rows(fetch_assoc arrays), all conditions must be columnnames (or invalid)
         foreach ($conditions as $path => $value) {
-            if (preg_match('/^(.*) ('.\Sledgehammer\COMPARE_OPERATORS.')$/', $path, $matches)) {
+            if (preg_match('/^(.*) (' . \Sledgehammer\COMPARE_OPERATORS . ')$/', $path, $matches)) {
                 $column = $this->convertPathToColumn($matches[1]);
                 $operator = $matches[2];
             } else {
@@ -189,14 +189,14 @@ class DatabaseCollection extends Collection
                         break;
 
                     default:
-                        \Sledgehammer\warning('Unknown behavior for NULL values with operator "'.$operator.'"');
+                        \Sledgehammer\warning('Unknown behavior for NULL values with operator "' . $operator . '"');
                         $expectation = $db->quote($expectation);
                         break;
                 }
-                $sql = $sql->$method($column.' '.$operator.' '.$expectation);
+                $sql = $sql->$method($column . ' ' . $operator . ' ' . $expectation);
             } else {
                 if ($operator === '!=') {
-                    $sql = $sql->$method('('.$column.' != '.$db->quote($value, PDO::PARAM_STR).' OR '.$column.' IS NULL)');
+                    $sql = $sql->$method('(' . $column . ' != ' . $db->quote($value, PDO::PARAM_STR) . ' OR ' . $column . ' IS NULL)');
                 } elseif ($operator === 'IN') {
                     if ((is_array($value) || $value instanceof Traversable) === false) {
                         \Sledgehammer\notice('Operator IN expects an array or Traversable', $value);
@@ -206,12 +206,12 @@ class DatabaseCollection extends Collection
                     foreach ($value as $val) {
                         $quoted[] = $this->quote($db, $column, $val);
                     }
-                    $sql = $sql->$method($column.' '.$operator.' ('.implode(', ', $quoted).')');
+                    $sql = $sql->$method($column . ' ' . $operator . ' (' . implode(', ', $quoted) . ')');
                 } else {
                     if ($operator === '==') {
                         $operator = '=';
                     }
-                    $sql = $sql->$method($column.' '.$operator.' '.$this->quote($db, $column, $value));
+                    $sql = $sql->$method($column . ' ' . $operator . ' ' . $this->quote($db, $column, $value));
                 }
             }
         }
@@ -312,7 +312,7 @@ class DatabaseCollection extends Collection
         if (is_string($selector) && $selector !== '.' && $this->data === null && is_string($this->sql) === false) {
             if ($this->sql->limit === false && $this->sql->offset === false && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
                 $db = Connection::instance($this->dbLink);
-                $sql = $this->sql->select('MIN('.$db->quoteIdentifier($selector).')');
+                $sql = $this->sql->select('MIN(' . $db->quoteIdentifier($selector) . ')');
 
                 return $db->fetchValue($sql);
             }
@@ -329,7 +329,7 @@ class DatabaseCollection extends Collection
         if (is_string($selector) && $selector !== '.' && $this->data === null && is_string($this->sql) === false) {
             if ($this->sql->limit === false && $this->sql->offset === false && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
                 $db = Connection::instance($this->dbLink);
-                $sql = $this->sql->select('MAX('.$db->quoteIdentifier($selector).')');
+                $sql = $this->sql->select('MAX(' . $db->quoteIdentifier($selector) . ')');
 
                 return $db->fetchValue($sql);
             }
@@ -367,10 +367,8 @@ class DatabaseCollection extends Collection
      * Returns the number of elements in the collection.
      *
      * @link http://php.net/manual/en/class.countable.php
-     *
-     * @return int
      */
-    public function count()
+    public function count(): int
     {
         if ($this->data === null && $this->sql instanceof Sql && is_array($this->sql->groupBy) && count($this->sql->groupBy) === 0) {
             $sql = $this->sql->select('COUNT(*)')->limit(false)->offset(false);

@@ -5,7 +5,7 @@ namespace Sledgehammer\Core;
 /**
  * A wrapper that prevents changes to an object or array.
  */
-class Readonly extends Wrapper
+class Freeze extends Wrapper
 {
     /**
      * Don't allow setting any data in a read-only object/array.
@@ -18,7 +18,7 @@ class Readonly extends Wrapper
      */
     protected function in($value, $element, $context)
     {
-        throw new \Exception('The '.gettype($this->_data).' is marked readonly');
+        throw new \Exception('The ' . gettype($this->_data) . ' is marked readonly');
     }
 
     /**
@@ -31,6 +31,6 @@ class Readonly extends Wrapper
      */
     public function __call($method, $arguments)
     {
-        throw new \Exception('The '.gettype($this->_data).' is marked readonly');
+        throw new \Exception('The ' . gettype($this->_data) . ' is marked readonly');
     }
 }

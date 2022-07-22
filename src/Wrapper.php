@@ -34,11 +34,11 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         $this->_data = $data;
         foreach ($options as $name => $value) {
-            $property = '_'.$name;
+            $property = '_' . $name;
             if (property_exists($this, $property)) {
                 $this->$property = $value;
             } else {
-                \Sledgehammer\notice('Invalid option: "'.$name.'"');
+                \Sledgehammer\notice('Invalid option: "' . $name . '"');
             }
         }
     }
@@ -115,7 +115,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     {
         $filtered = [];
         foreach ($arguments as $key => $value) {
-            $filtered[$key] = $this->in($value, $method.'['.$key.']', 'parameter');
+            $filtered[$key] = $this->in($value, $method . '[' . $key . ']', 'parameter');
         }
 
         return $this->out(call_user_func_array(array($this->_data, $method), $filtered), $method, 'method', $filtered);
@@ -135,7 +135,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
         } elseif ($this->_data instanceof \ArrayAccess) {
             return $this->out($this->_data[$key], $key, 'array');
         } else {
-            throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
+            throw new \Exception('Cannot use object of type ' . get_class($this->_data) . ' as array');
         }
     }
 
@@ -145,7 +145,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
      * @param string $key
      * @param mixed  $value
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         if (is_array($this->_data)) {
             $value = $this->in($value, $key, 'array');
@@ -154,7 +154,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
             $value = $this->in($value, $key, 'array');
             $this->_data[$key] = $value;
         } else {
-            throw new \Exception('Cannot use object of type '.get_class($this->_data).' as array');
+            throw new \Exception('Cannot use object of type ' . get_class($this->_data) . ' as array');
         }
     }
 
@@ -163,7 +163,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
      *
      * @param string $index
      */
-    public function offsetUnset($index)
+    public function offsetUnset($index): void
     {
         throw new \Exception('Not (yet) supported');
     }
@@ -173,7 +173,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
      *
      * @param string $index
      */
-    public function offsetExists($index)
+    public function offsetExists($index): bool
     {
         throw new \Exception('Not (yet) supported');
     }
@@ -181,10 +181,11 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     /**
      * Iterator: Rewind the iterator to the first element.
      */
-    public function rewind()
+    public function rewind(): void
     {
         if ($this->_data instanceof \Iterator) {
-            return $this->_data->rewind();
+            $this->_data->rewind();
+            return;
         } elseif (is_array($this->_data)) {
             reset($this->_data);
         }
@@ -207,7 +208,7 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
     /**
      * Iterator: Move the next element.
      */
-    public function next()
+    public function next(): void
     {
         if ($this->_data instanceof \Iterator) {
             $this->_data->next();
@@ -232,10 +233,8 @@ abstract class Wrapper extends Base implements \ArrayAccess, \Iterator
 
     /**
      * Iterator: Returns false when the end of the iterator is reached.
-     *
-     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         if ($this->_data instanceof \Iterator) {
             return $this->_data->valid();

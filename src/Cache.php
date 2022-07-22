@@ -4,6 +4,7 @@ namespace Sledgehammer\Core;
 
 use ArrayAccess;
 use DirectoryIterator;
+use Exception;
 
 /**
  * A Cache node in the Caching graph.
@@ -82,7 +83,7 @@ class Cache extends Base implements ArrayAccess
      */
     protected function __construct($identifier, $backend)
     {
-        $this->_guid = sha1('Sledgehammer'.__FILE__.$identifier);
+        $this->_guid = sha1('Sledgehammer' . __FILE__ . $identifier);
         $this->_identifier = $identifier;
         $this->_backend = $backend;
     }
@@ -90,7 +91,7 @@ class Cache extends Base implements ArrayAccess
     public function __destruct()
     {
         if ($this->_locked) {
-            \Sledgehammer\notice('Cache is locked, releasing: "'.$this->_identifier.'"');
+            \Sledgehammer\notice('Cache is locked, releasing: "' . $this->_identifier . '"');
             $this->unlock(); // Auto-release locks on time-outs
         }
     }
@@ -145,7 +146,7 @@ class Cache extends Base implements ArrayAccess
         ];
         $options = array_merge($default, $options);
         if (count($options) !== count($default)) {
-            \Sledgehammer\notice('Option: '.\Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))).' is invalid');
+            \Sledgehammer\notice('Option: ' . \Sledgehammer\quoted_human_implode(' and ', array_keys(array_diff_key($options, $default))) . ' is invalid');
         }
         if ($options['expires'] === false && $options['forever'] === false && $options['max_age'] === false) {
             throw new InfoException('Invalid options: "expires",  "max_age" or "forever" must be set', $options);
@@ -165,7 +166,7 @@ class Cache extends Base implements ArrayAccess
             // Read value from cache
             try {
                 $hit = $this->read($value, $options['max_age']);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 // Reading cache failed
                 $this->unlock();
                 throw $e;
@@ -179,7 +180,7 @@ class Cache extends Base implements ArrayAccess
         // Miss, obtain value.
         try {
             $value = call_user_func($closure);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if ($options['lock']) {
                 $this->unlock();
             }
@@ -205,7 +206,7 @@ class Cache extends Base implements ArrayAccess
      */
     protected function read(&$output, $maxAge = false)
     {
-        $method = $this->_backend.'Read';
+        $method = $this->_backend . 'Read';
         $success = $this->$method($node);
         if ($success === false) {
             return false;
@@ -219,7 +220,7 @@ class Cache extends Base implements ArrayAccess
                 $maxAge = $now - $maxAge;
             }
             if ($maxAge > $now) {
-                \Sledgehammer\notice('maxAge is '.($maxAge - $now).' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
+                \Sledgehammer\notice('maxAge is ' . ($maxAge - $now) . ' seconds in the future', 'Use Cache->clear() to invalidate a cache entry');
 
                 return false;
             }
@@ -255,7 +256,7 @@ class Cache extends Base implements ArrayAccess
                 \Sledgehammer\notice('Writing an expired cache entry', 'Use Cache->clear() to invalidate a cache entry');
             }
         }
-        $method = $this->_backend.'Write';
+        $method = $this->_backend . 'Write';
         $this->$method($value, $expires);
     }
 
@@ -264,7 +265,7 @@ class Cache extends Base implements ArrayAccess
      */
     public function clear()
     {
-        $method = $this->_backend.'Clear';
+        $method = $this->_backend . 'Clear';
         $this->$method();
     }
 
@@ -273,7 +274,7 @@ class Cache extends Base implements ArrayAccess
      */
     private function lock()
     {
-        $method = $this->_backend.'Lock';
+        $method = $this->_backend . 'Lock';
         $this->$method();
         $this->_locked = time();
     }
@@ -288,7 +289,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_locked === false) {
             throw new Exception('Must call lock() before unlock()');
         }
-        $method = $this->_backend.'Unlock';
+        $method = $this->_backend . 'Unlock';
         $this->$method();
         $this->_locked = false;
     }
@@ -303,7 +304,7 @@ class Cache extends Base implements ArrayAccess
     public function __get($property)
     {
         if (empty($this->_nodes[$property])) {
-            $this->_nodes[$property] = new self($this->_identifier.'.'.$property, $this->_backend);
+            $this->_nodes[$property] = new self($this->_identifier . '.' . $property, $this->_backend);
         }
 
         return $this->_nodes[$property];
@@ -366,7 +367,7 @@ class Cache extends Base implements ArrayAccess
     {
         $ttl = intval(ini_get('max_execution_time'));
         while (true) {
-            if (apc_add($this->_guid.'.lock', 'LOCKED', $ttl)) {
+            if (apc_add($this->_guid . '.lock', 'LOCKED', $ttl)) {
                 break;
             }
             // @todo Implement a timeout / Exception?
@@ -379,7 +380,7 @@ class Cache extends Base implements ArrayAccess
      */
     private function apcUnlock()
     {
-        if (apc_delete($this->_guid.'.lock') == false) {
+        if (apc_delete($this->_guid . '.lock') == false) {
             \Sledgehammer\warning('apcDelete() failed, lock was already released?');
         }
     }
@@ -389,7 +390,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_file !== null) {
             throw new Exception('Cache already has an open filepointer');
         }
-        $this->_file = fopen(Framework::tmp('Cache').$this->_guid, 'c+');
+        $this->_file = fopen(Framework::tmp('Cache') . $this->_guid, 'c+');
         if ($this->_file === false) {
             throw new Exception('Creating lockfile failed');
         }
@@ -414,11 +415,11 @@ class Cache extends Base implements ArrayAccess
     private function fileRead(&$output)
     {
         if ($this->_file === null) { // unlocked read?
-            $filename = Framework::tmp('Cache').$this->_guid;
+            $filename = Framework::tmp('Cache') . $this->_guid;
             if (file_exists($filename) === false) {
                 return false;
             }
-            $file = fopen(Framework::tmp('Cache').$this->_guid, 'r');
+            $file = fopen(Framework::tmp('Cache') . $this->_guid, 'r');
         } else {
             $file = $this->_file;
         }
@@ -453,7 +454,7 @@ class Cache extends Base implements ArrayAccess
         }
         fseek($this->_file, 0);
         ftruncate($this->_file, 0);
-        fwrite($this->_file, 'Expires: '.$expires."\nUpdated: ".time()."\n");
+        fwrite($this->_file, 'Expires: ' . $expires . "\nUpdated: " . time() . "\n");
         fwrite($this->_file, serialize($value));
         fflush($this->_file);
     }
@@ -463,7 +464,7 @@ class Cache extends Base implements ArrayAccess
         if ($this->_file) {
             throw new Exception('Can\'t clear a locked file');
         }
-        unlink(Framework::tmp('Cache').$this->_guid);
+        unlink(Framework::tmp('Cache') . $this->_guid);
     }
 
     /**
@@ -483,7 +484,7 @@ class Cache extends Base implements ArrayAccess
         $cache = new self('GC', 'file');
         foreach ($files as $id) {
             $cache->_guid = $id;
-            $cache->_file = fopen(Framework::tmp('Cache').$id, 'r');
+            $cache->_file = fopen(Framework::tmp('Cache') . $id, 'r');
             $hit = $cache->read($output);
             fclose($cache->_file);
             $cache->_file = null;
@@ -493,26 +494,26 @@ class Cache extends Base implements ArrayAccess
         }
     }
 
-    public function offsetGet($offset)
+    public function offsetGet(mixed $offset): mixed
     {
-        if (empty($this->_nodes['['.$offset.']'])) {
-            $this->_nodes['['.$offset.']'] = new self($this->_identifier.'['.$offset.']', $this->_backend);
+        if (empty($this->_nodes['[' . $offset . ']'])) {
+            $this->_nodes['[' . $offset . ']'] = new self($this->_identifier . '[' . $offset . ']', $this->_backend);
         }
 
-        return $this->_nodes['['.$offset.']'];
+        return $this->_nodes['[' . $offset . ']'];
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         throw new Exception('Not implemented');
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         throw new Exception('Not implemented');
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new Exception('Not implemented');
     }

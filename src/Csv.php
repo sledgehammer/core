@@ -116,7 +116,7 @@ class Csv extends Base implements Iterator
     {
         $fp = fopen($filename, 'w');
         if (!$fp) {
-            throw new Exception('Failed to open "'.$filename.'" for writing');
+            throw new Exception('Failed to open "' . $filename . '" for writing');
         }
         // De kolomnamen op de eerste csv regel zetten
         if ($columns === null) {
@@ -148,16 +148,15 @@ class Csv extends Base implements Iterator
     /**
      * Het csv bestand (opnieuw) openen en de eerste rij inlezen als kolomnamen.
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->index = null;
         if ($this->fp) {
             fclose($this->fp);
         }
-        ini_set('auto_detect_line_endings', true); // Add support for "CSV for Macintosh"
         $this->fp = fopen($this->filename, 'r');
         if (!$this->fp) {
-            throw new Exception('Couldn\'t open file "'.$this->filename.'"');
+            throw new Exception('Couldn\'t open file "' . $this->filename . '"');
         }
         if ($this->delimiter === null) {
             $line = fgets($this->fp);
@@ -170,7 +169,7 @@ class Csv extends Base implements Iterator
         foreach ($keys as $column) {
             if (isset($column_isset[$column])) {
                 if ($this->columns === null || array_search($column, $this->columns) !== false) {
-                    throw new Exception('Column "'.$column.'" is ambiguous');
+                    throw new Exception('Column "' . $column . '" is ambiguous');
                 }
             } else {
                 $column_isset[$column] = true;
@@ -184,9 +183,7 @@ class Csv extends Base implements Iterator
                 if ($index !== false) {
                     $this->keys[$index] = $key;
                 } else {
-                    throw new Exception('Column: "'.$column.'" not found. Available columns: "'.implode('", "', $keys).'"');
-
-                    return false;
+                    throw new Exception('Column: "' . $column . '" not found. Available columns: "' . implode('", "', $keys) . '"');
                 }
             }
         }
@@ -199,14 +196,15 @@ class Csv extends Base implements Iterator
      *
      * @link http://php.net/manual/en/iterator.next.php
      */
-    public function next()
+    public function next(): void
     {
         $this->values = [];
         $row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
 
         if ($row) { // Is het einde (eof) nog niet bereikt?
             if ($row === array(null)) { // Empty row?
-                return $this->next(); // Skip row
+                $this->next(); // Skip row
+                return;
             }
             ++$this->index;
             foreach ($this->keys as $index => $key) {
@@ -214,7 +212,7 @@ class Csv extends Base implements Iterator
                     $this->values[$key] = $row[$index];
                 } else {
                     $filename = (strpos($this->filename, \Sledgehammer\PATH) === 0) ? substr($this->filename, strlen(\Sledgehammer\PATH)) : $this->filename; // Waar mogelijk het PATH er van af halen
-                    \Sledgehammer\notice('Row too short, missing column #'.($index + 1).': "'.$this->keys[$index].'" in '.$filename.' on line '.($this->index + 2), $row); // @todo Calculate line offset compared to the index ()
+                    \Sledgehammer\notice('Row too short, missing column #' . ($index + 1) . ': "' . $this->keys[$index] . '" in ' . $filename . ' on line ' . ($this->index + 2), $row); // @todo Calculate line offset compared to the index ()
                 }
             }
         } else {
@@ -226,10 +224,8 @@ class Csv extends Base implements Iterator
      * Geeft aan of er nog records in het bestand zitten.
      *
      * @link http://php.net/manual/en/iterator.valid.php
-     *
-     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         return !feof($this->fp) || $this->index !== null; // Is het einde van het bestand NIET bereikt?
     }
@@ -238,10 +234,8 @@ class Csv extends Base implements Iterator
      * Huidige rij teruggeven.
      *
      * @link http://php.net/manual/en/iterator.current.php
-     *
-     * @return array
      */
-    public function current()
+    public function current(): mixed
     {
         return $this->values;
     }
@@ -250,10 +244,8 @@ class Csv extends Base implements Iterator
      * Returns current linenumber. (starts at 1).
      *
      * @link http://php.net/manual/en/iterator.key.php
-     *
-     * @return int
      */
-    public function key()
+    public function key(): int
     {
         return $this->index;
     }

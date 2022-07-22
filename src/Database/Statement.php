@@ -18,10 +18,8 @@ class Statement extends PDOStatement implements Countable
     /**
      * Return the number of rows in the result
      * (Slow on SQlite databases).
-     *
-     * @return int
      */
-    public function count()
+    public function count(): int
     {
         $count = $this->rowCount();
         if ($count !== 0) {

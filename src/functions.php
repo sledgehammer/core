@@ -41,15 +41,15 @@ function dump($variable, $export = false)
 {
     if (!class_exists('Sledgehammer\Core\Debug\Dump', false)) {
         if (!class_exists('Sledgehammer\Core\Base', false)) {
-            include __DIR__.'/Base.php';
+            include __DIR__ . '/Base.php';
         }
-        include __DIR__.'/Debug/Dump.php';
+        include __DIR__ . '/Debug/Dump.php';
     }
     if ($export) {
         ob_start();
     } elseif (headers_sent() === false && class_exists('Sledgehammer\Core\Framework', false)) {
         // Force Content-Type to text/html.
-        header('Content-Type: text/html; charset='.strtolower(Framework::$charset));
+        header('Content-Type: text/html; charset=' . strtolower(Framework::$charset));
     }
     $dump = new Dump($variable);
     $dump->render();
@@ -184,13 +184,14 @@ function array_value($array, $key)
     if (isset($array) === false) {
         return;
     }
+    $container = $array;
     foreach (func_get_args() as $i => $key) {
         if ($i === 0) {
             $container = $array;
             continue;
         }
         if (is_string($key) === false && is_int($key) === false) {
-            \Sledgehammer\notice('Unexpected type: "'.gettype($key).'" for parameter $key, expecting an int or string');
+            \Sledgehammer\notice('Unexpected type: "' . gettype($key) . '" for parameter $key, expecting an int or string');
 
             return;
         }
@@ -235,7 +236,7 @@ function is_indexed($array)
 {
     if (!is_array($array)) {
         if (!(is_object($array) && in_array('Iterator', class_implements($array)))) {
-            \Sledgehammer\notice('Unexpected '.gettype($array).', expecting array (or Iterator)');
+            \Sledgehammer\notice('Unexpected ' . gettype($array) . ', expecting array (or Iterator)');
 
             return false;
         }
@@ -390,7 +391,7 @@ function mimetype($filename, $allow_unknown_types = false, $default = 'applicati
     $mimetype = \Sledgehammer\value($globalMimetypes[strtolower($extension)]);
     if ($mimetype === null) {
         if (!$allow_unknown_types) {
-            trigger_error('Unknown mime type for :"'.$extension.'", E_USER_WARNING');
+            trigger_error('Unknown mime type for :"' . $extension . '", E_USER_WARNING');
         }
 
         return $default;
@@ -419,7 +420,7 @@ function human_implode($glueLast, $array, $glue = ', ')
         return $last;
     }
 
-    return implode($glue, $array).$glueLast.$last;
+    return implode($glue, $array) . $glueLast . $last;
 }
 
 /**
@@ -438,7 +439,7 @@ function quoted_human_implode($glueLast, $array, $glue = ', ', $quote = '"')
         return '';
     }
 
-    return $quote.\Sledgehammer\human_implode($quote.$glueLast.$quote, $array, $quote.$glue.$quote).$quote;
+    return $quote . \Sledgehammer\human_implode($quote . $glueLast . $quote, $array, $quote . $glue . $quote) . $quote;
 }
 
 /**
@@ -456,7 +457,7 @@ function quoted_implode($glue, $array, $quote = '"')
         return '';
     }
 
-    return $quote.implode($quote.$glue.$quote, $array).$quote;
+    return $quote . implode($quote . $glue . $quote, $array) . $quote;
 }
 
 /**
@@ -486,18 +487,19 @@ function extract_element($array, $identifier, &$value)
     }
     preg_match_all('/\\[[^[]*\\]/', $identifier, $keys); // Deze reguliere exp. splits alle van alle subelementen af in een array. element[subelement1][subelement2] wordt array("[subelement1]", "[subelement2]")
     $identifier = substr($identifier, 0, $bracket_position);
-    $php_variabele = '$array["'.addslashes($identifier).'"]';
+    $php_variabele = '$array["' . addslashes($identifier) . '"]';
     foreach ($keys[0] as $key) {
-        $php_code = 'if (gettype(@'.$php_variabele.") == 'array') {\n\treturn false;\n}\nreturn true;";
+        $php_code = 'if (gettype(@' . $php_variabele . ") == 'array') {\n\treturn false;\n}\nreturn true;";
         if (eval($php_code)) {
             return false;
         }
         if (preg_match('/[a-zA-Z]+/', $key)) {
-            $key = '["'.addslashes(substr($key, 1, -1)).'"]';
+            $key = '["' . addslashes(substr($key, 1, -1)) . '"]';
         }
         $php_variabele .= $key;
     }
-    $php_code = 'if (isset('.$php_variabele."))\n{\n\t\$value = ".$php_variabele.";\n\t\$return = true;\n}\nelse\n{\n\t\$return = false;\n}";
+    $php_code = 'if (isset(' . $php_variabele . "))\n{\n\t\$value = " . $php_variabele . ";\n\t\$return = true;\n}\nelse\n{\n\t\$return = false;\n}";
+    $return = null;
     eval($php_code);
 
     return $return;
@@ -629,13 +631,13 @@ function compare($value, $operator, $expectation)
                         } elseif (in_array($nextChar, array('%', '_', '\\'))) { // The \ is used as an escape?
                             $pattern .= preg_quote($nextChar, '/');
                         } else {
-                            $pattern .= preg_quote($char.$nextChar, '/');
+                            $pattern .= preg_quote($char . $nextChar, '/');
                         }
                     } else {
                         $pattern .= preg_quote($char, '/');
                     }
                 }
-                $pattern = '/^'.$pattern.'$/';
+                $pattern = '/^' . $pattern . '$/';
                 $patternCache[$expectation] = $pattern;
             }
 
@@ -646,7 +648,7 @@ function compare($value, $operator, $expectation)
         case 'NOT LIKE':
             return \Sledgehammer\compare($value, 'LIKE', $expectation) == false;
     }
-    throw new Exception('Invalid operator: "'.$operator.'" use '.\Sledgehammer\quoted_human_implode(' or ', explode('|', \Sledgehammer\COMPARE_OPERATORS)));
+    throw new Exception('Invalid operator: "' . $operator . '" use ' . \Sledgehammer\quoted_human_implode(' or ', explode('|', \Sledgehammer\COMPARE_OPERATORS)));
 }
 
 /**
@@ -775,7 +777,7 @@ function build_properties_hint($scopedProperties)
     $hint = '';
     foreach ($scopedProperties as $scope => $properties) {
         if (count($properties)) {
-            $hint .= '<div style="margin-top: 7px">'.$scope.'</b></div>';
+            $hint .= '<div style="margin-top: 7px">' . $scope . '</b></div>';
             foreach ($properties as $property => $value) {
                 $type = gettype($value);
                 if ($type === 'object') {
@@ -783,7 +785,7 @@ function build_properties_hint($scopedProperties)
                 } else {
                     $type = strtolower($type);
                 }
-                $hint .= '&nbsp;&nbsp;'.\Sledgehammer\syntax_highlight($property, 'attribute').' '.\Sledgehammer\syntax_highlight(':'.$type, 'comment').'<br />';
+                $hint .= '&nbsp;&nbsp;' . \Sledgehammer\syntax_highlight($property, 'attribute') . ' ' . \Sledgehammer\syntax_highlight(':' . $type, 'comment') . '<br />';
             }
         }
     }
@@ -825,20 +827,20 @@ function redirect($url, $permanently = false)
     if (headers_sent()) {
         // Javascript fallback
 
-        echo '<script type="text/javascript">window.location='.json_encode((string) $url).';</script>';
+        echo '<script type="text/javascript">window.location=' . json_encode((string) $url) . ';</script>';
         echo '<noscript>';
         // Meta refresh fallback
-        echo '<meta http-equiv="refresh" content="0; url='.htmlentities($url, ENT_QUOTES).'">';
+        echo '<meta http-equiv="refresh" content="0; url=' . htmlentities($url, ENT_QUOTES) . '">';
         // Show a link
         echo 'Redirecting to <a href="', htmlspecialchars($url, ENT_QUOTES, 'ISO-8859-15'), '">', htmlspecialchars($url, ENT_QUOTES, 'ISO-8859-15'), '</a>';
         echo '</noscript>';
     } else {
         if ($permanently) {
-            header($_SERVER['SERVER_PROTOCOL'].' 301 Moved Permanently');
+            header($_SERVER['SERVER_PROTOCOL'] . ' 301 Moved Permanently');
         } else {
-            header($_SERVER['SERVER_PROTOCOL'].' 302 Found');
+            header($_SERVER['SERVER_PROTOCOL'] . ' 302 Found');
         }
-        header('Location: '.$url);
+        header('Location: ' . $url);
     }
     exit();
 }
@@ -909,7 +911,7 @@ function mkdirs($path)
     }
     $parent = dirname($path);
     if ($parent == $path) { // Is er geen niveau hoger?
-        \Sledgehammer\warning('Unable to create path "'.$path.'"'); // Ongeldig $path bv null of ""
+        \Sledgehammer\warning('Unable to create path "' . $path . '"'); // Ongeldig $path bv null of ""
     } elseif (\Sledgehammer\mkdirs($parent)) { // Maak (waneer nodig) de boverliggende deze map aan.
         return mkdir($path); //  Maakt de map aan.
     }
@@ -936,16 +938,16 @@ function rmdir_recursive($path, $allowFailures = false)
             continue;
         }
         if ($entry->isDir()) { // is het een map?
-            $counter += \Sledgehammer\rmdir_recursive($entry->getPathname().'/', $allowFailures);
+            $counter += \Sledgehammer\rmdir_recursive($entry->getPathname() . '/', $allowFailures);
             continue;
         }
         if (unlink($entry->getPathname()) == false && $allowFailures == false) {
-            throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+            throw new Exception('Failed to delete "' . $entry->getPathname() . '"');
         }
         ++$counter;
     }
     if (rmdir($path) == false && $allowFailures == false) {
-        throw new Exception('Failed to delete directory "'.$path.'"');
+        throw new Exception('Failed to delete directory "' . $path . '"');
     }
 
     return $counter;
@@ -973,7 +975,7 @@ function rmdir_contents($path, $allowFailures = false)
             $counter += \Sledgehammer\rmdir_recursive($entry->getPathname(), $allowFailures);
         } else {
             if (unlink($entry->getPathname()) == false && $allowFailures == false) {
-                throw new Exception('Failed to delete "'.$entry->getPathname().'"');
+                throw new Exception('Failed to delete "' . $entry->getPathname() . '"');
             }
             ++$counter;
         }
@@ -997,19 +999,19 @@ function safe_unlink($filepath, $basepath, $recursive = false)
         $basepath = substr($basepath, 0, -1);
     }
     if (strlen($basepath) < 4) { // Minimal "/tmp"
-        throw new Exception('$basepath "'.$basepath.'" is too short');
+        throw new Exception('$basepath "' . $basepath . '" is too short');
     }
     //  Controleer of het path niet buiten de basepath ligt.
     $realpath = realpath(dirname($filepath));
     if ($realpath == false) {
-        throw new Exception('Invalid folder: "'.dirname($filepath).'"'); // Kon het path niet omvormen naar een bestaande map.
+        throw new Exception('Invalid folder: "' . dirname($filepath) . '"'); // Kon het path niet omvormen naar een bestaande map.
     }
-    $filepath = $realpath.'/'.basename($filepath);  // Nette $filepath
+    $filepath = $realpath . '/' . basename($filepath);  // Nette $filepath
     if (substr($filepath, 0, strlen($basepath)) != $basepath) { // Hack poging?
-        throw new Exception('Ongeldige bestandsnaam "'.$filepath.'"');
+        throw new Exception('Ongeldige bestandsnaam "' . $filepath . '"');
     }
     if (!file_exists($filepath)) {
-        throw new Exception('File "'.$filepath.'" not found');
+        throw new Exception('File "' . $filepath . '" not found');
     }
     if ($recursive) {
         \Sledgehammer\rmdir_recursive($filepath);
@@ -1017,7 +1019,7 @@ function safe_unlink($filepath, $basepath, $recursive = false)
         return;
     }
     if (unlink($filepath) == false) {
-        throw new Exception('Failed to delete "'.$filepath.'"');
+        throw new Exception('Failed to delete "' . $filepath . '"');
     }
 }
 
@@ -1045,7 +1047,7 @@ function mtime_folders($path, $extensions = null, &$count = null)
         foreach ($extensions as $extension) {
             $regex[] = preg_quote($extension, '/');
         }
-        $regex = '/\.('.implode('|', $extensions).')$/';
+        $regex = '/\.(' . implode('|', $extensions) . ')$/';
     } else {
         $regex = $extensions;
     }
@@ -1060,9 +1062,9 @@ function mtime_folders($path, $extensions = null, &$count = null)
             if ($filename === '.' || $filename === '..') {
                 continue;
             }
-            $filepath = $path.$filename;
+            $filepath = $path . $filename;
             if (is_dir($filepath)) {
-                $ts = \Sledgehammer\mtime_folders($filepath.'/', $regex, $subcount);
+                $ts = \Sledgehammer\mtime_folders($filepath . '/', $regex, $subcount);
                 $count += $subcount;
             } else {
                 if ($regex && preg_match($regex, $filename) === 0) { // Does't match any of the extensions?
@@ -1102,13 +1104,13 @@ function copydir($source, $destination, $exclude = [])
         if ($entry->isDot() || in_array($entry->getFilename(), $exclude)) {
             continue;
         } elseif ($entry->isFile()) {
-            if (copy($entry->getPathname(), $destination.'/'.$entry->getFilename())) {
+            if (copy($entry->getPathname(), $destination . '/' . $entry->getFilename())) {
                 ++$count;
             } else {
                 break;
             }
         } elseif ($entry->isDir()) {
-            $count += copydir($entry->getPathname(), $destination.'/'.$entry->getFilename(), $exclude);
+            $count += copydir($entry->getPathname(), $destination . '/' . $entry->getFilename(), $exclude);
         } else {
             \Sledgehammer\notice('Unsupported filetype');
         }
@@ -1130,7 +1132,7 @@ function copydir($source, $destination, $exclude = [])
 function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
 {
     if (class_exists(Framework::class, false) === false) {
-        require_once __DIR__.'/Framework.php';
+        require_once __DIR__ . '/Framework.php';
     }
     if ($datatype === null) {
         $datatype = gettype($variable);
@@ -1149,12 +1151,12 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
 
         case 'string':
             $color = 'string';
-            $label = '&#39;'.str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))).'&#39;';
+            $label = '&#39;' . str_replace("\n", '<br />', str_replace(' ', '&nbsp;', htmlspecialchars($variable, ENT_COMPAT, Framework::$charset))) . '&#39;';
             break;
 
         case 'array':
             $color = 'method';
-            $label = 'array('.count($variable).')';
+            $label = 'array(' . count($variable) . ')';
             break;
 
         case 'object':
@@ -1191,7 +1193,7 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
             break;
 
         default:
-            \Sledgehammer\notice('Datatype: "'.$datatype.'" is unknown');
+            \Sledgehammer\notice('Datatype: "' . $datatype . '" is unknown');
             break;
     }
     // Based on the Tomorrow theme.
@@ -1212,13 +1214,13 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
         'variable' => '#c82829', // Red
         'comment' => '#8e908c', // Gray
     );
-    $html = '<span style="color:'.$colorCodes[$color].'"';
+    $html = '<span style="color:' . $colorCodes[$color] . '"';
     if (($datatype === 'object' || $datatype === 'array') && $titleLimit > 0) { // Built title attribute?
         $title = partial_var_export($variable, $titleLimit, 4);
-        $html .= ' title="'.str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)).'"';
+        $html .= ' title="' . str_replace(array("\n"), array('&#10;'), htmlentities($title, ENT_COMPAT, Framework::$charset)) . '"';
     }
 
-    return $html.'>'.$label.'</span>';
+    return $html . '>' . $label . '</span>';
 }
 
 /**
@@ -1242,33 +1244,33 @@ function partial_var_export($variable, $maxLenght, $maxDepth = false, $depth = 0
         $end = ')';
         $elements = $variable;
     } else {
-        $title = get_class($variable).'{';
+        $title = get_class($variable) . '{';
         $end = '}';
         $elements = get_object_vars($variable);
     }
     if (count($elements) == 0) {
-        return $title.$end;
+        return $title . $end;
     }
     $indent = str_repeat('  ', $depth + 1);
     if ($depth !== 0) {
-        $end = substr($indent, 2).$end;
+        $end = substr($indent, 2) . $end;
     }
     $title .= "\n";
     foreach ($elements as $key => $value) {
         if (strlen($title) > $maxLenght) {
-            $title .= $indent.$hellip."\n";
+            $title .= $indent . $hellip . "\n";
             break;
         }
         if (is_array($variable)) {
             $title .= $indent;
             if (is_string($key)) {
-                $title .= "'".$key."'";
+                $title .= "'" . $key . "'";
             } else {
                 $title .= $key;
             }
             $title .= ' => ';
         } else {
-            $title .= $indent.$key.' = ';
+            $title .= $indent . $key . ' = ';
         }
         if (is_string($value)) {
             $charactersLeft = $maxLenght - strlen($title);
@@ -1276,24 +1278,24 @@ function partial_var_export($variable, $maxLenght, $maxDepth = false, $depth = 0
                 if ($charactersLeft < 10) {
                     $charactersLeft = 8;
                 }
-                $title .= "'".substr($value, 0, $charactersLeft).$hellip."\n";
+                $title .= "'" . substr($value, 0, $charactersLeft) . $hellip . "\n";
             } else {
-                $title .= "'".$value."'\n";
+                $title .= "'" . $value . "'\n";
             }
         } elseif (is_array($value)) {
             if ($maxDepth !== false && $depth == $maxDepth) {
-                $title .= 'array('.count($value)."),\n";
+                $title .= 'array(' . count($value) . "),\n";
             } else {
-                $title .= partial_var_export($value, $maxLenght - strlen($title), $maxDepth, $depth + 1).",\n";
+                $title .= partial_var_export($value, $maxLenght - strlen($title), $maxDepth, $depth + 1) . ",\n";
             }
         } elseif (is_object($value)) {
-            $title .= get_class($value).",\n";
+            $title .= get_class($value) . ",\n";
         } else {
-            $title .= $value.','."\n";
+            $title .= $value . ',' . "\n";
         }
     }
 
-    return $title.$end;
+    return $title . $end;
 }
 
 /**
@@ -1314,7 +1316,7 @@ function format_parsetime($seconds, $precision = 3)
         $miliseconds = fmod($seconds, 1);
         $seconds = str_pad($seconds % 60, 2, '0', STR_PAD_LEFT);
 
-        return $minutes.':'.$seconds.substr(number_format($miliseconds, $precision), 1);
+        return $minutes . ':' . $seconds . substr(number_format($miliseconds, $precision), 1);
     }
 }
 
@@ -1511,7 +1513,7 @@ function browser($part = null)
     // browser
     $version = '';
     if (!isset($_SERVER['HTTP_USER_AGENT'])) {
-        $browser = 'php-'.php_sapi_name();
+        $browser = 'php-' . php_sapi_name();
     } elseif (preg_match('/MSIE ([0-9]{1,2}.[0-9]{1,2})/', $_SERVER['HTTP_USER_AGENT'], $match)) {
         $browser = 'Microsoft Internet Explorer';
         $version = $match[1];
@@ -1568,7 +1570,7 @@ function browser($part = null)
     if (isset($info[$part])) {
         return $info[$part];
     }
-    \Sledgehammer\notice('Unexpected part: "'.$part.'", expecting: "'.implode('", "', array_keys($info)).'"');
+    \Sledgehammer\notice('Unexpected part: "' . $part . '", expecting: "' . implode('", "', array_keys($info)) . '"');
 }
 
 /**
@@ -1600,7 +1602,7 @@ function getClientIp()
     }
     foreach ($ips as $ip) {
         if (filter_var($ip, FILTER_VALIDATE_IP, $flags) === false) {
-            \Sledgehammer\notice('Invalid IP: "'.$ip.'"');
+            \Sledgehammer\notice('Invalid IP: "' . $ip . '"');
         } else {
             return $ip;
         }
@@ -1624,12 +1626,12 @@ function send_headers($headers)
         if ($file == '' && $line == 0) {
             $location = '';
         } else {
-            $location = ', output started in '.$file.' on line '.$line;
+            $location = ', output started in ' . $file . ' on line ' . $line;
         }
         if (class_exists('Sledgehammer\Debug\ErrorHandler', false)) {
-            \Sledgehammer\notice('Couldn\'t sent header(s)'.$location, array('headers' => $headers));
+            \Sledgehammer\notice('Couldn\'t sent header(s)' . $location, array('headers' => $headers));
         } else {
-            trigger_error('Couldn\'t sent header(s) "'.\Sledgehammer\human_implode(' and ', $headers, '", "').'"'.$location, E_USER_NOTICE);
+            trigger_error('Couldn\'t sent header(s) "' . \Sledgehammer\human_implode(' and ', $headers, '", "') . '"' . $location, E_USER_NOTICE);
         }
 
         return;
@@ -1638,11 +1640,11 @@ function send_headers($headers)
     $notices = [];
     foreach ($headers as $header => $value) {
         if ($header == 'Status') { // and != fastcgi?
-            header($_SERVER['SERVER_PROTOCOL'].' '.$value);
+            header($_SERVER['SERVER_PROTOCOL'] . ' ' . $value);
         } elseif (is_numeric($header)) {
-            $notices[] = 'Invalid HTTP header: "'.$header.': '.$value.'"';
+            $notices[] = 'Invalid HTTP header: "' . $header . ': ' . $value . '"';
         } else {
-            header($header.': '.$value);
+            header($header . ': ' . $value);
         }
     }
     foreach ($notices as $notice) {
@@ -1667,7 +1669,7 @@ function render_file($filename)
     if (array_key_exists('HTTP_IF_MODIFIED_SINCE', $_SERVER)) {
         $if_modified_since = strtotime(preg_replace('/;.*$/', '', $_SERVER['HTTP_IF_MODIFIED_SINCE']));
         if ($if_modified_since >= $last_modified) { // Is the Cached version the most recent?
-            header($_SERVER['SERVER_PROTOCOL'].' 304 Not Modified');
+            header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
             exit();
         }
     }
@@ -1678,7 +1680,7 @@ function render_file($filename)
       $headers[] = 'Accept-Ranges: bytes';
       } */
     if (is_dir($filename)) {
-        throw new Exception('Unable to render_file(). "'.$filename.'" is a folder');
+        throw new Exception('Unable to render_file(). "' . $filename . '" is a folder');
     }
     $headers['Content-Type'] = mimetype($filename);
     $headers['Last-Modified'] = gmdate('r', $last_modified);
@@ -1729,8 +1731,8 @@ function render_file($filename)
     if ($seek_start > 0 || $seek_end < ($filesize - 1)) {
         header('HTTP/1.1 206 Partial Content');
     }
-    $headers[] = 'Content-Range: bytes '.$seek_start.'-'.$seek_end.'/'.$filesize;
-    $headers[] = 'Content-Length: '.($seek_end - $seek_start + 1);
+    $headers[] = 'Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $filesize;
+    $headers[] = 'Content-Length: ' . ($seek_end - $seek_start + 1);
 
     $fp = fopen($filename, 'rb');
     if (!$fp) {
@@ -1807,22 +1809,22 @@ function sem_key($identifier)
  */
 function write_ini_file($filename, $array, $comment = null)
 {
-    $ini = ($comment !== null) ? '; '.$comment."\n\n" : '';
+    $ini = ($comment !== null) ? '; ' . $comment . "\n\n" : '';
     $usingSections = false;
     foreach ($array as $name => $value) {
         if (is_array($value)) {
             $usingSections = true;
         } else {
-            $ini .= $name.' = '.$value."\n"; // @todo Escape
+            $ini .= $name . ' = ' . $value . "\n"; // @todo Escape
         }
     }
     // Write [section] values
     if ($usingSections) {
         foreach ($array as $section => $values) {
             if (is_array($values)) {
-                $ini .= "\n[".$section."]\n";
+                $ini .= "\n[" . $section . "]\n";
                 foreach ($values as $name => $value) {
-                    $ini .= $name.' = '.$value."\n"; // @todo Escape
+                    $ini .= $name . ' = ' . $value . "\n"; // @todo Escape
                 }
             }
         }
@@ -1886,8 +1888,8 @@ function sudo($username, $password, $command)
     // Generate expect script
     fwrite($stdin, '
 set env(PS1) "# "
-spawn su '.addslashes($username).' -c "'.addslashes($command).'"
-expect "Password:" { send "'.addslashes($password).'\r" }
+spawn su ' . addslashes($username) . ' -c "' . addslashes($command) . '"
+expect "Password:" { send "' . addslashes($password) . '\r" }
 expect eof
 catch wait result
 exit [lindex $result 3]');

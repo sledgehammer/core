@@ -44,10 +44,8 @@ class PreparedStatement extends Statement
      * @link http://php.net/manual/en/pdostatement.execute.php
      *
      * @param array $input_parameters (optional)
-     *
-     * @return bool
      */
-    public function execute($input_parameters = [])
+    public function execute(?array $input_parameters = []): bool
     {
         $start = microtime(true);
         if (func_num_args() === 0) {
@@ -81,10 +79,8 @@ class PreparedStatement extends Statement
      * @param int   $data_type
      * @param int   $length
      * @param mixed $driver_options
-     *
-     * @return bool
      */
-    public function bindParam($parameter, &$variable, $data_type = null, $length = null, $driver_options = null)
+    public function bindParam(string|int $parameter, mixed &$variable, int $data_type = null, int $length = null, mixed $driver_options = null): bool
     {
         $this->params[$parameter] = &$variable;
 
@@ -96,17 +92,12 @@ class PreparedStatement extends Statement
      *
      * @link http://php.net/manual/en/pdostatement.bindcolumn.php
      *
-     * @param mixed $parameter
-     * @param mixed $value
-     * @param mixed $data_type
-     *
-     * @return bool
      */
-    public function bindValue($parameter, $value, $data_type = null)
+    public function bindValue(string|int $parameter, mixed $value, int $type = null): bool
     {
         $this->params[$parameter] = $value;
 
-        return parent::bindValue($parameter, $value, $data_type);
+        return parent::bindValue($parameter, $value, $type);
     }
 
     /**
@@ -126,7 +117,7 @@ class PreparedStatement extends Statement
         // build a regular expression for each parameter
         foreach ($params as $key => $value) {
             if (is_string($key)) {
-                $keys[] = '/:'.preg_quote($key).'/';
+                $keys[] = '/:' . preg_quote($key) . '/';
             } else {
                 $keys[] = '/[?]/';
             }

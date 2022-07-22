@@ -117,25 +117,25 @@ class Connection extends PDO
             }
             if (version_compare(PHP_VERSION, '5.3.6') == -1) {
                 if (empty($options[PDO::MYSQL_ATTR_INIT_COMMAND])) {
-                    $options[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "'.mysql_escape_string($charset).'"';
+                    $options[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES "' . $charset . '"';
                 }
             } elseif ($isUrlStyle) {
                 $config['charset'] = $charset;
             } else {
-                $dsn .= ';charset='.$charset;
+                $dsn .= ';charset=' . $charset;
             }
         } else {
             unset($this->reportWarnings); // Unset the reportWarning property for database drivers that don't support it
         }
         if ($isUrlStyle) {
-            $dsn = $driver.':';
+            $dsn = $driver . ':';
             foreach ($config as $name => $value) {
-                $dsn .= $name.'='.$value.';';
+                $dsn .= $name . '=' . $value . ';';
             }
         }
         // Parse $options
         $loggerOptions = array(
-            'identifier' => 'Database['.$dsn.']',
+            'identifier' => 'Database[' . $dsn . ']',
             'limit' => 1000,
             'renderer' => array($this, 'renderLog'),
             'start' => 0,
@@ -159,7 +159,7 @@ class Connection extends PDO
             $options[PDO::ATTR_STATEMENT_CLASS] = array(Statement::class);
         }
         parent::__construct($dsn, $username, $passwd, $options);
-        $this->logger->append('Database connection to '.$dsn, array('duration' => (microtime(true) - $start)));
+        $this->logger->append('Database connection to ' . $dsn, array('duration' => (microtime(true) - $start)));
         --$this->logger->count;
 
         $this->driver = $this->getAttribute(PDO::ATTR_DRIVER_NAME);
@@ -178,10 +178,8 @@ class Connection extends PDO
      * @link http://php.net/manual/en/pdo.exec.php
      *
      * @param string $statement The SQL statement to prepare and execute.
-     *
-     * @return int|bool
      */
-    public function exec($statement)
+    public function exec(string $statement): int|false
     {
         $start = microtime(true);
         $result = parent::exec($statement);
@@ -201,14 +199,12 @@ class Connection extends PDO
      * @link http://php.net/manual/en/pdo.query.php
      *
      * @param string $statement The SQL statement to prepare and execute.
-     *
-     * @return Statement
      */
-    public function query(string $statement, ?int $mode = null, mixed ...$args)
+    public function query(string $statement, ?int $mode = null, ...$args): Statement|false
     {
         $start = microtime(true);
         $statement = (string) $statement;
-        $result = parent::query($statement,$mode, ...$args);
+        $result = parent::query($statement, $mode, ...$args);
         $this->logger->append($statement, array('duration' => (microtime(true) - $start)));
         if ($result === false) {
             $this->reportError($statement);
@@ -226,10 +222,8 @@ class Connection extends PDO
      *
      * @param string $statement      The SQL statement to prepare
      * @param array  $driver_options
-     *
-     * @return PreparedStatement
      */
-    public function prepare($statement, $driver_options = [])
+    public function prepare(string $statement, array $driver_options = []): PreparedStatement|false
     {
         $start = microtime(true);
         $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array(PreparedStatement::class, array($this)));
@@ -241,7 +235,6 @@ class Connection extends PDO
         } else {
             $this->checkWarnings($statement);
         }
-
         return $result;
     }
 
@@ -275,7 +268,7 @@ class Connection extends PDO
             }
         }
         if ($addQuotes) {
-            $identifier = '`'.str_replace('`', '``', $identifier).'`';
+            $identifier = '`' . str_replace('`', '``', $identifier) . '`';
         }
         self::$quotedIdentifiers[$this->driver][$identifier] = $identifier;
 
@@ -292,7 +285,7 @@ class Connection extends PDO
      *
      * @return string A quoted string that is safe to pass into an SQL statement.
      */
-    public function quote($value, $parameterType = null)
+    public function quote($value, int|null $parameterType = null): string|false
     {
         if ($parameterType === null && $value === null) {
             return 'NULL';
@@ -310,6 +303,11 @@ class Connection extends PDO
             $value = (string) $value;
             setlocale(LC_NUMERIC, $previousLocale); // restore locale
         }
+        if (
+            $parameterType === null
+        ) {
+            $parameterType = PDO::PARAM_STR;
+        }
 
         return parent::quote($value, $parameterType);
     }
@@ -321,7 +319,7 @@ class Connection extends PDO
      */
     public function __get($property)
     {
-        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
+        \Sledgehammer\warning('Property: "' . $property . '" doesn\'t exist in a "' . get_class($this) . '" object.');
     }
 
     /**
@@ -332,7 +330,7 @@ class Connection extends PDO
      */
     public function __set($property, $value)
     {
-        \Sledgehammer\warning('Property: "'.$property.'" doesn\'t exist in a "'.get_class($this).'" object.');
+        \Sledgehammer\warning('Property: "' . $property . '" doesn\'t exist in a "' . get_class($this) . '" object.');
         $this->$property = $value;
     }
 
@@ -346,9 +344,9 @@ class Connection extends PDO
     {
         $query_log_count = count($this->log); // Het aantal onthouden queries.
         if ($query_log_count > 0) {
-            $id = 'querylog_C'.$this->queryCount.'_M'.strtolower(substr(md5($this->log[0]['sql']), 0, 6)).'_R'.rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
+            $id = 'querylog_C' . $this->queryCount . '_M' . strtolower(substr(md5($this->log[0]['sql']), 0, 6)) . '_R' . rand(10, 99); // Bereken een uniek ID (Count + Md5 + Rand)
             if ($popup) {
-                echo '<a href="#" onclick="document.getElementById(\''.$id.'\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\''.$id.'\').style.display=\'none\';}}, true); document.getElementById(\''.$id.'\').focus(); return false">';
+                echo '<a href="#" onclick="document.getElementById(\'' . $id . '\').style.display=\'block\';document.body.addEventListener(\'keyup\', function (e) { if(e.which == 27) {document.getElementById(\'' . $id . '\').style.display=\'none\';}}, true); document.getElementById(\'' . $id . '\').focus(); return false">';
             }
         }
         if ($connection !== null) {
@@ -357,7 +355,7 @@ class Connection extends PDO
         echo '<b>', $this->queryCount, '</b>&nbsp;';
         echo ($this->queryCount === 1) ? 'query' : 'queries';
         if ($this->queryCount != 0) {
-            echo '&nbsp;in&nbsp;<b>'.number_format($this->executionTime, 3, ',', '.').'</b>&nbsp;sec';
+            echo '&nbsp;in&nbsp;<b>' . number_format($this->executionTime, 3, ',', '.') . '</b>&nbsp;sec';
         }
 
         if ($popup && $query_log_count > 0) {
@@ -368,15 +366,15 @@ class Connection extends PDO
         }
         if ($query_log_count != 0) { // zijn er queries onthouden?
             if ($popup) {
-                echo '<div id="'.$id.'" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
-                echo '<a href="javascript:document.getElementById(\''.$id.'\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&times;</a>';
+                echo '<div id="' . $id . '" class="sledegehammer_querylog" tabindex="-1" style="display:none;">';
+                echo '<a href="javascript:document.getElementById(\'' . $id . '\').style.display=\'none\';" title="close" class="sledegehammer_querylog_close" style="float:right;">&times;</a>';
             }
             for ($i = 0; $i < $query_log_count; ++$i) {
                 $log = $this->log[$i];
-                echo '<div class="sledegehammer_querylog_sql"><span class="sledegehammer_querylog_number">'.$i.'</span> '.$this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']).'</div>';
+                echo '<div class="sledegehammer_querylog_sql"><span class="sledegehammer_querylog_number">' . $i . '</span> ' . $this->highlight($log['sql'], $log['truncated'], $log['time'], $log['backtrace']) . '</div>';
             }
             if ($this->queryCount == 0 && ($this->queryCount - $query_log_count) > 0) {
-                echo '<br /><b style="color:#ffa500">The other '.($this->number_of_queries - $query_log_count).' queries are suppressed.</b><br /><br />';
+                echo '<br /><b style="color:#ffa500">The other ' . ($this->number_of_queries - $query_log_count) . ' queries are suppressed.</b><br /><br />';
             }
             if ($popup) {
                 echo '</div>';
@@ -425,7 +423,7 @@ class Connection extends PDO
             return $results[0];
         }
         if (count($results) > 1) {
-            \Sledgehammer\notice('Unexpected '.count($results).' rows, expecting 1 row');
+            \Sledgehammer\notice('Unexpected ' . count($results) . ' rows, expecting 1 row');
         } elseif (!$allow_empty_results) {
             \Sledgehammer\notice('Row not found');
         }
@@ -450,7 +448,7 @@ class Connection extends PDO
             return false;
         }
         if (count($row) > 1) {
-            \Sledgehammer\notice('Unexpected number of columns('.count($row).'), expecting 1 column');
+            \Sledgehammer\notice('Unexpected number of columns(' . count($row) . '), expecting 1 column');
 
             return false;
         }
@@ -477,7 +475,7 @@ class Connection extends PDO
         $fp = fopen($filepath, 'r');
         $filepath = (strpos($filepath, \Sledgehammer\PATH) === 0) ? substr($filepath, strlen(\Sledgehammer\PATH)) : $filepath; // Het PATH van de $filepath afhalen zodat eventuele fouten een kort path tonen
         if (!$fp) { // Kan het bestand niet geopend worden?
-            $error_message = 'File "'.$filepath.'" not found';
+            $error_message = 'File "' . $filepath . '" not found';
 
             return false;
         }
@@ -489,12 +487,12 @@ class Connection extends PDO
             if ($line == '' || preg_match('/^[ ]*--/', $line)) { // Geen lege of MySQL-commentaar regel?
                 continue;
             }
-            if ($strip_php_comments && substr($line, 0, 2) == '/*' && substr(rtrim($line), -2) == '*'.'/') { // Geen /* * / commentaar?
+            if ($strip_php_comments && substr($line, 0, 2) == '/*' && substr(rtrim($line), -2) == '*' . '/') { // Geen /* * / commentaar?
                 continue;
             }
             $pieces = explode(';', $line);
             if (count($pieces) == 1) {
-                $query .= $line."\n";
+                $query .= $line . "\n";
                 continue;
             }
             $mode = false;
@@ -513,7 +511,7 @@ class Connection extends PDO
                 }
                 if ($query != '') {
                     if (!$this->query($query)) {
-                        $error_message = 'Invalid SQL statement in "'.$filepath.'" on line '.$line_nr;
+                        $error_message = 'Invalid SQL statement in "' . $filepath . '" on line ' . $line_nr;
                         fclose($fp);
 
                         return false;
@@ -533,7 +531,7 @@ class Connection extends PDO
         $query = trim($query);
         if ($query != '') {
             if (!$this->query($query)) {
-                $error_message = 'Invalid SQL statement in "'.$filepath.'" on line '.$line_nr;
+                $error_message = 'Invalid SQL statement in "' . $filepath . '" on line ' . $line_nr;
 
                 return false;
             }
@@ -551,7 +549,7 @@ class Connection extends PDO
      *
      * @return string
      */
-    public function lastInsertId($name = null)
+    public function lastInsertId(?string $name = null): string|false
     {
         if (isset($this->reportWarnings) && $this->reportWarnings === true) {
             // @todo Add support for $name (PostgreSQL)
@@ -579,13 +577,13 @@ class Connection extends PDO
         if ($regex === null) {
             $startKeywords = array('SELECT', 'UPDATE', 'ANALYSE', 'ALTER TABLE', 'REPLACE INTO', 'INSERT INTO', 'DELETE', 'CREATE TABLE', 'CREATE DATABASE', 'DESCRIBE', 'TRUNCATE TABLE', 'TRUNCATE', 'SHOW', 'SET', 'START TRANSACTION', 'ROLLBACK');
             $inlineKeywords = array('AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'COLLATE', 'COLUMN', 'CURRENT_DATE', 'DESC', 'DISTINCT', 'FROM', 'GROUP', 'HAVING', 'IF', 'IN', 'INNER', 'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'LIMIT', 'OFFSET', 'NOT', 'NULL', 'ON', 'OR', 'ORDER', 'OUTER', 'RIGHT', 'SELECT', 'SET', 'TO', 'UNION', 'VALUES', 'WHERE');
-            $regex = '/^'.implode('\b|^', $startKeywords).'\b|\b'.implode('\b|\b', $inlineKeywords).'\b/';
+            $regex = '/^' . implode('\b|^', $startKeywords) . '\b|\b' . implode('\b|\b', $inlineKeywords) . '\b/';
         }
         $sql = preg_replace($regex, '<span class="sql-keyword">\\0</span>', $sql);
         $sql = preg_replace('/`[^`]+`/', '<span class="sql-identifier">\\0</span>', $sql);
         if (isset($meta['truncated'])) {
             $kib = round($meta['truncated'] / 1024);
-            $sql .= '<span class="logentry-alert">...'.$kib.' KiB truncated</span>';
+            $sql .= '<span class="logentry-alert">...' . $kib . ' KiB truncated</span>';
         }
         echo '<td class="logentry-code">', $sql, '</td>';
         $duration = $meta['duration'];
@@ -616,7 +614,7 @@ class Connection extends PDO
             if ($statement instanceof Sql) {
                 $info['SQL'] = (string) $statement;
             }
-            \Sledgehammer\notice('SQL error ['.$error[1].'] '.$error[2], $info);
+            \Sledgehammer\notice('SQL error [' . $error[1] . '] ' . $error[2], $info);
         }
     }
 
@@ -643,7 +641,7 @@ class Connection extends PDO
             $this->logger->totalDuration += (microtime(true) - $start);
             if ($warnings->rowCount()) {
                 foreach ($warnings->fetchAll(PDO::FETCH_ASSOC) as $warning) {
-                    \Sledgehammer\notice('SQL '.strtolower($warning['Level']).' ['.$warning['Code'].'] '.$warning['Message'], $info);
+                    \Sledgehammer\notice('SQL ' . strtolower($warning['Level']) . ' [' . $warning['Code'] . '] ' . $warning['Message'], $info);
                 }
                 // @todo Clear warnings
                 // PDO/MySQL doesn't clear the warnings before CREATE/DROP DATABASE queries.

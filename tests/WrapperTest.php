@@ -3,7 +3,7 @@
 namespace SledgehammerTests\Core;
 
 use Exception;
-use Sledgehammer\Core\Readonly;
+use Sledgehammer\Core\Freeze;
 
 class WrapperTest extends TestCase
 {
@@ -13,13 +13,13 @@ class WrapperTest extends TestCase
             'greeting' => 'Hello',
             'subarray' => array('element' => 'value'),
         );
-        $wrapped = new Readonly($data);
+        $wrapped = new Freeze($data);
         $this->assertSame($wrapped['greeting'], 'Hello');
-        $this->assertInstanceOf(Readonly::class, $wrapped['subarray']);
+        $this->assertInstanceOf(Freeze::class, $wrapped['subarray']);
 
         try {
             $wrapped['greeting'] = 'new value';
-            $this->fail('Readonly should not allow a new value');
+            $this->fail('Freeze should not allow a new value');
         } catch (Exception $e) {
             $this->assertSame($e->getMessage(), 'The array is marked readonly');
         }

@@ -44,7 +44,7 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
 
     public function __get($property)
     {
-        $path = $this->cachePath.'->'.$property;
+        $path = $this->cachePath . '->' . $property;
         $object = $this->object;
         $value = \Sledgehammer\cache($path, $this->expires, function () use ($object, $property) {
             return $object->$property;
@@ -58,7 +58,7 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
 
     public function __call($method, $arguments)
     {
-        $key = $method.'(';
+        $key = $method . '(';
         foreach ($arguments as $i => $argument) {
             if ($i !== 0) {
                 $key .= ', ';
@@ -66,13 +66,13 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
             if (is_array($argument) || is_object($argument)) {
                 $key .= serialize($argument);
             } elseif (is_string($argument)) {
-                $key .= "'".$argument."'";
+                $key .= "'" . $argument . "'";
             } else {
                 $key .= $argument;
             }
         }
         $key .= ')';
-        $path = $this->cachePath.'['.PropertyPath::escape($key).']';
+        $path = $this->cachePath . '[' . PropertyPath::escape($key) . ']';
         $object = $this->object;
         $value = \Sledgehammer\cache($path, $this->expires, function () use ($object, $method, $arguments) {
             return call_user_func_array(array($object, $method), $arguments);
@@ -84,7 +84,7 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
         return $value;
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $this->__call('offsetExists', array($offset));
     }
@@ -94,12 +94,12 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
         return $this->__call('offsetGet', array($offset));
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         throw new Exception('Not supported for a Cached object');
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new Exception('Not supported for a Cached object');
     }
@@ -114,17 +114,17 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
         return $this->cachedIterator()->key();
     }
 
-    public function next()
+    public function next(): void
     {
-        return $this->cachedIterator()->next();
+        $this->cachedIterator()->next();
     }
 
-    public function rewind()
+    public function rewind(): void
     {
-        return $this->cachedIterator()->rewind();
+        $this->cachedIterator()->rewind();
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return $this->cachedIterator()->valid();
     }
@@ -138,10 +138,10 @@ class CacheWrapper extends Base implements ArrayAccess, Iterator
             return $this->iterator;
         }
         $object = $this->object;
-        $value = \Sledgehammer\cache($this->cachePath.':Iterator', $this->expires, function () use ($object) {
+        $value = \Sledgehammer\cache($this->cachePath . ':Iterator', $this->expires, function () use ($object) {
             return iterator_to_array($object);
         });
-        $this->iterator = new ArrayIterator($array);
+        $this->iterator = new ArrayIterator($value);
 
         return $this->iterator;
     }

@@ -26,7 +26,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
     /**
      * The traversable the Collection class operates on.
      *
-     * @var \Traversable Iterator / array
+     * iterable
      */
     protected $data;
 
@@ -334,7 +334,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
             }
             $operators = [];
             foreach ($conditions as $path => $expectation) {
-                if (preg_match('/^(.*) ('.\Sledgehammer\COMPARE_OPERATORS.')$/', $path, $matches)) {
+                if (preg_match('/^(.*) (' . \Sledgehammer\COMPARE_OPERATORS . ')$/', $path, $matches)) {
                     unset($conditions[$path]);
                     $conditions[$matches[1]] = $expectation;
                     $operators[$matches[1]] = $matches[2];
@@ -376,12 +376,12 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
                     return false; // None of conditions are met.
                 };
             } else {
-                throw new Exception('Unsupported logical operator "'.$logicalOperator.'", expecting "AND" or "OR"');
+                throw new Exception('Unsupported logical operator "' . $logicalOperator . '", expecting "AND" or "OR"');
             }
         }
         //'<= 5' or '10'
         // Compare the item directly with value given as $condition.
-        if (is_string($conditions) && preg_match('/^('.\Sledgehammer\COMPARE_OPERATORS.') (.*)$/', $conditions, $matches)) {
+        if (is_string($conditions) && preg_match('/^(' . \Sledgehammer\COMPARE_OPERATORS . ') (.*)$/', $conditions, $matches)) {
             $operator = $matches[1];
             $expectation = $matches[2];
         } else {
@@ -539,10 +539,8 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      * Returns the number of elements in the collection.
      *
      * @link http://php.net/manual/en/class.countable.php
-     *
-     * @return int
      */
-    public function count()
+    public function count(): int
     {
         if (is_array($this->data)) {
             return count($this->data);
@@ -562,7 +560,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      */
     public function getQuery()
     {
-        throw new Exception('The getQuery() method is not supported by '.get_class($this));
+        throw new Exception('The getQuery() method is not supported by ' . get_class($this));
     }
 
     /**
@@ -572,7 +570,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      */
     public function setQuery($query)
     {
-        throw new Exception('The setQuery() method is not supported by '.get_class($this));
+        throw new Exception('The setQuery() method is not supported by ' . get_class($this));
     }
 
     /**
@@ -589,10 +587,8 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      *
      * @param int|string $offset
-     *
-     * @return bool
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         $this->dataToArray();
 
@@ -605,10 +601,8 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      * @link http://php.net/manual/en/arrayaccess.offsetget.php
      *
      * @param int|string $offset
-     *
-     * @return mixed
      */
-    public function &offsetGet($offset)
+    public function &offsetGet($offset): mixed
     {
         $this->dataToArray();
 
@@ -623,7 +617,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      * @param int|string $offset
      * @param mixed      $value
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->dataToArray();
         if ($offset === null) {
@@ -656,7 +650,7 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
      *
      * @param int string $offset
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->dataToArray();
         if (array_key_exists($offset, $this->data)) {
@@ -693,13 +687,10 @@ class Collection extends Base implements IteratorAggregate, Countable, ArrayAcce
         }
         $type = gettype($this->data);
         $typeOrClass = ($type === 'object') ? get_class($this->data) : $type;
-        throw new Exception(''.$typeOrClass.' is not an Traversable');
+        throw new Exception('' . $typeOrClass . ' is not an Traversable');
     }
 
-    /**
-     * @return Iterator
-     */
-    public function getIterator()
+    public function getIterator(): Iterator
     {
         if ($this->data instanceof IteratorAggregate) {
             return $this->data->getIterator();

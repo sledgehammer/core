@@ -4,6 +4,8 @@ namespace Sledgehammer\Core;
 
 use Closure;
 use CURLFile;
+use CurlHandle;
+use CurlMultiHandle;
 use Exception;
 
 /**
@@ -52,8 +54,8 @@ class Curl extends Base
         // Automaticly disabled in safe mode
         CURLOPT_FOLLOWLOCATION => true, // When allowed follow 301 and 302 redirects.
         CURLOPT_MAXREDIRS => 25, // Prevent infinite redirection loops.
-            // Dynamic options
-//      CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
+        // Dynamic options
+        //      CURLOPT_TIMEOUT => ?, // Don't allow the request to take more time the the internal php timeout.
     );
 
     /**
@@ -85,9 +87,8 @@ class Curl extends Base
     /**
      * cURL handle.
      *
-     * @var resource
      */
-    private $handle;
+    private CurlHandle $handle;
 
     /**
      * Global queue of active cURL requests.
@@ -98,10 +99,10 @@ class Curl extends Base
 
     /**
      * cURL multi handle.
-     *
-     * @var resource
+     * 
+     * @var CurlMultiHandle
      */
-    private static $pool;
+    private static  $pool;
 
     /**
      * Keep the connections open, speeds up requests to the same server.
@@ -201,9 +202,9 @@ class Curl extends Base
     public static function post($url, $data = [], $options = [], $callback = null)
     {
         $defaults = self::defaults(array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $data,
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $data,
         ));
         $response = new self($options + $defaults);
         if ($callback !== null) {
@@ -226,9 +227,9 @@ class Curl extends Base
     public static function put($url, $data = '', $options = [], $callback = null)
     {
         $defaults = self::defaults(array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_CUSTOMREQUEST => 'PUT',
-                    CURLOPT_POSTFIELDS => $data,
+            CURLOPT_URL => $url,
+            CURLOPT_CUSTOMREQUEST => 'PUT',
+            CURLOPT_POSTFIELDS => $data,
         ));
         $response = new self($options + $defaults);
         if ($callback !== null) {
@@ -255,10 +256,10 @@ class Curl extends Base
     {
         $fp = fopen($filename, 'r');
         $defaults = self::defaults(array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_PUT => true,
-                    CURLOPT_INFILE => $fp,
-                    CURLOPT_INFILESIZE => filesize($filename),
+            CURLOPT_URL => $url,
+            CURLOPT_PUT => true,
+            CURLOPT_INFILE => $fp,
+            CURLOPT_INFILESIZE => filesize($filename),
         ));
         $response = new self($options + $defaults);
         if ($callback !== null) {
@@ -285,7 +286,7 @@ class Curl extends Base
     {
         $options[CURLOPT_URL] = $url;
         $defaults = self::defaults(array(
-                    CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
         ));
         $response = new self($options + $defaults);
         if ($callback !== null) {
@@ -311,13 +312,13 @@ class Curl extends Base
     {
         $fp = fopen($filename, 'w');
         if ($fp === false) {
-            throw new Exception('Unable to write to "'.$filename.'"');
+            throw new Exception('Unable to write to "' . $filename . '"');
         }
         flock($fp, LOCK_EX);
         $defaults = self::defaults(array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => false,
-                    CURLOPT_FILE => $fp,
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => false,
+            CURLOPT_FILE => $fp,
         ));
         $response = new self($options + $defaults);
         $response->on('load', function () use ($fp) {
@@ -350,9 +351,9 @@ class Curl extends Base
      * Proxy/resend the current request to different url/server.
      *
      * @param string   $endpoint Url
-     * @param callback $filter   Callback to change the generated Curl options.
+     * @param callable $filter   Callback to change the generated Curl options.
      */
-    public static function proxy($endpoint, $filter = null)
+    public static function proxy($endpoint,  $filter = null)
     {
         $url = new Url($endpoint);
         $url->query = $_GET;
@@ -367,7 +368,7 @@ class Curl extends Base
         // Proxy HTTP headers
         foreach ($_SERVER as $name => $value) {
             if (substr($name, 0, 5) === 'HTTP_' && in_array($name, array('HTTP_HOST', 'HTTP_CONNECTION')) === false) {
-                $options[CURLOPT_HTTPHEADER][] = substr($name, 5).':'.$value;
+                $options[CURLOPT_HTTPHEADER][] = substr($name, 5) . ':' . $value;
             }
         }
         // Proxy POST/PUT contents
@@ -413,7 +414,7 @@ class Curl extends Base
             return curl_file_create($filename, $mimetype, $postname);
         }
 
-        return '@'.$filename; // Old insecure method (PHP before 5.5)
+        return '@' . $filename; // Old insecure method (PHP before 5.5)
     }
 
     /**
@@ -444,7 +445,7 @@ class Curl extends Base
         }
         $max = intval($max);
         if ($max < 0) {
-            \Sledgehammer\notice('Invalid throttle value: '.$max);
+            \Sledgehammer\notice('Invalid throttle value: ' . $max);
             $max = 0;
         }
         if (count(self::$requests) <= $max) {
@@ -475,7 +476,7 @@ class Curl extends Base
     {
         $this->waitForCompletion();
         if ($this->state !== 'COMPLETED') {
-            throw new InfoException('No information available for a '.$this->state.' request', $this->options);
+            throw new InfoException('No information available for a ' . $this->state . ' request', $this->options);
         }
         if ($option === null) {
             return curl_getinfo($this->handle);
@@ -550,7 +551,7 @@ class Curl extends Base
     {
         $this->waitForCompletion();
         if ($this->state !== 'COMPLETED') {
-            throw new InfoException('No content available for a '.$this->state.' request', $this->options);
+            throw new InfoException('No content available for a ' . $this->state . ' request', $this->options);
         }
 
         return curl_multi_getcontent($this->handle);
@@ -565,16 +566,16 @@ class Curl extends Base
      */
     public function __get($property)
     {
-        $const = 'CURLINFO_'.strtoupper($property);
+        $const = 'CURLINFO_' . strtoupper($property);
         if (defined($const)) {
-            $option = eval('return '.$const.';');
+            $option = eval('return ' . $const . ';');
             $this->waitForCompletion();
 
             return curl_getinfo($this->handle, $option);
         }
         $properties = \Sledgehammer\reflect_properties($this);
         $properties['public'] = array_merge($properties['public'], curl_getinfo($this->handle));
-        \Sledgehammer\warning('Property "'.$property.'" doesn\'t exist in a '.get_class($this).' object', \Sledgehammer\build_properties_hint($properties));
+        \Sledgehammer\warning('Property "' . $property . '" doesn\'t exist in a ' . get_class($this) . ' object', \Sledgehammer\build_properties_hint($properties));
     }
 
     /**
@@ -610,7 +611,7 @@ class Curl extends Base
             $error = curl_multi_exec(self::$pool, $active);
         } while ($error === CURLM_CALL_MULTI_PERFORM);
         if ($error !== CURLM_OK) {
-            throw new Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
+            throw new Exception('[' . self::multiErrorName($error) . '] Failed to execute cURL multi handle');
         }
         $queued = 0;
         do {
@@ -625,7 +626,7 @@ class Curl extends Base
                         $tranferCount = self::$tranferCount;
                         if ($error !== CURLE_OK) {
                             $curl->state = 'ERROR';
-                            $curl->trigger('error', '['.self::errorName($error).'] '.curl_error($curl->handle), $curl->options, $curl);
+                            $curl->trigger('error', '[' . self::errorName($error) . '] ' . curl_error($curl->handle), $curl->options, $curl);
                         } else {
                             $curl->trigger('load', $curl);
                         }
@@ -691,7 +692,7 @@ class Curl extends Base
         // Setting options
         foreach ($options as $option => $value) {
             if (curl_setopt($this->handle, $option, $value) === false) {
-                throw new Exception('Setting option:'.self::optionName($option).' failed');
+                throw new Exception('Setting option:' . self::optionName($option) . ' failed');
             }
             $option = self::optionName($option);
             $this->options[$option] = $value;
@@ -719,7 +720,7 @@ class Curl extends Base
             $error = curl_multi_exec(self::$pool, $active);
         }
         if ($error !== CURLM_OK) {
-            throw new Exception('['.self::multiErrorName($error).'] Failed to add cURL handle');
+            throw new Exception('[' . self::multiErrorName($error) . '] Failed to add cURL handle');
         }
         ++self::$tranferCount;
         // Start request
@@ -727,7 +728,7 @@ class Curl extends Base
             $error = curl_multi_exec(self::$pool, $active);
         } while ($error === CURLM_CALL_MULTI_PERFORM);
         if ($error !== CURLM_OK) {
-            throw new Exception('['.self::multiErrorName($error).'] Failed to execute cURL multi handle');
+            throw new Exception('[' . self::multiErrorName($error) . '] Failed to execute cURL multi handle');
         }
         $this->state = 'RUNNING';
     }
@@ -743,7 +744,7 @@ class Curl extends Base
             $error = curl_multi_remove_handle(self::$pool, $this->handle);
             --self::$tranferCount;
             if ($error !== CURLM_OK) {
-                throw new Exception('['.self::multiErrorName($error).'] Failed to remove cURL handle');
+                throw new Exception('[' . self::multiErrorName($error) . '] Failed to remove cURL handle');
             }
             if (self::$tranferCount === 0 && self::$keepalive === false) {
                 curl_multi_close(self::$pool);

@@ -79,7 +79,7 @@ class PropertyPath extends Base
                     } elseif (is_array($data)) {
                         $data = $data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object or array');
 
                         return;
                     }
@@ -89,7 +89,7 @@ class PropertyPath extends Base
                     if (is_array($data) || (is_object($data) && $data instanceof ArrayAccess)) {
                         $data = $data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an array');
 
                         return;
                     }
@@ -99,7 +99,7 @@ class PropertyPath extends Base
                     if (is_object($data)) {
                         $data = $data->{$part[1]};
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
@@ -109,7 +109,7 @@ class PropertyPath extends Base
                     if (is_object($data)) {
                         $data = $data->{$part[1]}();
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
@@ -141,7 +141,7 @@ class PropertyPath extends Base
                             return;
                         }
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an array');
 
                         return;
                     }
@@ -155,7 +155,7 @@ class PropertyPath extends Base
                             return;
                         }
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
@@ -170,7 +170,7 @@ class PropertyPath extends Base
 
                         return $items;
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object or array');
 
                         return;
                     }
@@ -180,7 +180,7 @@ class PropertyPath extends Base
                     return $data;
 
                 default:
-                    throw new Exception('Unsupported type: '.$part[0]);
+                    throw new Exception('Unsupported type: ' . $part[0]);
             }
         }
 
@@ -209,7 +209,7 @@ class PropertyPath extends Base
                     } elseif (is_array($data)) {
                         $data = &$data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object or array');
 
                         return;
                     }
@@ -219,7 +219,7 @@ class PropertyPath extends Base
                     if (is_array($data)) {
                         $data = &$data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an array');
 
                         return;
                     }
@@ -229,7 +229,7 @@ class PropertyPath extends Base
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
@@ -239,14 +239,14 @@ class PropertyPath extends Base
                     if (is_object($data)) {
                         $data = &$data->{$part[1]}();
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
                     break;
 
                 default:
-                    throw new Exception('Unsupported type: '.$part[0]);
+                    throw new Exception('Unsupported type: ' . $part[0]);
             }
         }
 
@@ -275,7 +275,7 @@ class PropertyPath extends Base
                     } elseif (is_array($data)) {
                         $data = &$data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object or array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object or array');
 
                         return;
                     }
@@ -285,7 +285,7 @@ class PropertyPath extends Base
                     if (is_array($data)) {
                         $data = &$data[$part[1]];
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an array');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an array');
 
                         return;
                     }
@@ -295,14 +295,14 @@ class PropertyPath extends Base
                     if (is_object($data)) {
                         $data = &$data->{$part[1]};
                     } else {
-                        \Sledgehammer\notice('Unexpected type: '.gettype($data).', expecting an object');
+                        \Sledgehammer\notice('Unexpected type: ' . gettype($data) . ', expecting an object');
 
                         return;
                     }
                     break;
 
                 default:
-                    throw new Exception('Unsupported type: '.$part[0]);
+                    throw new Exception('Unsupported type: ' . $part[0]);
             }
         }
 
@@ -327,7 +327,7 @@ class PropertyPath extends Base
                 break;
 
             default:
-                throw new Exception('Unsupported type: '.$last[0]);
+                throw new Exception('Unsupported type: ' . $last[0]);
         }
     }
 
@@ -358,7 +358,7 @@ class PropertyPath extends Base
      * Escapes all path-modifiers "[", ".", "->", "()", etc.
      * "a[b]c" => "a\[b\]c".
      *
-     * @param type $identifier
+     * @param string $identifier
      *
      * @return string
      */
@@ -397,30 +397,30 @@ class PropertyPath extends Base
                     break;
 
                 case self::TYPE_PROPERTY:
-                    $path .= '->'.$value;
+                    $path .= '->' . $value;
                     break;
 
                 case self::TYPE_ELEMENT:
-                    $path .= '['.$value.']';
+                    $path .= '[' . $value . ']';
                     break;
 
                 case self::TYPE_METHOD:
-                    $path .= $value.'()';
+                    $path .= $value . '()';
                     break;
 
                 case self::TYPE_OPTIONAL:
                     if ($index != 0) {
                         $path .= '.';
                     }
-                    $path .= $value.'?';
+                    $path .= $value . '?';
                     break;
 
                 case self::TYPE_OPTIONAL_PROPERTY:
-                    $path .= '->'.$value.'?';
+                    $path .= '->' . $value . '?';
                     break;
 
                 case self::TYPE_OPTIONAL_ELEMENT:
-                    $path .= '['.$value.'?]';
+                    $path .= '[' . $value . '?]';
                     break;
 
                 default:
@@ -485,7 +485,7 @@ class PropertyPath extends Base
                     // TYPE_ANY
                 case self::T_STRING;
                     if ($first === false) { // Invalid chain? "[el]any" instead of "[el].any"
-                        \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "'.$token[1].'"');
+                        \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "' . $token[1] . '"');
 
                         return false;
                     }
@@ -513,7 +513,7 @@ class PropertyPath extends Base
                         break;
                     }
                     if ($nextToken[0] !== self::T_STRING) {
-                        \Sledgehammer\notice('Invalid "'.$token[1].'" in path, expecting an identifier after "."');
+                        \Sledgehammer\notice('Invalid "' . $token[1] . '" in path, expecting an identifier after "."');
 
                         return false;
                     }
@@ -529,7 +529,7 @@ class PropertyPath extends Base
                     // TYPE_PROPERTY
                 case self::T_ARROW:
                     if ($nextToken[0] !== self::T_STRING) {
-                        \Sledgehammer\notice('Invalid "'.$token[1].'" in path, expecting an identifier after an "->"');
+                        \Sledgehammer\notice('Invalid "' . $token[1] . '" in path, expecting an identifier after an "->"');
 
                         return false;
                     }
@@ -538,7 +538,7 @@ class PropertyPath extends Base
                         $i += 2;
                     } else {
                         if (preg_match('/^[a-z_]{1}[a-z_0-9]*$/i', $nextToken[1]) != 1) {
-                            \Sledgehammer\notice('Invalid property identifier "'.$nextToken[1].'" in path "'.$path.'"');
+                            \Sledgehammer\notice('Invalid property identifier "' . $nextToken[1] . '" in path "' . $path . '"');
                         }
                         $compiled[] = array(self::TYPE_PROPERTY, $nextToken[1]);
                         ++$i;
@@ -548,18 +548,18 @@ class PropertyPath extends Base
                     // TYPE_ELEMENT
                 case self::T_BRACKET_OPEN:
                     if ($nextToken[0] !== self::T_STRING) {
-                        \Sledgehammer\notice('Unexpected token "'.$token[0].'" in path, expecting T_STRING after ".["', $token);
+                        \Sledgehammer\notice('Unexpected token "' . $token[0] . '" in path, expecting T_STRING after ".["', $token);
 
                         return false;
                     }
                     if (($i + 2) === $length) {
-                        \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
+                        \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "' . $nextToken[1] . '"');
 
                         return false;
                     }
                     if ($tokens[$i + 2][0] === self::T_OPTIONAL) {
                         if (($i + 2) === $length || $tokens[$i + 3][0] !== self::T_BRACKET_CLOSE) {
-                            \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'?"');
+                            \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "' . $nextToken[1] . '?"');
 
                             return false;
                         }
@@ -567,7 +567,7 @@ class PropertyPath extends Base
                         $i += 3;
                     } else {
                         if ($tokens[$i + 2][0] !== self::T_BRACKET_CLOSE) {
-                            \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "'.$nextToken[1].'"');
+                            \Sledgehammer\notice('Unmatched brackets, missing a "]" in path after "' . $nextToken[1] . '"');
 
                             return false;
                         }
@@ -578,7 +578,7 @@ class PropertyPath extends Base
 
                 case self::T_ALL_ELEMENTS: // [*]
                     if ($nextToken[0] === self::T_STRING) {
-                        \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "'.$nextToken[1].'"');
+                        \Sledgehammer\notice('Invalid chain, expecting a ".", "->" or "[" before "' . $nextToken[1] . '"');
 
                         return false;
                     }
@@ -597,7 +597,7 @@ class PropertyPath extends Base
                     return $compiled;
 
                 default:
-                    \Sledgehammer\notice('Unexpected token: "'.$token[0].'"');
+                    \Sledgehammer\notice('Unexpected token: "' . $token[0] . '"');
 
                     return false;
             }
@@ -646,7 +646,7 @@ class PropertyPath extends Base
                     }
                     $tokens[] = array(self::T_STRING, $buffer);
                     $buffer = '';
-                    if (($i + 2) < $length && $path[$i + 1].$path[$i + 2] == '*]') { // [*] ?
+                    if (($i + 2) < $length && $path[$i + 1] . $path[$i + 2] == '*]') { // [*] ?
                         $tokens[] = array(self::T_ALL_ELEMENTS, '[*]');
                         $i += 2;
                     } else {

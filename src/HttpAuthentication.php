@@ -25,7 +25,7 @@ class HttpAuthentication extends Base
     /**
      * Callback for validating the given credentials.
      *
-     * @var callback
+     * @var callable
      */
     private $validation;
 
@@ -73,11 +73,11 @@ class HttpAuthentication extends Base
      */
     public function logout()
     {
-        header($_SERVER['SERVER_PROTOCOL'].' 401 Unauthorized');
+        header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
         if ($this->realm === null) {
             header('WWW-Authenticate: Basic');
         } else {
-            header('WWW-Authenticate: Basic realm="'.addslashes($this->realm).'"');
+            header('WWW-Authenticate: Basic realm="' . addslashes($this->realm) . '"');
         }
     }
 }
