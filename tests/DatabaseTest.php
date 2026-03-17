@@ -11,13 +11,6 @@ use Sledgehammer\Core\Database\Statement;
  */
 class DatabaseTest extends DatabaseTestCase
 {
-    public function __construct()
-    {
-        parent::__construct();
-        // parent::__construct('mysql');
-        // parent::__construct('sqlite');
-    }
-
     public function test_connect()
     {
         try {
@@ -35,7 +28,6 @@ class DatabaseTest extends DatabaseTestCase
      */
     public function test_invalid_query()
     {
-        // $this->expectException('\PHPUnit\Framework\Error\Notice');
         $this->expectException('\PDOException');
         $db = Connection::instance($this->dbLink);
         $result = $db->exec('this is not even a query');
@@ -47,7 +39,7 @@ class DatabaseTest extends DatabaseTestCase
         if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
             $this->markTestSkipped('Only available in MySQL');
         }
-        $this->expectException('\PHPUnit\Framework\Error\Notice');
+        $this->expectException('\ErrorException');
         $db->exec('INSERT INTO ducks (name) VALUES ("0123456789ABCDEF")');
     }
 
@@ -77,7 +69,7 @@ class DatabaseTest extends DatabaseTestCase
         // Fetch value
         $this->assertSame($db->fetchValue('SELECT name FROM ducks LIMIT 1'), 'Kwik');
 
-        $this->expectException('\PHPUnit\Framework\Error\Warning', 'Resultset has no columns, expecting 1 or more columns');
+        $this->expectExceptionMessage('Resultset has no columns, expecting 1 or more columns');
         $db->fetchValue('INSERT INTO ducks VALUES (90, "90")');
     }
 

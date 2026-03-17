@@ -5,9 +5,10 @@ namespace Sledgehammer\Core\Util;
 use DirectoryIterator;
 use Sledgehammer\Core\Debug\PhpAnalyzer;
 use Sledgehammer\Core\Framework;
+use SledgehammerTests\Core\TestCase;
 
 /**
- * Controleer of alle benodige php extenties geinstalleerd zijn.
+ * Controleer of alle benodigde php extensies geïnstalleerd zijn.
  *
  * @todo Convert to an utility
  */
@@ -21,14 +22,14 @@ class RequiredPhpExtensionsTest extends TestCase
     private $onlyClassesFolder = true;
 
     /**
-     * Assoc array waarvan de key de functie/class is en de value de extentie.
+     * Assoc array waarvan de key de functie/class is en de value de extensie.
      *
      * @var array
      */
     private $definitionToExtension = [];
 
     /**
-     * Assoc array met als key de extentie gevult met alle bestanden die deze extentie gebruiken.
+     * Assoc array met als key de extensie gevuld met alle bestanden die deze extensie gebruiken.
      *
      * @var array
      */
@@ -40,15 +41,15 @@ class RequiredPhpExtensionsTest extends TestCase
     private $missingExtensions = [];
 
     /**
-     * tests/data/required_php_extentions.db.php inlezen en omzetten naar de $function_to_extention_map.
+     * tests/data/required_php_extensions.db.php inlezen en omzetten naar de $function_to_extension_map.
      */
     public function __construct()
     {
-        $functions_per_extention = include __DIR__.'/data/required_php_extentions_functions.db.php';
+        $functions_per_extention = include __DIR__ . '/data/required_php_extensions_functions.db.php';
         foreach ($functions_per_extention as $extention => $functions_or_classes) {
             foreach ($functions_or_classes as $function_or_class) {
                 if (isset($this->definitionToExtension[strtolower($function_or_class)])) {
-                    trigger_error('Duplicate entry "'.$function_or_class.'"', E_USER_NOTICE);
+                    trigger_error('Duplicate entry "' . $function_or_class . '"', E_USER_NOTICE);
                 }
                 $this->definitionToExtension[strtolower($function_or_class)] = $extention;
             }
@@ -56,23 +57,23 @@ class RequiredPhpExtensionsTest extends TestCase
     }
 
     /**
-     * Controleer of de php extenties geinstalleerd zijn.
+     * Controleer of de php extensies geïnstalleerd zijn.
      */
     public function test_missing_extentions()
     {
         if (!function_exists('token_get_all')) {
-            $this->fail('PHP extention "tokenizer" is required for this UnitTest');
+            $this->fail('PHP extension "tokenizer" is required for this UnitTest');
 
             return;
         }
         $whitelist = array(
-//            'apc' => array(realpath(CORE_DIR.'classes/Cache.php')), // Sledgehammer\Cache doesn't require apc, only uses apc when available
+            //            'apc' => array(realpath(CORE_DIR.'classes/Cache.php')), // Sledgehammer\Cache doesn't require apc, only uses apc when available
         );
 
         if ($this->onlyClassesFolder) { // Alleen de classes mappen van de modules inlezen
             $modules = Framework::getModules();
             foreach ($modules as $module) {
-                $this->checkFolder($module['path'].'classes/');
+                $this->checkFolder($module['path'] . 'classes/');
             }
         } else { // check all php files within $path
             $this->checkFolder(\Sledgehammer\PATH);
@@ -85,10 +86,10 @@ class RequiredPhpExtensionsTest extends TestCase
                 }
             }
             if (count($files) > 0) {
-                $this->fail('Missing php extension "'.$extension.'". Function or class "'.$definition.'" is used in '.\Sledgehammer\quoted_human_implode(' and', $files));
+                $this->fail('Missing php extension "' . $extension . '". Function or class "' . $definition . '" is used in ' . \Sledgehammer\quoted_human_implode(' and', $files));
             }
         }
-        $this->assertTrue(true, 'All required extenstion are installed');
+        $this->assertTrue(true, 'All required extension are installed');
     }
 
     /**

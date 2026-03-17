@@ -80,7 +80,7 @@ class PreparedStatement extends Statement
      * @param int   $length
      * @param mixed $driver_options
      */
-    public function bindParam(string|int $parameter, mixed &$variable, int $data_type = null, int $length = null, mixed $driver_options = null): bool
+    public function bindParam(string|int $parameter, mixed &$variable, ?int $data_type = null, ?int $length = null, mixed $driver_options = null): bool
     {
         $this->params[$parameter] = &$variable;
 
@@ -93,7 +93,7 @@ class PreparedStatement extends Statement
      * @link http://php.net/manual/en/pdostatement.bindcolumn.php
      *
      */
-    public function bindValue(string|int $parameter, mixed $value, int $type = null): bool
+    public function bindValue(string|int $parameter, mixed $value, ?int $type = null): bool
     {
         $this->params[$parameter] = $value;
 

@@ -95,27 +95,27 @@ class CurlTest extends TestCase
         $response->on('closed', function () use ($fp) {
             fclose($fp);
         });
-        $this->assertTrue(strstr($log, '< HTTP/1.1 200 OK') !== false, 'CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
+        $this->assertStringContainsString('< HTTP/1.1 200 OK', $log, 'CURLOPT_VERBOSE should write to the CURLOPT_STDERR');
     }
 
     public function testParalellDownload()
     {
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            Curl::download('http://jsonplaceholder.typicode.com/users/1', Framework::tmp('CurlTest').$i.'.download', [], true);
+            Curl::download('http://jsonplaceholder.typicode.com/users/1', Framework::tmp('CurlTest') . $i . '.download', [], true);
         }
         Curl::synchronize();
         $this->assertEmptyPool();
         for ($i = 0; $i < 2; ++$i) {
-            unlink(Framework::tmp('CurlTest').$i.'.download');
+            unlink(Framework::tmp('CurlTest') . $i . '.download');
         }
     }
 
     public function testPut()
     {
-        $filename = Framework::tmp('CurlTest').'put.txt';
+        $filename = Framework::tmp('CurlTest') . 'put.txt';
         file_put_contents($filename, 'Curl TEST');
-        $request = Curl::putFile('http://date.jsontest.com/?service=ip', $filename, [CURLOPT_FAILONERROR => false]);
+        $request = Curl::putFile('https://bfanger.nl/curl-test', $filename, [CURLOPT_FAILONERROR => false]);
         $this->assertSame(405, $request->http_code);
     }
 

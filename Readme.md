@@ -15,13 +15,12 @@ A general purpose PHP toolkit, with a focus on debugging.
 
 ## Scope
 
-- Debugging, error-reporting, loggin and profiling functionality.
+- Debugging, error-reporting, logging and profiling functionality.
 - A collection of global functions (that should be included in PHP, imho)
 - Generic utility classes
 
 ## Classes
 
-- [Autoloader](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.Autoloader.html) : Detects classes and interfaces in any php file and load them when needed. no more includes.
 - [ErrorHandler](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.ErrorHandler.html) : An error reporting solution.
 - [Base](http://sledgehammer.github.com/api/class-Sledgehammer.Base.html) : A more strict base class with improved error messages.
 - [Sledgehammer/dump()](http://sledgehammer.github.io/api/function-Sledgehammer.dump.html) : A colorful `var_dump`, with copy-pastable array format.
@@ -32,6 +31,7 @@ A general purpose PHP toolkit, with a focus on debugging.
 - [Url](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Url.html) : Read and generate urls in a OOP style.
 - [Sledgehammer/cache()](http://sledgehammer.github.io/api/function-Sledgehammer.cache.html) : Easy caching api using closures.
 - [Json](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Json.html) : Reliable JSON encoding and decoding.
+- [Autoloader](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.Autoloader.html) : Detects classes and interfaces in any php file and load them when needed. no more includes.
 - [DebugR](http://sledgehammer.github.io/api/class-Sledgehammer.Core.Debug.DebugR.html) : Sending debugging information alongside XMLHttpRequests.
 - [more...](http://sledgehammer.github.io/api/namespace-Sledgehammer.Core.html)
 
@@ -39,8 +39,8 @@ A general purpose PHP toolkit, with a focus on debugging.
 
 Use [composer](http://getcomposer.org/) to install sledgehammer modules.
 
-```
-$ composer.phar require sledgehammer/core:*
+```sh
+composer require sledgehammer/core:*
 ```
 
 Just `include('vendor/autoload.php');` and the Sledgehammer Framework (and other installed composer libraries) can be used.
@@ -57,14 +57,14 @@ The errorhandler can send error reports per email to the address configured in `
 
 Serve static files from modules by adding a line to your rewrite/index.php.
 
-```
+```php
 require("vendor/sledgehammer/core/src/render_public_folders.php");
 ```
 
 ### Autoloader
 
 ```php
-\Sledgehammer\Core\Autoloader::enable();
+\Sledgehammer\Core\Debug\Autoloader::enable();
 ```
 
 Enables the autoloader, which kicks in when the Composer Autoloader was unable to load the class.

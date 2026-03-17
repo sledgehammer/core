@@ -133,14 +133,14 @@ class Csv extends Base implements Iterator
         } elseif ($columns !== false) {
             $columnKeys = array_keys($columns);
         }
-        fputcsv($fp, $columns, $delimiter, $enclosure);
+        fputcsv($fp, $columns, $delimiter, $enclosure, '');
 
         foreach ($iterator as $row) {
             $values = [];
             foreach ($columnKeys as $key) {
                 $values[] = $row[$key];
             }
-            fputcsv($fp, $values, $delimiter, $enclosure);
+            fputcsv($fp, $values, $delimiter, $enclosure, '');
         }
         fclose($fp);
     }
@@ -164,7 +164,7 @@ class Csv extends Base implements Iterator
             fseek($this->fp, 0); // rewind
         }
         // Kolommen controleren
-        $keys = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
+        $keys = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure, '');
         $column_isset = [];
         foreach ($keys as $column) {
             if (isset($column_isset[$column])) {
@@ -199,7 +199,7 @@ class Csv extends Base implements Iterator
     public function next(): void
     {
         $this->values = [];
-        $row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure);
+        $row = fgetcsv($this->fp, 0, $this->delimiter, $this->enclosure, '');
 
         if ($row) { // Is het einde (eof) nog niet bereikt?
             if ($row === array(null)) { // Empty row?

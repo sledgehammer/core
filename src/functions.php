@@ -101,7 +101,7 @@ function notice($message, $information = null)
  * @param string $message     The message
  * @param mixed  $information [optional] Additional information
  */
-function deprecated($message = 'This functionality will no longer be supported in upcomming releases', $information = null)
+function deprecated($message = 'This functionality will no longer be supported in upcoming releases', $information = null)
 {
     ErrorHandler::report(E_USER_DEPRECATED, $message, $information, true);
 }
@@ -1179,7 +1179,7 @@ function syntax_highlight($variable, $datatype = null, $titleLimit = 256)
             $label = $variable;
             break;
 
-            // al geconverteerde datatypes
+        // al geconverteerde datatypes
         case 'symbol':
         case 'number':
         case 'comment':

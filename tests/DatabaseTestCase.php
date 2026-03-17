@@ -47,22 +47,20 @@ abstract class DatabaseTestCase extends TestCase
     private $queryCount;
 
     /**
-     * Constructor.
-     *
-     * @param string $pdoDriver Choose between a sqlite of mysql database.
+     * Initialize database connection before first test.
      */
-    public function __construct($pdoDriver = 'sqlite')
+    protected function initializeDatabase(): void
     {
-        parent::__construct();
+        // Choose between a sqlite of mysql database.
+        $pdoDriver = 'sqlite';
+        // $pdoDriver = 'mysql';
+
+        
         // Voorkom dat de default connectie gebruikt wordt.
         if (isset(Connection::$instances['default'])) {
             Connection::$instances['_default_backup'] = Connection::$instances['default'];
             Connection::$instances['default'] = 'INVALID';
         }
-
-        // if (\Sledgehammer\ENVIRONMENT !== 'phpunit') {
-        //     return;
-        // }
 
         if ($this->dbLink == '__NOT_CONNECTED__') {
             $parts = explode('\\', get_class($this));
@@ -132,7 +130,7 @@ abstract class DatabaseTestCase extends TestCase
     }
 
     /**
-     * Shoud be used to fill the testdatabase with content (CREATEs and INSERTs).
+     * Should be used to fill the testdatabase with content (CREATEs and INSERTs).
      *
      * @param Database $database
      */
@@ -239,6 +237,7 @@ abstract class DatabaseTestCase extends TestCase
      */
     public function setUp(): void
     {
+        $this->initializeDatabase();
         $db = Connection::instance($this->dbLink);
         //dump(iterator_to_array($db->query('SHOW DATABASES', null, 'Database')));
         if ($this->skipRebuildDatabase == false && $this->dbName) {
